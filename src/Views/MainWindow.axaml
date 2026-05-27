@@ -37,6 +37,10 @@
                   IsVisible="{Binding IsAdmin}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="12,5" />
+          <Button Content="{loc:Tr Main_MonthOverview}"
+                  Command="{Binding OpenMonthOverviewCommand}"
+                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  CornerRadius="6" Padding="12,5" />
           <Button Content="{loc:Tr Main_Profile}"
                   Command="{Binding OpenProfileCommand}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"

@@ -20,6 +20,9 @@
   "Main_Logout": "Abmelden",
   "Main_Profile": "Profil",
   "Main_UserManagement": "Benutzerverwaltung",
+  "Main_MonthOverview": "Monatsübersicht",
+  "Month_Previous": "◀  Vorheriger Monat",
+  "Month_Next": "Nächster Monat  ▶",
   "Status_Ready": "Bereit",
 
   "User_New": "Neuer Benutzer",

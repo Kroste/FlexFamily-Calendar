@@ -16,6 +16,10 @@ public static class WeeklyHoursCalculator
         return all.Where(u => u.WeeklyHoursQuota > 0);
     }
 
+    /// <summary>Monats-Soll als Proration des Wochen-Solls: Quota × Tage/7.</summary>
+    public static double MonthlyTarget(double weeklyQuota, int daysInMonth)
+        => weeklyQuota * daysInMonth / 7.0;
+
     /// <summary>Summe der Dauer aller als Arbeit zählenden Einträge je UserId.</summary>
     public static Dictionary<string, double> ActualHoursByUser(IEnumerable<CalendarEntry> entries)
     {

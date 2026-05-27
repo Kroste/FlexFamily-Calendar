@@ -28,6 +28,7 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>Vom MainWindow-Code-Behind abonniert, um die jeweiligen Dialoge zu öffnen.</summary>
     public event Action? ProfileRequested;
     public event Action? UserManagementRequested;
+    public event Action? MonthOverviewRequested;
 
     public MainWindowViewModel(AuthService auth, StorageService storage, LoginViewModel loginVm)
     {
@@ -80,11 +81,24 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void OpenUserManagement() => UserManagementRequested?.Invoke();
 
+    [RelayCommand]
+    private void OpenMonthOverview() => MonthOverviewRequested?.Invoke();
+
     public UserEditorViewModel CreateProfileEditor()
         => new(_auth, _currentUser, isNew: false, selfMode: true);
 
     public UserManagementViewModel CreateUserManagement()
         => new(_auth);
+
+    public MonthOverviewViewModel CreateMonthOverview()
+    {
+        // gleiche Sicht-Regel wie das Wochen-Panel: Nicht-Admin nur er selbst;
+        // Admin folgt seiner aktuellen Kalender-Ansicht (Planung = alle, Meine Sicht = nur er)
+        var personalView = _currentUser is null
+            || _currentUser.Role != UserRole.Admin
+            || (CalendarVm?.IsPersonalView ?? false);
+        return new MonthOverviewViewModel(_storage, _currentUser!, personalView);
+    }
 
     /// <summary>Nach Profil-/Verwaltungs-Dialog: aktuellen Benutzer neu laden, Sprache/Anzeige anwenden.</summary>
     public async Task RefreshCurrentUserAsync()

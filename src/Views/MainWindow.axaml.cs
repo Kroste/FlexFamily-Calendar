@@ -17,13 +17,26 @@ public partial class MainWindow : Window
         {
             _vm.ProfileRequested -= OnProfileRequested;
             _vm.UserManagementRequested -= OnUserManagementRequested;
+            _vm.MonthOverviewRequested -= OnMonthOverviewRequested;
         }
         _vm = DataContext as MainWindowViewModel;
         if (_vm != null)
         {
             _vm.ProfileRequested += OnProfileRequested;
             _vm.UserManagementRequested += OnUserManagementRequested;
+            _vm.MonthOverviewRequested += OnMonthOverviewRequested;
         }
+    }
+
+    private async void OnMonthOverviewRequested()
+    {
+        if (_vm == null) return;
+        try
+        {
+            var dialog = new MonthOverviewDialog { DataContext = _vm.CreateMonthOverview() };
+            await dialog.ShowDialog(this);
+        }
+        catch (Exception ex) { LogService.Error("Fehler in der Monatsübersicht", ex); }
     }
 
     private async void OnProfileRequested()
