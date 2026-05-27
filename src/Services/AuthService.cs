@@ -140,6 +140,8 @@ public class AuthService
         existing.Email = user.Email;
         existing.WeeklyHoursQuota = user.WeeklyHoursQuota;
         existing.MaxWeeklyHours = user.MaxWeeklyHours;
+        existing.MaxDailyHours = user.MaxDailyHours;
+        existing.MinRestHours = user.MinRestHours;
         existing.ThemeVariant = user.ThemeVariant;
         existing.Color = user.Color;
         existing.OpeningBalanceHours = user.OpeningBalanceHours;

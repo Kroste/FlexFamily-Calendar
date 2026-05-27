@@ -13,14 +13,23 @@ public class WeeklyHoursViewModel
     public double MaxWeeklyHours { get; }
 
     public WeeklyHoursViewModel(string displayName, double actual, double target,
-        double workedHours = 0, double maxWeeklyHours = 0)
+        double workedHours = 0, double maxWeeklyHours = 0, IReadOnlyList<string>? extraWarnings = null)
     {
         DisplayName = displayName;
         Actual = actual;
         Target = target;
         WorkedHours = workedHours;
         MaxWeeklyHours = maxWeeklyHours;
+
+        var warnings = new List<string>();
+        if (IsOverLimit) warnings.Add(LimitWarning);
+        if (extraWarnings is { Count: > 0 }) warnings.AddRange(extraWarnings);
+        Warnings = warnings;
     }
+
+    /// <summary>Alle Arbeitszeit-Warnungen dieser Person (Wochenlimit + Tages-/Ruhezeit-Verstöße).</summary>
+    public IReadOnlyList<string> Warnings { get; }
+    public bool HasWarnings => Warnings.Count > 0;
 
     /// <summary>Hat die Person ein Wochenstunden-Soll? Ohne Soll nur Ist-Anzeige.</summary>
     public bool HasTarget => Target > 0;

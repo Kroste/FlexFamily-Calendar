@@ -73,6 +73,16 @@
         </StackPanel>
 
         <StackPanel Spacing="4" IsVisible="{Binding CanEditAdminFields}">
+          <TextBlock Text="{loc:Tr User_MaxDailyHours}" FontSize="12" Opacity="0.7" />
+          <TextBox Text="{Binding MaxDailyHours}" CornerRadius="6" />
+        </StackPanel>
+
+        <StackPanel Spacing="4" IsVisible="{Binding CanEditAdminFields}">
+          <TextBlock Text="{loc:Tr User_MinRestHours}" FontSize="12" Opacity="0.7" />
+          <TextBox Text="{Binding MinRestHours}" CornerRadius="6" />
+        </StackPanel>
+
+        <StackPanel Spacing="4" IsVisible="{Binding CanEditAdminFields}">
           <TextBlock Text="{loc:Tr User_OpeningBalance}" FontSize="12" Opacity="0.7" />
           <TextBox Text="{Binding OpeningBalance}" CornerRadius="6" />
         </StackPanel>

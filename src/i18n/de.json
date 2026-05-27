@@ -44,6 +44,8 @@
   "User_Category": "Personentyp",
   "User_WeeklyHours": "Wochenstunden-Soll",
   "User_MaxWeeklyHours": "Max. Wochenstunden (Limit, 0 = aus)",
+  "User_MaxDailyHours": "Max. Tagesstunden (Limit, 0 = aus)",
+  "User_MinRestHours": "Min. Ruhezeit zw. Tagen (Std., 0 = aus)",
   "User_PasswordRequired": "Kennwort",
   "User_PasswordKeep": "Neues Kennwort (leer = unverändert)",
   "User_ErrorNoUsername": "Bitte einen Benutzernamen eingeben.",
@@ -76,6 +78,8 @@
   "Cal_HoursToggle": "Stunden",
   "Cal_HoursTitle": "Wochenstunden",
   "Cal_OverWeeklyLimit": "Über Wochenlimit",
+  "Cal_OverDailyLimit": "Über Tageslimit",
+  "Cal_ShortRest": "Ruhezeit zu kurz",
   "Cal_ViewPersonal": "Meine Sicht",
 
   "Entry_New": "Neuer Eintrag",

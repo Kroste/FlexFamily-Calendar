@@ -44,6 +44,8 @@
   "User_Category": "Person type",
   "User_WeeklyHours": "Weekly hours target",
   "User_MaxWeeklyHours": "Max. weekly hours (limit, 0 = off)",
+  "User_MaxDailyHours": "Max. daily hours (limit, 0 = off)",
+  "User_MinRestHours": "Min. rest between days (hrs, 0 = off)",
   "User_PasswordRequired": "Password",
   "User_PasswordKeep": "New password (blank = unchanged)",
   "User_ErrorNoUsername": "Please enter a username.",
@@ -76,6 +78,8 @@
   "Cal_HoursToggle": "Hours",
   "Cal_HoursTitle": "Weekly hours",
   "Cal_OverWeeklyLimit": "Over weekly limit",
+  "Cal_OverDailyLimit": "Over daily limit",
+  "Cal_ShortRest": "Rest too short",
   "Cal_ViewPersonal": "My view",
 
   "Entry_New": "New entry",

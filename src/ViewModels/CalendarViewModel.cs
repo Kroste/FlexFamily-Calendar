@@ -145,6 +145,7 @@ public partial class CalendarViewModel : ViewModelBase
         var entries = Days.SelectMany(d => d.Entries).ToList();
         var actualByUser = WeeklyHoursCalculator.ActualHoursByUser(entries);
         var workedByUser = WeeklyHoursCalculator.WorkedHoursByUser(entries);
+        var daysOrdered = Days.OrderBy(d => d.Date).ToList();
 
         WeeklyHours.Clear();
         var people = WeeklyHoursCalculator.RelevantUsers(_allUsers, CurrentUser, IsPersonalView);
@@ -153,9 +154,33 @@ public partial class CalendarViewModel : ViewModelBase
             var actual = actualByUser.GetValueOrDefault(u.Id);
             var worked = workedByUser.GetValueOrDefault(u.Id);
             var name = string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
-            WeeklyHours.Add(new WeeklyHoursViewModel(name, actual, u.WeeklyHoursQuota, worked, u.MaxWeeklyHours));
+            var warnings = DailyAndRestWarnings(u, daysOrdered);
+            WeeklyHours.Add(new WeeklyHoursViewModel(name, actual, u.WeeklyHoursQuota, worked, u.MaxWeeklyHours, warnings));
         }
     }
+
+    /// <summary>Tages-Höchstarbeitszeit- und Ruhezeit-Warnungen für einen Benutzer über die sichtbare Woche.</summary>
+    private static IReadOnlyList<string> DailyAndRestWarnings(User u, IReadOnlyList<CalendarDayViewModel> daysOrdered)
+    {
+        var summaries = daysOrdered
+            .Select(d => WorkTimeRules.Summarize(d.Date, d.Entries.Where(e => e.UserId == u.Id)))
+            .ToList();
+
+        var warnings = new List<string>();
+        var dayFmt = "ddd dd.MM.";
+
+        foreach (var day in WorkTimeRules.OverDailyLimit(summaries, u.MaxDailyHours))
+            warnings.Add($"⚠ {Localizer.Instance["Cal_OverDailyLimit"]} ({day.Date.ToString(dayFmt, CultureInfo.CurrentCulture)}): " +
+                         $"{H(day.WorkedHours)} / {H(u.MaxDailyHours)} h");
+
+        foreach (var (prev, next, restHours) in WorkTimeRules.ShortRests(summaries, u.MinRestHours))
+            warnings.Add($"⚠ {Localizer.Instance["Cal_ShortRest"]} ({prev.Date.ToString(dayFmt, CultureInfo.CurrentCulture)}→" +
+                         $"{next.Date.ToString(dayFmt, CultureInfo.CurrentCulture)}): {H(restHours)} / {H(u.MinRestHours)} h");
+
+        return warnings;
+    }
+
+    private static string H(double v) => v.ToString("0.#", CultureInfo.CurrentCulture);
 
     [RelayCommand]
     private async Task PreviousWeekAsync()
