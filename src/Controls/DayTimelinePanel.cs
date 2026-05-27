@@ -12,7 +12,7 @@ namespace FlexFamilyCalendar.Controls;
 public class DayTimelinePanel : Panel
 {
     private const double Gap = 2.0;
-    private const double MinHeight = 22.0;
+    private const double MinEntryHeight = 22.0;
 
     protected override Size MeasureOverride(Size availableSize)
     {
@@ -42,7 +42,7 @@ public class DayTimelinePanel : Panel
 
             var y = entry.StartTime.TotalHours * CalendarMetrics.PixelsPerHour;
             var rawHeight = (entry.EndTime - entry.StartTime).TotalHours * CalendarMetrics.PixelsPerHour;
-            var height = Math.Max(MinHeight, rawHeight - Gap);
+            var height = Math.Max(MinEntryHeight, rawHeight - Gap);
 
             child.Arrange(new Rect(x, y, width, height));
         }

@@ -4,7 +4,7 @@ using System.Globalization;
 
 namespace FlexFamilyCalendar.Services;
 
-public class StorageService
+public class StorageService : IStorageService
 {
     public static readonly string DataDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),

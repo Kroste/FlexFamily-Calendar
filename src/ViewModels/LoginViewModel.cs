@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FlexFamilyCalendar.Localization;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
 
@@ -16,17 +17,29 @@ public partial class LoginViewModel : ViewModelBase
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _isFirstRun;
     [ObservableProperty] private bool _rememberMe;
+    [ObservableProperty] private LanguageOption? _selectedLanguage;
+
+    public IReadOnlyList<LanguageOption> AvailableLanguages => Localizer.Instance.AvailableLanguages;
 
     public event Action<User>? LoginSuccessful;
 
-    public LoginViewModel(AuthService auth) => _auth = auth;
+    public LoginViewModel(AuthService auth)
+    {
+        _auth = auth;
+        _selectedLanguage = AvailableLanguages.FirstOrDefault(l => l.Code == Localizer.Instance.CurrentLanguage);
+    }
+
+    partial void OnSelectedLanguageChanged(LanguageOption? value)
+    {
+        if (value != null) Localizer.Instance.SetLanguage(value.Code);
+    }
 
     [RelayCommand]
     private async Task LoginAsync()
     {
         if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
         {
-            ErrorMessage = "Bitte Benutzername und Kennwort eingeben.";
+            ErrorMessage = Localizer.Instance["Login_ErrorEmptyFields"];
             return;
         }
         LogService.Click(Username, "Anmelden-Button");
@@ -41,7 +54,7 @@ public partial class LoginViewModel : ViewModelBase
                 LoginSuccessful?.Invoke(user);
             }
             else
-                ErrorMessage = "Ungültiger Benutzername oder Kennwort.";
+                ErrorMessage = Localizer.Instance["Login_ErrorInvalid"];
         }
         finally
         {
@@ -55,7 +68,7 @@ public partial class LoginViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
         {
-            ErrorMessage = "Bitte Benutzername und Kennwort eingeben.";
+            ErrorMessage = Localizer.Instance["Login_ErrorEmptyFields"];
             return;
         }
         LogService.Click(Username, "Admin anlegen-Button");
@@ -63,8 +76,14 @@ public partial class LoginViewModel : ViewModelBase
         ErrorMessage = "";
         try
         {
-            await _auth.CreateUserAsync(Username, Password,
-                string.IsNullOrWhiteSpace(DisplayName) ? Username : DisplayName, UserRole.Admin);
+            await _auth.CreateUserAsync(new User
+            {
+                Username = Username,
+                DisplayName = string.IsNullOrWhiteSpace(DisplayName) ? Username : DisplayName,
+                Role = UserRole.Admin,
+                Category = PersonCategory.Parent,
+                Language = SelectedLanguage?.Code ?? Localizer.Instance.CurrentLanguage
+            }, Password);
             IsFirstRun = false;
             var user = await _auth.LoginAsync(Username, Password);
             if (user != null)
@@ -76,7 +95,7 @@ public partial class LoginViewModel : ViewModelBase
         catch (Exception ex)
         {
             LogService.Error("Fehler beim Anlegen des Admin-Kontos", ex);
-            ErrorMessage = "Fehler beim Anlegen des Kontos.";
+            ErrorMessage = Localizer.Instance["Login_ErrorCreateFailed"];
         }
         finally
         {

@@ -1,0 +1,21 @@
+using Avalonia.Controls;
+using FlexFamilyCalendar.ViewModels;
+
+namespace FlexFamilyCalendar.Views;
+
+public partial class UserEditorDialog : Window
+{
+    private UserEditorViewModel? _vm;
+
+    public UserEditorDialog() => InitializeComponent();
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+        if (_vm != null) _vm.Closed -= OnClosed;
+        _vm = DataContext as UserEditorViewModel;
+        if (_vm != null) _vm.Closed += OnClosed;
+    }
+
+    private void OnClosed(UserEditorResult? result) => Close(result);
+}

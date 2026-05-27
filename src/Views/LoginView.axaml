@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
              x:Class="FlexFamilyCalendar.Views.LoginView"
              x:DataType="vm:LoginViewModel"
              x:CompileBindings="False">
@@ -13,14 +14,23 @@
             BoxShadow="0 4 24 0 #40000000">
       <StackPanel Spacing="20">
 
+        <!-- Sprachwahl -->
+        <ComboBox ItemsSource="{Binding AvailableLanguages}"
+                  SelectedItem="{Binding SelectedLanguage}"
+                  HorizontalAlignment="Right" MinWidth="120">
+          <ComboBox.ItemTemplate>
+            <DataTemplate><TextBlock Text="{Binding DisplayName}" /></DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+
         <!-- Logo / Titel -->
         <StackPanel HorizontalAlignment="Center" Spacing="4">
           <TextBlock Text="📅" FontSize="40" HorizontalAlignment="Center" />
-          <TextBlock Text="FlexFamily Calendar"
+          <TextBlock Text="{loc:Tr App_Title}"
                      FontSize="22" FontWeight="Bold"
                      HorizontalAlignment="Center" />
           <TextBlock IsVisible="{Binding IsFirstRun}"
-                     Text="Erstkonfiguration"
+                     Text="{loc:Tr Login_FirstRunSubtitle}"
                      FontSize="13" Opacity="0.6"
                      HorizontalAlignment="Center" />
         </StackPanel>
@@ -28,28 +38,28 @@
         <!-- Felder -->
         <StackPanel Spacing="12">
           <StackPanel Spacing="4" IsVisible="{Binding IsFirstRun}">
-            <TextBlock Text="Anzeigename" FontSize="12" Opacity="0.7" />
+            <TextBlock Text="{loc:Tr Login_DisplayName}" FontSize="12" Opacity="0.7" />
             <TextBox Text="{Binding DisplayName}"
-                     PlaceholderText="z.B. Lars Krügel"
+                     PlaceholderText="{loc:Tr Login_DisplayNamePlaceholder}"
                      CornerRadius="6" />
           </StackPanel>
 
           <StackPanel Spacing="4">
-            <TextBlock Text="Benutzername" FontSize="12" Opacity="0.7" />
+            <TextBlock Text="{loc:Tr Login_Username}" FontSize="12" Opacity="0.7" />
             <TextBox Text="{Binding Username}"
-                     PlaceholderText="Benutzername"
+                     PlaceholderText="{loc:Tr Login_Username}"
                      CornerRadius="6" />
           </StackPanel>
 
           <StackPanel Spacing="4">
-            <TextBlock Text="Kennwort" FontSize="12" Opacity="0.7" />
+            <TextBlock Text="{loc:Tr Login_Password}" FontSize="12" Opacity="0.7" />
             <TextBox Text="{Binding Password}"
-                     PlaceholderText="Kennwort"
+                     PlaceholderText="{loc:Tr Login_Password}"
                      PasswordChar="*"
                      CornerRadius="6" />
           </StackPanel>
 
-          <CheckBox IsChecked="{Binding RememberMe}" Content="Login merken" />
+          <CheckBox IsChecked="{Binding RememberMe}" Content="{loc:Tr Login_RememberMe}" />
         </StackPanel>
 
         <!-- Fehlermeldung -->
@@ -60,7 +70,7 @@
 
         <!-- Buttons -->
         <Button IsVisible="{Binding !IsFirstRun}"
-                Content="Anmelden"
+                Content="{loc:Tr Login_SignIn}"
                 Command="{Binding LoginCommand}"
                 IsEnabled="{Binding !IsLoading}"
                 HorizontalAlignment="Stretch"
@@ -71,7 +81,7 @@
                 Foreground="White" />
 
         <Button IsVisible="{Binding IsFirstRun}"
-                Content="Admin-Konto anlegen"
+                Content="{loc:Tr Login_CreateAdmin}"
                 Command="{Binding CreateAdminCommand}"
                 IsEnabled="{Binding !IsLoading}"
                 HorizontalAlignment="Stretch"

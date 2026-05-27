@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FlexFamilyCalendar.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FlexFamilyCalendar.Tests/FlexFamilyCalendar.Tests.csproj" />
+  </Folder>
+</Solution>

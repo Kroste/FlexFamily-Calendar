@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FlexFamilyCalendar.Localization;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
 using System.Collections.ObjectModel;
@@ -23,11 +24,16 @@ public partial class CalendarViewModel : ViewModelBase
         get
         {
             var kw = ISOWeek.GetWeekOfYear(WeekStart.ToDateTime(TimeOnly.MinValue));
-            return $"KW {kw:D2} / {WeekStart.Year}";
+            return $"{Localizer.Instance["Cal_Week"]} {kw:D2} / {WeekStart.Year}";
         }
     }
 
     public ObservableCollection<CalendarDayViewModel> Days { get; } = new();
+    public ObservableCollection<WeeklyHoursViewModel> WeeklyHours { get; } = new();
+
+    public bool IsAdmin => CurrentUser.Role == UserRole.Admin;
+
+    [ObservableProperty] private bool _isHoursPanelVisible;
 
     /// <summary>date, existing (null = neu), users. Vom CalendarView-Code-Behind abonniert.</summary>
     public event Action<DateOnly, CalendarEntry?, IReadOnlyList<User>>? EntryDialogRequested;
@@ -39,6 +45,40 @@ public partial class CalendarViewModel : ViewModelBase
         _weekStart = GetMondayOfWeek(DateOnly.FromDateTime(DateTime.Today));
         RebuildDays();
         _ = LoadAsync();
+        Localizer.Instance.LanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        // Wochentagsnamen/Eintragstyp-Labels neu erzeugen und Woche neu laden
+        RebuildDays();
+        OnPropertyChanged(nameof(WeekLabel));
+        _ = LoadWeekAsync();
+    }
+
+    /// <summary>Vom MainWindowViewModel beim Abmelden/Benutzerwechsel aufrufen (kein Event-Leak).</summary>
+    public void Cleanup() => Localizer.Instance.LanguageChanged -= OnLanguageChanged;
+
+    [RelayCommand]
+    private void ToggleHoursPanel()
+    {
+        IsHoursPanelVisible = !IsHoursPanelVisible;
+        if (IsHoursPanelVisible) RecomputeWeeklyHours();
+    }
+
+    /// <summary>Ist-Stunden je Person (Work+Au-Pair) der Woche; nur Personen mit Soll&gt;0.</summary>
+    private void RecomputeWeeklyHours()
+    {
+        var entries = Days.SelectMany(d => d.Entries);
+        var actualByUser = WeeklyHoursCalculator.ActualHoursByUser(entries);
+
+        WeeklyHours.Clear();
+        foreach (var u in _allUsers.Where(u => u.WeeklyHoursQuota > 0).OrderBy(u => u.DisplayName))
+        {
+            var actual = actualByUser.GetValueOrDefault(u.Id);
+            var name = string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
+            WeeklyHours.Add(new WeeklyHoursViewModel(name, actual, u.WeeklyHoursQuota));
+        }
     }
 
     [RelayCommand]
@@ -94,6 +134,7 @@ public partial class CalendarViewModel : ViewModelBase
 
         var dayVm = Days.FirstOrDefault(d => d.Date == date);
         dayVm?.LoadFromModel(day);
+        RecomputeWeeklyHours();
 
         var verb = result.Action == EntryDialogAction.Save ? "gespeichert" : "gelöscht";
         LogService.UserAction(CurrentUser.Username,
@@ -113,6 +154,13 @@ public partial class CalendarViewModel : ViewModelBase
         await LoadWeekAsync();
     }
 
+    /// <summary>Personenliste neu laden, damit frisch angelegte Benutzer sofort planbar sind.</summary>
+    public async Task ReloadUsersAsync()
+    {
+        _allUsers = await _storage.LoadUsersAsync();
+        RecomputeWeeklyHours();
+    }
+
     private async Task LoadWeekAsync()
     {
         LogService.Info("Lade Kalenderwoche {0}", WeekLabel);
@@ -121,6 +169,7 @@ public partial class CalendarViewModel : ViewModelBase
             var day = await _storage.LoadDayAsync(WeekStart.AddDays(i));
             Days[i].LoadFromModel(day);
         }
+        RecomputeWeeklyHours();
     }
 
     private static DateOnly GetMondayOfWeek(DateOnly date)

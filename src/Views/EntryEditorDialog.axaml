@@ -1,10 +1,11 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+        xmlns:loc="using:FlexFamilyCalendar.Localization"
         x:Class="FlexFamilyCalendar.Views.EntryEditorDialog"
         x:CompileBindings="False"
-        Title="Eintrag"
-        Width="480" Height="600"
+        Title="{Binding HeaderText}"
+        Width="480" SizeToContent="Height" MaxHeight="760"
         CanResize="False"
         WindowStartupLocation="CenterOwner">
 
@@ -21,7 +22,7 @@
       <StackPanel Spacing="14">
 
         <StackPanel Spacing="4">
-          <TextBlock Text="Benutzer" FontSize="12" Opacity="0.7" />
+          <TextBlock Text="{loc:Tr Entry_User}" FontSize="12" Opacity="0.7" />
           <ComboBox ItemsSource="{Binding AvailableUsers}"
                     SelectedItem="{Binding SelectedUser}"
                     HorizontalAlignment="Stretch">
@@ -34,7 +35,7 @@
         </StackPanel>
 
         <StackPanel Spacing="4">
-          <TextBlock Text="Typ" FontSize="12" Opacity="0.7" />
+          <TextBlock Text="{loc:Tr Entry_Type}" FontSize="12" Opacity="0.7" />
           <ComboBox ItemsSource="{Binding EntryTypes}"
                     SelectedItem="{Binding SelectedType}"
                     HorizontalAlignment="Stretch">
@@ -48,13 +49,13 @@
 
         <Grid ColumnDefinitions="*,16,*">
           <StackPanel Grid.Column="0" Spacing="4">
-            <TextBlock Text="Startzeit" FontSize="12" Opacity="0.7" />
+            <TextBlock Text="{loc:Tr Entry_StartTime}" FontSize="12" Opacity="0.7" />
             <TimePicker SelectedTime="{Binding StartTime}"
                         ClockIdentifier="24HourClock"
                         HorizontalAlignment="Stretch" />
           </StackPanel>
           <StackPanel Grid.Column="2" Spacing="4">
-            <TextBlock Text="Endzeit" FontSize="12" Opacity="0.7" />
+            <TextBlock Text="{loc:Tr Entry_EndTime}" FontSize="12" Opacity="0.7" />
             <TimePicker SelectedTime="{Binding EndTime}"
                         ClockIdentifier="24HourClock"
                         HorizontalAlignment="Stretch" />
@@ -62,16 +63,16 @@
         </Grid>
 
         <StackPanel Spacing="4">
-          <TextBlock Text="Bezeichnung (optional)" FontSize="12" Opacity="0.7" />
+          <TextBlock Text="{loc:Tr Entry_TitleLabel}" FontSize="12" Opacity="0.7" />
           <TextBox Text="{Binding Title}"
-                   PlaceholderText="z.B. Sprachkurs, Schulausflug, ..."
+                   PlaceholderText="{loc:Tr Entry_TitlePlaceholder}"
                    CornerRadius="6" />
         </StackPanel>
 
         <StackPanel Spacing="4">
-          <TextBlock Text="Notizen (optional)" FontSize="12" Opacity="0.7" />
+          <TextBlock Text="{loc:Tr Entry_NotesLabel}" FontSize="12" Opacity="0.7" />
           <TextBox Text="{Binding Notes}"
-                   PlaceholderText="Weitere Informationen..."
+                   PlaceholderText="{loc:Tr Entry_NotesPlaceholder}"
                    AcceptsReturn="True"
                    Height="80"
                    TextWrapping="Wrap"
@@ -89,17 +90,17 @@
     <!-- Buttons -->
     <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,12,Auto" Margin="0,16,0,0">
       <Button Grid.Column="0"
-              Content="Löschen"
+              Content="{loc:Tr Common_Delete}"
               Command="{Binding DeleteCommand}"
               IsVisible="{Binding IsEditMode}"
               Padding="16,8" CornerRadius="6"
               Background="#C0392B" Foreground="White" />
       <Button Grid.Column="2"
-              Content="Abbrechen"
+              Content="{loc:Tr Common_Cancel}"
               Command="{Binding CancelCommand}"
               Padding="16,8" CornerRadius="6" />
       <Button Grid.Column="4"
-              Content="Speichern"
+              Content="{loc:Tr Common_Save}"
               Command="{Binding SaveCommand}"
               Padding="16,8" CornerRadius="6"
               Background="{DynamicResource SystemAccentColor}" Foreground="White" />

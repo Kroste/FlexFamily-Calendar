@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FlexFamilyCalendar.Localization;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
 using System.Globalization;
@@ -14,8 +15,6 @@ public record EntryDialogResult(EntryDialogAction Action, CalendarEntry Entry);
 
 public partial class EntryEditorViewModel : ViewModelBase
 {
-    private static readonly CultureInfo De = new("de-DE");
-
     private readonly string _entryId;
 
     [ObservableProperty] private User? _selectedUser;
@@ -29,7 +28,7 @@ public partial class EntryEditorViewModel : ViewModelBase
     public DateOnly Date { get; }
     public string DateLabel { get; }
     public bool IsEditMode { get; }
-    public string HeaderText => IsEditMode ? "Eintrag bearbeiten" : "Neuer Eintrag";
+    public string HeaderText => Localizer.Instance[IsEditMode ? "Entry_Edit" : "Entry_New"];
     public IReadOnlyList<User> AvailableUsers { get; }
     public IReadOnlyList<EntryTypeOption> EntryTypes { get; }
 
@@ -39,9 +38,10 @@ public partial class EntryEditorViewModel : ViewModelBase
     public EntryEditorViewModel(DateOnly date, IReadOnlyList<User> users)
     {
         Date = date;
-        DateLabel = date.ToString("dddd, dd. MMMM yyyy", De);
+        DateLabel = date.ToString("D", CultureInfo.CurrentCulture);
         AvailableUsers = users;
-        EntryTypes = Enum.GetValues<EntryType>().Select(t => new EntryTypeOption(t, EntryTypeInfo.Label(t))).ToList();
+        EntryTypes = Enum.GetValues<EntryType>()
+            .Select(t => new EntryTypeOption(t, Localizer.Instance[EntryTypeInfo.Key(t)])).ToList();
         _entryId = Guid.NewGuid().ToString();
         IsEditMode = false;
         SelectedUser = users.FirstOrDefault();
@@ -66,11 +66,11 @@ public partial class EntryEditorViewModel : ViewModelBase
     private void Save()
     {
         ErrorMessage = "";
-        if (SelectedUser == null) { ErrorMessage = "Bitte einen Benutzer auswählen."; return; }
-        if (SelectedType == null) { ErrorMessage = "Bitte einen Typ auswählen."; return; }
-        if (StartTime == null) { ErrorMessage = "Bitte eine Startzeit angeben."; return; }
-        if (EndTime == null) { ErrorMessage = "Bitte eine Endzeit angeben."; return; }
-        if (EndTime <= StartTime) { ErrorMessage = "Die Endzeit muss nach der Startzeit liegen."; return; }
+        if (SelectedUser == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoUser"]; return; }
+        if (SelectedType == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoType"]; return; }
+        if (StartTime == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoStart"]; return; }
+        if (EndTime == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoEnd"]; return; }
+        if (EndTime <= StartTime) { ErrorMessage = Localizer.Instance["Entry_ErrorEndBeforeStart"]; return; }
 
         var entry = new CalendarEntry
         {

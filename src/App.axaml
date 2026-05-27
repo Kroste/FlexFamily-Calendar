@@ -11,9 +11,11 @@
 
     <Application.Resources>
         <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
+        <SolidColorBrush x:Key="AppAccentBrush" Color="#2E86C1" />
     </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://FlexFamilyCalendar/Styles/AppStyles.axaml" />
     </Application.Styles>
 </Application>

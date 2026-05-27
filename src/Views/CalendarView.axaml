@@ -4,6 +4,7 @@
              xmlns:models="using:FlexFamilyCalendar.Models"
              xmlns:cv="using:FlexFamilyCalendar.Converters"
              xmlns:ctrl="using:FlexFamilyCalendar.Controls"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
              x:Class="FlexFamilyCalendar.Views.CalendarView"
              x:CompileBindings="False">
 
@@ -19,15 +20,19 @@
             BorderThickness="0,0,0,1"
             BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
             Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
-      <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-        <Button Grid.Column="0" Content="◀  Vorherige Woche"
+      <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+        <Button Grid.Column="0" Content="{loc:Tr Cal_PreviousWeek}"
                 Command="{Binding PreviousWeekCommand}" Padding="12,6" CornerRadius="6" />
-        <TextBlock Grid.Column="1" Text="{Binding WeekLabel}"
+        <Button Grid.Column="1" Content="{loc:Tr Cal_HoursToggle}"
+                Command="{Binding ToggleHoursPanelCommand}"
+                IsVisible="{Binding IsAdmin}"
+                Padding="12,6" CornerRadius="6" Margin="8,0,0,0" />
+        <TextBlock Grid.Column="2" Text="{Binding WeekLabel}"
                    FontSize="18" FontWeight="SemiBold"
                    HorizontalAlignment="Center" VerticalAlignment="Center" />
-        <Button Grid.Column="2" Content="Heute"
+        <Button Grid.Column="3" Content="{loc:Tr Cal_Today}"
                 Command="{Binding GoToTodayCommand}" Padding="12,6" CornerRadius="6" Margin="0,0,8,0" />
-        <Button Grid.Column="3" Content="Nächste Woche  ▶"
+        <Button Grid.Column="4" Content="{loc:Tr Cal_NextWeek}"
                 Command="{Binding NextWeekCommand}" Padding="12,6" CornerRadius="6" />
       </Grid>
     </Border>
@@ -49,12 +54,12 @@
                 <TextBlock Text="{Binding DateLabel}" HorizontalAlignment="Center" FontSize="12" Opacity="0.7" />
                 <Border IsVisible="{Binding IsToday}" Background="{DynamicResource SystemAccentColor}"
                         CornerRadius="3" Padding="6,1">
-                  <TextBlock Text="Heute" FontSize="10" Foreground="White" />
+                  <TextBlock Text="{loc:Tr Cal_TodayBadge}" FontSize="10" Foreground="White" />
                 </Border>
                 <Border IsVisible="{Binding IsFinalized}" Background="#27AE60" CornerRadius="3" Padding="6,1">
-                  <TextBlock Text="✓ Final" FontSize="10" Foreground="White" />
+                  <TextBlock Text="{loc:Tr Cal_FinalBadge}" FontSize="10" Foreground="White" />
                 </Border>
-                <Button Content="+ Eintrag"
+                <Button Content="{loc:Tr Cal_AddEntry}"
                         Command="{Binding AddEntryCommand}"
                         IsVisible="{Binding CanAddEntry}"
                         IsEnabled="{Binding !IsFinalized}"
@@ -66,6 +71,41 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
     </Grid>
+
+    <!-- Wochenstunden-Panel (Admin, einklappbar) -->
+    <Border DockPanel.Dock="Right"
+            IsVisible="{Binding IsHoursPanelVisible}"
+            Width="250"
+            BorderThickness="1,0,0,0"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            Background="{DynamicResource SystemControlBackgroundChromeLowBrush}">
+      <DockPanel Margin="12">
+        <TextBlock DockPanel.Dock="Top" Text="{loc:Tr Cal_HoursTitle}"
+                   FontSize="15" FontWeight="SemiBold" Margin="0,0,0,10" />
+        <ScrollViewer>
+          <ItemsControl ItemsSource="{Binding WeeklyHours}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Margin="0,0,0,12" Padding="10,8" CornerRadius="6"
+                        Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+                  <StackPanel Spacing="5">
+                    <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="13" />
+                    <ProgressBar Minimum="0" Maximum="{Binding Target}" Value="{Binding Actual}"
+                                 Height="8" CornerRadius="4"
+                                 Foreground="{Binding BarColor, Converter={StaticResource ColorStringToBrushConverter}}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Grid.Column="0" Text="{Binding Summary}" FontSize="12" Opacity="0.8" />
+                      <TextBlock Grid.Column="1" Text="{Binding Difference}" FontSize="12" FontWeight="SemiBold"
+                                 Foreground="{Binding BarColor, Converter={StaticResource ColorStringToBrushConverter}}" />
+                    </Grid>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </DockPanel>
+    </Border>
 
     <!-- Scrollbares 24h-Raster: Zeitachse (56px) + 7 Tagesspalten -->
     <ScrollViewer x:Name="GridScroll"
@@ -119,7 +159,8 @@
                               Background="{Binding EntryColor, Converter={StaticResource ColorStringToBrushConverter}}">
                         <StackPanel Spacing="0">
                           <TextBlock Text="{Binding TimeRange}" FontSize="10" Foreground="White" Opacity="0.85" />
-                          <TextBlock Text="{Binding TypeLabel}" FontSize="11" FontWeight="SemiBold"
+                          <TextBlock Text="{Binding Type, Converter={x:Static cv:EntryTypeLabelConverter.Instance}}"
+                                     FontSize="11" FontWeight="SemiBold"
                                      Foreground="White" TextTrimming="CharacterEllipsis" />
                           <TextBlock Text="{Binding Title}" FontSize="11" Foreground="White" Opacity="0.9"
                                      TextTrimming="CharacterEllipsis"

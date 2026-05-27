@@ -1,1 +1,43 @@
-/.claude
+# Build outputs
+bin/
+obj/
+
+# NuGet packages
+*.nupkg
+*.snupkg
+.nuget/packages/
+packages/
+nuget.config
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+
+# Publish output
+publish/
+out/
+
+# Playwright browsers
+**/playwright-chromium/
+**/playwright-firefox/
+**/playwright-webkit/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Projekte
+**/f95zone/
+**/usv2/
+**/usv3/

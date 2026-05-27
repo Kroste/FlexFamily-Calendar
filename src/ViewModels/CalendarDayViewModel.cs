@@ -3,14 +3,12 @@ using CommunityToolkit.Mvvm.Input;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
 using System.Collections.ObjectModel;
+using System.Globalization;
 
 namespace FlexFamilyCalendar.ViewModels;
 
 public partial class CalendarDayViewModel : ViewModelBase
 {
-    private static readonly string[] DayNames =
-        ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-
     private readonly CalendarViewModel _parent;
 
     public DateOnly Date { get; }
@@ -27,7 +25,8 @@ public partial class CalendarDayViewModel : ViewModelBase
     {
         Date = date;
         _parent = parent;
-        DayName = DayNames[(int)date.DayOfWeek];
+        // Wochentagsname kulturabhängig (folgt der aktuellen UI-Sprache)
+        DayName = CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(date.DayOfWeek);
         DateLabel = date.ToString("dd.MM.");
         IsToday = date == DateOnly.FromDateTime(DateTime.Today);
         CanAddEntry = parent.CurrentUser.Role == UserRole.Admin;
