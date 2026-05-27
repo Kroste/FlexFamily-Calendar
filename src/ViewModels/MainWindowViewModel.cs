@@ -29,6 +29,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public event Action? ProfileRequested;
     public event Action? UserManagementRequested;
     public event Action? MonthOverviewRequested;
+    public event Action? HoursAccountRequested;
 
     public MainWindowViewModel(AuthService auth, StorageService storage, LoginViewModel loginVm)
     {
@@ -84,6 +85,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void OpenMonthOverview() => MonthOverviewRequested?.Invoke();
 
+    [RelayCommand]
+    private void OpenHoursAccount() => HoursAccountRequested?.Invoke();
+
     public UserEditorViewModel CreateProfileEditor()
         => new(_auth, _currentUser, isNew: false, selfMode: true);
 
@@ -99,6 +103,9 @@ public partial class MainWindowViewModel : ViewModelBase
             || (CalendarVm?.IsPersonalView ?? false);
         return new MonthOverviewViewModel(_storage, _currentUser!, personalView);
     }
+
+    public HoursAccountViewModel CreateHoursAccount()
+        => new(_storage, _currentUser!, _currentUser?.Role == UserRole.Admin);
 
     /// <summary>Nach Profil-/Verwaltungs-Dialog: aktuellen Benutzer neu laden, Sprache/Anzeige anwenden.</summary>
     public async Task RefreshCurrentUserAsync()

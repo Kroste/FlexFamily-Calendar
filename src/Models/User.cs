@@ -13,4 +13,6 @@ public class User
     public double WeeklyHoursQuota { get; set; }  // Wochenstunden-Soll (0 = kein Soll)
     public string ThemeVariant { get; set; } = "System";  // System | Light | Dark
     public string Color { get; set; } = "";  // Personenfarbe im Kalender (leer = bei Anlage vergeben)
+    public double OpeningBalanceHours { get; set; }       // Stundenkonto: Anfangssaldo (Übertrag von vorher)
+    public DateOnly AccountStart { get; set; }            // Stundenkonto: Start (leer = bei Anlage gesetzt)
 }

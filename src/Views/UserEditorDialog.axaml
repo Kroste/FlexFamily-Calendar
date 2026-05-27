@@ -67,6 +67,16 @@
           <TextBox Text="{Binding WeeklyHours}" CornerRadius="6" />
         </StackPanel>
 
+        <StackPanel Spacing="4" IsVisible="{Binding CanEditAdminFields}">
+          <TextBlock Text="{loc:Tr User_OpeningBalance}" FontSize="12" Opacity="0.7" />
+          <TextBox Text="{Binding OpeningBalance}" CornerRadius="6" />
+        </StackPanel>
+
+        <StackPanel Spacing="4" IsVisible="{Binding CanEditAdminFields}">
+          <TextBlock Text="{loc:Tr User_AccountStart}" FontSize="12" Opacity="0.7" />
+          <DatePicker SelectedDate="{Binding AccountStart}" HorizontalAlignment="Stretch" />
+        </StackPanel>
+
         <!-- Theme pro Benutzer -->
         <StackPanel Spacing="4">
           <TextBlock Text="{loc:Tr User_Theme}" FontSize="12" Opacity="0.7" />

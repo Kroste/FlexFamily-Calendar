@@ -1,0 +1,76 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+        xmlns:loc="using:FlexFamilyCalendar.Localization"
+        x:Class="FlexFamilyCalendar.Views.HoursAccountDialog"
+        x:CompileBindings="False"
+        Title="{loc:Tr Main_HoursAccount}"
+        Width="560" Height="620"
+        WindowStartupLocation="CenterOwner">
+
+  <DockPanel Margin="20">
+
+    <TextBlock DockPanel.Dock="Top" Text="{loc:Tr Main_HoursAccount}"
+               FontSize="18" FontWeight="Bold" Margin="0,0,0,12" />
+
+    <!-- Benutzerauswahl (nur Admin) -->
+    <ComboBox DockPanel.Dock="Top"
+              ItemsSource="{Binding AvailableUsers}" SelectedItem="{Binding SelectedUser}"
+              IsVisible="{Binding CanSelectUser}"
+              HorizontalAlignment="Stretch" Margin="0,0,0,12">
+      <ComboBox.ItemTemplate>
+        <DataTemplate><TextBlock Text="{Binding DisplayName}" /></DataTemplate>
+      </ComboBox.ItemTemplate>
+    </ComboBox>
+
+    <!-- Aktueller Saldo -->
+    <Border DockPanel.Dock="Top" CornerRadius="8" Padding="14,10" Margin="0,0,0,12"
+            Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Grid.Column="0" Text="{loc:Tr HoursAccount_Balance}"
+                   FontSize="14" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Text="{Binding CurrentBalanceText}"
+                   FontSize="20" FontWeight="Bold"
+                   Foreground="{Binding CurrentBalanceColor, Converter={StaticResource ColorStringToBrushConverter}}" />
+      </Grid>
+    </Border>
+
+    <!-- Hinweis: V1 zählt nur gearbeitete Stunden -->
+    <TextBlock DockPanel.Dock="Bottom" Text="{loc:Tr HoursAccount_Note}"
+               FontSize="11" Opacity="0.6" TextWrapping="Wrap" Margin="0,10,0,0" />
+
+    <!-- Monatsverlauf -->
+    <Border BorderThickness="1" CornerRadius="6"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <DockPanel>
+        <!-- Kopfzeile -->
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="10,8"
+              Background="Transparent">
+          <TextBlock Grid.Column="0" Text="{loc:Tr HoursAccount_Month}" FontWeight="SemiBold" FontSize="12" />
+          <TextBlock Grid.Column="1" Text="{loc:Tr HoursAccount_Actual}" FontWeight="SemiBold" FontSize="12" Width="64" TextAlignment="Right" />
+          <TextBlock Grid.Column="2" Text="{loc:Tr HoursAccount_Target}" FontWeight="SemiBold" FontSize="12" Width="64" TextAlignment="Right" />
+          <TextBlock Grid.Column="3" Text="{loc:Tr HoursAccount_Diff}" FontWeight="SemiBold" FontSize="12" Width="64" TextAlignment="Right" />
+          <TextBlock Grid.Column="4" Text="{loc:Tr HoursAccount_Balance}" FontWeight="SemiBold" FontSize="12" Width="72" TextAlignment="Right" />
+        </Grid>
+        <ScrollViewer>
+          <ItemsControl ItemsSource="{Binding Rows}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="10,6"
+                      Background="Transparent">
+                  <TextBlock Grid.Column="0" Text="{Binding MonthLabel}" FontSize="13" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="1" Text="{Binding ActualText}" FontSize="13" Width="64" TextAlignment="Right" Opacity="0.85" />
+                  <TextBlock Grid.Column="2" Text="{Binding TargetText}" FontSize="13" Width="64" TextAlignment="Right" Opacity="0.85" />
+                  <TextBlock Grid.Column="3" Text="{Binding DifferenceText}" FontSize="13" Width="64" TextAlignment="Right" Opacity="0.85" />
+                  <TextBlock Grid.Column="4" Text="{Binding BalanceText}" FontSize="13" FontWeight="SemiBold" Width="72" TextAlignment="Right"
+                             Foreground="{Binding BalanceColor, Converter={StaticResource ColorStringToBrushConverter}}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </DockPanel>
+    </Border>
+
+  </DockPanel>
+</Window>

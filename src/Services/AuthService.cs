@@ -103,6 +103,11 @@ public class AuthService
             : "";
         if (string.IsNullOrWhiteSpace(user.DisplayName)) user.DisplayName = user.Username;
         if (string.IsNullOrWhiteSpace(user.Color)) user.Color = UserColorPalette.ColorAt(users.Count);
+        if (user.AccountStart == default)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            user.AccountStart = new DateOnly(today.Year, today.Month, 1);
+        }
         users.Add(user);
         await _storage.SaveUsersAsync(users);
         LogService.Info("Benutzer angelegt: {0} (Rolle: {1}, Typ: {2})", user.Username, user.Role, user.Category);
@@ -136,6 +141,8 @@ public class AuthService
         existing.WeeklyHoursQuota = user.WeeklyHoursQuota;
         existing.ThemeVariant = user.ThemeVariant;
         existing.Color = user.Color;
+        existing.OpeningBalanceHours = user.OpeningBalanceHours;
+        existing.AccountStart = user.AccountStart;
 
         await _storage.SaveUsersAsync(users);
         LogService.Info("Benutzer aktualisiert: {0}", existing.Username);

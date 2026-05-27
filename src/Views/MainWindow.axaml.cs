@@ -18,6 +18,7 @@ public partial class MainWindow : Window
             _vm.ProfileRequested -= OnProfileRequested;
             _vm.UserManagementRequested -= OnUserManagementRequested;
             _vm.MonthOverviewRequested -= OnMonthOverviewRequested;
+            _vm.HoursAccountRequested -= OnHoursAccountRequested;
         }
         _vm = DataContext as MainWindowViewModel;
         if (_vm != null)
@@ -25,7 +26,19 @@ public partial class MainWindow : Window
             _vm.ProfileRequested += OnProfileRequested;
             _vm.UserManagementRequested += OnUserManagementRequested;
             _vm.MonthOverviewRequested += OnMonthOverviewRequested;
+            _vm.HoursAccountRequested += OnHoursAccountRequested;
         }
+    }
+
+    private async void OnHoursAccountRequested()
+    {
+        if (_vm == null) return;
+        try
+        {
+            var dialog = new HoursAccountDialog { DataContext = _vm.CreateHoursAccount() };
+            await dialog.ShowDialog(this);
+        }
+        catch (Exception ex) { LogService.Error("Fehler im Stundenkonto", ex); }
     }
 
     private async void OnMonthOverviewRequested()
