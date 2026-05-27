@@ -1,0 +1,11 @@
+Name: FlexFamily Calendar
+Tag Line: Flexible planning for modern families
+
+Progammierspezifikation: csharp, .net10, Avalonia12, nlog, Multiplatform (Linux, Windows, MacOS, nice to have Web), Ki unterstüzung (Gemini, ChatGpt, Perplexity, Anthropic, local LLama (Auto Detect))
+Für die KI: doc/avalonia12-canvas-gotchas.md lesen
+
+
+Beschreibung: Ein Familienplaner, möglich soll sein das Planen von Arbeitszeiten für Angestellte und Au-Pairs. Abwesenheit und Aktivitäten (Verreist, usw.) von Eltern, Aktivitäten (Schule, Kita, Sport, usw.) von Kindern. Übersichtlich in einem Kalender.
+Es gibt keine Schichten im klassischen Sinn. Au-Pairs können über den ganzen Tag eingesetzt werden, mal für 1 Stunde, dann wieder für 6. Au-Pairs haben auch Außerhalbaktivitäten wie Sprachkurse (Aktivitäten müssen konfigurierbar sein (Für Eltern, Kinder, Angestellte, Au-Pairs))
+Arbeistzeitenkontingent muss verwaltbar sein. Zusammenrechnung von Wochenarbeitsstunden mit Anzeige von Soll und Ist. Volle KI Unterstüzung bei der Planung (ältere Pläne zum lernen berücksichtigen wenn möglich). Keine Datenbank. Datenspeicherung in Json
+Für den Kalender Order Pro Jahr, Kalenderwoche, jeder Tag eigene Json. Kopieren und Schieben von Schichten. Krankmeldungen. Export nach PDF und Mailversand an Angestellte und Eltern

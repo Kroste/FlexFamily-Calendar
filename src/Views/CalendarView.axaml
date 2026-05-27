@@ -1,0 +1,144 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+             xmlns:models="using:FlexFamilyCalendar.Models"
+             xmlns:cv="using:FlexFamilyCalendar.Converters"
+             xmlns:ctrl="using:FlexFamilyCalendar.Controls"
+             x:Class="FlexFamilyCalendar.Views.CalendarView"
+             x:CompileBindings="False">
+
+  <UserControl.Resources>
+    <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
+  </UserControl.Resources>
+
+  <DockPanel>
+
+    <!-- Wochennavigation -->
+    <Border DockPanel.Dock="Top"
+            Padding="12,8"
+            BorderThickness="0,0,0,1"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+        <Button Grid.Column="0" Content="◀  Vorherige Woche"
+                Command="{Binding PreviousWeekCommand}" Padding="12,6" CornerRadius="6" />
+        <TextBlock Grid.Column="1" Text="{Binding WeekLabel}"
+                   FontSize="18" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <Button Grid.Column="2" Content="Heute"
+                Command="{Binding GoToTodayCommand}" Padding="12,6" CornerRadius="6" Margin="0,0,8,0" />
+        <Button Grid.Column="3" Content="Nächste Woche  ▶"
+                Command="{Binding NextWeekCommand}" Padding="12,6" CornerRadius="6" />
+      </Grid>
+    </Border>
+
+    <!-- Sticky-Header: leere Ecke (56px) + 7 Tagesköpfe -->
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="56,*"
+          Background="{DynamicResource SystemControlBackgroundChromeLowBrush}">
+      <ItemsControl Grid.Column="1" ItemsSource="{Binding Days}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><UniformGrid Columns="7" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Padding="4,6"
+                    BorderThickness="1,0,0,1"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+              <StackPanel HorizontalAlignment="Center" Spacing="3">
+                <TextBlock Text="{Binding DayName}" HorizontalAlignment="Center" FontSize="13" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding DateLabel}" HorizontalAlignment="Center" FontSize="12" Opacity="0.7" />
+                <Border IsVisible="{Binding IsToday}" Background="{DynamicResource SystemAccentColor}"
+                        CornerRadius="3" Padding="6,1">
+                  <TextBlock Text="Heute" FontSize="10" Foreground="White" />
+                </Border>
+                <Border IsVisible="{Binding IsFinalized}" Background="#27AE60" CornerRadius="3" Padding="6,1">
+                  <TextBlock Text="✓ Final" FontSize="10" Foreground="White" />
+                </Border>
+                <Button Content="+ Eintrag"
+                        Command="{Binding AddEntryCommand}"
+                        IsVisible="{Binding CanAddEntry}"
+                        IsEnabled="{Binding !IsFinalized}"
+                        Padding="6,2" FontSize="11" CornerRadius="4"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Grid>
+
+    <!-- Scrollbares 24h-Raster: Zeitachse (56px) + 7 Tagesspalten -->
+    <ScrollViewer x:Name="GridScroll"
+                  HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+      <Grid ColumnDefinitions="56,*">
+
+        <!-- Zeitachse -->
+        <ItemsControl Grid.Column="0" ItemsSource="{x:Static ctrl:CalendarMetrics.HourLabels}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Height="48" BorderThickness="0,0,0,1"
+                      BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                <TextBlock Text="{Binding}" FontSize="11" Opacity="0.6"
+                           HorizontalAlignment="Right" VerticalAlignment="Top"
+                           Margin="0,-7,6,0" />
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Tagesspalten -->
+        <ItemsControl Grid.Column="1" ItemsSource="{Binding Days}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><UniformGrid Columns="7" /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid>
+                <!-- Heute-Tönung -->
+                <Border IsVisible="{Binding IsToday}" Background="#142E86C1" />
+
+                <!-- Stundenraster -->
+                <ItemsControl ItemsSource="{x:Static ctrl:CalendarMetrics.HourLabels}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Height="48" BorderThickness="1,0,0,1"
+                              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Einträge, zeitbasiert positioniert -->
+                <ItemsControl ItemsSource="{Binding Entries}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><ctrl:DayTimelinePanel /></ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border CornerRadius="5" Padding="5,3" Margin="0" ClipToBounds="True"
+                              Cursor="Hand" Tapped="OnEntryTapped"
+                              Background="{Binding EntryColor, Converter={StaticResource ColorStringToBrushConverter}}">
+                        <StackPanel Spacing="0">
+                          <TextBlock Text="{Binding TimeRange}" FontSize="10" Foreground="White" Opacity="0.85" />
+                          <TextBlock Text="{Binding TypeLabel}" FontSize="11" FontWeight="SemiBold"
+                                     Foreground="White" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Text="{Binding Title}" FontSize="11" Foreground="White" Opacity="0.9"
+                                     TextTrimming="CharacterEllipsis"
+                                     IsVisible="{Binding Title, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                          <TextBlock Text="{Binding UserDisplayName}" FontSize="10" Foreground="White" Opacity="0.8"
+                                     TextTrimming="CharacterEllipsis"
+                                     IsVisible="{Binding UserDisplayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+      </Grid>
+    </ScrollViewer>
+
+  </DockPanel>
+</UserControl>

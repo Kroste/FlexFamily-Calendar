@@ -1,0 +1,92 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+             x:Class="FlexFamilyCalendar.Views.LoginView"
+             x:DataType="vm:LoginViewModel"
+             x:CompileBindings="False">
+
+  <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+    <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+            CornerRadius="12"
+            Padding="40,36"
+            Width="380"
+            BoxShadow="0 4 24 0 #40000000">
+      <StackPanel Spacing="20">
+
+        <!-- Logo / Titel -->
+        <StackPanel HorizontalAlignment="Center" Spacing="4">
+          <TextBlock Text="📅" FontSize="40" HorizontalAlignment="Center" />
+          <TextBlock Text="FlexFamily Calendar"
+                     FontSize="22" FontWeight="Bold"
+                     HorizontalAlignment="Center" />
+          <TextBlock IsVisible="{Binding IsFirstRun}"
+                     Text="Erstkonfiguration"
+                     FontSize="13" Opacity="0.6"
+                     HorizontalAlignment="Center" />
+        </StackPanel>
+
+        <!-- Felder -->
+        <StackPanel Spacing="12">
+          <StackPanel Spacing="4" IsVisible="{Binding IsFirstRun}">
+            <TextBlock Text="Anzeigename" FontSize="12" Opacity="0.7" />
+            <TextBox Text="{Binding DisplayName}"
+                     PlaceholderText="z.B. Lars Krügel"
+                     CornerRadius="6" />
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Benutzername" FontSize="12" Opacity="0.7" />
+            <TextBox Text="{Binding Username}"
+                     PlaceholderText="Benutzername"
+                     CornerRadius="6" />
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Kennwort" FontSize="12" Opacity="0.7" />
+            <TextBox Text="{Binding Password}"
+                     PlaceholderText="Kennwort"
+                     PasswordChar="*"
+                     CornerRadius="6" />
+          </StackPanel>
+
+          <CheckBox IsChecked="{Binding RememberMe}" Content="Login merken" />
+        </StackPanel>
+
+        <!-- Fehlermeldung -->
+        <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Background="#33C0392B" CornerRadius="6" Padding="10,8">
+          <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" FontSize="13" />
+        </Border>
+
+        <!-- Buttons -->
+        <Button IsVisible="{Binding !IsFirstRun}"
+                Content="Anmelden"
+                Command="{Binding LoginCommand}"
+                IsEnabled="{Binding !IsLoading}"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"
+                Height="40"
+                CornerRadius="6"
+                Background="{DynamicResource SystemAccentColor}"
+                Foreground="White" />
+
+        <Button IsVisible="{Binding IsFirstRun}"
+                Content="Admin-Konto anlegen"
+                Command="{Binding CreateAdminCommand}"
+                IsEnabled="{Binding !IsLoading}"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"
+                Height="40"
+                CornerRadius="6"
+                Background="#27AE60"
+                Foreground="White" />
+
+        <!-- Ladeindikator -->
+        <ProgressBar IsVisible="{Binding IsLoading}"
+                     IsIndeterminate="True"
+                     Height="3"
+                     CornerRadius="2" />
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

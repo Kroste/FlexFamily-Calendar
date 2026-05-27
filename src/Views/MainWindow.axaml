@@ -1,0 +1,75 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+        xmlns:views="using:FlexFamilyCalendar.Views"
+        x:Class="FlexFamilyCalendar.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        x:CompileBindings="False"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="FlexFamily Calendar"
+        Width="1280" Height="800"
+        MinWidth="900" MinHeight="600">
+
+  <DockPanel>
+
+    <!-- Kopfzeile (nur wenn angemeldet) -->
+    <Border DockPanel.Dock="Top"
+            IsVisible="{Binding IsLoggedIn}"
+            Padding="16,10"
+            BorderThickness="0,0,0,1"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+          <GradientStop Color="#1A237E" Offset="0" />
+          <GradientStop Color="#283593" Offset="1" />
+        </LinearGradientBrush>
+      </Border.Background>
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+          <TextBlock Text="📅" FontSize="22" />
+          <TextBlock Text="FlexFamily Calendar"
+                     FontSize="18" FontWeight="Bold"
+                     Foreground="White"
+                     VerticalAlignment="Center" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+          <TextBlock Text="{Binding CurrentUserDisplay}"
+                     Foreground="White" Opacity="0.85"
+                     VerticalAlignment="Center" FontSize="13" />
+          <Button Content="Abmelden"
+                  Command="{Binding LogoutCommand}"
+                  Foreground="White"
+                  Background="#33FFFFFF"
+                  BorderBrush="#55FFFFFF"
+                  CornerRadius="6"
+                  Padding="12,5" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Statusleiste -->
+    <Border DockPanel.Dock="Bottom"
+            Padding="12,5"
+            BorderThickness="0,1,0,0"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            Background="{DynamicResource SystemControlBackgroundChromeLowBrush}">
+      <TextBlock Text="{Binding StatusMessage}"
+                 FontSize="12"
+                 Opacity="0.75"
+                 VerticalAlignment="Center" />
+    </Border>
+
+    <!-- Inhaltsfläche
+         IsVisible bindet gegen MainWindowViewModel (kein DataContext-Override auf Border).
+         DataContext wird erst auf dem inneren View gesetzt, damit kein Konflikt entsteht. -->
+    <Grid>
+      <Border IsVisible="{Binding IsLoggedIn}">
+        <views:CalendarView DataContext="{Binding CalendarVm}" />
+      </Border>
+      <Border IsVisible="{Binding IsNotLoggedIn}">
+        <views:LoginView DataContext="{Binding LoginVm}" />
+      </Border>
+    </Grid>
+
+  </DockPanel>
+</Window>

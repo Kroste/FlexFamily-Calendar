@@ -1,0 +1,109 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+        x:Class="FlexFamilyCalendar.Views.EntryEditorDialog"
+        x:CompileBindings="False"
+        Title="Eintrag"
+        Width="480" Height="600"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+  <Grid Margin="24,20,24,20" RowDefinitions="Auto,*,Auto">
+
+    <!-- Header -->
+    <StackPanel Grid.Row="0" Margin="0,0,0,16">
+      <TextBlock Text="{Binding HeaderText}" FontSize="18" FontWeight="Bold" />
+      <TextBlock Text="{Binding DateLabel}" Opacity="0.6" FontSize="13" Margin="0,2,0,0" />
+    </StackPanel>
+
+    <!-- Formular -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+      <StackPanel Spacing="14">
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Benutzer" FontSize="12" Opacity="0.7" />
+          <ComboBox ItemsSource="{Binding AvailableUsers}"
+                    SelectedItem="{Binding SelectedUser}"
+                    HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding DisplayName}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Typ" FontSize="12" Opacity="0.7" />
+          <ComboBox ItemsSource="{Binding EntryTypes}"
+                    SelectedItem="{Binding SelectedType}"
+                    HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Label}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,16,*">
+          <StackPanel Grid.Column="0" Spacing="4">
+            <TextBlock Text="Startzeit" FontSize="12" Opacity="0.7" />
+            <TimePicker SelectedTime="{Binding StartTime}"
+                        ClockIdentifier="24HourClock"
+                        HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <StackPanel Grid.Column="2" Spacing="4">
+            <TextBlock Text="Endzeit" FontSize="12" Opacity="0.7" />
+            <TimePicker SelectedTime="{Binding EndTime}"
+                        ClockIdentifier="24HourClock"
+                        HorizontalAlignment="Stretch" />
+          </StackPanel>
+        </Grid>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Bezeichnung (optional)" FontSize="12" Opacity="0.7" />
+          <TextBox Text="{Binding Title}"
+                   PlaceholderText="z.B. Sprachkurs, Schulausflug, ..."
+                   CornerRadius="6" />
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Notizen (optional)" FontSize="12" Opacity="0.7" />
+          <TextBox Text="{Binding Notes}"
+                   PlaceholderText="Weitere Informationen..."
+                   AcceptsReturn="True"
+                   Height="80"
+                   TextWrapping="Wrap"
+                   CornerRadius="6" />
+        </StackPanel>
+
+        <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Background="#33C0392B" CornerRadius="6" Padding="10,8">
+          <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" FontSize="13" TextWrapping="Wrap" />
+        </Border>
+
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Buttons -->
+    <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,12,Auto" Margin="0,16,0,0">
+      <Button Grid.Column="0"
+              Content="Löschen"
+              Command="{Binding DeleteCommand}"
+              IsVisible="{Binding IsEditMode}"
+              Padding="16,8" CornerRadius="6"
+              Background="#C0392B" Foreground="White" />
+      <Button Grid.Column="2"
+              Content="Abbrechen"
+              Command="{Binding CancelCommand}"
+              Padding="16,8" CornerRadius="6" />
+      <Button Grid.Column="4"
+              Content="Speichern"
+              Command="{Binding SaveCommand}"
+              Padding="16,8" CornerRadius="6"
+              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+    </Grid>
+
+  </Grid>
+</Window>

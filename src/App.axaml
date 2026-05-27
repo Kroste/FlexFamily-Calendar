@@ -1,0 +1,19 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cv="using:FlexFamilyCalendar.Converters"
+             x:Class="FlexFamilyCalendar.App"
+             xmlns:local="using:FlexFamilyCalendar"
+             RequestedThemeVariant="Default">
+
+    <Application.DataTemplates>
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+
+    <Application.Resources>
+        <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+</Application>
