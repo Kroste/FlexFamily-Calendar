@@ -12,5 +12,5 @@ public class User
     public PersonCategory Category { get; set; } = PersonCategory.Employee;
     public double WeeklyHoursQuota { get; set; }  // Wochenstunden-Soll (0 = kein Soll)
     public string ThemeVariant { get; set; } = "System";  // System | Light | Dark
-    public string AccentColor { get; set; } = "#2E86C1";
+    public string Color { get; set; } = "";  // Personenfarbe im Kalender (leer = bei Anlage vergeben)
 }

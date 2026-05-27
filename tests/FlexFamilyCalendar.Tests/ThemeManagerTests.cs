@@ -22,9 +22,6 @@ public class ThemeManagerTests
         => Assert.Equal(ThemeVariant.Default, ThemeManager.ParseVariant(id));
 
     [Fact]
-    public void AccentsAndVariants_AreAvailable()
-    {
-        Assert.Contains(ThemeManager.Instance.AvailableVariants, v => v.Id == "Dark");
-        Assert.All(ThemeManager.Instance.AvailableAccents, a => Assert.StartsWith("#", a.Hex));
-    }
+    public void Variants_AreAvailable()
+        => Assert.Contains(ThemeManager.Instance.AvailableVariants, v => v.Id == "Dark");
 }

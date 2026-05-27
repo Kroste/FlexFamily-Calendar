@@ -38,18 +38,11 @@
   "User_ErrorNoUsername": "Bitte einen Benutzernamen eingeben.",
   "User_ErrorNoPassword": "Bitte ein Kennwort vergeben.",
   "User_Theme": "Design",
-  "User_Accent": "Akzentfarbe",
+  "User_Color": "Persönliche Farbe",
 
   "ThemeVariant_System": "System",
   "ThemeVariant_Light": "Hell",
   "ThemeVariant_Dark": "Dunkel",
-
-  "Accent_Blue": "Blau",
-  "Accent_Green": "Grün",
-  "Accent_Violet": "Violett",
-  "Accent_Orange": "Orange",
-  "Accent_Red": "Rot",
-  "Accent_Teal": "Türkis",
 
   "PersonCategory_Parent": "Eltern",
   "PersonCategory_Child": "Kind",

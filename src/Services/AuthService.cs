@@ -102,6 +102,7 @@ public class AuthService
             ? BCrypt.Net.BCrypt.HashPassword(password)
             : "";
         if (string.IsNullOrWhiteSpace(user.DisplayName)) user.DisplayName = user.Username;
+        if (string.IsNullOrWhiteSpace(user.Color)) user.Color = UserColorPalette.ColorAt(users.Count);
         users.Add(user);
         await _storage.SaveUsersAsync(users);
         LogService.Info("Benutzer angelegt: {0} (Rolle: {1}, Typ: {2})", user.Username, user.Role, user.Category);
@@ -134,7 +135,7 @@ public class AuthService
         existing.Email = user.Email;
         existing.WeeklyHoursQuota = user.WeeklyHoursQuota;
         existing.ThemeVariant = user.ThemeVariant;
-        existing.AccentColor = user.AccentColor;
+        existing.Color = user.Color;
 
         await _storage.SaveUsersAsync(users);
         LogService.Info("Benutzer aktualisiert: {0}", existing.Username);

@@ -79,15 +79,15 @@
         </StackPanel>
 
         <StackPanel Spacing="4">
-          <TextBlock Text="{loc:Tr User_Accent}" FontSize="12" Opacity="0.7" />
-          <ComboBox ItemsSource="{Binding Accents}" SelectedItem="{Binding SelectedAccent}"
+          <TextBlock Text="{loc:Tr User_Color}" FontSize="12" Opacity="0.7" />
+          <ComboBox ItemsSource="{Binding PersonColors}" SelectedItem="{Binding SelectedColor}"
                     HorizontalAlignment="Stretch">
             <ComboBox.ItemTemplate>
               <DataTemplate>
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                  <Border Width="16" Height="16" CornerRadius="3"
-                          Background="{Binding Hex, Converter={StaticResource ColorStringToBrushConverter}}" />
-                  <TextBlock Text="{Binding NameKey, Converter={x:Static loc:LocKeyConverter.Instance}}" />
+                  <Border Width="20" Height="20" CornerRadius="4"
+                          Background="{Binding ., Converter={StaticResource ColorStringToBrushConverter}}" />
+                  <TextBlock Text="{Binding .}" VerticalAlignment="Center" />
                 </StackPanel>
               </DataTemplate>
             </ComboBox.ItemTemplate>

@@ -12,6 +12,7 @@ public partial class CalendarViewModel : ViewModelBase
 {
     private readonly StorageService _storage;
     private List<User> _allUsers = new();
+    private Dictionary<string, string> _userColors = new();
 
     public User CurrentUser { get; }
 
@@ -132,6 +133,7 @@ public partial class CalendarViewModel : ViewModelBase
         day.Entries.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
         await _storage.SaveDayAsync(day);
 
+        ApplyOwnerColors(day);
         var dayVm = Days.FirstOrDefault(d => d.Date == date);
         dayVm?.LoadFromModel(day);
         RecomputeWeeklyHours();
@@ -151,14 +153,27 @@ public partial class CalendarViewModel : ViewModelBase
     private async Task LoadAsync()
     {
         _allUsers = await _storage.LoadUsersAsync();
+        RebuildUserColors();
         await LoadWeekAsync();
     }
 
-    /// <summary>Personenliste neu laden, damit frisch angelegte Benutzer sofort planbar sind.</summary>
+    /// <summary>Personenliste neu laden (frische Benutzer sofort planbar) inkl. Farben → Woche neu laden.</summary>
     public async Task ReloadUsersAsync()
     {
         _allUsers = await _storage.LoadUsersAsync();
-        RecomputeWeeklyHours();
+        RebuildUserColors();
+        await LoadWeekAsync();  // damit geänderte Personenfarben sofort sichtbar werden
+    }
+
+    private void RebuildUserColors()
+        => _userColors = _allUsers.ToDictionary(
+            u => u.Id, u => string.IsNullOrEmpty(u.Color) ? "#7F8C8D" : u.Color);
+
+    /// <summary>Setzt je Eintrag die Personenfarbe (zur Laufzeit, nicht persistiert).</summary>
+    private void ApplyOwnerColors(CalendarDay day)
+    {
+        foreach (var e in day.Entries)
+            e.OwnerColor = _userColors.GetValueOrDefault(e.UserId, "#7F8C8D");
     }
 
     private async Task LoadWeekAsync()
@@ -167,6 +182,7 @@ public partial class CalendarViewModel : ViewModelBase
         for (int i = 0; i < 7; i++)
         {
             var day = await _storage.LoadDayAsync(WeekStart.AddDays(i));
+            ApplyOwnerColors(day);
             Days[i].LoadFromModel(day);
         }
         RecomputeWeeklyHours();

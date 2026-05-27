@@ -38,18 +38,11 @@
   "User_ErrorNoUsername": "Please enter a username.",
   "User_ErrorNoPassword": "Please set a password.",
   "User_Theme": "Theme",
-  "User_Accent": "Accent color",
+  "User_Color": "Personal color",
 
   "ThemeVariant_System": "System",
   "ThemeVariant_Light": "Light",
   "ThemeVariant_Dark": "Dark",
-
-  "Accent_Blue": "Blue",
-  "Accent_Green": "Green",
-  "Accent_Violet": "Violet",
-  "Accent_Orange": "Orange",
-  "Accent_Red": "Red",
-  "Accent_Teal": "Teal",
 
   "PersonCategory_Parent": "Parents",
   "PersonCategory_Child": "Child",

@@ -49,7 +49,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _currentUser = user;
         Localizer.Instance.SetLanguage(user.Language);
-        ThemeManager.Instance.Apply(user.ThemeVariant, user.AccentColor);
+        ThemeManager.Instance.Apply(user.ThemeVariant);
 
         CurrentUserDisplay = string.IsNullOrEmpty(user.DisplayName) ? user.Username : user.DisplayName;
         CalendarVm?.Cleanup();
@@ -95,7 +95,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (fresh == null) return;
         _currentUser = fresh;
         Localizer.Instance.SetLanguage(fresh.Language);
-        ThemeManager.Instance.Apply(fresh.ThemeVariant, fresh.AccentColor);
+        ThemeManager.Instance.Apply(fresh.ThemeVariant);
         CurrentUserDisplay = string.IsNullOrEmpty(fresh.DisplayName) ? fresh.Username : fresh.DisplayName;
         OnPropertyChanged(nameof(IsAdmin));
     }

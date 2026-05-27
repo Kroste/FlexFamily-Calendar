@@ -19,7 +19,7 @@
             Padding="16,10"
             BorderThickness="0,0,0,1"
             BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
-            Background="{DynamicResource AppAccentBrush}">
+            Background="{DynamicResource AppHeaderBrush}">
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
           <TextBlock Text="📅" FontSize="22" />

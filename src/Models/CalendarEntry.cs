@@ -22,4 +22,12 @@ public class CalendarEntry
 
     [Newtonsoft.Json.JsonIgnore]
     public string TypeLabel => EntryTypeInfo.Label(Type);
+
+    /// <summary>Personenfarbe (zur Laufzeit aus dem Benutzer aufgelöst, nicht persistiert).</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public string OwnerColor { get; set; } = "#7F8C8D";
+
+    /// <summary>Arbeit voll deckend, Nicht-Arbeit gedämpft → „wann arbeite ich" hebt sich ab.</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public double TypeOpacity => EntryTypeInfo.CountsAsWork(Type) ? 1.0 : 0.55;
 }

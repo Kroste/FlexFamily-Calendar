@@ -34,6 +34,6 @@ public class InMemoryStorageService : IStorageService
         Id = u.Id, Username = u.Username, PasswordHash = u.PasswordHash, Role = u.Role,
         DisplayName = u.DisplayName, Email = u.Email, Language = u.Language,
         Category = u.Category, WeeklyHoursQuota = u.WeeklyHoursQuota,
-        ThemeVariant = u.ThemeVariant, AccentColor = u.AccentColor
+        ThemeVariant = u.ThemeVariant, Color = u.Color
     };
 }

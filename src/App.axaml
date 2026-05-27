@@ -11,7 +11,8 @@
 
     <Application.Resources>
         <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
-        <SolidColorBrush x:Key="AppAccentBrush" Color="#2E86C1" />
+        <!-- Feste Markenfarbe für den Header (nicht benutzerabhängig) -->
+        <SolidColorBrush x:Key="AppHeaderBrush" Color="#1A237E" />
     </Application.Resources>
 
     <Application.Styles>

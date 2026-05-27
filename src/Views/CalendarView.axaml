@@ -156,7 +156,8 @@
                     <DataTemplate>
                       <Border CornerRadius="5" Padding="5,3" Margin="0" ClipToBounds="True"
                               Cursor="Hand" Tapped="OnEntryTapped"
-                              Background="{Binding EntryColor, Converter={StaticResource ColorStringToBrushConverter}}">
+                              Opacity="{Binding TypeOpacity}"
+                              Background="{Binding OwnerColor, Converter={StaticResource ColorStringToBrushConverter}}">
                         <StackPanel Spacing="0">
                           <TextBlock Text="{Binding TimeRange}" FontSize="10" Foreground="White" Opacity="0.85" />
                           <TextBlock Text="{Binding Type, Converter={x:Static cv:EntryTypeLabelConverter.Instance}}"

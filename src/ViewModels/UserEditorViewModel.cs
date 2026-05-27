@@ -20,7 +20,6 @@ public partial class UserEditorViewModel : ViewModelBase
     private readonly User _user;
     private readonly bool _isNew;
     private readonly string _originalVariant;
-    private readonly string _originalAccent;
     private bool _initialized;
 
     [ObservableProperty] private string _username;
@@ -39,7 +38,7 @@ public partial class UserEditorViewModel : ViewModelBase
     [ObservableProperty] private string _password = "";
     [ObservableProperty] private string _errorMessage = "";
     [ObservableProperty] private ThemeVariantOption? _selectedThemeVariant;
-    [ObservableProperty] private AccentOption? _selectedAccent;
+    [ObservableProperty] private string? _selectedColor;
 
     public bool IsSelfMode { get; }
     public bool CanEditAdminFields => !IsSelfMode;
@@ -54,7 +53,7 @@ public partial class UserEditorViewModel : ViewModelBase
     public IReadOnlyList<CategoryOption> Categories { get; }
     public IReadOnlyList<LanguageOption> Languages => Localizer.Instance.AvailableLanguages;
     public IReadOnlyList<ThemeVariantOption> ThemeVariants => ThemeManager.Instance.AvailableVariants;
-    public IReadOnlyList<AccentOption> Accents => ThemeManager.Instance.AvailableAccents;
+    public IReadOnlyList<string> PersonColors => UserColorPalette.Colors;
 
     public event Action<UserEditorResult?>? Closed;
 
@@ -80,10 +79,9 @@ public partial class UserEditorViewModel : ViewModelBase
         _weeklyHours = _user.WeeklyHoursQuota.ToString(CultureInfo.CurrentCulture);
 
         _originalVariant = string.IsNullOrEmpty(_user.ThemeVariant) ? "System" : _user.ThemeVariant;
-        _originalAccent = string.IsNullOrEmpty(_user.AccentColor) ? "#2E86C1" : _user.AccentColor;
         _selectedThemeVariant = ThemeVariants.FirstOrDefault(v => v.Id == _originalVariant) ?? ThemeVariants[0];
-        _selectedAccent = Accents.FirstOrDefault(a => a.Hex.Equals(_originalAccent, StringComparison.OrdinalIgnoreCase))
-                          ?? Accents[0];
+        _selectedColor = PersonColors.FirstOrDefault(c => c.Equals(_user.Color, StringComparison.OrdinalIgnoreCase))
+                         ?? (string.IsNullOrEmpty(_user.Color) ? PersonColors[0] : _user.Color);
         _initialized = true;
     }
 
@@ -93,13 +91,11 @@ public partial class UserEditorViewModel : ViewModelBase
             SelectedRole = Roles.FirstOrDefault(r => r.Role == UserRole.Admin);
     }
 
-    partial void OnSelectedThemeVariantChanged(ThemeVariantOption? value) => PreviewTheme();
-    partial void OnSelectedAccentChanged(AccentOption? value) => PreviewTheme();
-
-    private void PreviewTheme()
+    // Theme-Variante im Self-Modus sofort als Vorschau anwenden
+    partial void OnSelectedThemeVariantChanged(ThemeVariantOption? value)
     {
         if (_initialized && IsSelfMode)
-            ThemeManager.Instance.Apply(SelectedThemeVariant?.Id, SelectedAccent?.Hex);
+            ThemeManager.Instance.Apply(SelectedThemeVariant?.Id);
     }
 
     [RelayCommand]
@@ -130,7 +126,7 @@ public partial class UserEditorViewModel : ViewModelBase
             Language = SelectedLanguage?.Code ?? _user.Language,
             WeeklyHoursQuota = CanEditAdminFields ? hours : _user.WeeklyHoursQuota,
             ThemeVariant = SelectedThemeVariant?.Id ?? _user.ThemeVariant,
-            AccentColor = SelectedAccent?.Hex ?? _user.AccentColor,
+            Color = SelectedColor ?? _user.Color,
             PasswordHash = _user.PasswordHash
         };
 
@@ -177,8 +173,8 @@ public partial class UserEditorViewModel : ViewModelBase
     [RelayCommand]
     private void Cancel()
     {
-        // Live-Vorschau im Self-Modus zurücknehmen
-        if (IsSelfMode) ThemeManager.Instance.Apply(_originalVariant, _originalAccent);
+        // Theme-Vorschau im Self-Modus zurücknehmen
+        if (IsSelfMode) ThemeManager.Instance.Apply(_originalVariant);
         Closed?.Invoke(null);
     }
 }
