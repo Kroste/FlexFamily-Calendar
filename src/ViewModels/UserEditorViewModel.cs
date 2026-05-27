@@ -139,7 +139,7 @@ public partial class UserEditorViewModel : ViewModelBase
             OpeningBalanceHours = CanEditAdminFields ? opening : _user.OpeningBalanceHours,
             AccountStart = CanEditAdminFields ? accountStart : _user.AccountStart,
             ThemeVariant = SelectedThemeVariant?.Id ?? _user.ThemeVariant,
-            Color = SelectedColor ?? _user.Color,
+            Color = CanEditAdminFields ? (SelectedColor ?? _user.Color) : _user.Color,
             PasswordHash = _user.PasswordHash
         };
 

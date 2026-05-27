@@ -88,7 +88,7 @@
           </ComboBox>
         </StackPanel>
 
-        <StackPanel Spacing="4">
+        <StackPanel Spacing="4" IsVisible="{Binding CanEditAdminFields}">
           <TextBlock Text="{loc:Tr User_Color}" FontSize="12" Opacity="0.7" />
           <ComboBox ItemsSource="{Binding PersonColors}" SelectedItem="{Binding SelectedColor}"
                     HorizontalAlignment="Stretch">
