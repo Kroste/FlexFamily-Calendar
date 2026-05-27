@@ -31,6 +31,10 @@
           <Button Content="{loc:Tr Cal_HoursToggle}"
                   Command="{Binding ToggleHoursPanelCommand}"
                   Padding="12,6" CornerRadius="6" />
+          <Button Content="{loc:Tr Cal_CopyWeek}"
+                  Command="{Binding CopyWeekToNextCommand}"
+                  IsVisible="{Binding IsAdmin}"
+                  Padding="12,6" CornerRadius="6" />
           <Button Content="{Binding FinalizeButtonKey, Converter={x:Static loc:LocKeyConverter.Instance}}"
                   Command="{Binding ToggleFinalizeWeekCommand}"
                   IsVisible="{Binding IsAdmin}"

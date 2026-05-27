@@ -88,6 +88,35 @@ public partial class CalendarViewModel : ViewModelBase
     public void Cleanup() => Localizer.Instance.LanguageChanged -= OnLanguageChanged;
 
     [RelayCommand]
+    private async Task CopyWeekToNextAsync()
+    {
+        if (!IsAdmin) return;
+        var copied = 0;
+        for (int i = 0; i < 7; i++)
+        {
+            var src = await _storage.LoadDayAsync(WeekStart.AddDays(i));
+            var templates = WeekCopy.TemplateEntries(src.Entries);
+            if (templates.Count == 0) continue;
+
+            var dst = await _storage.LoadDayAsync(WeekStart.AddDays(i + 7));
+            if (dst.IsFinalized) continue;                                  // finalisierte Tage nicht überschreiben
+            if (dst.Entries.Any(e => WeekCopy.IsTemplate(e.Type))) continue; // schon geplant → kein Duplikat
+
+            dst.Entries.AddRange(templates);
+            dst.Entries.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
+            await _storage.SaveDayAsync(dst);
+            copied++;
+        }
+
+        LogService.UserAction(CurrentUser.Username, $"Woche kopiert ({WeekLabel}) → {copied} Tag(e)");
+
+        // Zur nächsten Woche springen, damit das Ergebnis sichtbar ist
+        WeekStart = WeekStart.AddDays(7);
+        RebuildDays();
+        await LoadWeekAsync();
+    }
+
+    [RelayCommand]
     private async Task ToggleFinalizeWeekAsync()
     {
         if (!IsAdmin) return;
