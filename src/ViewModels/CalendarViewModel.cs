@@ -33,8 +33,12 @@ public partial class CalendarViewModel : ViewModelBase
     public ObservableCollection<WeeklyHoursViewModel> WeeklyHours { get; } = new();
 
     public bool IsAdmin => CurrentUser.Role == UserRole.Admin;
+    public bool CanSwitchView => IsAdmin;
 
     [ObservableProperty] private bool _isHoursPanelVisible;
+
+    /// <summary>true = Normalsicht (eigene hervorgehoben); false = Planungssicht (alle gleich, editierbar).</summary>
+    [ObservableProperty] private bool _isPersonalView;
 
     /// <summary>date, existing (null = neu), users. Vom CalendarView-Code-Behind abonniert.</summary>
     public event Action<DateOnly, CalendarEntry?, IReadOnlyList<User>>? EntryDialogRequested;
@@ -43,10 +47,20 @@ public partial class CalendarViewModel : ViewModelBase
     {
         _storage = storage;
         CurrentUser = user;
+        // Admin startet in der Planungssicht; alle anderen fest in der Normalsicht
+        _isPersonalView = user.Role != UserRole.Admin;
         _weekStart = GetMondayOfWeek(DateOnly.FromDateTime(DateTime.Today));
         RebuildDays();
         _ = LoadAsync();
         Localizer.Instance.LanguageChanged += OnLanguageChanged;
+    }
+
+    partial void OnIsPersonalViewChanged(bool value)
+    {
+        LogService.UserAction(CurrentUser.Username,
+            value ? "Ansicht: Normalsicht (eigene Schichten)" : "Ansicht: Planungssicht");
+        RebuildDays();          // CanAddEntry je Tag neu berechnen
+        _ = LoadWeekAsync();    // Einträge neu auflösen (Hervorhebung/Deckkraft)
     }
 
     private void OnLanguageChanged(object? sender, EventArgs e)
@@ -117,7 +131,7 @@ public partial class CalendarViewModel : ViewModelBase
 
     public void RequestEditEntry(DateOnly date, CalendarEntry entry)
     {
-        if (CurrentUser.Role != UserRole.Admin) return;
+        if (!IsAdmin || IsPersonalView) return;  // Bearbeiten nur in der Planungssicht
         LogService.Click(CurrentUser.Username, $"Eintrag bearbeiten ({date:dd.MM.yyyy}, {entry.TypeLabel})");
         var users = _allUsers.Count > 0 ? _allUsers : new List<User> { CurrentUser };
         EntryDialogRequested?.Invoke(date, entry, users.AsReadOnly());
@@ -133,7 +147,7 @@ public partial class CalendarViewModel : ViewModelBase
         day.Entries.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
         await _storage.SaveDayAsync(day);
 
-        ApplyOwnerColors(day);
+        ApplyEntryDisplay(day);
         var dayVm = Days.FirstOrDefault(d => d.Date == date);
         dayVm?.LoadFromModel(day);
         RecomputeWeeklyHours();
@@ -169,11 +183,15 @@ public partial class CalendarViewModel : ViewModelBase
         => _userColors = _allUsers.ToDictionary(
             u => u.Id, u => string.IsNullOrEmpty(u.Color) ? "#7F8C8D" : u.Color);
 
-    /// <summary>Setzt je Eintrag die Personenfarbe (zur Laufzeit, nicht persistiert).</summary>
-    private void ApplyOwnerColors(CalendarDay day)
+    /// <summary>Setzt je Eintrag Personenfarbe, Deckkraft und Hervorhebung (Laufzeit, nicht persistiert).</summary>
+    private void ApplyEntryDisplay(CalendarDay day)
     {
         foreach (var e in day.Entries)
+        {
             e.OwnerColor = _userColors.GetValueOrDefault(e.UserId, "#7F8C8D");
+            var isOwn = e.UserId == CurrentUser.Id;
+            (e.EffectiveOpacity, e.IsHighlighted) = EntryDisplay.Resolve(e.Type, isOwn, IsPersonalView);
+        }
     }
 
     private async Task LoadWeekAsync()
@@ -182,7 +200,7 @@ public partial class CalendarViewModel : ViewModelBase
         for (int i = 0; i < 7; i++)
         {
             var day = await _storage.LoadDayAsync(WeekStart.AddDays(i));
-            ApplyOwnerColors(day);
+            ApplyEntryDisplay(day);
             Days[i].LoadFromModel(day);
         }
         RecomputeWeeklyHours();

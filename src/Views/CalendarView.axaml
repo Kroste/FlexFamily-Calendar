@@ -23,10 +23,16 @@
       <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
         <Button Grid.Column="0" Content="{loc:Tr Cal_PreviousWeek}"
                 Command="{Binding PreviousWeekCommand}" Padding="12,6" CornerRadius="6" />
-        <Button Grid.Column="1" Content="{loc:Tr Cal_HoursToggle}"
-                Command="{Binding ToggleHoursPanelCommand}"
-                IsVisible="{Binding IsAdmin}"
-                Padding="12,6" CornerRadius="6" Margin="8,0,0,0" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="8,0,0,0">
+          <ToggleButton Content="{loc:Tr Cal_ViewPersonal}"
+                        IsChecked="{Binding IsPersonalView}"
+                        IsVisible="{Binding CanSwitchView}"
+                        Padding="12,6" CornerRadius="6" />
+          <Button Content="{loc:Tr Cal_HoursToggle}"
+                  Command="{Binding ToggleHoursPanelCommand}"
+                  IsVisible="{Binding IsAdmin}"
+                  Padding="12,6" CornerRadius="6" />
+        </StackPanel>
         <TextBlock Grid.Column="2" Text="{Binding WeekLabel}"
                    FontSize="18" FontWeight="SemiBold"
                    HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -156,7 +162,9 @@
                     <DataTemplate>
                       <Border CornerRadius="5" Padding="5,3" Margin="0" ClipToBounds="True"
                               Cursor="Hand" Tapped="OnEntryTapped"
-                              Opacity="{Binding TypeOpacity}"
+                              Opacity="{Binding EffectiveOpacity}"
+                              BorderBrush="#E6FFFFFF"
+                              BorderThickness="{Binding IsHighlighted, Converter={x:Static cv:BoolToThicknessConverter.Instance}}"
                               Background="{Binding OwnerColor, Converter={StaticResource ColorStringToBrushConverter}}">
                         <StackPanel Spacing="0">
                           <TextBlock Text="{Binding TimeRange}" FontSize="10" Foreground="White" Opacity="0.85" />

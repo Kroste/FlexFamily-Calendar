@@ -29,7 +29,7 @@ public partial class CalendarDayViewModel : ViewModelBase
         DayName = CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(date.DayOfWeek);
         DateLabel = date.ToString("dd.MM.");
         IsToday = date == DateOnly.FromDateTime(DateTime.Today);
-        CanAddEntry = parent.CurrentUser.Role == UserRole.Admin;
+        CanAddEntry = parent.CurrentUser.Role == UserRole.Admin && !parent.IsPersonalView;
     }
 
     [RelayCommand]

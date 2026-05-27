@@ -27,7 +27,11 @@ public class CalendarEntry
     [Newtonsoft.Json.JsonIgnore]
     public string OwnerColor { get; set; } = "#7F8C8D";
 
-    /// <summary>Arbeit voll deckend, Nicht-Arbeit gedämpft → „wann arbeite ich" hebt sich ab.</summary>
+    /// <summary>Effektive Deckkraft je Sichtmodus/Eigentümer (zur Laufzeit gesetzt).</summary>
     [Newtonsoft.Json.JsonIgnore]
-    public double TypeOpacity => EntryTypeInfo.CountsAsWork(Type) ? 1.0 : 0.55;
+    public double EffectiveOpacity { get; set; } = 1.0;
+
+    /// <summary>Eigene Schicht in der Normalsicht → Rahmen-Hervorhebung.</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public bool IsHighlighted { get; set; }
 }
