@@ -88,7 +88,8 @@ public partial class CalendarViewModel : ViewModelBase
         var actualByUser = WeeklyHoursCalculator.ActualHoursByUser(entries);
 
         WeeklyHours.Clear();
-        foreach (var u in _allUsers.Where(u => u.WeeklyHoursQuota > 0).OrderBy(u => u.DisplayName))
+        var people = WeeklyHoursCalculator.RelevantUsers(_allUsers, CurrentUser, IsPersonalView);
+        foreach (var u in people.OrderBy(u => u.DisplayName))
         {
             var actual = actualByUser.GetValueOrDefault(u.Id);
             var name = string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;

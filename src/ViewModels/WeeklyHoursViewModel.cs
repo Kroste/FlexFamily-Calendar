@@ -16,8 +16,13 @@ public class WeeklyHoursViewModel
         Target = target;
     }
 
+    /// <summary>Hat die Person ein Wochenstunden-Soll? Ohne Soll nur Ist-Anzeige.</summary>
+    public bool HasTarget => Target > 0;
+
+    private string H(double v) => v.ToString("0.#", CultureInfo.CurrentCulture);
+
     public string Summary
-        => $"{Actual.ToString("0.#", CultureInfo.CurrentCulture)} / {Target.ToString("0.#", CultureInfo.CurrentCulture)} h";
+        => HasTarget ? $"{H(Actual)} / {H(Target)} h" : $"{H(Actual)} h";
 
     public string Difference
     {
@@ -25,10 +30,10 @@ public class WeeklyHoursViewModel
         {
             var diff = Actual - Target;
             var sign = diff >= 0 ? "+" : "−";
-            return $"{sign}{Math.Abs(diff).ToString("0.#", CultureInfo.CurrentCulture)} h";
+            return $"{sign}{H(Math.Abs(diff))} h";
         }
     }
 
-    /// <summary>Grün solange im Soll, orange bei Überschreitung.</summary>
-    public string BarColor => Actual > Target ? "#E67E22" : "#27AE60";
+    /// <summary>Grün solange im Soll, orange bei Überschreitung; neutral ohne Soll.</summary>
+    public string BarColor => !HasTarget ? "#7F8C8D" : Actual > Target ? "#E67E22" : "#27AE60";
 }

@@ -30,7 +30,6 @@
                         Padding="12,6" CornerRadius="6" />
           <Button Content="{loc:Tr Cal_HoursToggle}"
                   Command="{Binding ToggleHoursPanelCommand}"
-                  IsVisible="{Binding IsAdmin}"
                   Padding="12,6" CornerRadius="6" />
         </StackPanel>
         <TextBlock Grid.Column="2" Text="{Binding WeekLabel}"
@@ -98,10 +97,12 @@
                     <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="13" />
                     <ProgressBar Minimum="0" Maximum="{Binding Target}" Value="{Binding Actual}"
                                  Height="8" CornerRadius="4"
+                                 IsVisible="{Binding HasTarget}"
                                  Foreground="{Binding BarColor, Converter={StaticResource ColorStringToBrushConverter}}" />
                     <Grid ColumnDefinitions="*,Auto">
                       <TextBlock Grid.Column="0" Text="{Binding Summary}" FontSize="12" Opacity="0.8" />
                       <TextBlock Grid.Column="1" Text="{Binding Difference}" FontSize="12" FontWeight="SemiBold"
+                                 IsVisible="{Binding HasTarget}"
                                  Foreground="{Binding BarColor, Converter={StaticResource ColorStringToBrushConverter}}" />
                     </Grid>
                   </StackPanel>
