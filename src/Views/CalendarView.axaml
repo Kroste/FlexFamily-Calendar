@@ -70,6 +70,11 @@
                         IsEnabled="{Binding !IsFinalized}"
                         Padding="6,2" FontSize="11" CornerRadius="4"
                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+                <Button Content="{loc:Tr Cal_RequestAbsence}"
+                        Command="{Binding RequestAbsenceCommand}"
+                        IsVisible="{Binding CanRequestAbsence}"
+                        Padding="6,2" FontSize="11" CornerRadius="4"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
               </StackPanel>
             </Border>
           </DataTemplate>

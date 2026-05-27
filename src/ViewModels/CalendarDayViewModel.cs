@@ -17,7 +17,12 @@ public partial class CalendarDayViewModel : ViewModelBase
     public bool IsToday { get; }
     public bool CanAddEntry { get; }
 
-    [ObservableProperty] private bool _isFinalized;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanRequestAbsence))]
+    private bool _isFinalized;
+
+    /// <summary>Nicht-Admins dürfen sich (auf nicht-finalisierten Tagen) krank/Urlaub eintragen.</summary>
+    public bool CanRequestAbsence => _parent.CurrentUser.Role != UserRole.Admin && !IsFinalized;
 
     public ObservableCollection<CalendarEntry> Entries { get; } = new();
 
@@ -38,6 +43,9 @@ public partial class CalendarDayViewModel : ViewModelBase
         LogService.Click(_parent.CurrentUser.Username, $"Eintrag hinzufügen ({Date:dd.MM.yyyy})");
         _parent.RequestAddEntry(Date);
     }
+
+    [RelayCommand]
+    private void RequestAbsence() => _parent.RequestSelfAbsence(Date);
 
     public void LoadFromModel(CalendarDay day)
     {

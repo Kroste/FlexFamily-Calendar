@@ -40,8 +40,8 @@ public partial class CalendarViewModel : ViewModelBase
     /// <summary>true = Normalsicht (eigene hervorgehoben); false = Planungssicht (alle gleich, editierbar).</summary>
     [ObservableProperty] private bool _isPersonalView;
 
-    /// <summary>date, existing (null = neu), users. Vom CalendarView-Code-Behind abonniert.</summary>
-    public event Action<DateOnly, CalendarEntry?, IReadOnlyList<User>>? EntryDialogRequested;
+    /// <summary>date, existing (null = neu), users, selfAbsenceOnly. Vom CalendarView-Code-Behind abonniert.</summary>
+    public event Action<DateOnly, CalendarEntry?, IReadOnlyList<User>, bool>? EntryDialogRequested;
 
     public CalendarViewModel(StorageService storage, User user)
     {
@@ -127,15 +127,30 @@ public partial class CalendarViewModel : ViewModelBase
     public void RequestAddEntry(DateOnly date)
     {
         var users = _allUsers.Count > 0 ? _allUsers : new List<User> { CurrentUser };
-        EntryDialogRequested?.Invoke(date, null, users.AsReadOnly());
+        EntryDialogRequested?.Invoke(date, null, users.AsReadOnly(), false);
+    }
+
+    /// <summary>Selbst-Antrag: Benutzer meldet sich krank / trägt Urlaub ein (nur für sich).</summary>
+    public void RequestSelfAbsence(DateOnly date)
+    {
+        LogService.Click(CurrentUser.Username, $"Krank/Urlaub eintragen ({date:dd.MM.yyyy})");
+        EntryDialogRequested?.Invoke(date, null, new List<User> { CurrentUser }.AsReadOnly(), true);
     }
 
     public void RequestEditEntry(DateOnly date, CalendarEntry entry)
     {
-        if (!IsAdmin || IsPersonalView) return;  // Bearbeiten nur in der Planungssicht
+        var finalized = Days.FirstOrDefault(d => d.Date == date)?.IsFinalized ?? false;
+        var adminEdit = IsAdmin && !IsPersonalView;
+        // Benutzer dürfen ihre eigenen Krank/Urlaub-Einträge bearbeiten (solange nicht finalisiert)
+        var selfAbsenceEdit = !IsAdmin && entry.UserId == CurrentUser.Id
+                              && EntryPrivacy.IsPrivate(entry.Type) && !finalized;
+        if (!adminEdit && !selfAbsenceEdit) return;
+
         LogService.Click(CurrentUser.Username, $"Eintrag bearbeiten ({date:dd.MM.yyyy}, {entry.TypeLabel})");
-        var users = _allUsers.Count > 0 ? _allUsers : new List<User> { CurrentUser };
-        EntryDialogRequested?.Invoke(date, entry, users.AsReadOnly());
+        var users = adminEdit
+            ? (_allUsers.Count > 0 ? _allUsers : new List<User> { CurrentUser })
+            : new List<User> { CurrentUser };
+        EntryDialogRequested?.Invoke(date, entry, users.AsReadOnly(), selfAbsenceEdit);
     }
 
     /// <summary>Speichert/löscht das Dialog-Ergebnis: ein Pfad für Neu, Edit und Delete.</summary>

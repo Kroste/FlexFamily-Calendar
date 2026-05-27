@@ -21,7 +21,7 @@
     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
       <StackPanel Spacing="14">
 
-        <StackPanel Spacing="4">
+        <StackPanel Spacing="4" IsVisible="{Binding CanPickUser}">
           <TextBlock Text="{loc:Tr Entry_User}" FontSize="12" Opacity="0.7" />
           <ComboBox ItemsSource="{Binding AvailableUsers}"
                     SelectedItem="{Binding SelectedUser}"

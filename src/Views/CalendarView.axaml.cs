@@ -52,15 +52,15 @@ public partial class CalendarView : UserControl
             _vm.RequestEditEntry(day.Date, entry);
     }
 
-    private async void OnEntryDialogRequested(DateOnly date, CalendarEntry? existing, IReadOnlyList<User> users)
+    private async void OnEntryDialogRequested(DateOnly date, CalendarEntry? existing, IReadOnlyList<User> users, bool selfAbsenceOnly)
     {
         try
         {
             if (TopLevel.GetTopLevel(this) is not Window owner) return;
 
             var vm = existing is null
-                ? new EntryEditorViewModel(date, users)
-                : new EntryEditorViewModel(date, users, existing);
+                ? new EntryEditorViewModel(date, users, selfAbsenceOnly)
+                : new EntryEditorViewModel(date, users, existing, selfAbsenceOnly);
 
             var dialog = new EntryEditorDialog { DataContext = vm };
             var result = await dialog.ShowDialog<EntryDialogResult?>(owner);

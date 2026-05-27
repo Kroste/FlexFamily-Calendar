@@ -32,25 +32,34 @@ public partial class EntryEditorViewModel : ViewModelBase
     public IReadOnlyList<User> AvailableUsers { get; }
     public IReadOnlyList<EntryTypeOption> EntryTypes { get; }
 
+    /// <summary>Im Selbst-Antrag (Krank/Urlaub) ist der Benutzer fix → kein Benutzer-Dropdown.</summary>
+    public bool CanPickUser { get; }
+
     public event Action<EntryDialogResult?>? Closed;
 
-    /// <summary>Neuer Eintrag.</summary>
-    public EntryEditorViewModel(DateOnly date, IReadOnlyList<User> users)
+    /// <summary>Neuer Eintrag. selfAbsenceOnly: nur Krank/Urlaub für sich selbst (Benutzer fix).</summary>
+    public EntryEditorViewModel(DateOnly date, IReadOnlyList<User> users, bool selfAbsenceOnly = false)
     {
         Date = date;
         DateLabel = date.ToString("D", CultureInfo.CurrentCulture);
         AvailableUsers = users;
-        EntryTypes = Enum.GetValues<EntryType>()
-            .Select(t => new EntryTypeOption(t, Localizer.Instance[EntryTypeInfo.Key(t)])).ToList();
+        CanPickUser = !selfAbsenceOnly;
+
+        var types = selfAbsenceOnly
+            ? new[] { EntryType.SickLeave, EntryType.Vacation }
+            : Enum.GetValues<EntryType>();
+        EntryTypes = types.Select(t => new EntryTypeOption(t, Localizer.Instance[EntryTypeInfo.Key(t)])).ToList();
+
         _entryId = Guid.NewGuid().ToString();
         IsEditMode = false;
         SelectedUser = users.FirstOrDefault();
-        SelectedType = EntryTypes.First(t => t.Type == EntryType.Work);
+        var defaultType = selfAbsenceOnly ? EntryType.SickLeave : EntryType.Work;
+        SelectedType = EntryTypes.FirstOrDefault(t => t.Type == defaultType) ?? EntryTypes.FirstOrDefault();
     }
 
     /// <summary>Bestehenden Eintrag bearbeiten.</summary>
-    public EntryEditorViewModel(DateOnly date, IReadOnlyList<User> users, CalendarEntry existing)
-        : this(date, users)
+    public EntryEditorViewModel(DateOnly date, IReadOnlyList<User> users, CalendarEntry existing, bool selfAbsenceOnly = false)
+        : this(date, users, selfAbsenceOnly)
     {
         IsEditMode = true;
         _entryId = existing.Id;
