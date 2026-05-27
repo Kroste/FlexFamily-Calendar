@@ -29,7 +29,7 @@
   "HoursAccount_Actual": "Ist",
   "HoursAccount_Target": "Soll",
   "HoursAccount_Diff": "Differenz",
-  "HoursAccount_Note": "Hinweis: Es zählen nur tatsächlich gearbeitete Stunden. Krank/Urlaub werden noch nicht angerechnet.",
+  "HoursAccount_Note": "Hinweis: Krank und Urlaub werden als geleistete Stunden angerechnet.",
   "Status_Ready": "Bereit",
 
   "User_New": "Neuer Benutzer",

@@ -6,8 +6,12 @@ public static class EntryTypeInfo
     /// <summary>Lokalisierungs-Schlüssel, z.B. "EntryType_Work" → Localizer.</summary>
     public static string Key(EntryType type) => $"EntryType_{type}";
 
-    /// <summary>Zählt der Eintragstyp als geleistete Arbeitszeit (fürs Wochenstunden-Konto)?</summary>
+    /// <summary>Ist es tatsächliche Arbeit (für die Anzeige/Hervorhebung)?</summary>
     public static bool CountsAsWork(EntryType type) => type is EntryType.Work;
+
+    /// <summary>Zählt der Typ aufs Stundenkonto? Arbeit + angerechnete Abwesenheit (Krank/Urlaub).</summary>
+    public static bool CountsTowardHours(EntryType type)
+        => type is EntryType.Work or EntryType.SickLeave or EntryType.Vacation;
 
     /// <summary>Deutsche Fallback-Beschriftung (UI nutzt bevorzugt den Localizer via Key).</summary>
     public static string Label(EntryType type) => type switch

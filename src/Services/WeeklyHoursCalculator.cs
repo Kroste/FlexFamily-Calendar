@@ -20,13 +20,13 @@ public static class WeeklyHoursCalculator
     public static double MonthlyTarget(double weeklyQuota, int daysInMonth)
         => weeklyQuota * daysInMonth / 7.0;
 
-    /// <summary>Summe der Dauer aller als Arbeit zählenden Einträge je UserId.</summary>
+    /// <summary>Summe der angerechneten Stunden je UserId (Arbeit + Krank/Urlaub).</summary>
     public static Dictionary<string, double> ActualHoursByUser(IEnumerable<CalendarEntry> entries)
     {
         var result = new Dictionary<string, double>();
         foreach (var e in entries)
         {
-            if (!EntryTypeInfo.CountsAsWork(e.Type)) continue;
+            if (!EntryTypeInfo.CountsTowardHours(e.Type)) continue;  // Arbeit + Krank/Urlaub angerechnet
             if (string.IsNullOrEmpty(e.UserId)) continue;
             result[e.UserId] = result.GetValueOrDefault(e.UserId) + e.DurationHours;
         }

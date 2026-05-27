@@ -29,7 +29,7 @@
   "HoursAccount_Actual": "Actual",
   "HoursAccount_Target": "Target",
   "HoursAccount_Diff": "Difference",
-  "HoursAccount_Note": "Note: only actually worked hours count. Sick/vacation are not yet credited.",
+  "HoursAccount_Note": "Note: sick and vacation count as worked hours.",
   "Status_Ready": "Ready",
 
   "User_New": "New user",

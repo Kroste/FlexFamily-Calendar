@@ -23,6 +23,15 @@ public class WeeklyHoursTests
     public void CountsAsWork_OnlyWork(EntryType type, bool expected)
         => Assert.Equal(expected, EntryTypeInfo.CountsAsWork(type));
 
+    [Theory]
+    [InlineData(EntryType.Work, true)]
+    [InlineData(EntryType.SickLeave, true)]
+    [InlineData(EntryType.Vacation, true)]
+    [InlineData(EntryType.Activity, false)]
+    [InlineData(EntryType.Absence, false)]
+    public void CountsTowardHours_WorkSickVacation(EntryType type, bool expected)
+        => Assert.Equal(expected, EntryTypeInfo.CountsTowardHours(type));
+
     [Fact]
     public void SumsWork_PerUser()
     {
@@ -40,17 +49,18 @@ public class WeeklyHoursTests
     }
 
     [Fact]
-    public void IgnoresNonWorkTypes()
+    public void CreditsWorkSickVacation_IgnoresActivityAndAbsence()
     {
         var entries = new[]
         {
             Entry("u1", EntryType.Work, 8, 12),       // 4h zählt
-            Entry("u1", EntryType.Vacation, 0, 24),   // ignoriert
-            Entry("u1", EntryType.SickLeave, 0, 24),  // ignoriert
+            Entry("u1", EntryType.SickLeave, 8, 12),  // 4h angerechnet
+            Entry("u1", EntryType.Vacation, 8, 12),   // 4h angerechnet
             Entry("u1", EntryType.Activity, 13, 15),  // ignoriert
+            Entry("u1", EntryType.Absence, 0, 1),     // ignoriert
         };
 
-        Assert.Equal(4, WeeklyHoursCalculator.ActualHoursByUser(entries)["u1"]);
+        Assert.Equal(12, WeeklyHoursCalculator.ActualHoursByUser(entries)["u1"]);
     }
 
     [Fact]
