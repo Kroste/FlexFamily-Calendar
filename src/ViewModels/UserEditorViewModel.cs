@@ -35,6 +35,7 @@ public partial class UserEditorViewModel : ViewModelBase
 
     [ObservableProperty] private LanguageOption? _selectedLanguage;
     [ObservableProperty] private string _weeklyHours;
+    [ObservableProperty] private string _maxWeeklyHours;
     [ObservableProperty] private string _openingBalance;
     [ObservableProperty] private DateTimeOffset? _accountStart;
     [ObservableProperty] private string _password = "";
@@ -79,6 +80,7 @@ public partial class UserEditorViewModel : ViewModelBase
         _selectedCategory = Categories.FirstOrDefault(c => c.Category == _user.Category) ?? Categories[0];
         _selectedLanguage = Languages.FirstOrDefault(l => l.Code == _user.Language) ?? Languages.FirstOrDefault();
         _weeklyHours = _user.WeeklyHoursQuota.ToString(CultureInfo.CurrentCulture);
+        _maxWeeklyHours = _user.MaxWeeklyHours.ToString(CultureInfo.CurrentCulture);
         _openingBalance = _user.OpeningBalanceHours.ToString(CultureInfo.CurrentCulture);
         _accountStart = _user.AccountStart.Year >= 2000
             ? new DateTimeOffset(_user.AccountStart.ToDateTime(TimeOnly.MinValue))
@@ -120,6 +122,8 @@ public partial class UserEditorViewModel : ViewModelBase
         }
         if (!double.TryParse(WeeklyHours, NumberStyles.Any, CultureInfo.CurrentCulture, out var hours) || hours < 0)
             hours = 0;
+        if (!double.TryParse(MaxWeeklyHours, NumberStyles.Any, CultureInfo.CurrentCulture, out var maxHours) || maxHours < 0)
+            maxHours = 0;
         if (!double.TryParse(OpeningBalance, NumberStyles.Any, CultureInfo.CurrentCulture, out var opening))
             opening = 0;
         var accountStart = AccountStart.HasValue
@@ -136,6 +140,7 @@ public partial class UserEditorViewModel : ViewModelBase
             Category = CanEditAdminFields ? (SelectedCategory?.Category ?? _user.Category) : _user.Category,
             Language = SelectedLanguage?.Code ?? _user.Language,
             WeeklyHoursQuota = CanEditAdminFields ? hours : _user.WeeklyHoursQuota,
+            MaxWeeklyHours = CanEditAdminFields ? maxHours : _user.MaxWeeklyHours,
             OpeningBalanceHours = CanEditAdminFields ? opening : _user.OpeningBalanceHours,
             AccountStart = CanEditAdminFields ? accountStart : _user.AccountStart,
             ThemeVariant = SelectedThemeVariant?.Id ?? _user.ThemeVariant,

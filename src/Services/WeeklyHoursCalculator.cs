@@ -22,11 +22,18 @@ public static class WeeklyHoursCalculator
 
     /// <summary>Summe der angerechneten Stunden je UserId (Arbeit + Krank/Urlaub).</summary>
     public static Dictionary<string, double> ActualHoursByUser(IEnumerable<CalendarEntry> entries)
+        => SumByUser(entries, EntryTypeInfo.CountsTowardHours);
+
+    /// <summary>Summe der tatsächlich gearbeiteten Stunden je UserId (nur Arbeit) — fürs Arbeitszeit-Limit.</summary>
+    public static Dictionary<string, double> WorkedHoursByUser(IEnumerable<CalendarEntry> entries)
+        => SumByUser(entries, EntryTypeInfo.CountsAsWork);
+
+    private static Dictionary<string, double> SumByUser(IEnumerable<CalendarEntry> entries, Func<EntryType, bool> include)
     {
         var result = new Dictionary<string, double>();
         foreach (var e in entries)
         {
-            if (!EntryTypeInfo.CountsTowardHours(e.Type)) continue;  // Arbeit + Krank/Urlaub angerechnet
+            if (!include(e.Type)) continue;
             if (string.IsNullOrEmpty(e.UserId)) continue;
             result[e.UserId] = result.GetValueOrDefault(e.UserId) + e.DurationHours;
         }

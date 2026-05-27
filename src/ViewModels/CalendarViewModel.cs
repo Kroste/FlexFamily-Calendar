@@ -142,16 +142,18 @@ public partial class CalendarViewModel : ViewModelBase
     /// <summary>Ist-Stunden je Person (Work+Au-Pair) der Woche; nur Personen mit Soll&gt;0.</summary>
     private void RecomputeWeeklyHours()
     {
-        var entries = Days.SelectMany(d => d.Entries);
+        var entries = Days.SelectMany(d => d.Entries).ToList();
         var actualByUser = WeeklyHoursCalculator.ActualHoursByUser(entries);
+        var workedByUser = WeeklyHoursCalculator.WorkedHoursByUser(entries);
 
         WeeklyHours.Clear();
         var people = WeeklyHoursCalculator.RelevantUsers(_allUsers, CurrentUser, IsPersonalView);
         foreach (var u in people.OrderBy(u => u.DisplayName))
         {
             var actual = actualByUser.GetValueOrDefault(u.Id);
+            var worked = workedByUser.GetValueOrDefault(u.Id);
             var name = string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
-            WeeklyHours.Add(new WeeklyHoursViewModel(name, actual, u.WeeklyHoursQuota));
+            WeeklyHours.Add(new WeeklyHoursViewModel(name, actual, u.WeeklyHoursQuota, worked, u.MaxWeeklyHours));
         }
     }
 

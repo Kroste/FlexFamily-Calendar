@@ -1,5 +1,6 @@
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
+using FlexFamilyCalendar.ViewModels;
 using Xunit;
 
 namespace FlexFamilyCalendar.Tests;
@@ -66,4 +67,41 @@ public class WeeklyHoursTests
     [Fact]
     public void EmptyInput_EmptyResult()
         => Assert.Empty(WeeklyHoursCalculator.ActualHoursByUser([]));
+
+    [Fact]
+    public void WorkedHours_CountsWorkOnly_ExcludesSickVacation()
+    {
+        var entries = new[]
+        {
+            Entry("u1", EntryType.Work, 8, 12),       // 4h zählt
+            Entry("u1", EntryType.SickLeave, 8, 12),  // nicht gearbeitet
+            Entry("u1", EntryType.Vacation, 8, 12),   // nicht gearbeitet
+            Entry("u1", EntryType.Activity, 13, 15),  // ignoriert
+        };
+
+        Assert.Equal(4, WeeklyHoursCalculator.WorkedHoursByUser(entries)["u1"]);
+    }
+
+    [Fact]
+    public void IsOverLimit_TrueWhenWorkedExceedsLimit()
+    {
+        var vm = new WeeklyHoursViewModel("A", actual: 50, target: 40, workedHours: 50, maxWeeklyHours: 48);
+        Assert.True(vm.IsOverLimit);
+        Assert.NotEqual("", vm.LimitWarning);
+    }
+
+    [Fact]
+    public void IsOverLimit_FalseWhenWithinLimit()
+    {
+        var vm = new WeeklyHoursViewModel("A", actual: 40, target: 40, workedHours: 40, maxWeeklyHours: 48);
+        Assert.False(vm.IsOverLimit);
+        Assert.Equal("", vm.LimitWarning);
+    }
+
+    [Fact]
+    public void IsOverLimit_FalseWhenNoLimitSet()
+    {
+        var vm = new WeeklyHoursViewModel("A", actual: 80, target: 40, workedHours: 80, maxWeeklyHours: 0);
+        Assert.False(vm.IsOverLimit);
+    }
 }

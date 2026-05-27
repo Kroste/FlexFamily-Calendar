@@ -118,6 +118,9 @@
                                  IsVisible="{Binding HasTarget}"
                                  Foreground="{Binding BarColor, Converter={StaticResource ColorStringToBrushConverter}}" />
                     </Grid>
+                    <TextBlock Text="{Binding LimitWarning}" FontSize="11" FontWeight="SemiBold"
+                               Foreground="#C0392B" TextWrapping="Wrap"
+                               IsVisible="{Binding IsOverLimit}" />
                   </StackPanel>
                 </Border>
               </DataTemplate>

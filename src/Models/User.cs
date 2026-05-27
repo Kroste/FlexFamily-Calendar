@@ -11,6 +11,7 @@ public class User
     public string Language { get; set; } = "de";  // UI-Sprache des Benutzers
     public PersonCategory Category { get; set; } = PersonCategory.Employee;
     public double WeeklyHoursQuota { get; set; }  // Wochenstunden-Soll (0 = kein Soll)
+    public double MaxWeeklyHours { get; set; }    // Gesetzliche Wochen-Höchstarbeitszeit (0 = kein Limit)
     public string ThemeVariant { get; set; } = "System";  // System | Light | Dark
     public string Color { get; set; } = "";  // Personenfarbe im Kalender (leer = bei Anlage vergeben)
     public double OpeningBalanceHours { get; set; }       // Stundenkonto: Anfangssaldo (Übertrag von vorher)

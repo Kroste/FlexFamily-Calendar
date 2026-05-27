@@ -43,6 +43,7 @@
   "User_RoleUser": "Benutzer",
   "User_Category": "Personentyp",
   "User_WeeklyHours": "Wochenstunden-Soll",
+  "User_MaxWeeklyHours": "Max. Wochenstunden (Limit, 0 = aus)",
   "User_PasswordRequired": "Kennwort",
   "User_PasswordKeep": "Neues Kennwort (leer = unverändert)",
   "User_ErrorNoUsername": "Bitte einen Benutzernamen eingeben.",
@@ -74,6 +75,7 @@
   "Cal_UnfinalizeWeek": "Finalisierung aufheben",
   "Cal_HoursToggle": "Stunden",
   "Cal_HoursTitle": "Wochenstunden",
+  "Cal_OverWeeklyLimit": "Über Wochenlimit",
   "Cal_ViewPersonal": "Meine Sicht",
 
   "Entry_New": "Neuer Eintrag",
