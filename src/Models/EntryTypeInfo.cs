@@ -7,14 +7,12 @@ public static class EntryTypeInfo
     public static string Key(EntryType type) => $"EntryType_{type}";
 
     /// <summary>Zählt der Eintragstyp als geleistete Arbeitszeit (fürs Wochenstunden-Konto)?</summary>
-    public static bool CountsAsWork(EntryType type)
-        => type is EntryType.Work or EntryType.AuPairShift;
+    public static bool CountsAsWork(EntryType type) => type is EntryType.Work;
 
     /// <summary>Deutsche Fallback-Beschriftung (UI nutzt bevorzugt den Localizer via Key).</summary>
     public static string Label(EntryType type) => type switch
     {
         EntryType.Work => "Arbeit",
-        EntryType.AuPairShift => "Au-Pair",
         EntryType.Vacation => "Urlaub",
         EntryType.SickLeave => "Krank",
         EntryType.Activity => "Aktivität",
@@ -25,7 +23,6 @@ public static class EntryTypeInfo
     public static string Color(EntryType type) => type switch
     {
         EntryType.Work => "#2E86C1",
-        EntryType.AuPairShift => "#8E44AD",
         EntryType.Vacation => "#27AE60",
         EntryType.SickLeave => "#C0392B",
         EntryType.Activity => "#E67E22",

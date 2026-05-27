@@ -46,7 +46,7 @@ public class EntryDisplayTests
     // --- Normalsicht: fremde stark gedämpft ---
     [Theory]
     [InlineData(EntryType.Work)]
-    [InlineData(EntryType.AuPairShift)]
+    [InlineData(EntryType.Activity)]
     [InlineData(EntryType.Vacation)]
     public void Personal_OtherEntries_AreDimmed_NotHighlighted(EntryType type)
     {

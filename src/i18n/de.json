@@ -89,7 +89,6 @@
   "Entry_ErrorEndBeforeStart": "Die Endzeit muss nach der Startzeit liegen.",
 
   "EntryType_Work": "Arbeit",
-  "EntryType_AuPairShift": "Au-Pair",
   "EntryType_Vacation": "Urlaub",
   "EntryType_SickLeave": "Krank",
   "EntryType_Activity": "Aktivität",

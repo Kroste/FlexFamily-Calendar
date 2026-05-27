@@ -89,7 +89,6 @@
   "Entry_ErrorEndBeforeStart": "The end time must be after the start time.",
 
   "EntryType_Work": "Work",
-  "EntryType_AuPairShift": "Au-Pair",
   "EntryType_Vacation": "Vacation",
   "EntryType_SickLeave": "Sick",
   "EntryType_Activity": "Activity",

@@ -16,22 +16,21 @@ public class WeeklyHoursTests
 
     [Theory]
     [InlineData(EntryType.Work, true)]
-    [InlineData(EntryType.AuPairShift, true)]
     [InlineData(EntryType.Vacation, false)]
     [InlineData(EntryType.SickLeave, false)]
     [InlineData(EntryType.Activity, false)]
     [InlineData(EntryType.Absence, false)]
-    public void CountsAsWork_OnlyWorkAndAuPair(EntryType type, bool expected)
+    public void CountsAsWork_OnlyWork(EntryType type, bool expected)
         => Assert.Equal(expected, EntryTypeInfo.CountsAsWork(type));
 
     [Fact]
-    public void SumsWorkAndAuPair_PerUser()
+    public void SumsWork_PerUser()
     {
         var entries = new[]
         {
-            Entry("u1", EntryType.Work, 8, 12),        // 4h
-            Entry("u1", EntryType.AuPairShift, 14, 16), // 2h
-            Entry("u2", EntryType.Work, 9, 17),        // 8h
+            Entry("u1", EntryType.Work, 8, 12),  // 4h
+            Entry("u1", EntryType.Work, 14, 16), // 2h
+            Entry("u2", EntryType.Work, 9, 17),  // 8h
         };
 
         var result = WeeklyHoursCalculator.ActualHoursByUser(entries);

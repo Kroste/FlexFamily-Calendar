@@ -47,8 +47,14 @@ public class StorageService : IStorageService
         if (!File.Exists(file))
             return new() { DateString = date.ToString("yyyy-MM-dd") };
         var json = await File.ReadAllTextAsync(file);
-        return JsonConvert.DeserializeObject<CalendarDay>(json)
-               ?? new() { DateString = date.ToString("yyyy-MM-dd") };
+        var day = JsonConvert.DeserializeObject<CalendarDay>(json)
+                  ?? new() { DateString = date.ToString("yyyy-MM-dd") };
+
+        // Migration: ehemaliges AuPairShift (=1) → Arbeit
+        foreach (var e in day.Entries)
+            if ((int)e.Type == 1) e.Type = EntryType.Work;
+
+        return day;
     }
 
     public async Task SaveDayAsync(CalendarDay day)

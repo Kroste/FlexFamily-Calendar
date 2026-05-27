@@ -192,6 +192,11 @@ public partial class CalendarViewModel : ViewModelBase
             e.OwnerColor = _userColors.GetValueOrDefault(e.UserId, "#7F8C8D");
             var isOwn = e.UserId == CurrentUser.Id;
             (e.EffectiveOpacity, e.IsHighlighted) = EntryDisplay.Resolve(e.Type, isOwn, IsPersonalView);
+
+            // Datenschutz: Krank/Urlaub für Fremde als „Abwesend" ohne Grund
+            var canSeeReason = IsAdmin || isOwn;
+            e.DisplayType = EntryPrivacy.DisplayType(e.Type, canSeeReason);
+            e.DisplayTitle = EntryPrivacy.ShowReason(e.Type, canSeeReason) ? e.Title : "";
         }
     }
 

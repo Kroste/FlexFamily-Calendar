@@ -34,4 +34,12 @@ public class CalendarEntry
     /// <summary>Eigene Schicht in der Normalsicht → Rahmen-Hervorhebung.</summary>
     [Newtonsoft.Json.JsonIgnore]
     public bool IsHighlighted { get; set; }
+
+    /// <summary>Datenschutz-maskierter Anzeigetyp (Laufzeit; Default = echter Typ).</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public EntryType DisplayType { get; set; }
+
+    /// <summary>Datenschutz-maskierter Titel (Laufzeit; leer = verborgen).</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public string DisplayTitle { get; set; } = "";
 }
