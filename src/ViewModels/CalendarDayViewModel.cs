@@ -17,12 +17,11 @@ public partial class CalendarDayViewModel : ViewModelBase
     public bool IsToday { get; }
     public bool CanAddEntry { get; }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanRequestAbsence))]
-    private bool _isFinalized;
+    [ObservableProperty] private bool _isFinalized;
 
-    /// <summary>Nicht-Admins dürfen sich (auf nicht-finalisierten Tagen) krank/Urlaub eintragen.</summary>
-    public bool CanRequestAbsence => _parent.CurrentUser.Role != UserRole.Admin && !IsFinalized;
+    /// <summary>Nicht-Admins dürfen sich immer krank/Urlaub eintragen (Krank auch bei finalisierter Woche;
+    /// Urlaub bei Finalisierung im Editor ausgeblendet).</summary>
+    public bool CanRequestAbsence => _parent.CurrentUser.Role != UserRole.Admin;
 
     public ObservableCollection<CalendarEntry> Entries { get; } = new();
 

@@ -69,6 +69,8 @@
   "Cal_FinalBadge": "✓ Final",
   "Cal_AddEntry": "+ Entry",
   "Cal_RequestAbsence": "+ Sick/Vacation",
+  "Cal_FinalizeWeek": "Finalize week",
+  "Cal_UnfinalizeWeek": "Unlock week",
   "Cal_HoursToggle": "Hours",
   "Cal_HoursTitle": "Weekly hours",
   "Cal_ViewPersonal": "My view",

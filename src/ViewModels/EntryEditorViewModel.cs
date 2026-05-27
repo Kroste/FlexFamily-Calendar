@@ -37,29 +37,32 @@ public partial class EntryEditorViewModel : ViewModelBase
 
     public event Action<EntryDialogResult?>? Closed;
 
-    /// <summary>Neuer Eintrag. selfAbsenceOnly: nur Krank/Urlaub für sich selbst (Benutzer fix).</summary>
-    public EntryEditorViewModel(DateOnly date, IReadOnlyList<User> users, bool selfAbsenceOnly = false)
+    /// <summary>
+    /// Neuer Eintrag. canPickUser=false → Selbst-Antrag (Benutzer fix).
+    /// allowedTypes=null → alle Typen; sonst nur die erlaubten (z.B. nur Krank bei finalisierter Woche).
+    /// </summary>
+    public EntryEditorViewModel(DateOnly date, IReadOnlyList<User> users,
+        bool canPickUser = true, IReadOnlyList<EntryType>? allowedTypes = null)
     {
         Date = date;
         DateLabel = date.ToString("D", CultureInfo.CurrentCulture);
         AvailableUsers = users;
-        CanPickUser = !selfAbsenceOnly;
+        CanPickUser = canPickUser;
 
-        var types = selfAbsenceOnly
-            ? new[] { EntryType.SickLeave, EntryType.Vacation }
-            : Enum.GetValues<EntryType>();
+        var types = allowedTypes is { Count: > 0 } ? allowedTypes : Enum.GetValues<EntryType>();
         EntryTypes = types.Select(t => new EntryTypeOption(t, Localizer.Instance[EntryTypeInfo.Key(t)])).ToList();
 
         _entryId = Guid.NewGuid().ToString();
         IsEditMode = false;
         SelectedUser = users.FirstOrDefault();
-        var defaultType = selfAbsenceOnly ? EntryType.SickLeave : EntryType.Work;
+        var defaultType = canPickUser ? EntryType.Work : types[0];
         SelectedType = EntryTypes.FirstOrDefault(t => t.Type == defaultType) ?? EntryTypes.FirstOrDefault();
     }
 
     /// <summary>Bestehenden Eintrag bearbeiten.</summary>
-    public EntryEditorViewModel(DateOnly date, IReadOnlyList<User> users, CalendarEntry existing, bool selfAbsenceOnly = false)
-        : this(date, users, selfAbsenceOnly)
+    public EntryEditorViewModel(DateOnly date, IReadOnlyList<User> users, CalendarEntry existing,
+        bool canPickUser = true, IReadOnlyList<EntryType>? allowedTypes = null)
+        : this(date, users, canPickUser, allowedTypes)
     {
         IsEditMode = true;
         _entryId = existing.Id;

@@ -40,8 +40,21 @@ public partial class CalendarViewModel : ViewModelBase
     /// <summary>true = Normalsicht (eigene hervorgehoben); false = Planungssicht (alle gleich, editierbar).</summary>
     [ObservableProperty] private bool _isPersonalView;
 
-    /// <summary>date, existing (null = neu), users, selfAbsenceOnly. Vom CalendarView-Code-Behind abonniert.</summary>
-    public event Action<DateOnly, CalendarEntry?, IReadOnlyList<User>, bool>? EntryDialogRequested;
+    /// <summary>Woche abgeschlossen (alle 7 Tage finalisiert) → Planen/Urlaub gesperrt (Krank bleibt möglich).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FinalizeButtonKey))]
+    private bool _isWeekFinalized;
+
+    public string FinalizeButtonKey => IsWeekFinalized ? "Cal_UnfinalizeWeek" : "Cal_FinalizeWeek";
+
+    /// <summary>date, existing (null=neu), users, canPickUser, allowedTypes. Vom CalendarView-Code-Behind abonniert.</summary>
+    public event Action<DateOnly, CalendarEntry?, IReadOnlyList<User>, bool, IReadOnlyList<EntryType>>? EntryDialogRequested;
+
+    private static readonly IReadOnlyList<EntryType> AllTypes = Enum.GetValues<EntryType>();
+
+    // Selbst-Antrag: Urlaub nur wenn nicht finalisiert, Krank immer.
+    private static IReadOnlyList<EntryType> AbsenceTypes(bool finalized) =>
+        finalized ? new[] { EntryType.SickLeave } : new[] { EntryType.SickLeave, EntryType.Vacation };
 
     public CalendarViewModel(StorageService storage, User user)
     {
@@ -73,6 +86,22 @@ public partial class CalendarViewModel : ViewModelBase
 
     /// <summary>Vom MainWindowViewModel beim Abmelden/Benutzerwechsel aufrufen (kein Event-Leak).</summary>
     public void Cleanup() => Localizer.Instance.LanguageChanged -= OnLanguageChanged;
+
+    [RelayCommand]
+    private async Task ToggleFinalizeWeekAsync()
+    {
+        if (!IsAdmin) return;
+        var target = !IsWeekFinalized;
+        for (int i = 0; i < 7; i++)
+        {
+            var day = await _storage.LoadDayAsync(WeekStart.AddDays(i));
+            day.IsFinalized = target;
+            await _storage.SaveDayAsync(day);
+        }
+        LogService.UserAction(CurrentUser.Username,
+            target ? $"Woche finalisiert: {WeekLabel}" : $"Finalisierung aufgehoben: {WeekLabel}");
+        await LoadWeekAsync();
+    }
 
     [RelayCommand]
     private void ToggleHoursPanel()
@@ -127,30 +156,34 @@ public partial class CalendarViewModel : ViewModelBase
     public void RequestAddEntry(DateOnly date)
     {
         var users = _allUsers.Count > 0 ? _allUsers : new List<User> { CurrentUser };
-        EntryDialogRequested?.Invoke(date, null, users.AsReadOnly(), false);
+        EntryDialogRequested?.Invoke(date, null, users.AsReadOnly(), true, AllTypes);
     }
 
-    /// <summary>Selbst-Antrag: Benutzer meldet sich krank / trägt Urlaub ein (nur für sich).</summary>
+    /// <summary>Selbst-Antrag: Benutzer meldet sich krank / trägt Urlaub ein (nur für sich).
+    /// Krank ist immer möglich, Urlaub nur wenn die Woche nicht finalisiert ist.</summary>
     public void RequestSelfAbsence(DateOnly date)
     {
+        var finalized = Days.FirstOrDefault(d => d.Date == date)?.IsFinalized ?? false;
         LogService.Click(CurrentUser.Username, $"Krank/Urlaub eintragen ({date:dd.MM.yyyy})");
-        EntryDialogRequested?.Invoke(date, null, new List<User> { CurrentUser }.AsReadOnly(), true);
+        EntryDialogRequested?.Invoke(date, null, new List<User> { CurrentUser }.AsReadOnly(),
+            false, AbsenceTypes(finalized));
     }
 
     public void RequestEditEntry(DateOnly date, CalendarEntry entry)
     {
         var finalized = Days.FirstOrDefault(d => d.Date == date)?.IsFinalized ?? false;
-        var adminEdit = IsAdmin && !IsPersonalView;
-        // Benutzer dürfen ihre eigenen Krank/Urlaub-Einträge bearbeiten (solange nicht finalisiert)
-        var selfAbsenceEdit = !IsAdmin && entry.UserId == CurrentUser.Id
-                              && EntryPrivacy.IsPrivate(entry.Type) && !finalized;
-        if (!adminEdit && !selfAbsenceEdit) return;
+        var adminEdit = IsAdmin && !IsPersonalView && !finalized;   // finalisiert = gesperrt (Admin entsperrt zuerst)
+        // Eigene Abwesenheit: Krank immer editierbar, Urlaub nur wenn nicht finalisiert
+        var ownPrivate = !IsAdmin && entry.UserId == CurrentUser.Id && EntryPrivacy.IsPrivate(entry.Type);
+        var selfEdit = ownPrivate && (entry.Type == EntryType.SickLeave || !finalized);
+        if (!adminEdit && !selfEdit) return;
 
         LogService.Click(CurrentUser.Username, $"Eintrag bearbeiten ({date:dd.MM.yyyy}, {entry.TypeLabel})");
         var users = adminEdit
             ? (_allUsers.Count > 0 ? _allUsers : new List<User> { CurrentUser })
             : new List<User> { CurrentUser };
-        EntryDialogRequested?.Invoke(date, entry, users.AsReadOnly(), selfAbsenceEdit);
+        var allowed = adminEdit ? AllTypes : AbsenceTypes(finalized);
+        EntryDialogRequested?.Invoke(date, entry, users.AsReadOnly(), adminEdit, allowed);
     }
 
     /// <summary>Speichert/löscht das Dialog-Ergebnis: ein Pfad für Neu, Edit und Delete.</summary>
@@ -224,6 +257,7 @@ public partial class CalendarViewModel : ViewModelBase
             ApplyEntryDisplay(day);
             Days[i].LoadFromModel(day);
         }
+        IsWeekFinalized = Days.Count > 0 && Days.All(d => d.IsFinalized);
         RecomputeWeeklyHours();
     }
 
