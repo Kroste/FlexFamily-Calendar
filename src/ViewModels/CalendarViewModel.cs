@@ -11,6 +11,7 @@ namespace FlexFamilyCalendar.ViewModels;
 public partial class CalendarViewModel : ViewModelBase
 {
     private readonly StorageService _storage;
+    private readonly NotificationService _notifications;
     private List<User> _allUsers = new();
     private List<ShiftSwapRequest> _swapRequests = new();
     private Dictionary<string, string> _userColors = new();
@@ -60,9 +61,10 @@ public partial class CalendarViewModel : ViewModelBase
     private static IReadOnlyList<EntryType> AbsenceTypes(bool finalized) =>
         finalized ? new[] { EntryType.SickLeave } : new[] { EntryType.SickLeave, EntryType.Vacation };
 
-    public CalendarViewModel(StorageService storage, User user)
+    public CalendarViewModel(StorageService storage, User user, NotificationService notifications)
     {
         _storage = storage;
+        _notifications = notifications;
         CurrentUser = user;
         // Admin startet in der Planungssicht; alle anderen fest in der Normalsicht
         _isPersonalView = user.Role != UserRole.Admin;
@@ -133,6 +135,18 @@ public partial class CalendarViewModel : ViewModelBase
         }
         LogService.UserAction(CurrentUser.Username,
             target ? $"Woche finalisiert: {WeekLabel}" : $"Finalisierung aufgehoben: {WeekLabel}");
+
+        if (target)
+        {
+            // Mitarbeiter mit Arbeitsschichten in der Woche benachrichtigen (außer dem Admin selbst)
+            var affected = Days.SelectMany(d => d.Entries)
+                .Where(e => e.Type == EntryType.Work && e.UserId != CurrentUser.Id)
+                .Select(e => e.UserId);
+            var kw = ISOWeek.GetWeekOfYear(WeekStart.ToDateTime(TimeOnly.MinValue));
+            await _notifications.AddManyAsync(affected, "Notif_WeekFinalized",
+                WeekStart.ToString("yyyy-MM-dd"), kw.ToString("D2"), WeekStart.Year.ToString());
+        }
+
         await LoadWeekAsync();
     }
 
@@ -269,6 +283,32 @@ public partial class CalendarViewModel : ViewModelBase
         var verb = result.Action == EntryDialogAction.Save ? "gespeichert" : "gelöscht";
         LogService.UserAction(CurrentUser.Username,
             $"Eintrag {verb}: {result.Entry.TypeLabel} für {result.Entry.UserDisplayName} am {date:dd.MM.yyyy}");
+
+        await NotifyEntryChangeAsync(date, result);
+    }
+
+    /// <summary>Benachrichtigt Betroffene: Admin ändert/entfernt fremde Schicht; Mitarbeiter meldet sich krank → an Admins.</summary>
+    private async Task NotifyEntryChangeAsync(DateOnly date, EntryDialogResult result)
+    {
+        var entry = result.Entry;
+        var dateStr = date.ToString("yyyy-MM-dd");
+        var dateLabel = date.ToString("dd.MM.yyyy");
+
+        // Admin ändert/entfernt die Schicht eines anderen Benutzers
+        if (IsAdmin && entry.UserId != CurrentUser.Id)
+        {
+            var key = result.Action == EntryDialogAction.Save ? "Notif_ShiftChanged" : "Notif_ShiftRemoved";
+            await _notifications.AddAsync(entry.UserId, key, dateStr, dateLabel);
+            return;
+        }
+
+        // Nicht-Admin meldet sich krank → alle Admins benachrichtigen
+        if (!IsAdmin && result.Action == EntryDialogAction.Save && entry.Type == EntryType.SickLeave)
+        {
+            var admins = _allUsers.Where(u => u.Role == UserRole.Admin).Select(u => u.Id);
+            var who = string.IsNullOrEmpty(CurrentUser.DisplayName) ? CurrentUser.Username : CurrentUser.DisplayName;
+            await _notifications.AddManyAsync(admins, "Notif_SickReported", dateStr, who, dateLabel);
+        }
     }
 
     /// <summary>Antippen einer Schicht: offene Anfrage beantworten/zurückziehen, eigenen Tausch anbieten oder bearbeiten.</summary>
@@ -351,6 +391,8 @@ public partial class CalendarViewModel : ViewModelBase
                 _swapRequests.Add(result.Request);
                 await _storage.SaveSwapRequestsAsync(_swapRequests);
                 LogService.UserAction(CurrentUser.Username, $"Tausch angeboten an {result.Request.ToUserName}");
+                await _notifications.AddAsync(result.Request.ToUserId, "Notif_SwapOffered",
+                    result.Request.FromDate, result.Request.FromUserName, FmtDate(result.Request.FromDate));
                 await LoadWeekAsync();
                 break;
             case SwapDialogAction.Accept:
@@ -358,9 +400,13 @@ public partial class CalendarViewModel : ViewModelBase
                 break;
             case SwapDialogAction.Reject:
                 await SetSwapStatusAsync(result.Request.Id, SwapStatus.Rejected, "Tausch abgelehnt");
+                await _notifications.AddAsync(result.Request.FromUserId, "Notif_SwapRejected",
+                    result.Request.FromDate, result.Request.ToUserName, FmtDate(result.Request.FromDate));
                 break;
             case SwapDialogAction.Withdraw:
                 await SetSwapStatusAsync(result.Request.Id, SwapStatus.Cancelled, "Tausch zurückgezogen");
+                await _notifications.AddAsync(result.Request.ToUserId, "Notif_SwapWithdrawn",
+                    result.Request.FromDate, result.Request.FromUserName, FmtDate(result.Request.FromDate));
                 break;
         }
     }
@@ -381,6 +427,18 @@ public partial class CalendarViewModel : ViewModelBase
             await _storage.SaveDayAsync(toDay);
 
         await SetSwapStatusAsync(req.Id, SwapStatus.Accepted, "Tausch angenommen");
+        await _notifications.AddAsync(req.FromUserId, "Notif_SwapAccepted",
+            req.FromDate, req.ToUserName, FmtDate(req.FromDate));
+    }
+
+    private static string FmtDate(string iso) => DateOnly.Parse(iso).ToString("dd.MM.yyyy");
+
+    /// <summary>Navigiert zu der Woche, die das angegebene Datum enthält (für „zur Woche springen").</summary>
+    public async Task GoToWeekContaining(DateOnly date)
+    {
+        WeekStart = GetMondayOfWeek(date);
+        RebuildDays();
+        await LoadWeekAsync();
     }
 
     private async Task SetSwapStatusAsync(string id, SwapStatus status, string action)

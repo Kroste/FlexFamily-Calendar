@@ -11,6 +11,7 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly AuthService _auth;
     private readonly StorageService _storage;
+    private readonly NotificationService _notifications;
     private User? _currentUser;
 
     [ObservableProperty]
@@ -21,8 +22,15 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private string _currentUserDisplay = "";
     [ObservableProperty] private CalendarViewModel? _calendarVm;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUnread))]
+    [NotifyPropertyChangedFor(nameof(UnreadBadge))]
+    private int _unreadCount;
+
     public bool IsNotLoggedIn => !IsLoggedIn;
     public bool IsAdmin => _currentUser?.Role == UserRole.Admin;
+    public bool HasUnread => UnreadCount > 0;
+    public string UnreadBadge => UnreadCount > 9 ? "9+" : UnreadCount.ToString();
     public LoginViewModel LoginVm { get; }
 
     /// <summary>Vom MainWindow-Code-Behind abonniert, um die jeweiligen Dialoge zu öffnen.</summary>
@@ -30,11 +38,13 @@ public partial class MainWindowViewModel : ViewModelBase
     public event Action? UserManagementRequested;
     public event Action? MonthOverviewRequested;
     public event Action? HoursAccountRequested;
+    public event Action? NotificationsRequested;
 
-    public MainWindowViewModel(AuthService auth, StorageService storage, LoginViewModel loginVm)
+    public MainWindowViewModel(AuthService auth, StorageService storage, NotificationService notifications, LoginViewModel loginVm)
     {
         _auth = auth;
         _storage = storage;
+        _notifications = notifications;
         LoginVm = loginVm;
         LoginVm.LoginSuccessful += OnLoginSuccessful;
         LogService.StatusUpdated += msg =>
@@ -55,10 +65,16 @@ public partial class MainWindowViewModel : ViewModelBase
 
         CurrentUserDisplay = string.IsNullOrEmpty(user.DisplayName) ? user.Username : user.DisplayName;
         CalendarVm?.Cleanup();
-        CalendarVm = new CalendarViewModel(_storage, user);
+        CalendarVm = new CalendarViewModel(_storage, user, _notifications);
         IsLoggedIn = true;
         OnPropertyChanged(nameof(IsAdmin));
         LogService.UserAction(user.Username, logVerb);
+        _ = RefreshUnreadCountAsync();
+    }
+
+    public async Task RefreshUnreadCountAsync()
+    {
+        UnreadCount = _currentUser == null ? 0 : await _notifications.UnreadCountAsync(_currentUser.Id);
     }
 
     [RelayCommand]
@@ -71,10 +87,16 @@ public partial class MainWindowViewModel : ViewModelBase
         CalendarVm = null;
         CurrentUserDisplay = "";
         _currentUser = null;
+        UnreadCount = 0;
         OnPropertyChanged(nameof(IsAdmin));
         LoginVm.Username = "";
         LoginVm.RememberMe = false;
     }
+
+    [RelayCommand]
+    private void OpenNotifications() => NotificationsRequested?.Invoke();
+
+    public NotificationsViewModel CreateNotifications() => new(_notifications, _currentUser!);
 
     [RelayCommand]
     private void OpenProfile() => ProfileRequested?.Invoke();

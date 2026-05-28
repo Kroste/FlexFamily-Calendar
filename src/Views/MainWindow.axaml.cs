@@ -19,6 +19,7 @@ public partial class MainWindow : Window
             _vm.UserManagementRequested -= OnUserManagementRequested;
             _vm.MonthOverviewRequested -= OnMonthOverviewRequested;
             _vm.HoursAccountRequested -= OnHoursAccountRequested;
+            _vm.NotificationsRequested -= OnNotificationsRequested;
         }
         _vm = DataContext as MainWindowViewModel;
         if (_vm != null)
@@ -27,7 +28,22 @@ public partial class MainWindow : Window
             _vm.UserManagementRequested += OnUserManagementRequested;
             _vm.MonthOverviewRequested += OnMonthOverviewRequested;
             _vm.HoursAccountRequested += OnHoursAccountRequested;
+            _vm.NotificationsRequested += OnNotificationsRequested;
         }
+    }
+
+    private async void OnNotificationsRequested()
+    {
+        if (_vm == null) return;
+        try
+        {
+            var dialog = new NotificationsDialog { DataContext = _vm.CreateNotifications() };
+            var navigateTo = await dialog.ShowDialog<DateOnly?>(this);
+            await _vm.RefreshUnreadCountAsync();
+            if (navigateTo.HasValue && _vm.CalendarVm != null)
+                await _vm.CalendarVm.GoToWeekContaining(navigateTo.Value);
+        }
+        catch (Exception ex) { LogService.Error("Fehler bei den Benachrichtigungen", ex); }
     }
 
     private async void OnHoursAccountRequested()

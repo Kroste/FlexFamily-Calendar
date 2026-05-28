@@ -29,6 +29,22 @@
                      VerticalAlignment="Center" />
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+          <!-- Benachrichtigungs-Glocke mit Ungelesen-Badge -->
+          <Button Command="{Binding OpenNotificationsCommand}"
+                  Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  CornerRadius="6" Padding="10,5" VerticalAlignment="Center"
+                  ToolTip.Tip="{loc:Tr Notif_Title}">
+            <Grid>
+              <TextBlock Text="🔔" FontSize="15" Foreground="White" />
+              <Border IsVisible="{Binding HasUnread}"
+                      Background="#E74C3C" CornerRadius="8" MinWidth="16" Height="16"
+                      Padding="4,0" Margin="0,-8,-10,0"
+                      HorizontalAlignment="Right" VerticalAlignment="Top">
+                <TextBlock Text="{Binding UnreadBadge}" FontSize="10" FontWeight="Bold"
+                           Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Border>
+            </Grid>
+          </Button>
           <TextBlock Text="{Binding CurrentUserDisplay}"
                      Foreground="White" Opacity="0.85"
                      VerticalAlignment="Center" FontSize="13" />

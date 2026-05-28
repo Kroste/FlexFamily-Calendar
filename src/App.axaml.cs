@@ -23,6 +23,7 @@ public partial class App : Application
             SecretService.Initialize(StorageService.DataDirectory);
 
             var auth = new AuthService(storage);
+            var notifications = new NotificationService(storage);
             var loginVm = new LoginViewModel(auth);
 
             // Erstkonfiguration erkennen (async, aber wir warten kurz)
@@ -38,7 +39,7 @@ public partial class App : Application
                 new LlamaProvider()
             });
 
-            var mainVm = new MainWindowViewModel(auth, storage, loginVm);
+            var mainVm = new MainWindowViewModel(auth, storage, notifications, loginVm);
 
             // Auto-Login: gemerkten Benutzer vor dem Anzeigen anmelden (kein Login-Screen-Flackern)
             if (hasUsers)
