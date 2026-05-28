@@ -198,26 +198,27 @@ public partial class CalendarViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Baut das Export-Modell aus der aktuell aufgelösten Wochenansicht (Sicht/Datenschutz bereits angewendet).</summary>
+    /// <summary>Baut das Export-Modell als Tabelle (Person × Wochentag) aus der aufgelösten Wochenansicht.</summary>
     public WeekExport CreateWeekExport()
     {
         string TypeLabel(EntryType t) => Localizer.Instance[EntryTypeInfo.Key(t)];
 
-        var days = new List<PlanExportDay>();
-        foreach (var d in Days)
+        var headers = Days.Select(d => new PlanDayHeader(d.DayName, d.DateLabel, d.HolidayName)).ToList();
+        var notes = Days.Select(d => d.DayNote ?? "").ToList();
+
+        var rows = new List<PlanPersonRow>();
+        foreach (var r in Rows)
         {
-            var entries = d.TimelineEntries.ToList();
-            var lanes = Controls.DayTimelinePanel.AssignLanes(entries);
-            var blocks = entries
-                .Select((e, i) => PlanExportBuilder.BlockOf(e, lanes[i].LaneIndex, lanes[i].LaneCount, TypeLabel))
+            var cells = r.Cells
+                .Select(c => (IReadOnlyList<PlanCellEntry>)c.Entries
+                    .Select(e => PlanExportBuilder.CellEntry(e, TypeLabel)).ToList())
                 .ToList();
-            var chips = d.AbsenceHints.Select(e => PlanExportBuilder.ChipOf(e, TypeLabel)).ToList();
-            days.Add(new PlanExportDay(d.DayName, d.DateLabel, d.HolidayName, d.DayNote, chips, blocks));
+            rows.Add(new PlanPersonRow(r.Name, r.Color, r.CategoryLabel, cells));
         }
 
         var generated = string.Format(Localizer.Instance["Pdf_Generated"],
             DateTime.Now.ToString("g", CultureInfo.CurrentCulture));
-        return new WeekExport(Localizer.Instance["Pdf_Title"], WeekLabel, generated, days);
+        return new WeekExport(Localizer.Instance["Pdf_Title"], WeekLabel, generated, headers, rows, notes);
     }
 
     /// <summary>Ist-Stunden je Person (Work+Au-Pair) der Woche; nur Personen mit Soll&gt;0.</summary>

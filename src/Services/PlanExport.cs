@@ -2,52 +2,30 @@ using FlexFamilyCalendar.Models;
 
 namespace FlexFamilyCalendar.Services;
 
-/// <summary>Ein farbig positionierter Block im Zeitraster (eine Schicht/Aktivität).</summary>
-public record PlanBlock(
-    double StartHour, double EndHour, string ColorHex, double Opacity,
-    string TimeLabel, IReadOnlyList<string> Lines, int LaneIndex, int LaneCount);
+/// <summary>Ein Eintrag in einer Tabellenzelle: Personenfarbe + (Uhrzeit oder Abwesenheits-Zeitraum) + Bezeichnung.</summary>
+public record PlanCellEntry(string ColorHex, string Time, string Label);
 
-/// <summary>Eine Abwesenheit als farbiger Chip im Tageskopf.</summary>
-public record PlanChip(string ColorHex, string Text);
+/// <summary>Spaltenkopf eines Wochentags (Datum + Feiertag).</summary>
+public record PlanDayHeader(string DayName, string DateLabel, string Holiday);
 
-public record PlanExportDay(
-    string DayName, string DateLabel, string Holiday, string Note,
-    IReadOnlyList<PlanChip> Absences, IReadOnlyList<PlanBlock> Blocks);
+/// <summary>Eine Personenzeile mit 7 Tageszellen (je Zelle eine Liste von Einträgen).</summary>
+public record PlanPersonRow(string Name, string ColorHex, string Category,
+    IReadOnlyList<IReadOnlyList<PlanCellEntry>> Cells);
 
-public record WeekExport(string Title, string WeekLabel, string GeneratedLabel, IReadOnlyList<PlanExportDay> Days);
+public record WeekExport(
+    string Title, string WeekLabel, string GeneratedLabel,
+    IReadOnlyList<PlanDayHeader> Days, IReadOnlyList<PlanPersonRow> Rows, IReadOnlyList<string> Notes);
 
-/// <summary>
-/// Reine Aufbereitung der Wochen-Daten für den Raster-Export (UI-/Render-unabhängig, testbar).
-/// Die Typ-Beschriftung wird als Funktion übergeben, damit die Lokalisierung außerhalb bleibt.
-/// </summary>
+/// <summary>Reine Aufbereitung der Tabellen-Daten für den Export (UI-/Render-unabhängig, testbar).</summary>
 public static class PlanExportBuilder
 {
-    private const string FallbackColor = "#7F8C8D";
-
-    /// <summary>Bildet einen Tageseintrag auf einen Raster-Block ab (Position aus Start/Ende, Über-Mitternacht bis 24:00).</summary>
-    public static PlanBlock BlockOf(CalendarEntry e, int laneIndex, int laneCount, Func<EntryType, string> typeLabel)
+    /// <summary>Ein Zellen-Eintrag: Uhrzeit (bzw. Abwesenheits-Zeitraum) + Kategorie/Typ (+ Titel), in Personenfarbe.</summary>
+    public static PlanCellEntry CellEntry(CalendarEntry e, Func<EntryType, string> typeLabel)
     {
-        var lines = new List<string>();
-        var primary = e.HasActivity ? e.ActivityName : typeLabel(e.DisplayType);
-        if (!string.IsNullOrEmpty(primary)) lines.Add(primary);
-        if (!string.IsNullOrEmpty(e.DisplayTitle)) lines.Add(e.DisplayTitle);
-        if (!string.IsNullOrEmpty(e.UserDisplayName)) lines.Add(e.UserDisplayName);
-
-        var time = (e.IsContinuation ? "» " : "") + e.TimeRange;
-        return new PlanBlock(
-            e.StartTime.TotalHours,
-            e.CrossesMidnight ? 24.0 : e.EndTime.TotalHours,
-            string.IsNullOrEmpty(e.OwnerColor) ? FallbackColor : e.OwnerColor,
-            e.EffectiveOpacity,
-            time, lines, laneIndex, laneCount);
-    }
-
-    /// <summary>Abwesenheits-Chip: Person + Typ (+ Zeitraum), in Personenfarbe.</summary>
-    public static PlanChip ChipOf(CalendarEntry e, Func<EntryType, string> typeLabel)
-    {
-        var span = string.IsNullOrEmpty(e.AbsenceSpanLabel) ? "" : $" ({e.AbsenceSpanLabel})";
-        return new PlanChip(
-            string.IsNullOrEmpty(e.OwnerColor) ? FallbackColor : e.OwnerColor,
-            $"{e.UserDisplayName} – {typeLabel(e.DisplayType)}{span}");
+        var label = e.HasActivity ? e.ActivityName : typeLabel(e.DisplayType);
+        if (!string.IsNullOrEmpty(e.DisplayTitle))
+            label += $" · {e.DisplayTitle}";
+        var time = e.IsAbsenceDisplay ? e.AbsenceSpanLabel : e.TimeRange;
+        return new PlanCellEntry(string.IsNullOrEmpty(e.OwnerColor) ? "#7F8C8D" : e.OwnerColor, time, label);
     }
 }
