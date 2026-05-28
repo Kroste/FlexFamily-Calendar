@@ -51,7 +51,7 @@ public class PlanExportTests
 
         var line = PlanExportBuilder.ShiftLine(e, TypeLabel);
 
-        Assert.StartsWith("↳ ", line.Time);
+        Assert.StartsWith("» ", line.Time);
     }
 
     [Fact]
@@ -90,9 +90,21 @@ public class PlanExportTests
 
         var bytes = PdfExportService.Render(export);
 
-        Assert.True(bytes.Length > 1000);
-        // PDF-Dateikennung "%PDF"
+        Assert.True(bytes.Length > 500);
         Assert.Equal("%PDF", System.Text.Encoding.ASCII.GetString(bytes, 0, 4));
+        // Trailer/EOF vorhanden
+        Assert.Contains("%%EOF", System.Text.Encoding.Latin1.GetString(bytes));
+    }
+
+    [Theory]
+    [InlineData("kurz", 20, 1)]
+    [InlineData("Lena – Urlaub (01.06.–14.06.)", 12, 4)]
+    [InlineData("Donnerwetterlangeswort", 5, 5)]
+    public void Wrap_RespectsMaxChars(string text, int max, int expectedLines)
+    {
+        var lines = PdfExportService.Wrap(text, max);
+        Assert.Equal(expectedLines, lines.Count);
+        Assert.All(lines, l => Assert.True(l.Length <= max));
     }
 
     private static WeekExport SampleWeek()
@@ -107,7 +119,8 @@ public class PlanExportTests
                 i == 1 ? new[] { new PlanExportLine("", "Lena – Urlaub (01.06.–14.06.)") } : Array.Empty<PlanExportLine>(),
                 new[]
                 {
-                    new PlanExportLine("08:00–16:00", "Arbeit – Lena"),
+                    new PlanExportLine("» 00:00–06:00", "Übernachtung – Snea"),
+                    new PlanExportLine("08:00–16:00", "Arbeit – Lena 😀"),  // Emoji → wird auf '?' abgebildet, kein Absturz
                     new PlanExportLine("16:00–17:00", "Sprachkurs – Snea"),
                     new PlanExportLine("20:00–06:00", "Übernachtung – Snea"),
                 }));

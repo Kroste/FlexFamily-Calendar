@@ -29,6 +29,5 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NLog" Version="5.3.4" />
-    <PackageReference Include="QuestPDF" Version="2026.5.0" />
   </ItemGroup>
 </Project>

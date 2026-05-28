@@ -26,7 +26,7 @@ public static class PlanExportBuilder
         if (!string.IsNullOrEmpty(e.UserDisplayName))
             label += $" – {e.UserDisplayName}";
 
-        var time = e.IsContinuation ? $"↳ {e.TimeRange}" : e.TimeRange;
+        var time = e.IsContinuation ? $"» {e.TimeRange}" : e.TimeRange;
         return new PlanExportLine(time, label);
     }
 
