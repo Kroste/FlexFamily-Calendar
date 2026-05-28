@@ -43,6 +43,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public event Action? NotificationsRequested;
     public event Action? AiSettingsRequested;
     public event Action? ActivityTypesRequested;
+    public event Action? RecurringActivitiesRequested;
     public event Action? HolidaySettingsRequested;
 
     public MainWindowViewModel(AuthService auth, StorageService storage, NotificationService notifications, AiService ai, LoginViewModel loginVm)
@@ -113,6 +114,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OpenActivityTypes() => ActivityTypesRequested?.Invoke();
 
     public ActivityTypeManagementViewModel CreateActivityTypeManagement() => new(_storage);
+
+    [RelayCommand]
+    private void OpenRecurringActivities() => RecurringActivitiesRequested?.Invoke();
+
+    public RecurringActivityManagementViewModel CreateRecurringActivityManagement() => new(_storage);
 
     [RelayCommand]
     private void OpenHolidaySettings() => HolidaySettingsRequested?.Invoke();

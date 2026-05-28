@@ -226,7 +226,16 @@
                             <TextBlock Text="{Binding UserDisplayName}" FontSize="10" Foreground="White" Opacity="0.8"
                                        TextTrimming="CharacterEllipsis"
                                        IsVisible="{Binding UserDisplayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="{loc:Tr Recur_HolidayHint}" IsVisible="{Binding HolidayConflict}"
+                                       FontSize="10" FontStyle="Italic" Foreground="White" Opacity="0.95"
+                                       TextWrapping="Wrap" />
                           </StackPanel>
+                          <Border IsVisible="{Binding IsRecurring}"
+                                  HorizontalAlignment="Right" VerticalAlignment="Top"
+                                  Background="#CC000000" CornerRadius="3" Padding="3,0" Margin="0,-1,-1,0"
+                                  ToolTip.Tip="{loc:Tr Recur_Title}">
+                            <TextBlock Text="↻" FontSize="11" Foreground="White" />
+                          </Border>
                           <Border IsVisible="{Binding HasSwap}"
                                   HorizontalAlignment="Right" VerticalAlignment="Top"
                                   Background="#CC000000" CornerRadius="3" Padding="3,0" Margin="0,-1,-1,0">

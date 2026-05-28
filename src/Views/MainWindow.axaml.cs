@@ -22,6 +22,7 @@ public partial class MainWindow : Window
             _vm.NotificationsRequested -= OnNotificationsRequested;
             _vm.AiSettingsRequested -= OnAiSettingsRequested;
             _vm.ActivityTypesRequested -= OnActivityTypesRequested;
+            _vm.RecurringActivitiesRequested -= OnRecurringActivitiesRequested;
             _vm.HolidaySettingsRequested -= OnHolidaySettingsRequested;
         }
         _vm = DataContext as MainWindowViewModel;
@@ -34,6 +35,7 @@ public partial class MainWindow : Window
             _vm.NotificationsRequested += OnNotificationsRequested;
             _vm.AiSettingsRequested += OnAiSettingsRequested;
             _vm.ActivityTypesRequested += OnActivityTypesRequested;
+            _vm.RecurringActivitiesRequested += OnRecurringActivitiesRequested;
             _vm.HolidaySettingsRequested += OnHolidaySettingsRequested;
         }
     }
@@ -62,6 +64,19 @@ public partial class MainWindow : Window
                 await _vm.CalendarVm.ReloadActivityTypesAsync();
         }
         catch (Exception ex) { LogService.Error("Fehler in der Aktivitätstypen-Verwaltung", ex); }
+    }
+
+    private async void OnRecurringActivitiesRequested()
+    {
+        if (_vm == null) return;
+        try
+        {
+            var dialog = new RecurringActivityManagementDialog { DataContext = _vm.CreateRecurringActivityManagement() };
+            await dialog.ShowDialog(this);
+            if (_vm.CalendarVm != null)
+                await _vm.CalendarVm.ReloadRecurringActivitiesAsync();
+        }
+        catch (Exception ex) { LogService.Error("Fehler in der Verwaltung wiederkehrender Aktivitäten", ex); }
     }
 
     private async void OnAiSettingsRequested()

@@ -17,6 +17,8 @@ public partial class CalendarViewModel : ViewModelBase
     private List<User> _allUsers = new();
     private List<ShiftSwapRequest> _swapRequests = new();
     private List<ActivityType> _activityTypes = new();
+    private List<RecurringActivity> _recurringActivities = new();
+    private IReadOnlyList<Holiday> _weekHolidays = Array.Empty<Holiday>();
     private GermanState _holidayState = GermanState.BY;
     private Dictionary<string, string> _userColors = new();
 
@@ -175,7 +177,7 @@ public partial class CalendarViewModel : ViewModelBase
     /// <summary>Ist-Stunden je Person (Work+Au-Pair) der Woche; nur Personen mit Soll&gt;0.</summary>
     private void RecomputeWeeklyHours()
     {
-        var entries = Days.SelectMany(d => d.Entries).ToList();
+        var entries = Days.SelectMany(d => d.Entries).Where(e => !e.IsRecurring).ToList();
         var actualByUser = WeeklyHoursCalculator.ActualHoursByUser(entries);
         var workedByUser = WeeklyHoursCalculator.WorkedHoursByUser(entries);
         var daysOrdered = Days.OrderBy(d => d.Date).ToList();
@@ -196,7 +198,7 @@ public partial class CalendarViewModel : ViewModelBase
     private static IReadOnlyList<string> DailyAndRestWarnings(User u, IReadOnlyList<CalendarDayViewModel> daysOrdered)
     {
         var summaries = daysOrdered
-            .Select(d => WorkTimeRules.Summarize(d.Date, d.Entries.Where(e => e.UserId == u.Id)))
+            .Select(d => WorkTimeRules.Summarize(d.Date, d.Entries.Where(e => e.UserId == u.Id && !e.IsRecurring)))
             .ToList();
 
         var warnings = new List<string>();
@@ -211,7 +213,7 @@ public partial class CalendarViewModel : ViewModelBase
                          $"{next.Date.ToString(dayFmt, CultureInfo.CurrentCulture)}): {H(restHours)} / {H(u.MinRestHours)} h");
 
         foreach (var day in daysOrdered)
-            foreach (var (first, second) in WorkTimeRules.WorkOverlaps(day.Entries.Where(e => e.UserId == u.Id)))
+            foreach (var (first, second) in WorkTimeRules.WorkOverlaps(day.Entries.Where(e => e.UserId == u.Id && !e.IsRecurring)))
                 warnings.Add($"⚠ {Localizer.Instance["Cal_Overlap"]} ({day.Date.ToString(dayFmt, CultureInfo.CurrentCulture)}): " +
                              $"{first.TimeRange} ↔ {second.TimeRange}");
 
@@ -292,7 +294,7 @@ public partial class CalendarViewModel : ViewModelBase
 
         ApplyEntryDisplay(day);
         var dayVm = Days.FirstOrDefault(d => d.Date == date);
-        dayVm?.LoadFromModel(day);
+        dayVm?.LoadFromModel(day, BuildRecurring(date));
         RecomputeWeeklyHours();
 
         var verb = result.Action == EntryDialogAction.Save ? "gespeichert" : "gelöscht";
@@ -329,6 +331,9 @@ public partial class CalendarViewModel : ViewModelBase
     /// <summary>Antippen einer Schicht: offene Anfrage beantworten/zurückziehen, eigenen Tausch anbieten oder bearbeiten.</summary>
     public void ActivateEntry(DateOnly date, CalendarEntry entry)
     {
+        // Projizierte (wiederkehrende) Aktivitäten sind keine echten Tageseinträge → nicht editier-/tauschbar.
+        if (entry.IsRecurring) return;
+
         var dayStr = date.ToString("yyyy-MM-dd");
         bool Involves(ShiftSwapRequest r) =>
             (r.FromDate == dayStr && r.FromEntryId == entry.Id)
@@ -604,6 +609,9 @@ public partial class CalendarViewModel : ViewModelBase
     /// <summary>Aktivitätstypen neu laden (nach der Verwaltung) → Woche neu auflösen.</summary>
     public Task ReloadActivityTypesAsync() => LoadWeekAsync();
 
+    /// <summary>Wiederkehrende Aktivitäten neu laden (nach der Verwaltung) → Woche neu projizieren.</summary>
+    public Task ReloadRecurringActivitiesAsync() => LoadWeekAsync();
+
     private void RebuildUserColors()
         => _userColors = _allUsers.ToDictionary(
             u => u.Id, u => string.IsNullOrEmpty(u.Color) ? "#7F8C8D" : u.Color);
@@ -638,6 +646,36 @@ public partial class CalendarViewModel : ViewModelBase
         }
     }
 
+    private bool IsHoliday(DateOnly date) => _weekHolidays.Any(h => h.Date == date);
+
+    /// <summary>Projiziert die wiederkehrenden Regeln auf einen Tag und löst Anzeige (Farbe/Kategorie/Deckkraft) auf.</summary>
+    private List<CalendarEntry> BuildRecurring(DateOnly date)
+    {
+        var projected = RecurrenceEngine.Project(_recurringActivities, date, IsHoliday(date));
+        foreach (var e in projected) ApplyRecurringDisplay(e);
+        return projected;
+    }
+
+    /// <summary>Laufzeit-Anzeige einer projizierten Aktivität (Personenfarbe, Deckkraft, Kategorie). Aktivitäten sind öffentlich.</summary>
+    private void ApplyRecurringDisplay(CalendarEntry e)
+    {
+        e.OwnerColor = _userColors.GetValueOrDefault(e.UserId, "#7F8C8D");
+        var isOwn = e.UserId == CurrentUser.Id;
+        (e.EffectiveOpacity, e.IsHighlighted) = EntryDisplay.Resolve(e.Type, isOwn, IsPersonalView);
+        e.DisplayType = EntryType.Activity;
+        e.DisplayTitle = e.Title;
+
+        if (!string.IsNullOrEmpty(e.ActivityTypeId))
+        {
+            var type = _activityTypes.FirstOrDefault(t => t.Id == e.ActivityTypeId);
+            if (type != null)
+            {
+                e.ActivityName = type.Name;
+                e.ActivityColor = string.IsNullOrEmpty(type.Color) ? "#7F8C8D" : type.Color;
+            }
+        }
+    }
+
     /// <summary>Markiert eine Schicht, wenn eine offene Tausch-Anfrage sie betrifft (eingehend hat Vorrang).</summary>
     private SwapMark ResolveSwapMark(string dayStr, string entryId)
     {
@@ -659,13 +697,15 @@ public partial class CalendarViewModel : ViewModelBase
         LogService.Info("Lade Kalenderwoche {0}", WeekLabel);
         _swapRequests = await _storage.LoadSwapRequestsAsync();
         _activityTypes = await _storage.LoadActivityTypesAsync();
-        var holidays = HolidayCalculator.ForRange(WeekStart, WeekStart.AddDays(6), _holidayState);
+        _recurringActivities = await _storage.LoadRecurringActivitiesAsync();
+        _weekHolidays = HolidayCalculator.ForRange(WeekStart, WeekStart.AddDays(6), _holidayState);
         for (int i = 0; i < 7; i++)
         {
-            var day = await _storage.LoadDayAsync(WeekStart.AddDays(i));
+            var date = WeekStart.AddDays(i);
+            var day = await _storage.LoadDayAsync(date);
             ApplyEntryDisplay(day);
-            Days[i].LoadFromModel(day);
-            Days[i].SetHoliday(holidays.FirstOrDefault(h => h.Date == Days[i].Date)?.NameKey, IsHolidaysVisible);
+            Days[i].LoadFromModel(day, BuildRecurring(date));
+            Days[i].SetHoliday(_weekHolidays.FirstOrDefault(h => h.Date == date)?.NameKey, IsHolidaysVisible);
         }
         IsWeekFinalized = Days.Count > 0 && Days.All(d => d.IsFinalized);
         RecomputeWeeklyHours();

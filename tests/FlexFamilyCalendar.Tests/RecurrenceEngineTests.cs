@@ -1,0 +1,137 @@
+using FlexFamilyCalendar.Models;
+using FlexFamilyCalendar.Services;
+using Xunit;
+
+namespace FlexFamilyCalendar.Tests;
+
+public class RecurrenceEngineTests
+{
+    private static RecurringActivity Football(params DayOfWeek[] days) => new()
+    {
+        UserId = "u1",
+        UserDisplayName = "Kind",
+        Title = "Fußball",
+        StartTime = TimeSpan.FromHours(16),
+        EndTime = TimeSpan.FromHours(17),
+        Weekdays = days.ToList(),
+        SkipOnHolidays = false
+    };
+
+    [Fact]
+    public void Project_IncludesRule_OnMatchingWeekday()
+    {
+        var date = new DateOnly(2026, 5, 28);
+        var rule = Football(date.DayOfWeek);
+
+        var result = RecurrenceEngine.Project(new[] { rule }, date, isHoliday: false);
+
+        var entry = Assert.Single(result);
+        Assert.True(entry.IsRecurring);
+        Assert.Equal(EntryType.Activity, entry.Type);
+        Assert.Equal("Fußball", entry.Title);
+        Assert.Equal(TimeSpan.FromHours(16), entry.StartTime);
+    }
+
+    [Fact]
+    public void Project_Excludes_OnNonMatchingWeekday()
+    {
+        var date = new DateOnly(2026, 5, 28);
+        var rule = Football(date.AddDays(1).DayOfWeek);   // anderer Wochentag
+
+        Assert.Empty(RecurrenceEngine.Project(new[] { rule }, date, isHoliday: false));
+    }
+
+    [Fact]
+    public void Project_Daily_OccursEveryDayOfWeek()
+    {
+        var rule = Football(Enum.GetValues<DayOfWeek>());
+        var monday = new DateOnly(2026, 5, 25);
+
+        for (int i = 0; i < 7; i++)
+            Assert.Single(RecurrenceEngine.Project(new[] { rule }, monday.AddDays(i), isHoliday: false));
+    }
+
+    [Fact]
+    public void Project_EmptyWeekdays_NeverOccurs()
+    {
+        var date = new DateOnly(2026, 5, 28);
+        Assert.Empty(RecurrenceEngine.Project(new[] { Football() }, date, isHoliday: false));
+    }
+
+    [Fact]
+    public void Project_SkipOnHoliday_HidesOccurrence()
+    {
+        var date = new DateOnly(2026, 5, 28);
+        var rule = Football(date.DayOfWeek);
+        rule.SkipOnHolidays = true;
+
+        Assert.Empty(RecurrenceEngine.Project(new[] { rule }, date, isHoliday: true));
+        Assert.Single(RecurrenceEngine.Project(new[] { rule }, date, isHoliday: false));
+    }
+
+    [Fact]
+    public void Project_NotSkipping_OnHoliday_FlagsConflict()
+    {
+        var date = new DateOnly(2026, 5, 28);
+        var rule = Football(date.DayOfWeek);   // SkipOnHolidays = false
+
+        var entry = Assert.Single(RecurrenceEngine.Project(new[] { rule }, date, isHoliday: true));
+        Assert.True(entry.HolidayConflict);
+    }
+
+    [Fact]
+    public void Project_NoHoliday_NoConflict()
+    {
+        var date = new DateOnly(2026, 5, 28);
+        var entry = Assert.Single(RecurrenceEngine.Project(new[] { Football(date.DayOfWeek) }, date, isHoliday: false));
+        Assert.False(entry.HolidayConflict);
+    }
+
+    [Fact]
+    public void Project_SortsByStartTime()
+    {
+        var date = new DateOnly(2026, 5, 28);
+        var late = Football(date.DayOfWeek);
+        late.StartTime = TimeSpan.FromHours(19);
+        late.Title = "Spät";
+        var early = Football(date.DayOfWeek);
+        early.StartTime = TimeSpan.FromHours(8);
+        early.Title = "Früh";
+
+        var result = RecurrenceEngine.Project(new[] { late, early }, date, isHoliday: false);
+
+        Assert.Equal("Früh", result[0].Title);
+        Assert.Equal("Spät", result[1].Title);
+    }
+
+    [Fact]
+    public void ProjectedId_IsStable_PerRuleAndDate()
+    {
+        var date = new DateOnly(2026, 5, 28);
+        var rule = Football(date.DayOfWeek);
+
+        var a = RecurrenceEngine.Project(new[] { rule }, date, isHoliday: false)[0];
+        var b = RecurrenceEngine.Project(new[] { rule }, date, isHoliday: false)[0];
+
+        Assert.Equal(a.Id, b.Id);
+        Assert.Contains(rule.Id, a.Id);
+    }
+
+    [Fact]
+    public async Task Storage_Roundtrip_PreservesRule()
+    {
+        var storage = new InMemoryStorageService();
+        var rule = Football(DayOfWeek.Thursday, DayOfWeek.Tuesday);
+        rule.SkipOnHolidays = true;
+        rule.ActivityTypeId = "act-1";
+
+        await storage.SaveRecurringActivitiesAsync(new List<RecurringActivity> { rule });
+        var loaded = Assert.Single(await storage.LoadRecurringActivitiesAsync());
+
+        Assert.Equal(rule.Id, loaded.Id);
+        Assert.Equal("Fußball", loaded.Title);
+        Assert.Equal("act-1", loaded.ActivityTypeId);
+        Assert.True(loaded.SkipOnHolidays);
+        Assert.Equal(new[] { DayOfWeek.Thursday, DayOfWeek.Tuesday }, loaded.Weekdays);
+    }
+}

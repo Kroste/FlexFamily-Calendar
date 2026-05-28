@@ -58,6 +58,11 @@
                   IsVisible="{Binding IsAdmin}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="12,5" />
+          <Button Content="{loc:Tr Main_RecurringActivities}"
+                  Command="{Binding OpenRecurringActivitiesCommand}"
+                  IsVisible="{Binding IsAdmin}"
+                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  CornerRadius="6" Padding="12,5" />
           <Button Content="{loc:Tr Main_HolidaySettings}"
                   Command="{Binding OpenHolidaySettingsCommand}"
                   IsVisible="{Binding IsAdmin}"

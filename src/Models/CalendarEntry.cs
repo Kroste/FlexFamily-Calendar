@@ -73,4 +73,12 @@ public class CalendarEntry
     /// <summary>Karte zeigt das feste Typ-Label nur, wenn keine Aktivitäts-Kategorie aufgelöst ist.</summary>
     [Newtonsoft.Json.JsonIgnore]
     public bool ShowsTypeLabel => !HasActivity;
+
+    /// <summary>Laufzeit: aus einer wiederkehrenden Regel projiziert (nicht persistiert, nicht editierbar).</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public bool IsRecurring { get; set; }
+
+    /// <summary>Laufzeit: fällt auf einen Feiertag → Hinweis „könnte ausfallen".</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public bool HolidayConflict { get; set; }
 }

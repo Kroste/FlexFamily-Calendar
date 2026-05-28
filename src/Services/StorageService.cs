@@ -15,6 +15,7 @@ public class StorageService : IStorageService
     private string SwapRequestsFile => Path.Combine(DataDirectory, "swap-requests.json");
     private string NotificationsFile => Path.Combine(DataDirectory, "notifications.json");
     private string ActivityTypesFile => Path.Combine(DataDirectory, "activity-types.json");
+    private string RecurringActivitiesFile => Path.Combine(DataDirectory, "recurring-activities.json");
 
     public StorageService() => Directory.CreateDirectory(DataDirectory);
 
@@ -68,6 +69,19 @@ public class StorageService : IStorageService
     {
         await File.WriteAllTextAsync(ActivityTypesFile, JsonConvert.SerializeObject(types, Formatting.Indented));
         LogService.Debug("Aktivitätstypen gespeichert ({0})", types.Count);
+    }
+
+    public async Task<List<RecurringActivity>> LoadRecurringActivitiesAsync()
+    {
+        if (!File.Exists(RecurringActivitiesFile)) return new();
+        var json = await File.ReadAllTextAsync(RecurringActivitiesFile);
+        return JsonConvert.DeserializeObject<List<RecurringActivity>>(json) ?? new();
+    }
+
+    public async Task SaveRecurringActivitiesAsync(List<RecurringActivity> activities)
+    {
+        await File.WriteAllTextAsync(RecurringActivitiesFile, JsonConvert.SerializeObject(activities, Formatting.Indented));
+        LogService.Debug("Wiederkehrende Aktivitäten gespeichert ({0})", activities.Count);
     }
 
     public async Task<AppSettings> LoadSettingsAsync()

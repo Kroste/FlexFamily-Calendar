@@ -1,0 +1,129 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+        xmlns:cv="using:FlexFamilyCalendar.Converters"
+        xmlns:loc="using:FlexFamilyCalendar.Localization"
+        x:Class="FlexFamilyCalendar.Views.RecurringActivityManagementDialog"
+        x:CompileBindings="False"
+        Title="{loc:Tr Recur_Title}"
+        Width="720" Height="560"
+        WindowStartupLocation="CenterOwner">
+
+  <Window.Resources>
+    <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
+  </Window.Resources>
+
+  <Grid Margin="20" ColumnDefinitions="280,16,*" RowDefinitions="Auto,*">
+
+    <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Text="{loc:Tr Recur_Title}"
+               FontSize="18" FontWeight="Bold" Margin="0,0,0,12" />
+
+    <!-- Liste links -->
+    <DockPanel Grid.Row="1" Grid.Column="0">
+      <Button DockPanel.Dock="Bottom" Content="{loc:Tr Recur_New}"
+              Command="{Binding NewCommand}" Margin="0,8,0,0"
+              HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+              Padding="12,7" CornerRadius="6"
+              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+      <Border BorderThickness="1" CornerRadius="6"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <ListBox ItemsSource="{Binding Activities}" SelectedItem="{Binding SelectedActivity}"
+                 Background="Transparent">
+          <ListBox.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Spacing="2" Margin="2,4">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="{Binding WeekdaysLabel}" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding TimeRange}" FontWeight="SemiBold" Opacity="0.8" />
+                </StackPanel>
+                <TextBlock Text="{Binding Title}" FontSize="12" />
+                <TextBlock Text="{Binding UserDisplayName}" FontSize="11" Opacity="0.6" />
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Border>
+    </DockPanel>
+
+    <!-- Formular rechts -->
+    <ScrollViewer Grid.Row="1" Grid.Column="2" VerticalScrollBarVisibility="Auto">
+      <StackPanel Spacing="14">
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="{loc:Tr Entry_User}" FontSize="12" Opacity="0.7" />
+          <ComboBox ItemsSource="{Binding AvailableUsers}" SelectedItem="{Binding SelectedUser}"
+                    HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding DisplayName}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="{loc:Tr Entry_TitleLabel}" FontSize="12" Opacity="0.7" />
+          <TextBox Text="{Binding EditTitle}" PlaceholderText="{loc:Tr Entry_TitlePlaceholder}" CornerRadius="6" />
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="{loc:Tr Entry_ActivityType}" FontSize="12" Opacity="0.7" />
+          <ComboBox ItemsSource="{Binding AvailableActivityTypes}" SelectedItem="{Binding SelectedActivityType}"
+                    HorizontalAlignment="Stretch" PlaceholderText="{loc:Tr Entry_ActivityNone}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Border Width="16" Height="16" CornerRadius="8" VerticalAlignment="Center"
+                          Background="{Binding Color, Converter={StaticResource ColorStringToBrushConverter}}" />
+                  <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                </StackPanel>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,16,*">
+          <StackPanel Grid.Column="0" Spacing="4">
+            <TextBlock Text="{loc:Tr Entry_StartTime}" FontSize="12" Opacity="0.7" />
+            <TimePicker SelectedTime="{Binding StartTime}" ClockIdentifier="24HourClock" HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <StackPanel Grid.Column="2" Spacing="4">
+            <TextBlock Text="{loc:Tr Entry_EndTime}" FontSize="12" Opacity="0.7" />
+            <TimePicker SelectedTime="{Binding EndTime}" ClockIdentifier="24HourClock" HorizontalAlignment="Stretch" />
+          </StackPanel>
+        </Grid>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="{loc:Tr Recur_Weekdays}" FontSize="12" Opacity="0.7" />
+          <WrapPanel>
+            <CheckBox Content="{loc:Tr Day_Mon}" IsChecked="{Binding Mon}" Margin="0,0,12,0" />
+            <CheckBox Content="{loc:Tr Day_Tue}" IsChecked="{Binding Tue}" Margin="0,0,12,0" />
+            <CheckBox Content="{loc:Tr Day_Wed}" IsChecked="{Binding Wed}" Margin="0,0,12,0" />
+            <CheckBox Content="{loc:Tr Day_Thu}" IsChecked="{Binding Thu}" Margin="0,0,12,0" />
+            <CheckBox Content="{loc:Tr Day_Fri}" IsChecked="{Binding Fri}" Margin="0,0,12,0" />
+            <CheckBox Content="{loc:Tr Day_Sat}" IsChecked="{Binding Sat}" Margin="0,0,12,0" />
+            <CheckBox Content="{loc:Tr Day_Sun}" IsChecked="{Binding Sun}" />
+          </WrapPanel>
+        </StackPanel>
+
+        <CheckBox Content="{loc:Tr Recur_SkipOnHolidays}" IsChecked="{Binding SkipOnHolidays}" />
+
+        <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Background="#33C0392B" CornerRadius="6" Padding="10,8">
+          <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" FontSize="13" TextWrapping="Wrap" />
+        </Border>
+
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <Button Content="{loc:Tr Common_Save}" Command="{Binding SaveCommand}"
+                  Padding="16,8" CornerRadius="6"
+                  Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+          <Button Content="{loc:Tr Common_Delete}" Command="{Binding DeleteCommand}"
+                  IsEnabled="{Binding SelectedActivity, Converter={x:Static ObjectConverters.IsNotNull}}"
+                  Padding="16,8" CornerRadius="6" Background="#C0392B" Foreground="White" />
+        </StackPanel>
+
+      </StackPanel>
+    </ScrollViewer>
+
+  </Grid>
+</Window>

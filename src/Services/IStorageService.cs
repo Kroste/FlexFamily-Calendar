@@ -17,4 +17,6 @@ public interface IStorageService
     Task SaveNotificationsAsync(List<Notification> notifications);
     Task<List<ActivityType>> LoadActivityTypesAsync();
     Task SaveActivityTypesAsync(List<ActivityType> types);
+    Task<List<RecurringActivity>> LoadRecurringActivitiesAsync();
+    Task SaveRecurringActivitiesAsync(List<RecurringActivity> activities);
 }

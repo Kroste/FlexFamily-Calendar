@@ -63,12 +63,13 @@ public partial class CalendarDayViewModel : ViewModelBase
     [RelayCommand]
     private void EditNote() => _parent.RequestEditDayNote(Date);
 
-    public void LoadFromModel(CalendarDay day)
+    public void LoadFromModel(CalendarDay day, IReadOnlyList<CalendarEntry>? recurring = null)
     {
         IsFinalized = day.IsFinalized;
         DayNote = day.Note;
         Entries.Clear();
-        foreach (var e in day.Entries.OrderBy(x => x.StartTime))
+        var combined = recurring is { Count: > 0 } ? day.Entries.Concat(recurring) : day.Entries;
+        foreach (var e in combined.OrderBy(x => x.StartTime))
             Entries.Add(e);
     }
 

@@ -12,6 +12,7 @@ public class InMemoryStorageService : IStorageService
     private List<ShiftSwapRequest> _swapRequests = new();
     private List<Notification> _notifications = new();
     private List<ActivityType> _activityTypes = new();
+    private List<RecurringActivity> _recurringActivities = new();
 
     public Task<List<User>> LoadUsersAsync()
         // Kopie zurückgeben, damit Tests echtes Laden/Speichern abbilden
@@ -59,9 +60,25 @@ public class InMemoryStorageService : IStorageService
         return Task.CompletedTask;
     }
 
+    public Task<List<RecurringActivity>> LoadRecurringActivitiesAsync()
+        => Task.FromResult(_recurringActivities.Select(Clone).ToList());
+
+    public Task SaveRecurringActivitiesAsync(List<RecurringActivity> activities)
+    {
+        _recurringActivities = activities.Select(Clone).ToList();
+        return Task.CompletedTask;
+    }
+
     private static ActivityType Clone(ActivityType t) => new()
     {
         Id = t.Id, Name = t.Name, Color = t.Color, Categories = new List<PersonCategory>(t.Categories)
+    };
+
+    private static RecurringActivity Clone(RecurringActivity a) => new()
+    {
+        Id = a.Id, UserId = a.UserId, UserDisplayName = a.UserDisplayName, Title = a.Title,
+        ActivityTypeId = a.ActivityTypeId, StartTime = a.StartTime, EndTime = a.EndTime,
+        Weekdays = new List<DayOfWeek>(a.Weekdays), SkipOnHolidays = a.SkipOnHolidays
     };
 
     private static Notification Clone(Notification n) => new()
