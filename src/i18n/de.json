@@ -120,6 +120,15 @@
   "Notif_ShiftRemoved": "Deine Schicht am {0} wurde entfernt.",
   "Notif_SickReported": "{0} hat sich für den {1} krank gemeldet.",
   "Notif_WeekFinalized": "Die Woche {0}/{1} wurde finalisiert.",
+  "Notif_ShiftAssigned": "Dir wurde eine Schicht am {0} zugewiesen (Krankheitsvertretung).",
+
+  "Replan_Title": "Schicht umplanen",
+  "Replan_AbsentShift": "Ausgefallene Schicht",
+  "Replan_AiThinking": "KI sucht einen Vorschlag …",
+  "Replan_AiUnavailable": "Keine KI konfiguriert – Vorschlag nach Auslastung sortiert.",
+  "Replan_NoCandidates": "Kein/e verfügbare/r Kollege/in für diese Schicht gefunden.",
+  "Replan_TakeOver": "Übernehmen",
+  "Replan_NoShift": "Keine Arbeitsschicht zum Umplanen an diesem Tag.",
 
   "Ai_Title": "KI-Einstellungen",
   "Ai_Provider": "Anbieter",

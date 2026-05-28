@@ -120,6 +120,15 @@
   "Notif_ShiftRemoved": "Your shift on {0} was removed.",
   "Notif_SickReported": "{0} reported sick for {1}.",
   "Notif_WeekFinalized": "Week {0}/{1} has been finalized.",
+  "Notif_ShiftAssigned": "A shift on {0} was assigned to you (sick cover).",
+
+  "Replan_Title": "Reassign shift",
+  "Replan_AbsentShift": "Dropped shift",
+  "Replan_AiThinking": "AI is finding a suggestion …",
+  "Replan_AiUnavailable": "No AI configured – candidates sorted by workload.",
+  "Replan_NoCandidates": "No available colleague found for this shift.",
+  "Replan_TakeOver": "Take over",
+  "Replan_NoShift": "No work shift to reassign on this day.",
 
   "Ai_Title": "AI settings",
   "Ai_Provider": "Provider",

@@ -36,6 +36,7 @@ public partial class CalendarView : UserControl
         {
             _vm.EntryDialogRequested -= OnEntryDialogRequested;
             _vm.SwapDialogRequested -= OnSwapDialogRequested;
+            _vm.ReplanDialogRequested -= OnReplanDialogRequested;
         }
 
         _vm = DataContext as CalendarViewModel;
@@ -44,6 +45,7 @@ public partial class CalendarView : UserControl
         {
             _vm.EntryDialogRequested += OnEntryDialogRequested;
             _vm.SwapDialogRequested += OnSwapDialogRequested;
+            _vm.ReplanDialogRequested += OnReplanDialogRequested;
         }
     }
 
@@ -96,6 +98,24 @@ public partial class CalendarView : UserControl
         catch (Exception ex)
         {
             LogService.Error("Fehler im Tausch-Dialog", ex);
+        }
+    }
+
+    private async void OnReplanDialogRequested(ReplanViewModel vm)
+    {
+        try
+        {
+            if (TopLevel.GetTopLevel(this) is not Window owner) return;
+
+            var dialog = new ReplanDialog { DataContext = vm };
+            var result = await dialog.ShowDialog<ReplanResult?>(owner);
+
+            if (result is not null && _vm is not null)
+                await _vm.ApplyReplanResultAsync(result);
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("Fehler im Umplanungs-Dialog", ex);
         }
     }
 }

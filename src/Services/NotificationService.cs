@@ -42,6 +42,25 @@ public class NotificationService
         await _storage.SaveNotificationsAsync(all);
     }
 
+    /// <summary>Krankmeldung an alle Admins — mit Umplanungs-Aktion (Klick öffnet den Umplanungs-Dialog).</summary>
+    public async Task AddSickReplanAsync(IEnumerable<string> adminIds, string sickUserId, string relatedDate, string who, string dateLabel)
+    {
+        var targets = adminIds.Where(id => !string.IsNullOrEmpty(id)).Distinct().ToList();
+        if (targets.Count == 0) return;
+        var all = await _storage.LoadNotificationsAsync();
+        foreach (var adminId in targets)
+            all.Add(new Notification
+            {
+                UserId = adminId,
+                MessageKey = "Notif_SickReported",
+                Args = new List<string> { who, dateLabel },
+                RelatedDate = relatedDate,
+                Action = "ReplanSick",
+                RelatedUserId = sickUserId
+            });
+        await _storage.SaveNotificationsAsync(all);
+    }
+
     /// <summary>Benachrichtigungen eines Benutzers, neueste zuerst.</summary>
     public async Task<List<Notification>> GetForUserAsync(string userId)
     {

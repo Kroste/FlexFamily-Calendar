@@ -51,10 +51,14 @@ public partial class MainWindow : Window
         try
         {
             var dialog = new NotificationsDialog { DataContext = _vm.CreateNotifications() };
-            var navigateTo = await dialog.ShowDialog<DateOnly?>(this);
+            var result = await dialog.ShowDialog<NotificationResult?>(this);
             await _vm.RefreshUnreadCountAsync();
-            if (navigateTo.HasValue && _vm.CalendarVm != null)
-                await _vm.CalendarVm.GoToWeekContaining(navigateTo.Value);
+            if (result is null || _vm.CalendarVm is null) return;
+
+            if (result.ReplanUserId != null && result.ReplanDate.HasValue)
+                await _vm.CalendarVm.StartReplanAsync(result.ReplanUserId, result.ReplanDate.Value);
+            else if (result.NavigateDate.HasValue)
+                await _vm.CalendarVm.GoToWeekContaining(result.NavigateDate.Value);
         }
         catch (Exception ex) { LogService.Error("Fehler bei den Benachrichtigungen", ex); }
     }

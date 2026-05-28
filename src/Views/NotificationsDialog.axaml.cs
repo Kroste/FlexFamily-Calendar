@@ -22,5 +22,5 @@ public partial class NotificationsDialog : Window
             _vm.CloseRequested += OnCloseRequested;
     }
 
-    private void OnCloseRequested(DateOnly? navigateTo) => Close(navigateTo);
+    private void OnCloseRequested(NotificationResult? result) => Close(result);
 }

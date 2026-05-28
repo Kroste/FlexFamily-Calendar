@@ -52,7 +52,8 @@ public class InMemoryStorageService : IStorageService
     private static Notification Clone(Notification n) => new()
     {
         Id = n.Id, UserId = n.UserId, CreatedAt = n.CreatedAt, IsRead = n.IsRead,
-        MessageKey = n.MessageKey, Args = new List<string>(n.Args), RelatedDate = n.RelatedDate
+        MessageKey = n.MessageKey, Args = new List<string>(n.Args), RelatedDate = n.RelatedDate,
+        Action = n.Action, RelatedUserId = n.RelatedUserId
     };
 
     private static ShiftSwapRequest Clone(ShiftSwapRequest r) => new()

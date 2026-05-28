@@ -8,6 +8,9 @@ using System.Globalization;
 
 namespace FlexFamilyCalendar.ViewModels;
 
+/// <summary>Ergebnis eines Benachrichtigungs-Klicks: zur Woche springen oder eine Umplanung starten.</summary>
+public record NotificationResult(DateOnly? NavigateDate, string? ReplanUserId, DateOnly? ReplanDate);
+
 /// <summary>Eine Zeile in der Benachrichtigungsliste; Text wird in der Sprache des Empfängers formatiert.</summary>
 public partial class NotificationItemViewModel : ViewModelBase
 {
@@ -15,6 +18,8 @@ public partial class NotificationItemViewModel : ViewModelBase
     public string Text { get; }
     public string TimeLabel { get; }
     public DateOnly? RelatedDate { get; }
+    public string? Action { get; }
+    public string? RelatedUserId { get; }
 
     [ObservableProperty] private bool _isRead;
 
@@ -24,6 +29,8 @@ public partial class NotificationItemViewModel : ViewModelBase
         IsRead = n.IsRead;
         TimeLabel = n.CreatedAt.ToString("dd.MM.yyyy HH:mm", CultureInfo.CurrentCulture);
         RelatedDate = DateOnly.TryParse(n.RelatedDate, out var d) ? d : null;
+        Action = n.Action;
+        RelatedUserId = n.RelatedUserId;
         Text = Format(n.MessageKey, n.Args);
     }
 
@@ -49,8 +56,8 @@ public partial class NotificationsViewModel : ViewModelBase
     public bool IsEmpty => Loaded && Items.Count == 0;
     public bool HasItems => Items.Count > 0;
 
-    /// <summary>Schließt den Dialog; optionales Datum → Kalender soll zu dieser Woche springen.</summary>
-    public event Action<DateOnly?>? CloseRequested;
+    /// <summary>Schließt den Dialog; das Ergebnis steuert Navigation bzw. Start einer Umplanung.</summary>
+    public event Action<NotificationResult?>? CloseRequested;
 
     public NotificationsViewModel(NotificationService notifications, User user)
     {
@@ -84,7 +91,9 @@ public partial class NotificationsViewModel : ViewModelBase
         if (item == null) return;
         await _notifications.MarkReadAsync(item.Id);
         item.IsRead = true;
-        CloseRequested?.Invoke(item.RelatedDate);
+        CloseRequested?.Invoke(item.Action == "ReplanSick" && item.RelatedUserId != null
+            ? new NotificationResult(item.RelatedDate, item.RelatedUserId, item.RelatedDate)
+            : new NotificationResult(item.RelatedDate, null, null));
     }
 
     [RelayCommand]

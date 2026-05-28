@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using FlexFamilyCalendar.Localization;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
+using FlexFamilyCalendar.Services.AI;
 using System.Collections.ObjectModel;
 using System.Globalization;
 
@@ -12,6 +13,7 @@ public partial class CalendarViewModel : ViewModelBase
 {
     private readonly StorageService _storage;
     private readonly NotificationService _notifications;
+    private readonly AiService _ai;
     private List<User> _allUsers = new();
     private List<ShiftSwapRequest> _swapRequests = new();
     private Dictionary<string, string> _userColors = new();
@@ -55,16 +57,20 @@ public partial class CalendarViewModel : ViewModelBase
     /// <summary>Öffnet den Schichttausch-Dialog mit vorbereitetem ViewModel. Vom CalendarView-Code-Behind abonniert.</summary>
     public event Action<ShiftSwapViewModel>? SwapDialogRequested;
 
+    /// <summary>Öffnet den Umplanungs-Dialog (Krankmeldung) mit vorbereitetem ViewModel.</summary>
+    public event Action<ReplanViewModel>? ReplanDialogRequested;
+
     private static readonly IReadOnlyList<EntryType> AllTypes = Enum.GetValues<EntryType>();
 
     // Selbst-Antrag: Urlaub nur wenn nicht finalisiert, Krank immer.
     private static IReadOnlyList<EntryType> AbsenceTypes(bool finalized) =>
         finalized ? new[] { EntryType.SickLeave } : new[] { EntryType.SickLeave, EntryType.Vacation };
 
-    public CalendarViewModel(StorageService storage, User user, NotificationService notifications)
+    public CalendarViewModel(StorageService storage, User user, NotificationService notifications, AiService ai)
     {
         _storage = storage;
         _notifications = notifications;
+        _ai = ai;
         CurrentUser = user;
         // Admin startet in der Planungssicht; alle anderen fest in der Normalsicht
         _isPersonalView = user.Role != UserRole.Admin;
@@ -302,12 +308,12 @@ public partial class CalendarViewModel : ViewModelBase
             return;
         }
 
-        // Nicht-Admin meldet sich krank → alle Admins benachrichtigen
+        // Nicht-Admin meldet sich krank → alle Admins benachrichtigen (mit Umplanungs-Einstieg)
         if (!IsAdmin && result.Action == EntryDialogAction.Save && entry.Type == EntryType.SickLeave)
         {
             var admins = _allUsers.Where(u => u.Role == UserRole.Admin).Select(u => u.Id);
             var who = string.IsNullOrEmpty(CurrentUser.DisplayName) ? CurrentUser.Username : CurrentUser.DisplayName;
-            await _notifications.AddManyAsync(admins, "Notif_SickReported", dateStr, who, dateLabel);
+            await _notifications.AddSickReplanAsync(admins, CurrentUser.Id, dateStr, who, dateLabel);
         }
     }
 
@@ -327,6 +333,13 @@ public partial class CalendarViewModel : ViewModelBase
             r.Status == SwapStatus.Pending && r.FromUserId == CurrentUser.Id && Involves(r));
         if (outgoing != null) { WithdrawSwap(outgoing); return; }
 
+        // Admin tippt eine Krank-Schicht an → Umplanungs-Vorschlag für die Arbeitsschicht(en) der Person
+        if (IsAdmin && entry.Type == EntryType.SickLeave)
+        {
+            RequestReplan(entry.UserId, date);
+            return;
+        }
+
         var finalized = Days.FirstOrDefault(d => d.Date == date)?.IsFinalized ?? false;
         if (!IsAdmin && entry.UserId == CurrentUser.Id && entry.Type == EntryType.Work && !finalized)
         {
@@ -335,6 +348,48 @@ public partial class CalendarViewModel : ViewModelBase
         }
 
         RequestEditEntry(date, entry);
+    }
+
+    /// <summary>Aus der Benachrichtigung: zur betroffenen Woche springen und den Umplanungs-Dialog öffnen.</summary>
+    public async Task StartReplanAsync(string absentUserId, DateOnly date)
+    {
+        await GoToWeekContaining(date);
+        RequestReplan(absentUserId, date);
+    }
+
+    /// <summary>Ermittelt Ersatzkandidaten für die (früheste) Arbeitsschicht der kranken Person und öffnet den Dialog.</summary>
+    public void RequestReplan(string absentUserId, DateOnly date)
+    {
+        var dayVm = Days.FirstOrDefault(d => d.Date == date);
+        var absentShift = dayVm?.Entries
+            .Where(e => e.UserId == absentUserId && e.Type == EntryType.Work)
+            .OrderBy(e => e.StartTime)
+            .FirstOrDefault();
+        if (absentShift == null) { LogService.Warn(Localizer.Instance["Replan_NoShift"]); return; }
+
+        var week = Days.Select(d => (d.Date, (IReadOnlyList<CalendarEntry>)d.Entries.ToList())).ToList();
+        var candidates = ReplanEngine.FindCandidates(absentShift, date, _allUsers, absentUserId, week);
+        LogService.Click(CurrentUser.Username, $"Umplanung ({date:dd.MM.yyyy})");
+        ReplanDialogRequested?.Invoke(new ReplanViewModel(_ai, absentShift, date, candidates));
+    }
+
+    /// <summary>Bucht die ausgefallene Schicht auf den gewählten Ersatz um (Admin-Aktion, auch bei finalisierter Woche).</summary>
+    public async Task ApplyReplanResultAsync(ReplanResult result)
+    {
+        var day = await _storage.LoadDayAsync(result.Date);
+        var shift = day.Entries.FirstOrDefault(e => e.Id == result.ShiftId);
+        if (shift == null) { LogService.Warn(Localizer.Instance["Replan_NoShift"]); return; }
+
+        var name = string.IsNullOrEmpty(result.Replacement.DisplayName)
+            ? result.Replacement.Username : result.Replacement.DisplayName;
+        shift.UserId = result.Replacement.Id;
+        shift.UserDisplayName = name;
+        await _storage.SaveDayAsync(day);
+
+        await _notifications.AddAsync(result.Replacement.Id, "Notif_ShiftAssigned",
+            result.Date.ToString("yyyy-MM-dd"), result.Date.ToString("dd.MM.yyyy"));
+        LogService.UserAction(CurrentUser.Username, $"Schicht umgeplant auf {name} ({result.Date:dd.MM.yyyy})");
+        await LoadWeekAsync();
     }
 
     private void RequestInitiateSwap(DateOnly date, CalendarEntry entry)

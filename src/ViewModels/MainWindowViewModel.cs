@@ -69,7 +69,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         CurrentUserDisplay = string.IsNullOrEmpty(user.DisplayName) ? user.Username : user.DisplayName;
         CalendarVm?.Cleanup();
-        CalendarVm = new CalendarViewModel(_storage, user, _notifications);
+        CalendarVm = new CalendarViewModel(_storage, user, _notifications, _ai);
         IsLoggedIn = true;
         OnPropertyChanged(nameof(IsAdmin));
         LogService.UserAction(user.Username, logVerb);
