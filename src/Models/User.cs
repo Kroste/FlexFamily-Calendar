@@ -18,4 +18,5 @@ public class User
     public string Color { get; set; } = "";  // Personenfarbe im Kalender (leer = bei Anlage vergeben)
     public double OpeningBalanceHours { get; set; }       // Stundenkonto: Anfangssaldo (Übertrag von vorher)
     public DateOnly AccountStart { get; set; }            // Stundenkonto: Start (leer = bei Anlage gesetzt)
+    public bool ShowHolidays { get; set; } = true;        // Anzeige-Präferenz: Feiertage im Kalender einblenden
 }

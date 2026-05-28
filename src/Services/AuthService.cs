@@ -146,6 +146,7 @@ public class AuthService
         existing.Color = user.Color;
         existing.OpeningBalanceHours = user.OpeningBalanceHours;
         existing.AccountStart = user.AccountStart;
+        existing.ShowHolidays = user.ShowHolidays;
 
         await _storage.SaveUsersAsync(users);
         LogService.Info("Benutzer aktualisiert: {0}", existing.Username);

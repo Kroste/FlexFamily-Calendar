@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+        xmlns:loc="using:FlexFamilyCalendar.Localization"
+        x:Class="FlexFamilyCalendar.Views.HolidaySettingsDialog"
+        x:CompileBindings="False"
+        Title="{loc:Tr Main_HolidaySettings}"
+        Width="380" SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+  <Grid Margin="24,20,24,20" RowDefinitions="Auto,Auto,Auto">
+
+    <TextBlock Grid.Row="0" Text="{loc:Tr Main_HolidaySettings}" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" />
+
+    <StackPanel Grid.Row="1" Spacing="4">
+      <TextBlock Text="{loc:Tr Holiday_Region}" FontSize="12" Opacity="0.7" />
+      <ComboBox ItemsSource="{Binding States}" SelectedItem="{Binding SelectedState}"
+                HorizontalAlignment="Stretch">
+        <ComboBox.ItemTemplate>
+          <DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+    </StackPanel>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" Margin="0,20,0,0">
+      <Button Content="{loc:Tr Common_Cancel}" Command="{Binding CancelCommand}"
+              Padding="16,8" CornerRadius="6" />
+      <Button Content="{loc:Tr Common_Save}" Command="{Binding SaveCommand}"
+              Padding="16,8" CornerRadius="6"
+              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+    </StackPanel>
+
+  </Grid>
+</Window>

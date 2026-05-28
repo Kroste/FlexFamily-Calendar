@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FlexFamilyCalendar.Localization;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
 using System.Collections.ObjectModel;
@@ -18,6 +19,19 @@ public partial class CalendarDayViewModel : ViewModelBase
     public bool CanAddEntry { get; }
 
     [ObservableProperty] private bool _isFinalized;
+
+    [ObservableProperty] private bool _showHoliday;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNote))]
+    private string _dayNote = "";
+
+    private bool _isHoliday;
+    public string HolidayName { get; private set; } = "";
+    public bool HasNote => !string.IsNullOrWhiteSpace(DayNote);
+
+    /// <summary>Admin darf pro Tag einen allgemeinen Hinweis pflegen.</summary>
+    public bool CanEditNote => _parent.IsAdmin;
 
     /// <summary>Nicht-Admins dürfen sich immer krank/Urlaub eintragen (Krank auch bei finalisierter Woche;
     /// Urlaub bei Finalisierung im Editor ausgeblendet).</summary>
@@ -46,11 +60,27 @@ public partial class CalendarDayViewModel : ViewModelBase
     [RelayCommand]
     private void RequestAbsence() => _parent.RequestSelfAbsence(Date);
 
+    [RelayCommand]
+    private void EditNote() => _parent.RequestEditDayNote(Date);
+
     public void LoadFromModel(CalendarDay day)
     {
         IsFinalized = day.IsFinalized;
+        DayNote = day.Note;
         Entries.Clear();
         foreach (var e in day.Entries.OrderBy(x => x.StartTime))
             Entries.Add(e);
     }
+
+    /// <summary>Feiertag (oder keiner) samt Sichtbarkeit setzen; <paramref name="nameKey"/> ist ein i18n-Schlüssel.</summary>
+    public void SetHoliday(string? nameKey, bool visible)
+    {
+        _isHoliday = !string.IsNullOrEmpty(nameKey);
+        HolidayName = _isHoliday ? Localizer.Instance[nameKey!] : "";
+        ShowHoliday = _isHoliday && visible;
+        OnPropertyChanged(nameof(HolidayName));
+    }
+
+    /// <summary>Nur die Feiertags-Sichtbarkeit umschalten (Header-Toggle), ohne Neuberechnung.</summary>
+    public void SetHolidayVisible(bool visible) => ShowHoliday = _isHoliday && visible;
 }

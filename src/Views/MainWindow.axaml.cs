@@ -22,6 +22,7 @@ public partial class MainWindow : Window
             _vm.NotificationsRequested -= OnNotificationsRequested;
             _vm.AiSettingsRequested -= OnAiSettingsRequested;
             _vm.ActivityTypesRequested -= OnActivityTypesRequested;
+            _vm.HolidaySettingsRequested -= OnHolidaySettingsRequested;
         }
         _vm = DataContext as MainWindowViewModel;
         if (_vm != null)
@@ -33,7 +34,21 @@ public partial class MainWindow : Window
             _vm.NotificationsRequested += OnNotificationsRequested;
             _vm.AiSettingsRequested += OnAiSettingsRequested;
             _vm.ActivityTypesRequested += OnActivityTypesRequested;
+            _vm.HolidaySettingsRequested += OnHolidaySettingsRequested;
         }
+    }
+
+    private async void OnHolidaySettingsRequested()
+    {
+        if (_vm == null) return;
+        try
+        {
+            var dialog = new HolidaySettingsDialog { DataContext = _vm.CreateHolidaySettings() };
+            await dialog.ShowDialog(this);
+            if (_vm.CalendarVm != null)
+                await _vm.CalendarVm.ReloadHolidaysAsync();
+        }
+        catch (Exception ex) { LogService.Error("Fehler in den Feiertags-Einstellungen", ex); }
     }
 
     private async void OnActivityTypesRequested()

@@ -17,6 +17,7 @@ public partial class CalendarViewModel : ViewModelBase
     private List<User> _allUsers = new();
     private List<ShiftSwapRequest> _swapRequests = new();
     private List<ActivityType> _activityTypes = new();
+    private GermanState _holidayState = GermanState.BY;
     private Dictionary<string, string> _userColors = new();
 
     public User CurrentUser { get; }
@@ -52,6 +53,9 @@ public partial class CalendarViewModel : ViewModelBase
 
     public string FinalizeButtonKey => IsWeekFinalized ? "Cal_UnfinalizeWeek" : "Cal_FinalizeWeek";
 
+    /// <summary>Feiertage im Kalender anzeigen (pro Benutzer gemerkt, per Header-Toggle umschaltbar).</summary>
+    [ObservableProperty] private bool _isHolidaysVisible = true;
+
     /// <summary>date, existing (null=neu), users, canPickUser, allowedTypes, activityTypes. Vom CalendarView-Code-Behind abonniert.</summary>
     public event Action<DateOnly, CalendarEntry?, IReadOnlyList<User>, bool, IReadOnlyList<EntryType>, IReadOnlyList<ActivityType>>? EntryDialogRequested;
 
@@ -60,6 +64,9 @@ public partial class CalendarViewModel : ViewModelBase
 
     /// <summary>Öffnet den Umplanungs-Dialog (Krankmeldung) mit vorbereitetem ViewModel.</summary>
     public event Action<ReplanViewModel>? ReplanDialogRequested;
+
+    /// <summary>Öffnet den Tages-Hinweis-Dialog (Admin). Parameter: Datum + aktuelle Notiz.</summary>
+    public event Action<DateOnly, string>? DayNoteDialogRequested;
 
     private static readonly IReadOnlyList<EntryType> AllTypes = Enum.GetValues<EntryType>();
 
@@ -75,6 +82,7 @@ public partial class CalendarViewModel : ViewModelBase
         CurrentUser = user;
         // Admin startet in der Planungssicht; alle anderen fest in der Normalsicht
         _isPersonalView = user.Role != UserRole.Admin;
+        _isHolidaysVisible = user.ShowHolidays;
         _weekStart = GetMondayOfWeek(DateOnly.FromDateTime(DateTime.Today));
         RebuildDays();
         _ = LoadAsync();
@@ -541,7 +549,48 @@ public partial class CalendarViewModel : ViewModelBase
     {
         _allUsers = await _storage.LoadUsersAsync();
         RebuildUserColors();
+        _holidayState = GermanStates.Parse((await _storage.LoadSettingsAsync()).HolidayState);
         await LoadWeekAsync();
+    }
+
+    /// <summary>Feiertage neu laden (nach Region-Änderung durch den Admin) → Woche neu auflösen.</summary>
+    public async Task ReloadHolidaysAsync()
+    {
+        _holidayState = GermanStates.Parse((await _storage.LoadSettingsAsync()).HolidayState);
+        await LoadWeekAsync();
+    }
+
+    /// <summary>Header-Toggle: Feiertags-Anzeige sofort umschalten und die Präferenz pro Benutzer merken.</summary>
+    partial void OnIsHolidaysVisibleChanged(bool value)
+    {
+        foreach (var d in Days) d.SetHolidayVisible(value);
+        CurrentUser.ShowHolidays = value;
+        _ = PersistShowHolidaysAsync(value);
+    }
+
+    private async Task PersistShowHolidaysAsync(bool value)
+    {
+        var users = await _storage.LoadUsersAsync();
+        var u = users.FirstOrDefault(x => x.Id == CurrentUser.Id);
+        if (u != null) { u.ShowHolidays = value; await _storage.SaveUsersAsync(users); }
+    }
+
+    /// <summary>Admin pflegt den allgemeinen Tages-Hinweis (Hinweisspalte, für alle sichtbar).</summary>
+    public void RequestEditDayNote(DateOnly date)
+    {
+        if (!IsAdmin) return;
+        var note = Days.FirstOrDefault(d => d.Date == date)?.DayNote ?? "";
+        DayNoteDialogRequested?.Invoke(date, note);
+    }
+
+    public async Task ApplyDayNoteAsync(DateOnly date, string note)
+    {
+        var day = await _storage.LoadDayAsync(date);
+        day.Note = note.Trim();
+        await _storage.SaveDayAsync(day);
+        var dayVm = Days.FirstOrDefault(d => d.Date == date);
+        if (dayVm != null) dayVm.DayNote = day.Note;
+        LogService.UserAction(CurrentUser.Username, $"Tages-Hinweis gespeichert ({date:dd.MM.yyyy})");
     }
 
     /// <summary>Personenliste neu laden (frische Benutzer sofort planbar) inkl. Farben → Woche neu laden.</summary>
@@ -610,11 +659,13 @@ public partial class CalendarViewModel : ViewModelBase
         LogService.Info("Lade Kalenderwoche {0}", WeekLabel);
         _swapRequests = await _storage.LoadSwapRequestsAsync();
         _activityTypes = await _storage.LoadActivityTypesAsync();
+        var holidays = HolidayCalculator.ForRange(WeekStart, WeekStart.AddDays(6), _holidayState);
         for (int i = 0; i < 7; i++)
         {
             var day = await _storage.LoadDayAsync(WeekStart.AddDays(i));
             ApplyEntryDisplay(day);
             Days[i].LoadFromModel(day);
+            Days[i].SetHoliday(holidays.FirstOrDefault(h => h.Date == Days[i].Date)?.NameKey, IsHolidaysVisible);
         }
         IsWeekFinalized = Days.Count > 0 && Days.All(d => d.IsFinalized);
         RecomputeWeeklyHours();

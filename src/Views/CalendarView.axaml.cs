@@ -37,6 +37,7 @@ public partial class CalendarView : UserControl
             _vm.EntryDialogRequested -= OnEntryDialogRequested;
             _vm.SwapDialogRequested -= OnSwapDialogRequested;
             _vm.ReplanDialogRequested -= OnReplanDialogRequested;
+            _vm.DayNoteDialogRequested -= OnDayNoteDialogRequested;
         }
 
         _vm = DataContext as CalendarViewModel;
@@ -46,6 +47,25 @@ public partial class CalendarView : UserControl
             _vm.EntryDialogRequested += OnEntryDialogRequested;
             _vm.SwapDialogRequested += OnSwapDialogRequested;
             _vm.ReplanDialogRequested += OnReplanDialogRequested;
+            _vm.DayNoteDialogRequested += OnDayNoteDialogRequested;
+        }
+    }
+
+    private async void OnDayNoteDialogRequested(DateOnly date, string note)
+    {
+        try
+        {
+            if (TopLevel.GetTopLevel(this) is not Window owner) return;
+
+            var dialog = new DayNoteDialog { DataContext = new DayNoteViewModel(date, note) };
+            var result = await dialog.ShowDialog<string?>(owner);
+
+            if (result is not null && _vm is not null)
+                await _vm.ApplyDayNoteAsync(date, result);
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("Fehler im Tages-Hinweis-Dialog", ex);
         }
     }
 

@@ -86,6 +86,7 @@ public class InMemoryStorageService : IStorageService
         Category = u.Category, WeeklyHoursQuota = u.WeeklyHoursQuota,
         MaxWeeklyHours = u.MaxWeeklyHours, MaxDailyHours = u.MaxDailyHours, MinRestHours = u.MinRestHours,
         ThemeVariant = u.ThemeVariant, Color = u.Color,
-        OpeningBalanceHours = u.OpeningBalanceHours, AccountStart = u.AccountStart
+        OpeningBalanceHours = u.OpeningBalanceHours, AccountStart = u.AccountStart,
+        ShowHolidays = u.ShowHolidays
     };
 }
