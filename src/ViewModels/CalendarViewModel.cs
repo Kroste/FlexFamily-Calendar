@@ -16,6 +16,7 @@ public partial class CalendarViewModel : ViewModelBase
     private readonly AiService _ai;
     private List<User> _allUsers = new();
     private List<ShiftSwapRequest> _swapRequests = new();
+    private List<ActivityType> _activityTypes = new();
     private Dictionary<string, string> _userColors = new();
 
     public User CurrentUser { get; }
@@ -51,8 +52,8 @@ public partial class CalendarViewModel : ViewModelBase
 
     public string FinalizeButtonKey => IsWeekFinalized ? "Cal_UnfinalizeWeek" : "Cal_FinalizeWeek";
 
-    /// <summary>date, existing (null=neu), users, canPickUser, allowedTypes. Vom CalendarView-Code-Behind abonniert.</summary>
-    public event Action<DateOnly, CalendarEntry?, IReadOnlyList<User>, bool, IReadOnlyList<EntryType>>? EntryDialogRequested;
+    /// <summary>date, existing (null=neu), users, canPickUser, allowedTypes, activityTypes. Vom CalendarView-Code-Behind abonniert.</summary>
+    public event Action<DateOnly, CalendarEntry?, IReadOnlyList<User>, bool, IReadOnlyList<EntryType>, IReadOnlyList<ActivityType>>? EntryDialogRequested;
 
     /// <summary>Öffnet den Schichttausch-Dialog mit vorbereitetem ViewModel. Vom CalendarView-Code-Behind abonniert.</summary>
     public event Action<ShiftSwapViewModel>? SwapDialogRequested;
@@ -241,7 +242,7 @@ public partial class CalendarViewModel : ViewModelBase
     public void RequestAddEntry(DateOnly date)
     {
         var users = _allUsers.Count > 0 ? _allUsers : new List<User> { CurrentUser };
-        EntryDialogRequested?.Invoke(date, null, users.AsReadOnly(), true, AllTypes);
+        EntryDialogRequested?.Invoke(date, null, users.AsReadOnly(), true, AllTypes, _activityTypes);
     }
 
     /// <summary>Selbst-Antrag: Benutzer meldet sich krank / trägt Urlaub ein (nur für sich).
@@ -251,7 +252,7 @@ public partial class CalendarViewModel : ViewModelBase
         var finalized = Days.FirstOrDefault(d => d.Date == date)?.IsFinalized ?? false;
         LogService.Click(CurrentUser.Username, $"Krank/Urlaub eintragen ({date:dd.MM.yyyy})");
         EntryDialogRequested?.Invoke(date, null, new List<User> { CurrentUser }.AsReadOnly(),
-            false, AbsenceTypes(finalized));
+            false, AbsenceTypes(finalized), _activityTypes);
     }
 
     public void RequestEditEntry(DateOnly date, CalendarEntry entry)
@@ -268,7 +269,7 @@ public partial class CalendarViewModel : ViewModelBase
             ? (_allUsers.Count > 0 ? _allUsers : new List<User> { CurrentUser })
             : new List<User> { CurrentUser };
         var allowed = adminEdit ? AllTypes : AbsenceTypes(finalized);
-        EntryDialogRequested?.Invoke(date, entry, users.AsReadOnly(), adminEdit, allowed);
+        EntryDialogRequested?.Invoke(date, entry, users.AsReadOnly(), adminEdit, allowed, _activityTypes);
     }
 
     /// <summary>Speichert/löscht das Dialog-Ergebnis: ein Pfad für Neu, Edit und Delete.</summary>
@@ -551,6 +552,9 @@ public partial class CalendarViewModel : ViewModelBase
         await LoadWeekAsync();  // damit geänderte Personenfarben sofort sichtbar werden
     }
 
+    /// <summary>Aktivitätstypen neu laden (nach der Verwaltung) → Woche neu auflösen.</summary>
+    public Task ReloadActivityTypesAsync() => LoadWeekAsync();
+
     private void RebuildUserColors()
         => _userColors = _allUsers.ToDictionary(
             u => u.Id, u => string.IsNullOrEmpty(u.Color) ? "#7F8C8D" : u.Color);
@@ -570,6 +574,18 @@ public partial class CalendarViewModel : ViewModelBase
             e.DisplayTitle = EntryPrivacy.ShowReason(e.Type, canSeeReason) ? e.Title : "";
 
             e.SwapMark = ResolveSwapMark(day.DateString, e.Id);
+
+            // Aktivitäts-Kategorie auflösen (Name + Farbe), nur für sichtbare Aktivitäten
+            e.ActivityName = "";
+            if (e.DisplayType == EntryType.Activity && !string.IsNullOrEmpty(e.ActivityTypeId))
+            {
+                var type = _activityTypes.FirstOrDefault(t => t.Id == e.ActivityTypeId);
+                if (type != null)
+                {
+                    e.ActivityName = type.Name;
+                    e.ActivityColor = string.IsNullOrEmpty(type.Color) ? "#7F8C8D" : type.Color;
+                }
+            }
         }
     }
 
@@ -593,6 +609,7 @@ public partial class CalendarViewModel : ViewModelBase
     {
         LogService.Info("Lade Kalenderwoche {0}", WeekLabel);
         _swapRequests = await _storage.LoadSwapRequestsAsync();
+        _activityTypes = await _storage.LoadActivityTypesAsync();
         for (int i = 0; i < 7; i++)
         {
             var day = await _storage.LoadDayAsync(WeekStart.AddDays(i));

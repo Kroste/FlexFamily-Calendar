@@ -61,15 +61,15 @@ public partial class CalendarView : UserControl
     }
 
     private async void OnEntryDialogRequested(DateOnly date, CalendarEntry? existing, IReadOnlyList<User> users,
-        bool canPickUser, IReadOnlyList<EntryType> allowedTypes)
+        bool canPickUser, IReadOnlyList<EntryType> allowedTypes, IReadOnlyList<ActivityType> activityTypes)
     {
         try
         {
             if (TopLevel.GetTopLevel(this) is not Window owner) return;
 
             var vm = existing is null
-                ? new EntryEditorViewModel(date, users, canPickUser, allowedTypes)
-                : new EntryEditorViewModel(date, users, existing, canPickUser, allowedTypes);
+                ? new EntryEditorViewModel(date, users, canPickUser, allowedTypes, activityTypes)
+                : new EntryEditorViewModel(date, users, existing, canPickUser, allowedTypes, activityTypes);
 
             var dialog = new EntryEditorDialog { DataContext = vm };
             var result = await dialog.ShowDialog<EntryDialogResult?>(owner);

@@ -11,6 +11,7 @@ public class InMemoryStorageService : IStorageService
     private readonly Dictionary<string, CalendarDay> _days = new();
     private List<ShiftSwapRequest> _swapRequests = new();
     private List<Notification> _notifications = new();
+    private List<ActivityType> _activityTypes = new();
 
     public Task<List<User>> LoadUsersAsync()
         // Kopie zurückgeben, damit Tests echtes Laden/Speichern abbilden
@@ -48,6 +49,20 @@ public class InMemoryStorageService : IStorageService
         _notifications = notifications.Select(Clone).ToList();
         return Task.CompletedTask;
     }
+
+    public Task<List<ActivityType>> LoadActivityTypesAsync()
+        => Task.FromResult(_activityTypes.Select(Clone).ToList());
+
+    public Task SaveActivityTypesAsync(List<ActivityType> types)
+    {
+        _activityTypes = types.Select(Clone).ToList();
+        return Task.CompletedTask;
+    }
+
+    private static ActivityType Clone(ActivityType t) => new()
+    {
+        Id = t.Id, Name = t.Name, Color = t.Color, Categories = new List<PersonCategory>(t.Categories)
+    };
 
     private static Notification Clone(Notification n) => new()
     {

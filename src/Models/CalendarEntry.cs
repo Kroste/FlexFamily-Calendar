@@ -18,6 +18,7 @@ public class CalendarEntry
     public TimeSpan EndTime { get; set; }
     public string Title { get; set; } = "";
     public string Notes { get; set; } = "";
+    public string? ActivityTypeId { get; set; }   // optionale Kategorie bei Typ Activity
 
     [Newtonsoft.Json.JsonIgnore]
     public double DurationHours => (EndTime - StartTime).TotalHours;
@@ -57,4 +58,19 @@ public class CalendarEntry
 
     [Newtonsoft.Json.JsonIgnore]
     public bool HasSwap => SwapMark != SwapMark.None;
+
+    /// <summary>Aufgelöster Aktivitäts-Kategoriename (Laufzeit; leer = keine Kategorie).</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public string ActivityName { get; set; } = "";
+
+    /// <summary>Farbe der Aktivitäts-Kategorie (Laufzeit).</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public string ActivityColor { get; set; } = "#7F8C8D";
+
+    [Newtonsoft.Json.JsonIgnore]
+    public bool HasActivity => !string.IsNullOrEmpty(ActivityName);
+
+    /// <summary>Karte zeigt das feste Typ-Label nur, wenn keine Aktivitäts-Kategorie aufgelöst ist.</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public bool ShowsTypeLabel => !HasActivity;
 }

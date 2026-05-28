@@ -14,6 +14,7 @@ public class StorageService : IStorageService
     private string SettingsFile => Path.Combine(DataDirectory, "settings.json");
     private string SwapRequestsFile => Path.Combine(DataDirectory, "swap-requests.json");
     private string NotificationsFile => Path.Combine(DataDirectory, "notifications.json");
+    private string ActivityTypesFile => Path.Combine(DataDirectory, "activity-types.json");
 
     public StorageService() => Directory.CreateDirectory(DataDirectory);
 
@@ -54,6 +55,19 @@ public class StorageService : IStorageService
     {
         await File.WriteAllTextAsync(NotificationsFile, JsonConvert.SerializeObject(notifications, Formatting.Indented));
         LogService.Debug("Benachrichtigungen gespeichert ({0})", notifications.Count);
+    }
+
+    public async Task<List<ActivityType>> LoadActivityTypesAsync()
+    {
+        if (!File.Exists(ActivityTypesFile)) return new();
+        var json = await File.ReadAllTextAsync(ActivityTypesFile);
+        return JsonConvert.DeserializeObject<List<ActivityType>>(json) ?? new();
+    }
+
+    public async Task SaveActivityTypesAsync(List<ActivityType> types)
+    {
+        await File.WriteAllTextAsync(ActivityTypesFile, JsonConvert.SerializeObject(types, Formatting.Indented));
+        LogService.Debug("Aktivitätstypen gespeichert ({0})", types.Count);
     }
 
     public async Task<AppSettings> LoadSettingsAsync()

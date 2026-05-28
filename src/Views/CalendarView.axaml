@@ -193,7 +193,15 @@
                             <TextBlock Text="{Binding TimeRange}" FontSize="10" Foreground="White" Opacity="0.85" />
                             <TextBlock Text="{Binding DisplayType, Converter={x:Static cv:EntryTypeLabelConverter.Instance}}"
                                        FontSize="11" FontWeight="SemiBold"
-                                       Foreground="White" TextTrimming="CharacterEllipsis" />
+                                       Foreground="White" TextTrimming="CharacterEllipsis"
+                                       IsVisible="{Binding ShowsTypeLabel}" />
+                            <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding HasActivity}">
+                              <Border Width="9" Height="9" CornerRadius="4.5" VerticalAlignment="Center"
+                                      BorderBrush="#E6FFFFFF" BorderThickness="1"
+                                      Background="{Binding ActivityColor, Converter={StaticResource ColorStringToBrushConverter}}" />
+                              <TextBlock Text="{Binding ActivityName}" FontSize="11" FontWeight="SemiBold"
+                                         Foreground="White" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
                             <TextBlock Text="{Binding DisplayTitle}" FontSize="11" Foreground="White" Opacity="0.9"
                                        TextTrimming="CharacterEllipsis"
                                        IsVisible="{Binding DisplayTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />

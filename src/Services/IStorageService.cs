@@ -15,4 +15,6 @@ public interface IStorageService
     Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests);
     Task<List<Notification>> LoadNotificationsAsync();
     Task SaveNotificationsAsync(List<Notification> notifications);
+    Task<List<ActivityType>> LoadActivityTypesAsync();
+    Task SaveActivityTypesAsync(List<ActivityType> types);
 }

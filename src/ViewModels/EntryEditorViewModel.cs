@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using FlexFamilyCalendar.Localization;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
+using System.Collections.ObjectModel;
 using System.Globalization;
 
 namespace FlexFamilyCalendar.ViewModels;
@@ -16,9 +17,15 @@ public record EntryDialogResult(EntryDialogAction Action, CalendarEntry Entry);
 public partial class EntryEditorViewModel : ViewModelBase
 {
     private readonly string _entryId;
+    private readonly IReadOnlyList<ActivityType> _allActivityTypes;
 
     [ObservableProperty] private User? _selectedUser;
-    [ObservableProperty] private EntryTypeOption? _selectedType;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowActivityType))]
+    private EntryTypeOption? _selectedType;
+
+    [ObservableProperty] private ActivityType? _selectedActivityType;
     [ObservableProperty] private TimeSpan? _startTime = TimeSpan.FromHours(8);
     [ObservableProperty] private TimeSpan? _endTime = TimeSpan.FromHours(16);
     [ObservableProperty] private string _title = "";
@@ -32,6 +39,12 @@ public partial class EntryEditorViewModel : ViewModelBase
     public IReadOnlyList<User> AvailableUsers { get; }
     public IReadOnlyList<EntryTypeOption> EntryTypes { get; }
 
+    /// <summary>Konfigurierbare Aktivitäts-Kategorien, gefiltert nach der Rolle der gewählten Person.</summary>
+    public ObservableCollection<ActivityType> AvailableActivityTypes { get; } = new();
+
+    /// <summary>Kategorie-Auswahl nur bei Typ „Aktivität".</summary>
+    public bool ShowActivityType => SelectedType?.Type == EntryType.Activity;
+
     /// <summary>Im Selbst-Antrag (Krank/Urlaub) ist der Benutzer fix → kein Benutzer-Dropdown.</summary>
     public bool CanPickUser { get; }
 
@@ -42,12 +55,14 @@ public partial class EntryEditorViewModel : ViewModelBase
     /// allowedTypes=null → alle Typen; sonst nur die erlaubten (z.B. nur Krank bei finalisierter Woche).
     /// </summary>
     public EntryEditorViewModel(DateOnly date, IReadOnlyList<User> users,
-        bool canPickUser = true, IReadOnlyList<EntryType>? allowedTypes = null)
+        bool canPickUser = true, IReadOnlyList<EntryType>? allowedTypes = null,
+        IReadOnlyList<ActivityType>? activityTypes = null)
     {
         Date = date;
         DateLabel = date.ToString("D", CultureInfo.CurrentCulture);
         AvailableUsers = users;
         CanPickUser = canPickUser;
+        _allActivityTypes = activityTypes ?? Array.Empty<ActivityType>();
 
         var types = allowedTypes is { Count: > 0 } ? allowedTypes : Enum.GetValues<EntryType>();
         EntryTypes = types.Select(t => new EntryTypeOption(t, Localizer.Instance[EntryTypeInfo.Key(t)])).ToList();
@@ -61,8 +76,9 @@ public partial class EntryEditorViewModel : ViewModelBase
 
     /// <summary>Bestehenden Eintrag bearbeiten.</summary>
     public EntryEditorViewModel(DateOnly date, IReadOnlyList<User> users, CalendarEntry existing,
-        bool canPickUser = true, IReadOnlyList<EntryType>? allowedTypes = null)
-        : this(date, users, canPickUser, allowedTypes)
+        bool canPickUser = true, IReadOnlyList<EntryType>? allowedTypes = null,
+        IReadOnlyList<ActivityType>? activityTypes = null)
+        : this(date, users, canPickUser, allowedTypes, activityTypes)
     {
         IsEditMode = true;
         _entryId = existing.Id;
@@ -72,6 +88,20 @@ public partial class EntryEditorViewModel : ViewModelBase
         EndTime = existing.EndTime;
         Title = existing.Title;
         Notes = existing.Notes;
+        SelectedActivityType = AvailableActivityTypes.FirstOrDefault(t => t.Id == existing.ActivityTypeId);
+    }
+
+    partial void OnSelectedUserChanged(User? value) => RefreshActivityTypes();
+
+    private void RefreshActivityTypes()
+    {
+        var prevId = SelectedActivityType?.Id;
+        AvailableActivityTypes.Clear();
+        if (SelectedUser != null)
+            foreach (var t in _allActivityTypes.Where(t => t.AppliesTo(SelectedUser.Category)))
+                AvailableActivityTypes.Add(t);
+        SelectedActivityType = AvailableActivityTypes.FirstOrDefault(t => t.Id == prevId)
+                               ?? AvailableActivityTypes.FirstOrDefault();
     }
 
     [RelayCommand]
@@ -93,7 +123,8 @@ public partial class EntryEditorViewModel : ViewModelBase
             StartTime = StartTime.Value,
             EndTime = EndTime.Value,
             Title = Title.Trim(),
-            Notes = Notes.Trim()
+            Notes = Notes.Trim(),
+            ActivityTypeId = ShowActivityType ? SelectedActivityType?.Id : null
         };
         LogService.Debug("Eintrag-Dialog: Speichern ({0}, {1})", entry.TypeLabel, entry.UserDisplayName);
         Closed?.Invoke(new EntryDialogResult(EntryDialogAction.Save, entry));
