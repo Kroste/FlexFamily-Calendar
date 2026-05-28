@@ -20,7 +20,8 @@ public class PlanLayoutTests
 
         var ordered = PlanLayout.OrderPeople(users).Select(u => u.DisplayName).ToArray();
 
-        Assert.Equal(new[] { "Anna", "Bob", "Alice", "Zoe", "Yan" }, ordered);
+        // Reihenfolge: Eltern → Au-Pair → Angestellte → Kinder, je Gruppe nach Name
+        Assert.Equal(new[] { "Anna", "Bob", "Yan", "Zoe", "Alice" }, ordered);
     }
 
     [Fact]

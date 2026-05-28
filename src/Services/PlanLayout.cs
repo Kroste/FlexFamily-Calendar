@@ -8,10 +8,20 @@ namespace FlexFamilyCalendar.Services;
 /// </summary>
 public static class PlanLayout
 {
-    /// <summary>Personen in Rollen-Reihenfolge: Eltern → Kinder → Angestellte → Au-Pairs, je Gruppe nach Name.</summary>
+    /// <summary>Anzeige-Reihenfolge der Rollen (unabhängig vom persistierten Enum-Wert): Eltern → Au-Pair → Angestellte → Kinder.</summary>
+    private static int Rank(PersonCategory c) => c switch
+    {
+        PersonCategory.Parent => 0,
+        PersonCategory.AuPair => 1,
+        PersonCategory.Employee => 2,
+        PersonCategory.Child => 3,
+        _ => 9
+    };
+
+    /// <summary>Personen in Rollen-Reihenfolge: Eltern → Au-Pair → Angestellte → Kinder, je Gruppe nach Name.</summary>
     public static IReadOnlyList<User> OrderPeople(IEnumerable<User> users)
         => users
-            .OrderBy(u => (int)u.Category)
+            .OrderBy(u => Rank(u.Category))
             .ThenBy(u => string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName,
                     StringComparer.CurrentCultureIgnoreCase)
             .ToList();
