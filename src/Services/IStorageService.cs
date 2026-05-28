@@ -13,4 +13,6 @@ public interface IStorageService
     Task SaveDayAsync(CalendarDay day);
     Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync();
     Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests);
+    Task<List<Notification>> LoadNotificationsAsync();
+    Task SaveNotificationsAsync(List<Notification> notifications);
 }
