@@ -80,6 +80,7 @@
   "Cal_OverWeeklyLimit": "Over weekly limit",
   "Cal_OverDailyLimit": "Over daily limit",
   "Cal_ShortRest": "Rest too short",
+  "Cal_Overlap": "Time overlap",
   "Cal_ViewPersonal": "My view",
 
   "Entry_New": "New entry",

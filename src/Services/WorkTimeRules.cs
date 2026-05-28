@@ -47,4 +47,20 @@ public static class WorkTimeRules
                 yield return (orderedDays[i], orderedDays[i + 1], rest);
         }
     }
+
+    /// <summary>
+    /// Paare sich zeitlich überschneidender Arbeitseinträge (Doppelbelegung an einem Tag).
+    /// Nur Arbeit zählt — Krank/Urlaub überspannen oft den ganzen Tag und sind keine echte Kollision.
+    /// </summary>
+    public static IReadOnlyList<(CalendarEntry First, CalendarEntry Second)> WorkOverlaps(IEnumerable<CalendarEntry> entries)
+    {
+        var work = entries.Where(e => EntryTypeInfo.CountsAsWork(e.Type))
+                          .OrderBy(e => e.StartTime).ToList();
+        var pairs = new List<(CalendarEntry, CalendarEntry)>();
+        for (var i = 0; i < work.Count; i++)
+            for (var j = i + 1; j < work.Count; j++)
+                if (work[i].StartTime < work[j].EndTime && work[j].StartTime < work[i].EndTime)
+                    pairs.Add((work[i], work[j]));
+        return pairs;
+    }
 }

@@ -115,4 +115,39 @@ public class WorkTimeRulesTests
         };
         Assert.Empty(WorkTimeRules.ShortRests(days, 0));
     }
+
+    [Fact]
+    public void WorkOverlaps_FlagsOverlappingShifts()
+    {
+        var overlaps = WorkTimeRules.WorkOverlaps(new[]
+        {
+            Entry(EntryType.Work, 8, 12),
+            Entry(EntryType.Work, 11, 14),  // überschneidet 11–12
+        });
+        Assert.Single(overlaps);
+    }
+
+    [Fact]
+    public void WorkOverlaps_AdjacentShifts_NoOverlap()
+    {
+        // 12:00-Ende und 12:00-Start berühren sich nur — keine Überschneidung
+        var overlaps = WorkTimeRules.WorkOverlaps(new[]
+        {
+            Entry(EntryType.Work, 8, 12),
+            Entry(EntryType.Work, 12, 16),
+        });
+        Assert.Empty(overlaps);
+    }
+
+    [Fact]
+    public void WorkOverlaps_IgnoresNonWork()
+    {
+        // Krank überspannt den ganzen Tag, soll Arbeit nicht als Kollision markieren
+        var overlaps = WorkTimeRules.WorkOverlaps(new[]
+        {
+            Entry(EntryType.SickLeave, 0, 24),
+            Entry(EntryType.Work, 8, 12),
+        });
+        Assert.Empty(overlaps);
+    }
 }

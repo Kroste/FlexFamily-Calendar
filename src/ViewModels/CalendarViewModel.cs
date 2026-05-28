@@ -177,6 +177,11 @@ public partial class CalendarViewModel : ViewModelBase
             warnings.Add($"⚠ {Localizer.Instance["Cal_ShortRest"]} ({prev.Date.ToString(dayFmt, CultureInfo.CurrentCulture)}→" +
                          $"{next.Date.ToString(dayFmt, CultureInfo.CurrentCulture)}): {H(restHours)} / {H(u.MinRestHours)} h");
 
+        foreach (var day in daysOrdered)
+            foreach (var (first, second) in WorkTimeRules.WorkOverlaps(day.Entries.Where(e => e.UserId == u.Id)))
+                warnings.Add($"⚠ {Localizer.Instance["Cal_Overlap"]} ({day.Date.ToString(dayFmt, CultureInfo.CurrentCulture)}): " +
+                             $"{first.TimeRange} ↔ {second.TimeRange}");
+
         return warnings;
     }
 
