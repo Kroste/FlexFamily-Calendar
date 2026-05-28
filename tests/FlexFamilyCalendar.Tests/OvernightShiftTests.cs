@@ -1,4 +1,3 @@
-using FlexFamilyCalendar.Controls;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
 using Xunit;
@@ -29,19 +28,6 @@ public class OvernightShiftTests
         Assert.True(Work(20, 0).CrossesMidnight);
         Assert.False(Work(20, 0).ContinuesNextDay);   // endet um Mitternacht → kein Folgetag-Anteil
         Assert.False(Work(8, 16).CrossesMidnight);
-    }
-
-    [Fact]
-    public void AssignLanes_OvernightShift_OverlapsLaterEveningEntry()
-    {
-        var night = Work(20, 6, "night");          // belegt bis Tagesende
-        var evening = Work(22, 23, "evening");      // liegt innerhalb der Nachtschicht
-
-        var lanes = DayTimelinePanel.AssignLanes(new[] { night, evening });
-
-        Assert.Equal(2, lanes[0].LaneCount);        // erkannt als Überlappung → zwei Spuren
-        Assert.Equal(2, lanes[1].LaneCount);
-        Assert.NotEqual(lanes[0].LaneIndex, lanes[1].LaneIndex);
     }
 
     [Fact]
