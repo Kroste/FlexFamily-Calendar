@@ -178,7 +178,8 @@ public partial class CalendarViewModel : ViewModelBase
     private void RecomputeWeeklyHours()
     {
         var entries = Days.SelectMany(d => d.Entries).Where(e => !e.IsRecurring).ToList();
-        var actualByUser = WeeklyHoursCalculator.ActualHoursByUser(entries);
+        var overnight = _allUsers.ToDictionary(u => u.Id, u => u.OvernightHoursPerDay);
+        var actualByUser = WeeklyHoursCalculator.ActualHoursByUser(entries, overnight);
         var workedByUser = WeeklyHoursCalculator.WorkedHoursByUser(entries);
         var daysOrdered = Days.OrderBy(d => d.Date).ToList();
 

@@ -14,6 +14,7 @@ public class User
     public double MaxWeeklyHours { get; set; }    // Gesetzliche Wochen-Höchstarbeitszeit (0 = kein Limit)
     public double MaxDailyHours { get; set; }     // Gesetzliche Tages-Höchstarbeitszeit (0 = kein Limit)
     public double MinRestHours { get; set; }      // Mindest-Ruhezeit zwischen zwei Tagen (0 = keine Prüfung)
+    public double OvernightHoursPerDay { get; set; } = 2.0;  // Pauschale Gutschrift je Übernachtung (auf Abruf)
     public string ThemeVariant { get; set; } = "System";  // System | Light | Dark
     public string Color { get; set; } = "";  // Personenfarbe im Kalender (leer = bei Anlage vergeben)
     public double OpeningBalanceHours { get; set; }       // Stundenkonto: Anfangssaldo (Übertrag von vorher)

@@ -12,7 +12,8 @@ public static class EntryDisplay
 
     public static (double Opacity, bool Highlighted) Resolve(EntryType type, bool isOwn, bool personalView)
     {
-        var isWork = EntryTypeInfo.CountsAsWork(type);
+        // Übernachtung ist eine reale Schicht → wie Arbeit voll deckend (auf Abruf, aber den ganzen Zeitraum sichtbar).
+        var isWork = EntryTypeInfo.CountsAsWork(type) || type == EntryType.Overnight;
 
         if (!personalView)                       // Planungssicht: alle gleich
             return (isWork ? 1.0 : NonWorkOpacity, false);

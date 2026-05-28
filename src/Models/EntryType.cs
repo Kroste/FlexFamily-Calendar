@@ -8,5 +8,6 @@ public enum EntryType
     Vacation = 2,
     SickLeave = 3,
     Activity = 4,
-    Absence = 5
+    Absence = 5,
+    Overnight = 6   // Übernachtung (auf Abruf): volle Zeit sichtbar, zählt pauschal x Std./Tag aufs Konto
 }

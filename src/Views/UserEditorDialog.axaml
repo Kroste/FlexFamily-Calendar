@@ -83,6 +83,11 @@
         </StackPanel>
 
         <StackPanel Spacing="4" IsVisible="{Binding CanEditAdminFields}">
+          <TextBlock Text="{loc:Tr User_OvernightHours}" FontSize="12" Opacity="0.7" />
+          <TextBox Text="{Binding OvernightHours}" CornerRadius="6" />
+        </StackPanel>
+
+        <StackPanel Spacing="4" IsVisible="{Binding CanEditAdminFields}">
           <TextBlock Text="{loc:Tr User_OpeningBalance}" FontSize="12" Opacity="0.7" />
           <TextBox Text="{Binding OpeningBalance}" CornerRadius="6" />
         </StackPanel>

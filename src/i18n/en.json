@@ -51,6 +51,7 @@
   "User_MaxWeeklyHours": "Max. weekly hours (limit, 0 = off)",
   "User_MaxDailyHours": "Max. daily hours (limit, 0 = off)",
   "User_MinRestHours": "Min. rest between days (hrs, 0 = off)",
+  "User_OvernightHours": "Credit per overnight (hrs/day)",
   "User_PasswordRequired": "Password",
   "User_PasswordKeep": "New password (blank = unchanged)",
   "User_ErrorNoUsername": "Please enter a username.",
@@ -217,10 +218,12 @@
   "Entry_ErrorNoEnd": "Please enter an end time.",
   "Entry_ErrorSameTime": "Start and end time must not be identical.",
   "Entry_ErrorNoDate": "Please select a date range (from–to).",
+  "Entry_OvernightNote": "Overnight (on call): shown across the whole span, but credited as a flat {0} h/day to the hours account.",
 
   "EntryType_Work": "Work",
   "EntryType_Vacation": "Vacation",
   "EntryType_SickLeave": "Sick",
   "EntryType_Activity": "Activity",
-  "EntryType_Absence": "Absent"
+  "EntryType_Absence": "Absent",
+  "EntryType_Overnight": "Overnight"
 }

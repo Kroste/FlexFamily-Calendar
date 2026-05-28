@@ -98,6 +98,11 @@
           </StackPanel>
         </Grid>
 
+        <Border IsVisible="{Binding ShowOvernightNote}"
+                Background="#225B4B8A" CornerRadius="6" Padding="10,8">
+          <TextBlock Text="{Binding OvernightNote}" FontSize="12" TextWrapping="Wrap" />
+        </Border>
+
         <StackPanel Spacing="4">
           <TextBlock Text="{loc:Tr Entry_TitleLabel}" FontSize="12" Opacity="0.7" />
           <TextBox Text="{Binding Title}"

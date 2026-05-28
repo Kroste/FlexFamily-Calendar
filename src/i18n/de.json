@@ -51,6 +51,7 @@
   "User_MaxWeeklyHours": "Max. Wochenstunden (Limit, 0 = aus)",
   "User_MaxDailyHours": "Max. Tagesstunden (Limit, 0 = aus)",
   "User_MinRestHours": "Min. Ruhezeit zw. Tagen (Std., 0 = aus)",
+  "User_OvernightHours": "Gutschrift je Übernachtung (Std./Tag)",
   "User_PasswordRequired": "Kennwort",
   "User_PasswordKeep": "Neues Kennwort (leer = unverändert)",
   "User_ErrorNoUsername": "Bitte einen Benutzernamen eingeben.",
@@ -217,10 +218,12 @@
   "Entry_ErrorNoEnd": "Bitte eine Endzeit angeben.",
   "Entry_ErrorSameTime": "Start- und Endzeit dürfen nicht identisch sein.",
   "Entry_ErrorNoDate": "Bitte einen Zeitraum (von–bis) auswählen.",
+  "Entry_OvernightNote": "Übernachtung (auf Abruf): wird über den ganzen Zeitraum angezeigt, zählt aber pauschal {0} h/Tag aufs Stundenkonto.",
 
   "EntryType_Work": "Arbeit",
   "EntryType_Vacation": "Urlaub",
   "EntryType_SickLeave": "Krank",
   "EntryType_Activity": "Aktivität",
-  "EntryType_Absence": "Abwesend"
+  "EntryType_Absence": "Abwesend",
+  "EntryType_Overnight": "Übernachtung"
 }

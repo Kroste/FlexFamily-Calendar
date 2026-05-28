@@ -63,7 +63,8 @@ public partial class MonthOverviewViewModel : ViewModelBase
             entries.AddRange(day.Entries);
         }
 
-        var actualByUser = WeeklyHoursCalculator.ActualHoursByUser(entries);
+        var overnight = _allUsers.ToDictionary(u => u.Id, u => u.OvernightHoursPerDay);
+        var actualByUser = WeeklyHoursCalculator.ActualHoursByUser(entries, overnight);
         var people = WeeklyHoursCalculator.RelevantUsers(_allUsers, _currentUser, _personalView);
 
         Rows.Clear();

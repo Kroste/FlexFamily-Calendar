@@ -22,11 +22,15 @@ public partial class EntryEditorViewModel : ViewModelBase
     private DateOnly? _origStart;
     private DateOnly? _origEnd;
 
-    [ObservableProperty] private User? _selectedUser;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(OvernightNote))]
+    private User? _selectedUser;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowActivityType))]
     [NotifyPropertyChangedFor(nameof(ShowDateRange))]
+    [NotifyPropertyChangedFor(nameof(ShowOvernightNote))]
+    [NotifyPropertyChangedFor(nameof(OvernightNote))]
     private EntryTypeOption? _selectedType;
 
     [ObservableProperty] private ActivityType? _selectedActivityType;
@@ -53,6 +57,13 @@ public partial class EntryEditorViewModel : ViewModelBase
 
     /// <summary>Datumsbereich (von–bis) nur bei Abwesenheiten (Urlaub/Krank/Abwesend).</summary>
     public bool ShowDateRange => SelectedType != null && EntryTypeInfo.IsAbsence(SelectedType.Type);
+
+    /// <summary>Hinweis auf die pauschale Stunden-Gutschrift bei Typ „Übernachtung".</summary>
+    public bool ShowOvernightNote => SelectedType?.Type == EntryType.Overnight;
+
+    public string OvernightNote => SelectedUser == null ? "" :
+        string.Format(Localizer.Instance["Entry_OvernightNote"],
+            SelectedUser.OvernightHoursPerDay.ToString("0.#", CultureInfo.CurrentCulture));
 
     /// <summary>Im Selbst-Antrag (Krank/Urlaub) ist der Benutzer fix → kein Benutzer-Dropdown.</summary>
     public bool CanPickUser { get; }

@@ -13,9 +13,9 @@ public static class EntryTypeInfo
     public static bool IsAbsence(EntryType type)
         => type is EntryType.Vacation or EntryType.SickLeave or EntryType.Absence;
 
-    /// <summary>Zählt der Typ aufs Stundenkonto? Arbeit + angerechnete Abwesenheit (Krank/Urlaub).</summary>
+    /// <summary>Zählt der Typ aufs Stundenkonto? Arbeit + angerechnete Abwesenheit (Krank/Urlaub) + Übernachtung (pauschal).</summary>
     public static bool CountsTowardHours(EntryType type)
-        => type is EntryType.Work or EntryType.SickLeave or EntryType.Vacation;
+        => type is EntryType.Work or EntryType.SickLeave or EntryType.Vacation or EntryType.Overnight;
 
     /// <summary>Deutsche Fallback-Beschriftung (UI nutzt bevorzugt den Localizer via Key).</summary>
     public static string Label(EntryType type) => type switch
@@ -25,6 +25,7 @@ public static class EntryTypeInfo
         EntryType.SickLeave => "Krank",
         EntryType.Activity => "Aktivität",
         EntryType.Absence => "Abwesend",
+        EntryType.Overnight => "Übernachtung",
         _ => type.ToString()
     };
 
@@ -35,6 +36,7 @@ public static class EntryTypeInfo
         EntryType.SickLeave => "#C0392B",
         EntryType.Activity => "#E67E22",
         EntryType.Absence => "#7F8C8D",
+        EntryType.Overnight => "#5B4B8A",
         _ => "#2E86C1"
     };
 }
