@@ -33,12 +33,18 @@ public partial class CalendarView : UserControl
         base.OnDataContextChanged(e);
 
         if (_vm != null)
+        {
             _vm.EntryDialogRequested -= OnEntryDialogRequested;
+            _vm.SwapDialogRequested -= OnSwapDialogRequested;
+        }
 
         _vm = DataContext as CalendarViewModel;
 
         if (_vm != null)
+        {
             _vm.EntryDialogRequested += OnEntryDialogRequested;
+            _vm.SwapDialogRequested += OnSwapDialogRequested;
+        }
     }
 
     /// <summary>Klick auf eine Eintragskarte → Bearbeiten. Tag wird per Referenzgleichheit gefunden.</summary>
@@ -49,7 +55,7 @@ public partial class CalendarView : UserControl
 
         var day = _vm.Days.FirstOrDefault(d => d.Entries.Contains(entry));
         if (day != null)
-            _vm.RequestEditEntry(day.Date, entry);
+            _vm.ActivateEntry(day.Date, entry);
     }
 
     private async void OnEntryDialogRequested(DateOnly date, CalendarEntry? existing, IReadOnlyList<User> users,
@@ -72,6 +78,24 @@ public partial class CalendarView : UserControl
         catch (Exception ex)
         {
             LogService.Error("Fehler im Eintrag-Dialog", ex);
+        }
+    }
+
+    private async void OnSwapDialogRequested(ShiftSwapViewModel vm)
+    {
+        try
+        {
+            if (TopLevel.GetTopLevel(this) is not Window owner) return;
+
+            var dialog = new ShiftSwapDialog { DataContext = vm };
+            var result = await dialog.ShowDialog<SwapDialogResult?>(owner);
+
+            if (result is not null && _vm is not null)
+                await _vm.ApplySwapResultAsync(result);
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("Fehler im Tausch-Dialog", ex);
         }
     }
 }

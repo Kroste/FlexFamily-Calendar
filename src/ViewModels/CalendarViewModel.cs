@@ -12,6 +12,7 @@ public partial class CalendarViewModel : ViewModelBase
 {
     private readonly StorageService _storage;
     private List<User> _allUsers = new();
+    private List<ShiftSwapRequest> _swapRequests = new();
     private Dictionary<string, string> _userColors = new();
 
     public User CurrentUser { get; }
@@ -49,6 +50,9 @@ public partial class CalendarViewModel : ViewModelBase
 
     /// <summary>date, existing (null=neu), users, canPickUser, allowedTypes. Vom CalendarView-Code-Behind abonniert.</summary>
     public event Action<DateOnly, CalendarEntry?, IReadOnlyList<User>, bool, IReadOnlyList<EntryType>>? EntryDialogRequested;
+
+    /// <summary>Öffnet den Schichttausch-Dialog mit vorbereitetem ViewModel. Vom CalendarView-Code-Behind abonniert.</summary>
+    public event Action<ShiftSwapViewModel>? SwapDialogRequested;
 
     private static readonly IReadOnlyList<EntryType> AllTypes = Enum.GetValues<EntryType>();
 
@@ -267,6 +271,131 @@ public partial class CalendarViewModel : ViewModelBase
             $"Eintrag {verb}: {result.Entry.TypeLabel} für {result.Entry.UserDisplayName} am {date:dd.MM.yyyy}");
     }
 
+    /// <summary>Antippen einer Schicht: offene Anfrage beantworten/zurückziehen, eigenen Tausch anbieten oder bearbeiten.</summary>
+    public void ActivateEntry(DateOnly date, CalendarEntry entry)
+    {
+        var dayStr = date.ToString("yyyy-MM-dd");
+        bool Involves(ShiftSwapRequest r) =>
+            (r.FromDate == dayStr && r.FromEntryId == entry.Id)
+            || (r.Mode == SwapMode.Exchange && r.ToDate == dayStr && r.ToEntryId == entry.Id);
+
+        var incoming = _swapRequests.FirstOrDefault(r =>
+            r.Status == SwapStatus.Pending && r.ToUserId == CurrentUser.Id && Involves(r));
+        if (incoming != null) { RespondToSwap(incoming); return; }
+
+        var outgoing = _swapRequests.FirstOrDefault(r =>
+            r.Status == SwapStatus.Pending && r.FromUserId == CurrentUser.Id && Involves(r));
+        if (outgoing != null) { WithdrawSwap(outgoing); return; }
+
+        var finalized = Days.FirstOrDefault(d => d.Date == date)?.IsFinalized ?? false;
+        if (!IsAdmin && entry.UserId == CurrentUser.Id && entry.Type == EntryType.Work && !finalized)
+        {
+            RequestInitiateSwap(date, entry);
+            return;
+        }
+
+        RequestEditEntry(date, entry);
+    }
+
+    private void RequestInitiateSwap(DateOnly date, CalendarEntry entry)
+    {
+        var colleagues = _allUsers
+            .Where(u => u.Id != CurrentUser.Id
+                && (u.Category == PersonCategory.Employee || u.Category == PersonCategory.AuPair))
+            .ToList();
+        if (colleagues.Count == 0) { LogService.Warn(Localizer.Instance["Swap_NoColleagues"]); return; }
+
+        var colleagueIds = colleagues.Select(c => c.Id).ToHashSet();
+        var shifts = new List<SwapShiftOption>();
+        foreach (var d in Days.Where(d => !d.IsFinalized))
+            foreach (var e in d.Entries)
+                if (e.Type == EntryType.Work && e.Id != entry.Id && colleagueIds.Contains(e.UserId))
+                    shifts.Add(new SwapShiftOption(e.Id, d.Date.ToString("yyyy-MM-dd"), e.UserId,
+                        $"{d.Date.ToString("ddd dd.MM.", CultureInfo.CurrentCulture)} {e.TimeRange}"));
+
+        LogService.Click(CurrentUser.Username, $"Tausch anbieten ({date:dd.MM.yyyy})");
+        SwapDialogRequested?.Invoke(new ShiftSwapViewModel(CurrentUser, entry, date, colleagues, shifts));
+    }
+
+    private void RespondToSwap(ShiftSwapRequest req)
+        => SwapDialogRequested?.Invoke(new ShiftSwapViewModel(CurrentUser, req, SwapDialogMode.Respond, SwapSummary(req)));
+
+    private void WithdrawSwap(ShiftSwapRequest req)
+        => SwapDialogRequested?.Invoke(new ShiftSwapViewModel(CurrentUser, req, SwapDialogMode.Withdraw, SwapSummary(req)));
+
+    private string SwapSummary(ShiftSwapRequest req)
+    {
+        var fromLabel = ShiftLabelFor(req.FromDate, req.FromEntryId);
+        if (req.Mode == SwapMode.GiveAway)
+            return string.Format(Localizer.Instance["Swap_SummaryGiveAway"], req.FromUserName, fromLabel, req.ToUserName);
+        var toLabel = ShiftLabelFor(req.ToDate, req.ToEntryId);
+        return string.Format(Localizer.Instance["Swap_SummaryExchange"], req.FromUserName, fromLabel, req.ToUserName, toLabel);
+    }
+
+    private string ShiftLabelFor(string? dateStr, string? entryId)
+    {
+        if (string.IsNullOrEmpty(dateStr)) return "";
+        var date = DateOnly.Parse(dateStr);
+        var fallback = date.ToString("ddd dd.MM.", CultureInfo.CurrentCulture);
+        var e = Days.FirstOrDefault(d => d.Date == date)?.Entries.FirstOrDefault(x => x.Id == entryId);
+        return e != null ? $"{fallback} {e.TimeRange}" : fallback;
+    }
+
+    /// <summary>Verarbeitet das Ergebnis des Tausch-Dialogs (Anlegen/Annehmen/Ablehnen/Zurückziehen).</summary>
+    public async Task ApplySwapResultAsync(SwapDialogResult? result)
+    {
+        if (result == null) return;
+        switch (result.Action)
+        {
+            case SwapDialogAction.Create:
+                _swapRequests.Add(result.Request);
+                await _storage.SaveSwapRequestsAsync(_swapRequests);
+                LogService.UserAction(CurrentUser.Username, $"Tausch angeboten an {result.Request.ToUserName}");
+                await LoadWeekAsync();
+                break;
+            case SwapDialogAction.Accept:
+                await AcceptSwapAsync(result.Request);
+                break;
+            case SwapDialogAction.Reject:
+                await SetSwapStatusAsync(result.Request.Id, SwapStatus.Rejected, "Tausch abgelehnt");
+                break;
+            case SwapDialogAction.Withdraw:
+                await SetSwapStatusAsync(result.Request.Id, SwapStatus.Cancelled, "Tausch zurückgezogen");
+                break;
+        }
+    }
+
+    private async Task AcceptSwapAsync(ShiftSwapRequest req)
+    {
+        var fromDay = await _storage.LoadDayAsync(DateOnly.Parse(req.FromDate));
+        CalendarDay? toDay = null;
+        if (req.Mode == SwapMode.Exchange && !string.IsNullOrEmpty(req.ToDate))
+            toDay = req.ToDate == req.FromDate ? fromDay : await _storage.LoadDayAsync(DateOnly.Parse(req.ToDate));
+
+        var error = ShiftSwapEngine.Validate(req, fromDay, toDay);
+        if (error != null) { LogService.Warn(Localizer.Instance[error]); return; }
+
+        ShiftSwapEngine.Apply(req, fromDay, toDay);
+        await _storage.SaveDayAsync(fromDay);
+        if (toDay != null && !ReferenceEquals(toDay, fromDay))
+            await _storage.SaveDayAsync(toDay);
+
+        await SetSwapStatusAsync(req.Id, SwapStatus.Accepted, "Tausch angenommen");
+    }
+
+    private async Task SetSwapStatusAsync(string id, SwapStatus status, string action)
+    {
+        var stored = _swapRequests.FirstOrDefault(r => r.Id == id);
+        if (stored != null)
+        {
+            stored.Status = status;
+            stored.RespondedAt = DateTime.Now;
+            await _storage.SaveSwapRequestsAsync(_swapRequests);
+            LogService.UserAction(CurrentUser.Username, action);
+        }
+        await LoadWeekAsync();
+    }
+
     private void RebuildDays()
     {
         Days.Clear();
@@ -306,12 +435,31 @@ public partial class CalendarViewModel : ViewModelBase
             var canSeeReason = IsAdmin || isOwn;
             e.DisplayType = EntryPrivacy.DisplayType(e.Type, canSeeReason);
             e.DisplayTitle = EntryPrivacy.ShowReason(e.Type, canSeeReason) ? e.Title : "";
+
+            e.SwapMark = ResolveSwapMark(day.DateString, e.Id);
         }
+    }
+
+    /// <summary>Markiert eine Schicht, wenn eine offene Tausch-Anfrage sie betrifft (eingehend hat Vorrang).</summary>
+    private SwapMark ResolveSwapMark(string dayStr, string entryId)
+    {
+        var mark = SwapMark.None;
+        foreach (var r in _swapRequests)
+        {
+            if (r.Status != SwapStatus.Pending) continue;
+            var involved = (r.FromDate == dayStr && r.FromEntryId == entryId)
+                || (r.Mode == SwapMode.Exchange && r.ToDate == dayStr && r.ToEntryId == entryId);
+            if (!involved) continue;
+            if (CurrentUser.Id == r.ToUserId) return SwapMark.Incoming;
+            if (CurrentUser.Id == r.FromUserId) mark = SwapMark.Outgoing;
+        }
+        return mark;
     }
 
     private async Task LoadWeekAsync()
     {
         LogService.Info("Lade Kalenderwoche {0}", WeekLabel);
+        _swapRequests = await _storage.LoadSwapRequestsAsync();
         for (int i = 0; i < 7; i++)
         {
             var day = await _storage.LoadDayAsync(WeekStart.AddDays(i));

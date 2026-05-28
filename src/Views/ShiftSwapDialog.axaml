@@ -1,0 +1,122 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+        xmlns:loc="using:FlexFamilyCalendar.Localization"
+        x:Class="FlexFamilyCalendar.Views.ShiftSwapDialog"
+        x:CompileBindings="False"
+        Title="{Binding HeaderText}"
+        Width="460" SizeToContent="Height" MaxHeight="720"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+  <Grid Margin="24,20,24,20" RowDefinitions="Auto,*,Auto">
+
+    <TextBlock Grid.Row="0" Text="{Binding HeaderText}" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" />
+
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+      <StackPanel Spacing="14">
+
+        <!-- Initiate: eigene Schicht anbieten -->
+        <StackPanel Spacing="14" IsVisible="{Binding IsInitiate}">
+          <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                  CornerRadius="6" Padding="10,8">
+            <StackPanel Spacing="2">
+              <TextBlock Text="{loc:Tr Swap_YourShift}" FontSize="12" Opacity="0.7" />
+              <TextBlock Text="{Binding ShiftLabel}" FontSize="14" FontWeight="SemiBold" />
+            </StackPanel>
+          </Border>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="{loc:Tr Swap_Colleague}" FontSize="12" Opacity="0.7" />
+            <ComboBox ItemsSource="{Binding Colleagues}" SelectedItem="{Binding SelectedColleague}"
+                      HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding DisplayName}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="{loc:Tr Swap_Mode}" FontSize="12" Opacity="0.7" />
+            <ComboBox ItemsSource="{Binding Modes}" SelectedItem="{Binding SelectedMode}"
+                      HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Label}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </StackPanel>
+
+          <StackPanel Spacing="4" IsVisible="{Binding IsExchange}">
+            <TextBlock Text="{loc:Tr Swap_CounterShift}" FontSize="12" Opacity="0.7" />
+            <ComboBox ItemsSource="{Binding CounterShifts}" SelectedItem="{Binding SelectedCounterShift}"
+                      HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate>
+                <DataTemplate><TextBlock Text="{Binding Label}" /></DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBlock Text="{loc:Tr Swap_NoCounterShifts}" FontSize="12" Opacity="0.6"
+                       IsVisible="{Binding ShowNoCounterShifts}" />
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="{loc:Tr Swap_Message}" FontSize="12" Opacity="0.7" />
+            <TextBox Text="{Binding Message}" AcceptsReturn="True" Height="64"
+                     TextWrapping="Wrap" CornerRadius="6" />
+          </StackPanel>
+        </StackPanel>
+
+        <!-- Respond / Withdraw: Anfrage-Zusammenfassung -->
+        <StackPanel Spacing="10" IsVisible="{Binding !IsInitiate}">
+          <TextBlock Text="{Binding Summary}" FontSize="14" TextWrapping="Wrap" />
+          <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                  CornerRadius="6" Padding="10,8" IsVisible="{Binding HasMessage}">
+            <StackPanel Spacing="2">
+              <TextBlock Text="{loc:Tr Swap_Message}" FontSize="12" Opacity="0.7" />
+              <TextBlock Text="{Binding Message}" FontSize="13" TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Background="#33C0392B" CornerRadius="6" Padding="10,8">
+          <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" FontSize="13" TextWrapping="Wrap" />
+        </Border>
+
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Buttons je Modus -->
+    <Grid Grid.Row="2" Margin="0,16,0,0">
+      <!-- Initiate -->
+      <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right"
+                  IsVisible="{Binding IsInitiate}">
+        <Button Content="{loc:Tr Common_Cancel}" Command="{Binding CancelCommand}"
+                Padding="16,8" CornerRadius="6" />
+        <Button Content="{loc:Tr Swap_Send}" Command="{Binding SendCommand}"
+                Padding="16,8" CornerRadius="6"
+                Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+      </StackPanel>
+
+      <!-- Respond -->
+      <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right"
+                  IsVisible="{Binding IsRespond}">
+        <Button Content="{loc:Tr Common_Cancel}" Command="{Binding CancelCommand}"
+                Padding="16,8" CornerRadius="6" />
+        <Button Content="{loc:Tr Swap_Reject}" Command="{Binding RejectCommand}"
+                Padding="16,8" CornerRadius="6" Background="#C0392B" Foreground="White" />
+        <Button Content="{loc:Tr Swap_Accept}" Command="{Binding AcceptCommand}"
+                Padding="16,8" CornerRadius="6" Background="#27AE60" Foreground="White" />
+      </StackPanel>
+
+      <!-- Withdraw -->
+      <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right"
+                  IsVisible="{Binding IsWithdraw}">
+        <Button Content="{loc:Tr Common_Cancel}" Command="{Binding CancelCommand}"
+                Padding="16,8" CornerRadius="6" />
+        <Button Content="{loc:Tr Swap_Withdraw}" Command="{Binding WithdrawCommand}"
+                Padding="16,8" CornerRadius="6" Background="#C0392B" Foreground="White" />
+      </StackPanel>
+    </Grid>
+
+  </Grid>
+</Window>
