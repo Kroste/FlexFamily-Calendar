@@ -3,6 +3,7 @@ using Xunit;
 
 namespace FlexFamilyCalendar.Tests;
 
+[Collection("SecretService")]
 public class SecretServiceTests : IDisposable
 {
     private readonly string _dir;

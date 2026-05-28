@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using FlexFamilyCalendar.Localization;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
+using FlexFamilyCalendar.Services.AI;
 using FlexFamilyCalendar.Theming;
 
 namespace FlexFamilyCalendar.ViewModels;
@@ -12,6 +13,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly AuthService _auth;
     private readonly StorageService _storage;
     private readonly NotificationService _notifications;
+    private readonly AiService _ai;
     private User? _currentUser;
 
     [ObservableProperty]
@@ -40,11 +42,12 @@ public partial class MainWindowViewModel : ViewModelBase
     public event Action? HoursAccountRequested;
     public event Action? NotificationsRequested;
 
-    public MainWindowViewModel(AuthService auth, StorageService storage, NotificationService notifications, LoginViewModel loginVm)
+    public MainWindowViewModel(AuthService auth, StorageService storage, NotificationService notifications, AiService ai, LoginViewModel loginVm)
     {
         _auth = auth;
         _storage = storage;
         _notifications = notifications;
+        _ai = ai;
         LoginVm = loginVm;
         LoginVm.LoginSuccessful += OnLoginSuccessful;
         LogService.StatusUpdated += msg =>

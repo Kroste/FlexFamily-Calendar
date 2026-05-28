@@ -1,13 +1,10 @@
 namespace FlexFamilyCalendar.Services.AI;
 
-public class OpenAiProvider : IAiProvider
+public class OpenAiProvider : OpenAiCompatibleProvider
 {
-    private string? _apiKey;
+    public OpenAiProvider(HttpClient? http = null) : base(http) { }
 
-    public string Name => "ChatGPT";
-    public bool IsConfigured => !string.IsNullOrEmpty(_apiKey);
-    public void SetApiKey(string key) => _apiKey = key;
-
-    public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
-        => throw new NotImplementedException("ChatGPT-Integration noch nicht implementiert");
+    public override string Name => "ChatGPT";
+    protected override string DefaultModel => "gpt-4o-mini";
+    protected override string Endpoint => "https://api.openai.com/v1/chat/completions";
 }

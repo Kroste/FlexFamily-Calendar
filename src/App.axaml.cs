@@ -39,7 +39,10 @@ public partial class App : Application
                 new LlamaProvider()
             });
 
-            var mainVm = new MainWindowViewModel(auth, storage, notifications, loginVm);
+            var settings = Task.Run(() => storage.LoadSettingsAsync()).GetAwaiter().GetResult();
+            aiService.ApplySettings(settings);
+
+            var mainVm = new MainWindowViewModel(auth, storage, notifications, aiService, loginVm);
 
             // Auto-Login: gemerkten Benutzer vor dem Anzeigen anmelden (kein Login-Screen-Flackern)
             if (hasUsers)

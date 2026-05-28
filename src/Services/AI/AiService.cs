@@ -1,3 +1,5 @@
+using FlexFamilyCalendar.Models;
+
 namespace FlexFamilyCalendar.Services.AI;
 
 public class AiService
@@ -10,6 +12,8 @@ public class AiService
 
     public IReadOnlyList<string> AvailableProviders => _providers.Keys.Order().ToList();
 
+    public IAiProvider? GetProvider(string name) => _providers.GetValueOrDefault(name);
+
     public IAiProvider? ActiveProvider
         => _providers.GetValueOrDefault(_activeProvider);
 
@@ -17,6 +21,28 @@ public class AiService
     {
         _activeProvider = name;
         LogService.Info("AI-Provider gewechselt zu: {0}", name);
+    }
+
+    /// <summary>Entschlüsselt die gespeicherten Schlüssel und wendet Provider-Auswahl + Modell an.</summary>
+    public void ApplySettings(AppSettings settings)
+    {
+        foreach (var (name, encrypted) in settings.EncryptedApiKeys)
+        {
+            if (!_providers.TryGetValue(name, out var provider) || string.IsNullOrEmpty(encrypted)) continue;
+            try { provider.SetApiKey(SecretService.Decrypt(encrypted)); }
+            catch (Exception ex) { LogService.Error($"AI-Schlüssel für '{name}' konnte nicht entschlüsselt werden", ex); }
+        }
+        if (!string.IsNullOrEmpty(settings.ActiveAiProvider))
+            _activeProvider = settings.ActiveAiProvider;
+        if (!string.IsNullOrWhiteSpace(settings.AiModel))
+            ActiveProvider?.SetModel(settings.AiModel);
+    }
+
+    /// <summary>Kurzer Verbindungstest über den aktiven Provider; true bei nicht-leerer Antwort.</summary>
+    public async Task<bool> TestAsync(CancellationToken ct = default)
+    {
+        var result = await SuggestAsync("Antworte ausschließlich mit: OK", ct);
+        return !string.IsNullOrWhiteSpace(result);
     }
 
     public async Task<string?> SuggestAsync(string prompt, CancellationToken ct = default)
