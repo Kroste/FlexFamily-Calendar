@@ -4,12 +4,15 @@ using System.Text;
 namespace FlexFamilyCalendar.Services;
 
 /// <summary>
-/// Erzeugt das Wochenplan-PDF ohne externe Abhängigkeit (reines Managed, Standard-Helvetica/WinAnsi).
-/// Bewusst nativ-frei, damit es im Avalonia-Prozess zuverlässig läuft (kein Skia-Konflikt). UI-unabhängig.
+/// Erzeugt das Wochenplan-PDF als Zeitraster (Zeitachse + 7 Tagesspalten, farbige Blöcke) — ohne externe
+/// Abhängigkeit (reines Managed, Standard-Helvetica/WinAnsi). Nativ-frei → läuft zuverlässig im Avalonia-Prozess.
 /// </summary>
 public static class PdfExportService
 {
-    private const double PageW = 842, PageH = 595, Margin = 30;  // A4 quer (Punkte)
+    private const double PageW = 842, PageH = 595, Margin = 20;
+    private const double TimeAxisW = 26;
+    private const double HeaderTop = 58, GridTop = 122, FooterTop = PageH - 14;
+    private static readonly double GridBottom = PageH - 22;
 
     public static byte[] Render(WeekExport export) => Assemble(BuildContent(export));
 
@@ -17,114 +20,137 @@ public static class PdfExportService
     {
         var c = new StringBuilder();
 
-        void Color(double r, double g, double b) => c.Append($"{F(r)} {F(g)} {F(b)} rg\n");
+        void Fill(double r, double g, double b) => c.Append($"{F(r)} {F(g)} {F(b)} rg\n");
         void Stroke(double v) => c.Append($"{F(v)} {F(v)} {F(v)} RG\n");
-        void Line(double x1, double yt1, double x2, double yt2)
-            => c.Append($"{F(x1)} {F(PageH - yt1)} m {F(x2)} {F(PageH - yt2)} l S\n");
-        void Text(double x, double yTop, double size, bool bold, string s)
+        void Rect(double x, double top, double w, double h) => c.Append($"{F(x)} {F(PageH - top - h)} {F(w)} {F(h)} re\n");
+        void RectFill(double x, double top, double w, double h) { Rect(x, top, w, h); c.Append("f\n"); }
+        void Line(double x1, double t1, double x2, double t2) => c.Append($"{F(x1)} {F(PageH - t1)} m {F(x2)} {F(PageH - t2)} l S\n");
+        void Text(double x, double top, double size, bool bold, string s)
+            => c.Append("BT\n").Append($"/{(bold ? "F2" : "F1")} {F(size)} Tf\n")
+                .Append($"1 0 0 1 {F(x)} {F(PageH - top)} Tm\n").Append($"({Escape(s)}) Tj\nET\n");
+
+        var dayAreaX = Margin + TimeAxisW;
+        var dayAreaW = PageW - Margin - dayAreaX;
+        var colW = dayAreaW / 7;
+        var hourH = (GridBottom - GridTop) / 24.0;
+
+        // Kopf (fix oben; Tagesköpfe beginnen darunter ab HeaderTop)
+        Fill(0, 0, 0); Text(Margin, 24, 16, true, export.Title);
+        Fill(0.4, 0.4, 0.4); Text(Margin, 40, 10.5, false, export.WeekLabel);
+
+        // Feiertags-Tönung der Spalte (dezent), zuerst zeichnen
+        for (int i = 0; i < export.Days.Count && i < 7; i++)
         {
-            c.Append("BT\n").Append($"/{(bold ? "F2" : "F1")} {F(size)} Tf\n")
-             .Append($"1 0 0 1 {F(x)} {F(PageH - yTop)} Tm\n")
-             .Append($"({Escape(s)}) Tj\nET\n");
+            if (string.IsNullOrEmpty(export.Days[i].Holiday)) continue;
+            Fill(0.99, 0.95, 0.88);
+            RectFill(dayAreaX + i * colW, GridTop, colW, GridBottom - GridTop);
         }
 
-        // Kopf
-        Color(0, 0, 0);
-        Text(Margin, Margin + 13, 16, true, export.Title);
-        Color(0.4, 0.4, 0.4);
-        Text(Margin, Margin + 30, 11, false, export.WeekLabel);
-
-        var usableW = PageW - 2 * Margin;
-        var colW = usableW / 7;
-        const double pad = 4;
-        var textW = colW - 2 * pad;
-        var gridTop = Margin + 44;
-        var gridBottom = PageH - Margin - 16;
-
-        // Rahmen
-        Stroke(0.7);
-        Line(Margin, gridTop, Margin + usableW, gridTop);
-        Line(Margin, gridBottom, Margin + usableW, gridBottom);
+        // Stundenraster + Zeitachse
+        Stroke(0.85);
+        for (int h = 0; h <= 24; h++)
+        {
+            var y = GridTop + h * hourH;
+            Line(dayAreaX, y, dayAreaX + dayAreaW, y);
+            if (h < 24 && h % 2 == 0)
+            {
+                Fill(0.55, 0.55, 0.55);
+                Text(Margin, y + 7, 6.5, false, $"{h:D2}:00");
+            }
+        }
+        // Spaltenlinien
+        Stroke(0.8);
         for (int i = 0; i <= 7; i++)
-            Line(Margin + i * colW, gridTop, Margin + i * colW, gridBottom);
+            Line(dayAreaX + i * colW, GridTop, dayAreaX + i * colW, GridBottom);
 
-        var days = export.Days;
-        for (int i = 0; i < days.Count && i < 7; i++)
+        // Tagesköpfe + Blöcke
+        for (int i = 0; i < export.Days.Count && i < 7; i++)
         {
-            var day = days[i];
-            var x = Margin + i * colW + pad;
-            var y = gridTop + 13;
+            var day = export.Days[i];
+            var cx = dayAreaX + i * colW;
+            var tx = cx + 4;
+            var y = HeaderTop;
 
-            Color(0, 0, 0);
-            Text(x, y, 9.5, true, day.DayName); y += 11;
-            Color(0.4, 0.4, 0.4);
-            Text(x, y, 8, false, day.DateLabel); y += 11;
-
+            Fill(0, 0, 0); Text(tx, y, 9, true, Truncate(day.DayName, colW - 8, 9)); y += 10;
+            Fill(0.45, 0.45, 0.45); Text(tx, y, 7.5, false, day.DateLabel); y += 9;
             if (!string.IsNullOrEmpty(day.Holiday))
-            {
-                Color(0.8, 0.45, 0.1);
-                foreach (var l in Wrap(day.Holiday, MaxChars(textW, 8))) { if (y > gridBottom) break; Text(x, y, 8, false, l); y += 10; }
-            }
+            { Fill(0.8, 0.45, 0.1); Text(tx, y, 7, false, Truncate(day.Holiday, colW - 8, 7)); y += 9; }
             if (!string.IsNullOrEmpty(day.Note))
+            { Fill(0.3, 0.3, 0.3); Text(tx, y, 6.5, false, Truncate(day.Note, colW - 8, 6.5)); y += 9; }
+
+            foreach (var chip in day.Absences)
             {
-                Color(0.25, 0.25, 0.25);
-                foreach (var l in Wrap(day.Note, MaxChars(textW, 8))) { if (y > gridBottom) break; Text(x, y, 8, false, l); y += 10; }
+                if (y + 9 > GridTop - 1) break;
+                var (r, g, b) = Hex(chip.ColorHex);
+                Fill(r, g, b); RectFill(tx, y - 6.5, colW - 8, 9);
+                var (tr, tg, tb) = TextColor(r, g, b);
+                Fill(tr, tg, tb); Text(tx + 2, y, 6.5, false, Truncate(chip.Text, colW - 12, 6.5));
+                y += 10.5;
             }
 
-            Color(0.35, 0.35, 0.35);
-            foreach (var a in day.Absences)
-                foreach (var l in Wrap(a.Text, MaxChars(textW, 8))) { if (y > gridBottom) break; Text(x, y, 8, false, l); y += 10; }
-
-            y += 3;
-            foreach (var s in day.Shifts)
+            // Blöcke
+            foreach (var blk in day.Blocks)
             {
-                if (y > gridBottom) break;
-                Color(0.15, 0.3, 0.6);
-                Text(x, y, 8, false, s.Time); y += 9;
-                Color(0, 0, 0);
-                foreach (var l in Wrap(s.Text, MaxChars(textW, 9))) { if (y > gridBottom) break; Text(x, y, 9, false, l); y += 10; }
-                y += 2;
+                var lanes = Math.Max(1, blk.LaneCount);
+                var lw = (colW - 2) / lanes;
+                var bx = cx + 1 + blk.LaneIndex * lw;
+                var top = GridTop + blk.StartHour * hourH;
+                var h = Math.Max(9, (blk.EndHour - blk.StartHour) * hourH - 1);
+
+                var (br, bg, bb) = Blend(Hex(blk.ColorHex), blk.Opacity);
+                Fill(br, bg, bb); RectFill(bx, top, lw - 1, h);
+
+                var (tr, tg, tb) = TextColor(br, bg, bb);
+                Fill(tr, tg, tb);
+                var innerW = lw - 5;
+                var ty = top + 7;
+                var bottom = top + h - 1;
+                Text(bx + 2, ty, 6, false, Truncate(blk.TimeLabel, innerW, 6)); ty += 7.5;
+                foreach (var ln in blk.Lines)
+                {
+                    if (ty > bottom) break;
+                    Text(bx + 2, ty, 6.8, false, Truncate(ln, innerW, 6.8)); ty += 7.5;
+                }
             }
         }
 
-        // Fußzeile (rechtsbündig, grob ausgerichtet)
-        Color(0.5, 0.5, 0.5);
-        var fw = export.GeneratedLabel.Length * 8 * 0.5;
-        Text(PageW - Margin - fw, PageH - Margin + 6, 8, false, export.GeneratedLabel);
+        // Fußzeile
+        Fill(0.5, 0.5, 0.5);
+        Text(PageW - Margin - export.GeneratedLabel.Length * 8 * 0.45, FooterTop, 8, false, export.GeneratedLabel);
 
         return c.ToString();
     }
 
-    /// <summary>Bricht Text wortweise auf höchstens <paramref name="maxChars"/> Zeichen je Zeile um (harte Trennung sehr langer Wörter).</summary>
-    public static List<string> Wrap(string text, int maxChars)
+    /// <summary>Kürzt Text auf die verfügbare Breite (Helvetica ~0,5·Größe je Zeichen) und hängt „…" an.</summary>
+    private static string Truncate(string text, double width, double size)
     {
-        var lines = new List<string>();
-        if (string.IsNullOrEmpty(text)) return lines;
-        maxChars = Math.Max(1, maxChars);
-
-        var line = new StringBuilder();
-        foreach (var word in text.Split(' '))
-        {
-            var w = word;
-            while (w.Length > maxChars)   // sehr langes Wort hart trennen
-            {
-                if (line.Length > 0) { lines.Add(line.ToString()); line.Clear(); }
-                lines.Add(w[..maxChars]);
-                w = w[maxChars..];
-            }
-            if (line.Length == 0) line.Append(w);
-            else if (line.Length + 1 + w.Length <= maxChars) line.Append(' ').Append(w);
-            else { lines.Add(line.ToString()); line.Clear(); line.Append(w); }
-        }
-        if (line.Length > 0) lines.Add(line.ToString());
-        return lines;
+        if (string.IsNullOrEmpty(text)) return "";
+        var max = Math.Max(1, (int)(width / (size * 0.5)));
+        return text.Length <= max ? text : text[..Math.Max(1, max - 1)] + "…";
     }
 
-    private static int MaxChars(double width, double size) => Math.Max(1, (int)(width / (size * 0.5)));
+    private static (double, double, double) Hex(string hex)
+    {
+        hex = hex.TrimStart('#');
+        if (hex.Length != 6) return (0.5, 0.5, 0.5);
+        return (
+            int.Parse(hex.Substring(0, 2), NumberStyles.HexNumber) / 255.0,
+            int.Parse(hex.Substring(2, 2), NumberStyles.HexNumber) / 255.0,
+            int.Parse(hex.Substring(4, 2), NumberStyles.HexNumber) / 255.0);
+    }
+
+    private static (double, double, double) Blend((double r, double g, double b) c, double op)
+    {
+        op = Math.Clamp(op, 0, 1);
+        return (c.r * op + (1 - op), c.g * op + (1 - op), c.b * op + (1 - op));
+    }
+
+    /// <summary>Lesbare Textfarbe je nach Helligkeit des Hintergrunds (dunkel auf hell, sonst weiß).</summary>
+    private static (double, double, double) TextColor(double r, double g, double b)
+        => 0.299 * r + 0.587 * g + 0.114 * b > 0.62 ? (0.15, 0.15, 0.15) : (1, 1, 1);
 
     private static string F(double v) => v.ToString("0.###", CultureInfo.InvariantCulture);
 
-    /// <summary>Maskiert PDF-Sonderzeichen und bildet auf WinAnsi (Windows-1252) ab.</summary>
     private static string Escape(string s)
     {
         var b = new StringBuilder(s.Length);
@@ -139,7 +165,7 @@ public static class PdfExportService
 
     private static char WinAnsi(char ch)
     {
-        if (ch <= 0xFF) return ch;   // Latin-1 deckt 0xA0–0xFF (inkl. Umlaute, ·, », «) byte-gleich ab
+        if (ch <= 0xFF) return ch;
         return ch switch
         {
             '–' => (char)0x96, '—' => (char)0x97,

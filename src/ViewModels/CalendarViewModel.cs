@@ -200,13 +200,17 @@ public partial class CalendarViewModel : ViewModelBase
     {
         string TypeLabel(EntryType t) => Localizer.Instance[EntryTypeInfo.Key(t)];
 
-        var days = Days.Select(d => new PlanExportDay(
-            d.DayName,
-            d.DateLabel,
-            d.HolidayName,
-            d.DayNote,
-            d.AbsenceHints.Select(e => PlanExportBuilder.AbsenceLine(e, TypeLabel)).ToList(),
-            d.TimelineEntries.Select(e => PlanExportBuilder.ShiftLine(e, TypeLabel)).ToList())).ToList();
+        var days = new List<PlanExportDay>();
+        foreach (var d in Days)
+        {
+            var entries = d.TimelineEntries.ToList();
+            var lanes = Controls.DayTimelinePanel.AssignLanes(entries);
+            var blocks = entries
+                .Select((e, i) => PlanExportBuilder.BlockOf(e, lanes[i].LaneIndex, lanes[i].LaneCount, TypeLabel))
+                .ToList();
+            var chips = d.AbsenceHints.Select(e => PlanExportBuilder.ChipOf(e, TypeLabel)).ToList();
+            days.Add(new PlanExportDay(d.DayName, d.DateLabel, d.HolidayName, d.DayNote, chips, blocks));
+        }
 
         var generated = string.Format(Localizer.Instance["Pdf_Generated"],
             DateTime.Now.ToString("g", CultureInfo.CurrentCulture));
