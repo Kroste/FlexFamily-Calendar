@@ -1,25 +1,18 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:FlexFamilyCalendar.ViewModels"
-        xmlns:cv="using:FlexFamilyCalendar.Converters"
-        xmlns:loc="using:FlexFamilyCalendar.Localization"
-        x:Class="FlexFamilyCalendar.Views.RecurringActivityManagementDialog"
-        x:CompileBindings="False"
-        Title="{loc:Tr Recur_Title}"
-        Width="720" Height="560"
-        WindowStartupLocation="CenterOwner">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cv="using:FlexFamilyCalendar.Converters"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.RecurringActivityManagementView"
+             x:CompileBindings="False">
 
-  <Window.Resources>
+  <UserControl.Resources>
     <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
-  </Window.Resources>
+  </UserControl.Resources>
 
-  <Grid Margin="20" ColumnDefinitions="280,16,*" RowDefinitions="Auto,*">
-
-    <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Text="{loc:Tr Recur_Title}"
-               FontSize="18" FontWeight="Bold" Margin="0,0,0,12" />
+  <Grid Margin="16" ColumnDefinitions="280,16,*">
 
     <!-- Liste links -->
-    <DockPanel Grid.Row="1" Grid.Column="0">
+    <DockPanel Grid.Column="0">
       <Button DockPanel.Dock="Bottom" Content="{loc:Tr Recur_New}"
               Command="{Binding NewCommand}" Margin="0,8,0,0"
               HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
@@ -46,7 +39,7 @@
     </DockPanel>
 
     <!-- Formular rechts -->
-    <ScrollViewer Grid.Row="1" Grid.Column="2" VerticalScrollBarVisibility="Auto">
+    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
       <StackPanel Spacing="14">
 
         <StackPanel Spacing="4">
@@ -121,4 +114,4 @@
     </ScrollViewer>
 
   </Grid>
-</Window>
+</UserControl>

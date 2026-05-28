@@ -85,7 +85,7 @@ public partial class HoursAccountViewModel : ViewModelBase
         var earliest = currentMonth.AddMonths(-(MaxMonths - 1));
         if (start < earliest) start = earliest;
 
-        var overnight = new Dictionary<string, double> { [user.Id] = user.OvernightHoursPerDay };
+        var overnightHoursPerDay = (await _storage.LoadSettingsAsync()).OvernightHoursPerDay;
 
         // Monate sammeln, je Monat Ist/Soll bestimmen
         var months = new List<(DateOnly Month, double Actual, double Target)>();
@@ -96,7 +96,7 @@ public partial class HoursAccountViewModel : ViewModelBase
             for (int d = 1; d <= daysInMonth; d++)
                 entries.AddRange((await _storage.LoadDayAsync(new DateOnly(m.Year, m.Month, d))).Entries);
 
-            var actual = WeeklyHoursCalculator.ActualHoursByUser(entries, overnight).GetValueOrDefault(user.Id);
+            var actual = WeeklyHoursCalculator.ActualHoursByUser(entries, overnightHoursPerDay).GetValueOrDefault(user.Id);
             var target = WeeklyHoursCalculator.MonthlyTarget(user.WeeklyHoursQuota, daysInMonth);
             months.Add((m, actual, target));
         }

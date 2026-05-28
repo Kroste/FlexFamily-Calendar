@@ -1,19 +1,12 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:FlexFamilyCalendar.ViewModels"
-        xmlns:loc="using:FlexFamilyCalendar.Localization"
-        x:Class="FlexFamilyCalendar.Views.AiSettingsDialog"
-        x:CompileBindings="False"
-        Title="{loc:Tr Ai_Title}"
-        Width="460" SizeToContent="Height" MaxHeight="640"
-        CanResize="False"
-        WindowStartupLocation="CenterOwner">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.AiSettingsView"
+             x:CompileBindings="False">
 
-  <Grid Margin="24,20,24,20" RowDefinitions="Auto,*,Auto">
+  <Grid Margin="16" RowDefinitions="*,Auto" MaxWidth="520" HorizontalAlignment="Left">
 
-    <TextBlock Grid.Row="0" Text="{loc:Tr Ai_Title}" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" />
-
-    <StackPanel Grid.Row="1" Spacing="14">
+    <StackPanel Grid.Row="0" Spacing="14">
 
       <StackPanel Spacing="4">
         <TextBlock Text="{loc:Tr Ai_Provider}" FontSize="12" Opacity="0.7" />
@@ -48,15 +41,11 @@
 
     </StackPanel>
 
-    <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,12,Auto" Margin="0,16,0,0">
-      <Button Grid.Column="0" Content="{loc:Tr Ai_Test}"
-              Command="{Binding TestCommand}" Padding="16,8" CornerRadius="6" />
-      <Button Grid.Column="2" Content="{loc:Tr Common_Cancel}"
-              Command="{Binding CancelCommand}" Padding="16,8" CornerRadius="6" />
-      <Button Grid.Column="4" Content="{loc:Tr Common_Save}"
-              Command="{Binding SaveCommand}" Padding="16,8" CornerRadius="6"
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,16,0,0">
+      <Button Content="{loc:Tr Ai_Test}" Command="{Binding TestCommand}" Padding="16,8" CornerRadius="6" />
+      <Button Content="{loc:Tr Common_Save}" Command="{Binding SaveCommand}" Padding="16,8" CornerRadius="6"
               Background="{DynamicResource SystemAccentColor}" Foreground="White" />
-    </Grid>
+    </StackPanel>
 
   </Grid>
-</Window>
+</UserControl>

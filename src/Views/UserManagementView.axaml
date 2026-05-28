@@ -1,17 +1,10 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:FlexFamilyCalendar.ViewModels"
-        xmlns:loc="using:FlexFamilyCalendar.Localization"
-        x:Class="FlexFamilyCalendar.Views.UserManagementDialog"
-        x:CompileBindings="False"
-        Title="{loc:Tr Main_UserManagement}"
-        Width="560" Height="560"
-        WindowStartupLocation="CenterOwner">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.UserManagementView"
+             x:CompileBindings="False">
 
-  <DockPanel Margin="20">
-
-    <TextBlock DockPanel.Dock="Top" Text="{loc:Tr Main_UserManagement}"
-               FontSize="18" FontWeight="Bold" Margin="0,0,0,12" />
+  <DockPanel Margin="16">
 
     <!-- Toolbar -->
     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
@@ -55,4 +48,4 @@
     </Border>
 
   </DockPanel>
-</Window>
+</UserControl>

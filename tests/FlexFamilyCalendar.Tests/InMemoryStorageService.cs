@@ -102,7 +102,6 @@ public class InMemoryStorageService : IStorageService
         DisplayName = u.DisplayName, Email = u.Email, Language = u.Language,
         Category = u.Category, WeeklyHoursQuota = u.WeeklyHoursQuota,
         MaxWeeklyHours = u.MaxWeeklyHours, MaxDailyHours = u.MaxDailyHours, MinRestHours = u.MinRestHours,
-        OvernightHoursPerDay = u.OvernightHoursPerDay,
         ThemeVariant = u.ThemeVariant, Color = u.Color,
         OpeningBalanceHours = u.OpeningBalanceHours, AccountStart = u.AccountStart,
         ShowHolidays = u.ShowHolidays

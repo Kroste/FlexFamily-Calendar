@@ -5,11 +5,11 @@ using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Views;
 
-public partial class UserManagementDialog : Window
+public partial class UserManagementView : UserControl
 {
     private UserManagementViewModel? _vm;
 
-    public UserManagementDialog() => InitializeComponent();
+    public UserManagementView() => InitializeComponent();
 
     protected override void OnDataContextChanged(EventArgs e)
     {
@@ -24,8 +24,9 @@ public partial class UserManagementDialog : Window
         if (_vm == null) return;
         try
         {
+            if (TopLevel.GetTopLevel(this) is not Window owner) return;
             var dialog = new UserEditorDialog { DataContext = _vm.CreateEditor(user) };
-            var result = await dialog.ShowDialog<UserEditorResult?>(this);
+            var result = await dialog.ShowDialog<UserEditorResult?>(owner);
             if (result != null)
                 await _vm.ReloadAsync();
         }

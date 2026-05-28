@@ -22,28 +22,25 @@ public static class WeeklyHoursCalculator
 
     /// <summary>
     /// Summe der angerechneten Stunden je UserId (Arbeit + Krank/Urlaub + Übernachtung).
-    /// Übernachtungen zählen pauschal je Tag (Wert aus <paramref name="overnightHoursByUser"/>, sonst 0), nicht die volle Dauer.
+    /// Übernachtungen zählen pauschal je Tag (<paramref name="overnightHoursPerDay"/>, global), nicht die volle Dauer.
     /// </summary>
     public static Dictionary<string, double> ActualHoursByUser(
-        IEnumerable<CalendarEntry> entries, IReadOnlyDictionary<string, double>? overnightHoursByUser = null)
-        => SumByUser(entries, EntryTypeInfo.CountsTowardHours, overnightHoursByUser);
+        IEnumerable<CalendarEntry> entries, double overnightHoursPerDay = 0)
+        => SumByUser(entries, EntryTypeInfo.CountsTowardHours, overnightHoursPerDay);
 
     /// <summary>Summe der tatsächlich gearbeiteten Stunden je UserId (nur Arbeit) — fürs Arbeitszeit-Limit.</summary>
     public static Dictionary<string, double> WorkedHoursByUser(IEnumerable<CalendarEntry> entries)
-        => SumByUser(entries, EntryTypeInfo.CountsAsWork, null);
+        => SumByUser(entries, EntryTypeInfo.CountsAsWork, 0);
 
     private static Dictionary<string, double> SumByUser(
-        IEnumerable<CalendarEntry> entries, Func<EntryType, bool> include,
-        IReadOnlyDictionary<string, double>? overnightHoursByUser)
+        IEnumerable<CalendarEntry> entries, Func<EntryType, bool> include, double overnightHoursPerDay)
     {
         var result = new Dictionary<string, double>();
         foreach (var e in entries)
         {
             if (!include(e.Type)) continue;
             if (string.IsNullOrEmpty(e.UserId)) continue;
-            var hours = e.Type == EntryType.Overnight
-                ? (overnightHoursByUser?.GetValueOrDefault(e.UserId) ?? 0)  // pauschale Tagesgutschrift
-                : e.DurationHours;
+            var hours = e.Type == EntryType.Overnight ? overnightHoursPerDay : e.DurationHours;
             result[e.UserId] = result.GetValueOrDefault(e.UserId) + hours;
         }
         return result;

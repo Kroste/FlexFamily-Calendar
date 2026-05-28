@@ -20,6 +20,7 @@ public partial class CalendarViewModel : ViewModelBase
     private List<RecurringActivity> _recurringActivities = new();
     private IReadOnlyList<Holiday> _weekHolidays = Array.Empty<Holiday>();
     private GermanState _holidayState = GermanState.BY;
+    private double _overnightHoursPerDay = 2.0;
     private Dictionary<string, string> _userColors = new();
 
     public User CurrentUser { get; }
@@ -178,8 +179,7 @@ public partial class CalendarViewModel : ViewModelBase
     private void RecomputeWeeklyHours()
     {
         var entries = Days.SelectMany(d => d.Entries).Where(e => !e.IsRecurring).ToList();
-        var overnight = _allUsers.ToDictionary(u => u.Id, u => u.OvernightHoursPerDay);
-        var actualByUser = WeeklyHoursCalculator.ActualHoursByUser(entries, overnight);
+        var actualByUser = WeeklyHoursCalculator.ActualHoursByUser(entries, _overnightHoursPerDay);
         var workedByUser = WeeklyHoursCalculator.WorkedHoursByUser(entries);
         var daysOrdered = Days.OrderBy(d => d.Date).ToList();
 
@@ -625,15 +625,21 @@ public partial class CalendarViewModel : ViewModelBase
     {
         _allUsers = await _storage.LoadUsersAsync();
         RebuildUserColors();
-        _holidayState = GermanStates.Parse((await _storage.LoadSettingsAsync()).HolidayState);
+        var settings = await _storage.LoadSettingsAsync();
+        _holidayState = GermanStates.Parse(settings.HolidayState);
+        _overnightHoursPerDay = settings.OvernightHoursPerDay;
         await LoadWeekAsync();
     }
 
-    /// <summary>Feiertage neu laden (nach Region-Änderung durch den Admin) → Woche neu auflösen.</summary>
-    public async Task ReloadHolidaysAsync()
+    /// <summary>Nach dem Admin-Bereich: Benutzer, Einstellungen (Region/Übernachtung), Kategorien/Regeln neu laden.</summary>
+    public async Task RefreshAllAsync()
     {
-        _holidayState = GermanStates.Parse((await _storage.LoadSettingsAsync()).HolidayState);
-        await LoadWeekAsync();
+        _allUsers = await _storage.LoadUsersAsync();
+        RebuildUserColors();
+        var settings = await _storage.LoadSettingsAsync();
+        _holidayState = GermanStates.Parse(settings.HolidayState);
+        _overnightHoursPerDay = settings.OvernightHoursPerDay;
+        await LoadWeekAsync();  // lädt Kategorien + wiederkehrende Regeln jeweils neu
     }
 
     /// <summary>Header-Toggle: Feiertags-Anzeige sofort umschalten und die Präferenz pro Benutzer merken.</summary>
@@ -668,20 +674,6 @@ public partial class CalendarViewModel : ViewModelBase
         if (dayVm != null) dayVm.DayNote = day.Note;
         LogService.UserAction(CurrentUser.Username, $"Tages-Hinweis gespeichert ({date:dd.MM.yyyy})");
     }
-
-    /// <summary>Personenliste neu laden (frische Benutzer sofort planbar) inkl. Farben → Woche neu laden.</summary>
-    public async Task ReloadUsersAsync()
-    {
-        _allUsers = await _storage.LoadUsersAsync();
-        RebuildUserColors();
-        await LoadWeekAsync();  // damit geänderte Personenfarben sofort sichtbar werden
-    }
-
-    /// <summary>Aktivitätstypen neu laden (nach der Verwaltung) → Woche neu auflösen.</summary>
-    public Task ReloadActivityTypesAsync() => LoadWeekAsync();
-
-    /// <summary>Wiederkehrende Aktivitäten neu laden (nach der Verwaltung) → Woche neu projizieren.</summary>
-    public Task ReloadRecurringActivitiesAsync() => LoadWeekAsync();
 
     private void RebuildUserColors()
         => _userColors = _allUsers.ToDictionary(

@@ -1,25 +1,18 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:FlexFamilyCalendar.ViewModels"
-        xmlns:cv="using:FlexFamilyCalendar.Converters"
-        xmlns:loc="using:FlexFamilyCalendar.Localization"
-        x:Class="FlexFamilyCalendar.Views.ActivityTypeManagementDialog"
-        x:CompileBindings="False"
-        Title="{loc:Tr ActType_Title}"
-        Width="620" Height="520"
-        WindowStartupLocation="CenterOwner">
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:cv="using:FlexFamilyCalendar.Converters"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.ActivityTypeManagementView"
+             x:CompileBindings="False">
 
-  <Window.Resources>
+  <UserControl.Resources>
     <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
-  </Window.Resources>
+  </UserControl.Resources>
 
-  <Grid Margin="20" ColumnDefinitions="240,16,*" RowDefinitions="Auto,*">
-
-    <TextBlock Grid.Row="0" Grid.ColumnSpan="3" Text="{loc:Tr ActType_Title}"
-               FontSize="18" FontWeight="Bold" Margin="0,0,0,12" />
+  <Grid Margin="16" ColumnDefinitions="240,16,*">
 
     <!-- Liste links -->
-    <DockPanel Grid.Row="1" Grid.Column="0">
+    <DockPanel Grid.Column="0">
       <Button DockPanel.Dock="Bottom" Content="{loc:Tr ActType_New}"
               Command="{Binding NewCommand}" Margin="0,8,0,0"
               HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
@@ -43,7 +36,7 @@
     </DockPanel>
 
     <!-- Formular rechts -->
-    <StackPanel Grid.Row="1" Grid.Column="2" Spacing="14">
+    <StackPanel Grid.Column="2" Spacing="14">
 
       <StackPanel Spacing="4">
         <TextBlock Text="{loc:Tr ActType_Name}" FontSize="12" Opacity="0.7" />
@@ -93,4 +86,4 @@
     </StackPanel>
 
   </Grid>
-</Window>
+</UserControl>

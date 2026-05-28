@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.SettingsView"
+             x:CompileBindings="False">
+
+  <StackPanel Margin="16" Spacing="14" MaxWidth="420" HorizontalAlignment="Left">
+
+    <StackPanel Spacing="4">
+      <TextBlock Text="{loc:Tr Holiday_Region}" FontSize="12" Opacity="0.7" />
+      <ComboBox ItemsSource="{Binding States}" SelectedItem="{Binding SelectedState}"
+                HorizontalAlignment="Stretch">
+        <ComboBox.ItemTemplate>
+          <DataTemplate><TextBlock Text="{Binding Name}" /></DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+    </StackPanel>
+
+    <StackPanel Spacing="4">
+      <TextBlock Text="{loc:Tr Settings_OvernightHours}" FontSize="12" Opacity="0.7" />
+      <TextBox Text="{Binding OvernightHours}" CornerRadius="6" />
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" Spacing="12">
+      <Button Content="{loc:Tr Common_Save}" Command="{Binding SaveCommand}"
+              Padding="16,8" CornerRadius="6"
+              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+      <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center"
+                 Foreground="#27AE60" FontSize="13" />
+    </StackPanel>
+
+  </StackPanel>
+</UserControl>

@@ -37,14 +37,10 @@ public partial class MainWindowViewModel : ViewModelBase
 
     /// <summary>Vom MainWindow-Code-Behind abonniert, um die jeweiligen Dialoge zu öffnen.</summary>
     public event Action? ProfileRequested;
-    public event Action? UserManagementRequested;
     public event Action? MonthOverviewRequested;
     public event Action? HoursAccountRequested;
     public event Action? NotificationsRequested;
-    public event Action? AiSettingsRequested;
-    public event Action? ActivityTypesRequested;
-    public event Action? RecurringActivitiesRequested;
-    public event Action? HolidaySettingsRequested;
+    public event Action? AdminRequested;
 
     public MainWindowViewModel(AuthService auth, StorageService storage, NotificationService notifications, AiService ai, LoginViewModel loginVm)
     {
@@ -106,30 +102,12 @@ public partial class MainWindowViewModel : ViewModelBase
     public NotificationsViewModel CreateNotifications() => new(_notifications, _currentUser!);
 
     [RelayCommand]
-    private void OpenAiSettings() => AiSettingsRequested?.Invoke();
+    private void OpenAdmin() => AdminRequested?.Invoke();
 
-    public AiSettingsViewModel CreateAiSettings() => new(_ai, _storage);
-
-    [RelayCommand]
-    private void OpenActivityTypes() => ActivityTypesRequested?.Invoke();
-
-    public ActivityTypeManagementViewModel CreateActivityTypeManagement() => new(_storage);
-
-    [RelayCommand]
-    private void OpenRecurringActivities() => RecurringActivitiesRequested?.Invoke();
-
-    public RecurringActivityManagementViewModel CreateRecurringActivityManagement() => new(_storage);
-
-    [RelayCommand]
-    private void OpenHolidaySettings() => HolidaySettingsRequested?.Invoke();
-
-    public HolidaySettingsViewModel CreateHolidaySettings() => new(_storage);
+    public AdminViewModel CreateAdmin() => new(_auth, _storage, _ai);
 
     [RelayCommand]
     private void OpenProfile() => ProfileRequested?.Invoke();
-
-    [RelayCommand]
-    private void OpenUserManagement() => UserManagementRequested?.Invoke();
 
     [RelayCommand]
     private void OpenMonthOverview() => MonthOverviewRequested?.Invoke();
@@ -139,9 +117,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public UserEditorViewModel CreateProfileEditor()
         => new(_auth, _currentUser, isNew: false, selfMode: true);
-
-    public UserManagementViewModel CreateUserManagement()
-        => new(_auth);
 
     public MonthOverviewViewModel CreateMonthOverview()
     {

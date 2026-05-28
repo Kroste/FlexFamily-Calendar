@@ -13,6 +13,7 @@ public partial class MonthOverviewViewModel : ViewModelBase
     private readonly User _currentUser;
     private readonly bool _personalView;
     private List<User> _allUsers = new();
+    private double _overnightHoursPerDay = 2.0;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MonthLabel))]
@@ -49,6 +50,7 @@ public partial class MonthOverviewViewModel : ViewModelBase
     private async Task LoadAsync()
     {
         _allUsers = await _storage.LoadUsersAsync();
+        _overnightHoursPerDay = (await _storage.LoadSettingsAsync()).OvernightHoursPerDay;
         await LoadMonthAsync();
     }
 
@@ -63,8 +65,7 @@ public partial class MonthOverviewViewModel : ViewModelBase
             entries.AddRange(day.Entries);
         }
 
-        var overnight = _allUsers.ToDictionary(u => u.Id, u => u.OvernightHoursPerDay);
-        var actualByUser = WeeklyHoursCalculator.ActualHoursByUser(entries, overnight);
+        var actualByUser = WeeklyHoursCalculator.ActualHoursByUser(entries, _overnightHoursPerDay);
         var people = WeeklyHoursCalculator.RelevantUsers(_allUsers, _currentUser, _personalView);
 
         Rows.Clear();

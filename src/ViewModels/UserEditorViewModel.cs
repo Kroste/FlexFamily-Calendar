@@ -38,7 +38,6 @@ public partial class UserEditorViewModel : ViewModelBase
     [ObservableProperty] private string _maxWeeklyHours;
     [ObservableProperty] private string _maxDailyHours;
     [ObservableProperty] private string _minRestHours;
-    [ObservableProperty] private string _overnightHours;
     [ObservableProperty] private string _openingBalance;
     [ObservableProperty] private DateTimeOffset? _accountStart;
     [ObservableProperty] private string _password = "";
@@ -86,7 +85,6 @@ public partial class UserEditorViewModel : ViewModelBase
         _maxWeeklyHours = _user.MaxWeeklyHours.ToString(CultureInfo.CurrentCulture);
         _maxDailyHours = _user.MaxDailyHours.ToString(CultureInfo.CurrentCulture);
         _minRestHours = _user.MinRestHours.ToString(CultureInfo.CurrentCulture);
-        _overnightHours = _user.OvernightHoursPerDay.ToString(CultureInfo.CurrentCulture);
         _openingBalance = _user.OpeningBalanceHours.ToString(CultureInfo.CurrentCulture);
         _accountStart = _user.AccountStart.Year >= 2000
             ? new DateTimeOffset(_user.AccountStart.ToDateTime(TimeOnly.MinValue))
@@ -134,8 +132,6 @@ public partial class UserEditorViewModel : ViewModelBase
             maxDaily = 0;
         if (!double.TryParse(MinRestHours, NumberStyles.Any, CultureInfo.CurrentCulture, out var minRest) || minRest < 0)
             minRest = 0;
-        if (!double.TryParse(OvernightHours, NumberStyles.Any, CultureInfo.CurrentCulture, out var overnight) || overnight < 0)
-            overnight = 0;
         if (!double.TryParse(OpeningBalance, NumberStyles.Any, CultureInfo.CurrentCulture, out var opening))
             opening = 0;
         var accountStart = AccountStart.HasValue
@@ -155,7 +151,6 @@ public partial class UserEditorViewModel : ViewModelBase
             MaxWeeklyHours = CanEditAdminFields ? maxHours : _user.MaxWeeklyHours,
             MaxDailyHours = CanEditAdminFields ? maxDaily : _user.MaxDailyHours,
             MinRestHours = CanEditAdminFields ? minRest : _user.MinRestHours,
-            OvernightHoursPerDay = CanEditAdminFields ? overnight : _user.OvernightHoursPerDay,
             OpeningBalanceHours = CanEditAdminFields ? opening : _user.OpeningBalanceHours,
             AccountStart = CanEditAdminFields ? accountStart : _user.AccountStart,
             ThemeVariant = SelectedThemeVariant?.Id ?? _user.ThemeVariant,

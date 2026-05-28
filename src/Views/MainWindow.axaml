@@ -48,28 +48,8 @@
           <TextBlock Text="{Binding CurrentUserDisplay}"
                      Foreground="White" Opacity="0.85"
                      VerticalAlignment="Center" FontSize="13" />
-          <Button Content="{loc:Tr Main_UserManagement}"
-                  Command="{Binding OpenUserManagementCommand}"
-                  IsVisible="{Binding IsAdmin}"
-                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
-                  CornerRadius="6" Padding="12,5" />
-          <Button Content="{loc:Tr Main_ActivityTypes}"
-                  Command="{Binding OpenActivityTypesCommand}"
-                  IsVisible="{Binding IsAdmin}"
-                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
-                  CornerRadius="6" Padding="12,5" />
-          <Button Content="{loc:Tr Main_RecurringActivities}"
-                  Command="{Binding OpenRecurringActivitiesCommand}"
-                  IsVisible="{Binding IsAdmin}"
-                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
-                  CornerRadius="6" Padding="12,5" />
-          <Button Content="{loc:Tr Main_HolidaySettings}"
-                  Command="{Binding OpenHolidaySettingsCommand}"
-                  IsVisible="{Binding IsAdmin}"
-                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
-                  CornerRadius="6" Padding="12,5" />
-          <Button Content="{loc:Tr Main_AiSettings}"
-                  Command="{Binding OpenAiSettingsCommand}"
+          <Button Content="{loc:Tr Main_Admin}"
+                  Command="{Binding OpenAdminCommand}"
                   IsVisible="{Binding IsAdmin}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="12,5" />

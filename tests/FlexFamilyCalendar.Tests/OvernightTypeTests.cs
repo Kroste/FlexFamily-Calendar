@@ -34,11 +34,7 @@ public class OvernightTypeTests
     [Fact]
     public void ActualHours_CreditsFlatRate_NotDuration()
     {
-        var entries = new[] { Overnight() };
-        var rates = new Dictionary<string, double> { ["u1"] = 2.0 };
-
-        var actual = WeeklyHoursCalculator.ActualHoursByUser(entries, rates);
-
+        var actual = WeeklyHoursCalculator.ActualHoursByUser(new[] { Overnight() }, overnightHoursPerDay: 2.0);
         Assert.Equal(2.0, actual.GetValueOrDefault("u1"), 3);   // pauschal 2h, nicht 10h
     }
 
@@ -58,9 +54,8 @@ public class OvernightTypeTests
             new CalendarEntry { UserId = "u1", Type = EntryType.Work,
                 StartTime = TimeSpan.FromHours(8), EndTime = TimeSpan.FromHours(16) }  // 8h
         };
-        var rates = new Dictionary<string, double> { ["u1"] = 2.0 };
 
-        var actual = WeeklyHoursCalculator.ActualHoursByUser(entries, rates);
+        var actual = WeeklyHoursCalculator.ActualHoursByUser(entries, overnightHoursPerDay: 2.0);
 
         Assert.Equal(10.0, actual.GetValueOrDefault("u1"), 3);   // 2h (Übernachtung) + 8h (Arbeit)
     }

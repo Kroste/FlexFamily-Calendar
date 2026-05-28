@@ -16,78 +16,35 @@ public partial class MainWindow : Window
         if (_vm != null)
         {
             _vm.ProfileRequested -= OnProfileRequested;
-            _vm.UserManagementRequested -= OnUserManagementRequested;
             _vm.MonthOverviewRequested -= OnMonthOverviewRequested;
             _vm.HoursAccountRequested -= OnHoursAccountRequested;
             _vm.NotificationsRequested -= OnNotificationsRequested;
-            _vm.AiSettingsRequested -= OnAiSettingsRequested;
-            _vm.ActivityTypesRequested -= OnActivityTypesRequested;
-            _vm.RecurringActivitiesRequested -= OnRecurringActivitiesRequested;
-            _vm.HolidaySettingsRequested -= OnHolidaySettingsRequested;
+            _vm.AdminRequested -= OnAdminRequested;
         }
         _vm = DataContext as MainWindowViewModel;
         if (_vm != null)
         {
             _vm.ProfileRequested += OnProfileRequested;
-            _vm.UserManagementRequested += OnUserManagementRequested;
             _vm.MonthOverviewRequested += OnMonthOverviewRequested;
             _vm.HoursAccountRequested += OnHoursAccountRequested;
             _vm.NotificationsRequested += OnNotificationsRequested;
-            _vm.AiSettingsRequested += OnAiSettingsRequested;
-            _vm.ActivityTypesRequested += OnActivityTypesRequested;
-            _vm.RecurringActivitiesRequested += OnRecurringActivitiesRequested;
-            _vm.HolidaySettingsRequested += OnHolidaySettingsRequested;
+            _vm.AdminRequested += OnAdminRequested;
         }
     }
 
-    private async void OnHolidaySettingsRequested()
+    private async void OnAdminRequested()
     {
         if (_vm == null) return;
         try
         {
-            var dialog = new HolidaySettingsDialog { DataContext = _vm.CreateHolidaySettings() };
+            var dialog = new AdminDialog { DataContext = _vm.CreateAdmin() };
             await dialog.ShowDialog(this);
+            // Nach dem Admin-Bereich: Benutzer/Einstellungen/Kategorien/Regeln neu laden, Sprache/Anzeige anwenden.
+            await _vm.RefreshCurrentUserAsync();
             if (_vm.CalendarVm != null)
-                await _vm.CalendarVm.ReloadHolidaysAsync();
+                await _vm.CalendarVm.RefreshAllAsync();
         }
-        catch (Exception ex) { LogService.Error("Fehler in den Feiertags-Einstellungen", ex); }
-    }
-
-    private async void OnActivityTypesRequested()
-    {
-        if (_vm == null) return;
-        try
-        {
-            var dialog = new ActivityTypeManagementDialog { DataContext = _vm.CreateActivityTypeManagement() };
-            await dialog.ShowDialog(this);
-            if (_vm.CalendarVm != null)
-                await _vm.CalendarVm.ReloadActivityTypesAsync();
-        }
-        catch (Exception ex) { LogService.Error("Fehler in der Aktivitätstypen-Verwaltung", ex); }
-    }
-
-    private async void OnRecurringActivitiesRequested()
-    {
-        if (_vm == null) return;
-        try
-        {
-            var dialog = new RecurringActivityManagementDialog { DataContext = _vm.CreateRecurringActivityManagement() };
-            await dialog.ShowDialog(this);
-            if (_vm.CalendarVm != null)
-                await _vm.CalendarVm.ReloadRecurringActivitiesAsync();
-        }
-        catch (Exception ex) { LogService.Error("Fehler in der Verwaltung wiederkehrender Aktivitäten", ex); }
-    }
-
-    private async void OnAiSettingsRequested()
-    {
-        if (_vm == null) return;
-        try
-        {
-            var dialog = new AiSettingsDialog { DataContext = _vm.CreateAiSettings() };
-            await dialog.ShowDialog(this);
-        }
-        catch (Exception ex) { LogService.Error("Fehler in den KI-Einstellungen", ex); }
+        catch (Exception ex) { LogService.Error("Fehler im Admin-Bereich", ex); }
     }
 
     private async void OnNotificationsRequested()
@@ -140,19 +97,5 @@ public partial class MainWindow : Window
             await _vm.RefreshCurrentUserAsync();
         }
         catch (Exception ex) { LogService.Error("Fehler im Profil-Dialog", ex); }
-    }
-
-    private async void OnUserManagementRequested()
-    {
-        if (_vm == null) return;
-        try
-        {
-            var dialog = new UserManagementDialog { DataContext = _vm.CreateUserManagement() };
-            await dialog.ShowDialog(this);
-            await _vm.RefreshCurrentUserAsync();
-            if (_vm.CalendarVm != null)
-                await _vm.CalendarVm.ReloadUsersAsync();  // neue Benutzer sofort planbar
-        }
-        catch (Exception ex) { LogService.Error("Fehler in der Benutzerverwaltung", ex); }
     }
 }
