@@ -41,6 +41,9 @@ public partial class CalendarViewModel : ViewModelBase
     public ObservableCollection<CalendarDayViewModel> Days { get; } = new();
     public ObservableCollection<WeeklyHoursViewModel> WeeklyHours { get; } = new();
 
+    /// <summary>Tabellarische Sicht: je Person eine Zeile mit 7 Tageszellen.</summary>
+    public ObservableCollection<PersonRowViewModel> Rows { get; } = new();
+
     public bool IsAdmin => CurrentUser.Role == UserRole.Admin;
     public bool CanSwitchView => IsAdmin;
 
@@ -292,8 +295,16 @@ public partial class CalendarViewModel : ViewModelBase
         await LoadWeekAsync();
     }
 
-    public void RequestAddEntry(DateOnly date)
+    public void RequestAddEntry(DateOnly date) => RequestAddEntry(date, null);
+
+    /// <summary>Neuer Eintrag; ist <paramref name="person"/> gesetzt, ist die Person fix (Klick in deren Tabellenzeile).</summary>
+    public void RequestAddEntry(DateOnly date, User? person)
     {
+        if (person != null)
+        {
+            EntryDialogRequested?.Invoke(date, null, new List<User> { person }.AsReadOnly(), false, AllTypes, _activityTypes);
+            return;
+        }
         var users = _allUsers.Count > 0 ? _allUsers : new List<User> { CurrentUser };
         EntryDialogRequested?.Invoke(date, null, users.AsReadOnly(), true, AllTypes, _activityTypes);
     }
@@ -837,7 +848,43 @@ public partial class CalendarViewModel : ViewModelBase
             prevEntries = day.Entries;
         }
         IsWeekFinalized = Days.Count > 0 && Days.All(d => d.IsFinalized);
+        RebuildRows();
         RecomputeWeeklyHours();
+    }
+
+    /// <summary>Baut die Personen×Tag-Tabelle aus den aufgelösten Tagen (Reihenfolge: Eltern→Kinder→Angestellte→Au-Pairs).</summary>
+    private void RebuildRows()
+    {
+        Rows.Clear();
+        foreach (var u in PlanLayout.OrderPeople(_allUsers))
+        {
+            var isSelf = u.Id == CurrentUser.Id;
+            var cells = new List<PersonDayCellViewModel>();
+            foreach (var d in Days)
+            {
+                var entries = PlanLayout.CellEntries(d.TimelineEntries, d.AbsenceHints, u.Id);
+                var canAdd = (IsAdmin && !IsPersonalView && !d.IsFinalized) || (isSelf && !IsAdmin);
+                cells.Add(new PersonDayCellViewModel(d.Date, u, entries, canAdd, d.IsToday));
+            }
+            var name = string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
+            var color = string.IsNullOrEmpty(u.Color) ? "#7F8C8D" : u.Color;
+            Rows.Add(new PersonRowViewModel(name, color, Localizer.Instance[$"PersonCategory_{u.Category}"], isSelf, cells));
+        }
+    }
+
+    /// <summary>Klick in eine Tabellenzelle: Admin plant für die Person, Mitarbeiter trägt sich krank/Urlaub ein.</summary>
+    public void AddForCell(User person, DateOnly date)
+    {
+        if (IsAdmin && !IsPersonalView)
+        {
+            var finalized = Days.FirstOrDefault(d => d.Date == date)?.IsFinalized ?? false;
+            if (finalized) return;
+            RequestAddEntry(date, person);
+        }
+        else if (person.Id == CurrentUser.Id)
+        {
+            RequestSelfAbsence(date);
+        }
     }
 
     private static DateOnly GetMondayOfWeek(DateOnly date)

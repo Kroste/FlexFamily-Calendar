@@ -1,10 +1,6 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using Avalonia.Threading;
-using FlexFamilyCalendar.Controls;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
 using FlexFamilyCalendar.ViewModels;
@@ -14,20 +10,8 @@ namespace FlexFamilyCalendar.Views;
 public partial class CalendarView : UserControl
 {
     private CalendarViewModel? _vm;
-    private bool _scrolledToMorning;
 
     public CalendarView() => InitializeComponent();
-
-    protected override void OnLoaded(RoutedEventArgs e)
-    {
-        base.OnLoaded(e);
-        if (_scrolledToMorning) return;
-        _scrolledToMorning = true;
-        // Nach dem ersten Layout auf ~07:00 scrollen, damit der Morgen sichtbar ist.
-        Dispatcher.UIThread.Post(() =>
-            GridScroll.Offset = GridScroll.Offset.WithY(7 * CalendarMetrics.PixelsPerHour),
-            DispatcherPriority.Background);
-    }
 
     protected override void OnDataContextChanged(EventArgs e)
     {
@@ -99,26 +83,26 @@ public partial class CalendarView : UserControl
         }
     }
 
-    /// <summary>Klick auf eine Eintragskarte → Bearbeiten. Tag wird per Referenzgleichheit gefunden.</summary>
+    /// <summary>Klick auf einen Eintrag in einer Tabellenzelle → Bearbeiten. Stoppt das Bubbling (kein Neu-Anlegen).</summary>
     private void OnEntryTapped(object? sender, TappedEventArgs e)
     {
         if (_vm == null) return;
         if (sender is not Control { DataContext: CalendarEntry entry }) return;
 
-        var day = _vm.Days.FirstOrDefault(d => d.TimelineEntries.Contains(entry));
-        if (day != null)
-            _vm.ActivateEntry(day.Date, entry);
+        var cell = _vm.Rows.SelectMany(r => r.Cells).FirstOrDefault(c => c.Entries.Contains(entry));
+        if (cell != null)
+        {
+            e.Handled = true;
+            _vm.ActivateEntry(cell.Date, entry);
+        }
     }
 
-    /// <summary>Klick auf einen Abwesenheits-Hinweis → Bearbeiten (bzw. Umplanung bei Krank).</summary>
-    private void OnAbsenceTapped(object? sender, TappedEventArgs e)
+    /// <summary>Klick in eine (leere) Zelle → Eintrag für diese Person an diesem Tag anlegen.</summary>
+    private void OnCellTapped(object? sender, TappedEventArgs e)
     {
         if (_vm == null) return;
-        if (sender is not Control { DataContext: CalendarEntry entry }) return;
-
-        var day = _vm.Days.FirstOrDefault(d => d.AbsenceHints.Contains(entry));
-        if (day != null)
-            _vm.ActivateEntry(day.Date, entry);
+        if (sender is not Control { DataContext: PersonDayCellViewModel cell }) return;
+        if (cell.CanAdd) _vm.AddForCell(cell.Person, cell.Date);
     }
 
     private async void OnEntryDialogRequested(DateOnly date, CalendarEntry? existing, IReadOnlyList<User> users,

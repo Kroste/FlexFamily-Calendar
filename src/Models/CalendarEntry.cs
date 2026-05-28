@@ -56,6 +56,18 @@ public class CalendarEntry
     public string AbsenceSpanLabel =>
         AbsenceStart is { } s && AbsenceEnd is { } e && e > s ? $"{s:dd.MM.}–{e:dd.MM.}" : "";
 
+    /// <summary>Anzeige als Abwesenheit (Urlaub/Krank/Abwesend) — in der Tabellenzelle ohne Uhrzeit.</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public bool IsAbsenceDisplay => EntryTypeInfo.IsAbsence(DisplayType);
+
+    /// <summary>Uhrzeit anzeigen (Schichten/Aktivitäten) — nicht bei Abwesenheiten.</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public bool ShowsTime => !IsAbsenceDisplay;
+
+    /// <summary>Zeitraum einer Abwesenheit in der Zelle anzeigen (nur wenn mehrtägig).</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public bool ShowAbsenceSpan => IsAbsenceDisplay && !string.IsNullOrEmpty(AbsenceSpanLabel);
+
     [Newtonsoft.Json.JsonIgnore]
     public string EntryColor => EntryTypeInfo.Color(Type);
 

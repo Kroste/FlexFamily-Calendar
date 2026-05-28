@@ -3,7 +3,6 @@
              xmlns:vm="using:FlexFamilyCalendar.ViewModels"
              xmlns:models="using:FlexFamilyCalendar.Models"
              xmlns:cv="using:FlexFamilyCalendar.Converters"
-             xmlns:ctrl="using:FlexFamilyCalendar.Controls"
              xmlns:loc="using:FlexFamilyCalendar.Localization"
              x:Class="FlexFamilyCalendar.Views.CalendarView"
              x:CompileBindings="False">
@@ -56,80 +55,6 @@
       </Grid>
     </Border>
 
-    <!-- Sticky-Header: leere Ecke (56px) + 7 Tagesköpfe -->
-    <Grid DockPanel.Dock="Top" ColumnDefinitions="56,*"
-          Background="{DynamicResource SystemControlBackgroundChromeLowBrush}">
-      <ItemsControl Grid.Column="1" ItemsSource="{Binding Days}">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate><UniformGrid Columns="7" /></ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <Border Padding="4,6"
-                    BorderThickness="1,0,0,1"
-                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-              <StackPanel HorizontalAlignment="Center" Spacing="3">
-                <TextBlock Text="{Binding DayName}" HorizontalAlignment="Center" FontSize="13" FontWeight="SemiBold" />
-                <TextBlock Text="{Binding DateLabel}" HorizontalAlignment="Center" FontSize="12" Opacity="0.7" />
-
-                <!-- Hinweisspalte: Feiertag + allgemeine Tages-Info -->
-                <TextBlock Text="{Binding HolidayName}" IsVisible="{Binding ShowHoliday}"
-                           HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
-                           FontSize="11" FontWeight="SemiBold" Foreground="#E67E22" />
-                <TextBlock Text="{Binding DayNote}" IsVisible="{Binding HasNote}"
-                           HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
-                           FontSize="10" Opacity="0.7" />
-                <Button Content="✎" Command="{Binding EditNoteCommand}" IsVisible="{Binding CanEditNote}"
-                        FontSize="10" Padding="4,0" CornerRadius="3" HorizontalAlignment="Center"
-                        Background="Transparent" Opacity="0.6"
-                        ToolTip.Tip="{loc:Tr DayNote_Title}" />
-
-                <!-- Abwesenheiten (Urlaub/Krank/Abwesend) als kompakte Hinweis-Chips -->
-                <ItemsControl ItemsSource="{Binding AbsenceHints}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                      <Border Margin="0,2,0,0" CornerRadius="3" Padding="5,1" Cursor="Hand" Tapped="OnAbsenceTapped"
-                              Background="{Binding OwnerColor, Converter={StaticResource ColorStringToBrushConverter}}">
-                        <StackPanel Spacing="0">
-                          <TextBlock Text="{Binding UserDisplayName}" FontSize="10" FontWeight="SemiBold"
-                                     Foreground="White" TextAlignment="Center" TextWrapping="Wrap" />
-                          <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
-                            <TextBlock Text="{Binding DisplayType, Converter={x:Static cv:EntryTypeLabelConverter.Instance}}"
-                                       FontSize="9" Foreground="White" Opacity="0.95" />
-                            <TextBlock Text="{Binding AbsenceSpanLabel}" FontSize="9" Foreground="White" Opacity="0.8"
-                                       IsVisible="{Binding AbsenceSpanLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                          </StackPanel>
-                        </StackPanel>
-                      </Border>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-
-                <Border IsVisible="{Binding IsToday}" Background="{DynamicResource SystemAccentColor}"
-                        CornerRadius="3" Padding="6,1">
-                  <TextBlock Text="{loc:Tr Cal_TodayBadge}" FontSize="10" Foreground="White" />
-                </Border>
-                <Border IsVisible="{Binding IsFinalized}" Background="#27AE60" CornerRadius="3" Padding="6,1">
-                  <TextBlock Text="{loc:Tr Cal_FinalBadge}" FontSize="10" Foreground="White" />
-                </Border>
-                <Button Content="{loc:Tr Cal_AddEntry}"
-                        Command="{Binding AddEntryCommand}"
-                        IsVisible="{Binding CanAddEntry}"
-                        IsEnabled="{Binding !IsFinalized}"
-                        Padding="6,2" FontSize="11" CornerRadius="4"
-                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
-                <Button Content="{loc:Tr Cal_RequestAbsence}"
-                        Command="{Binding RequestAbsenceCommand}"
-                        IsVisible="{Binding CanRequestAbsence}"
-                        Padding="6,2" FontSize="11" CornerRadius="4"
-                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
-              </StackPanel>
-            </Border>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </Grid>
-
     <!-- Wochenstunden-Panel (Admin, einklappbar) -->
     <Border DockPanel.Dock="Right"
             IsVisible="{Binding IsHoursPanelVisible}"
@@ -175,120 +100,141 @@
       </DockPanel>
     </Border>
 
-    <!-- Scrollbares 24h-Raster: Zeitachse (56px) + 7 Tagesspalten -->
-    <ScrollViewer x:Name="GridScroll"
-                  HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-      <Grid ColumnDefinitions="56,*">
+    <!-- Tabellen-Plan: Personen (Zeilen) × Wochentage (Spalten) -->
+    <DockPanel>
 
-        <!-- Zeitachse -->
-        <ItemsControl Grid.Column="0" ItemsSource="{x:Static ctrl:CalendarMetrics.HourLabels}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Border Height="48" BorderThickness="0,0,0,1"
-                      BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-                <TextBlock Text="{Binding}" FontSize="11" Opacity="0.6"
-                           HorizontalAlignment="Right" VerticalAlignment="Top"
-                           Margin="0,-7,6,0" />
-              </Border>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-
-        <!-- Tagesspalten -->
+      <!-- Spaltenkopf: leere Ecke (160px) + 7 Tagesköpfe -->
+      <Grid DockPanel.Dock="Top" ColumnDefinitions="160,*"
+            Background="{DynamicResource SystemControlBackgroundChromeLowBrush}">
+        <Border Grid.Column="0" BorderThickness="0,0,1,1"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" />
         <ItemsControl Grid.Column="1" ItemsSource="{Binding Days}">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate><UniformGrid Columns="7" /></ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Grid>
-                <!-- Feiertags-Tönung (dezent) -->
-                <Border IsVisible="{Binding ShowHoliday}" Background="#1FE67E22" />
-                <!-- Heute-Tönung -->
-                <Border IsVisible="{Binding IsToday}" Background="#142E86C1" />
+              <Border Padding="4,6" BorderThickness="1,0,0,1"
+                      BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                <StackPanel HorizontalAlignment="Center" Spacing="2">
+                  <TextBlock Text="{Binding DayName}" HorizontalAlignment="Center" FontSize="13" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding DateLabel}" HorizontalAlignment="Center" FontSize="12" Opacity="0.7" />
+                  <TextBlock Text="{Binding HolidayName}" IsVisible="{Binding ShowHoliday}"
+                             HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
+                             FontSize="11" FontWeight="SemiBold" Foreground="#E67E22" />
+                  <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding DayNote}" IsVisible="{Binding HasNote}"
+                               TextAlignment="Center" TextWrapping="Wrap" FontSize="10" Opacity="0.7" />
+                    <Button Content="✎" Command="{Binding EditNoteCommand}" IsVisible="{Binding CanEditNote}"
+                            FontSize="10" Padding="4,0" CornerRadius="3"
+                            Background="Transparent" Opacity="0.6" ToolTip.Tip="{loc:Tr DayNote_Title}" />
+                  </StackPanel>
+                  <Border IsVisible="{Binding IsToday}" Background="{DynamicResource SystemAccentColor}"
+                          CornerRadius="3" Padding="6,1">
+                    <TextBlock Text="{loc:Tr Cal_TodayBadge}" FontSize="10" Foreground="White" />
+                  </Border>
+                  <Border IsVisible="{Binding IsFinalized}" Background="#27AE60" CornerRadius="3" Padding="6,1">
+                    <TextBlock Text="{loc:Tr Cal_FinalBadge}" FontSize="10" Foreground="White" />
+                  </Border>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Grid>
 
-                <!-- Stundenraster -->
-                <ItemsControl ItemsSource="{x:Static ctrl:CalendarMetrics.HourLabels}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                      <Border Height="48" BorderThickness="1,0,0,1"
-                              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" />
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
+      <!-- Personenzeilen -->
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl ItemsSource="{Binding Rows}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="160,*">
 
-                <!-- Einträge, zeitbasiert positioniert (Arbeit/Aktivität; Abwesenheiten stehen als Hinweis im Kopf) -->
-                <ItemsControl ItemsSource="{Binding TimelineEntries}">
+                <!-- Person -->
+                <Border Grid.Column="0" BorderThickness="0,0,1,1" Padding="8,6"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Border Width="11" Height="11" CornerRadius="5.5" VerticalAlignment="Center"
+                            Background="{Binding Color, Converter={StaticResource ColorStringToBrushConverter}}" />
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding CategoryLabel}" FontSize="10" Opacity="0.6" />
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+
+                <!-- 7 Tageszellen -->
+                <ItemsControl Grid.Column="1" ItemsSource="{Binding Cells}">
                   <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate><ctrl:DayTimelinePanel /></ItemsPanelTemplate>
+                    <ItemsPanelTemplate><UniformGrid Columns="7" /></ItemsPanelTemplate>
                   </ItemsControl.ItemsPanel>
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                      <Border CornerRadius="5" Padding="5,3" Margin="0" ClipToBounds="True"
-                              Cursor="Hand" Tapped="OnEntryTapped"
-                              Opacity="{Binding EffectiveOpacity}"
-                              BorderBrush="#E6FFFFFF"
-                              BorderThickness="{Binding IsHighlighted, Converter={x:Static cv:BoolToThicknessConverter.Instance}}"
-                              Background="{Binding OwnerColor, Converter={StaticResource ColorStringToBrushConverter}}">
+                      <Border BorderThickness="1,0,0,1" MinHeight="46" Padding="3" Cursor="Hand"
+                              Tapped="OnCellTapped" Background="Transparent"
+                              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
                         <Grid>
-                          <StackPanel Spacing="0">
-                            <TextBlock Text="{Binding TimeRange}" FontSize="10" Foreground="White" Opacity="0.85" />
-                            <TextBlock Text="{Binding DisplayType, Converter={x:Static cv:EntryTypeLabelConverter.Instance}}"
-                                       FontSize="11" FontWeight="SemiBold"
-                                       Foreground="White" TextTrimming="CharacterEllipsis"
-                                       IsVisible="{Binding ShowsTypeLabel}" />
-                            <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding HasActivity}">
-                              <Border Width="9" Height="9" CornerRadius="4.5" VerticalAlignment="Center"
-                                      BorderBrush="#E6FFFFFF" BorderThickness="1"
-                                      Background="{Binding ActivityColor, Converter={StaticResource ColorStringToBrushConverter}}" />
-                              <TextBlock Text="{Binding ActivityName}" FontSize="11" FontWeight="SemiBold"
-                                         Foreground="White" TextTrimming="CharacterEllipsis" />
-                            </StackPanel>
-                            <TextBlock Text="{Binding DisplayTitle}" FontSize="11" Foreground="White" Opacity="0.9"
-                                       TextTrimming="CharacterEllipsis"
-                                       IsVisible="{Binding DisplayTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                            <TextBlock Text="{Binding UserDisplayName}" FontSize="10" Foreground="White" Opacity="0.8"
-                                       TextTrimming="CharacterEllipsis"
-                                       IsVisible="{Binding UserDisplayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                            <TextBlock Text="{loc:Tr Recur_HolidayHint}" IsVisible="{Binding HolidayConflict}"
-                                       FontSize="10" FontStyle="Italic" Foreground="White" Opacity="0.95"
-                                       TextWrapping="Wrap" />
-                          </StackPanel>
-                          <Border IsVisible="{Binding IsRecurring}"
-                                  HorizontalAlignment="Right" VerticalAlignment="Top"
-                                  Background="#CC000000" CornerRadius="3" Padding="3,0" Margin="0,-1,-1,0"
-                                  ToolTip.Tip="{loc:Tr Recur_Title}">
-                            <TextBlock Text="↻" FontSize="11" Foreground="White" />
-                          </Border>
-                          <Border IsVisible="{Binding ContinuesNextDay}"
-                                  HorizontalAlignment="Left" VerticalAlignment="Bottom"
-                                  Background="#CC000000" CornerRadius="3" Padding="3,0" Margin="-1,0,0,-1"
-                                  ToolTip.Tip="{loc:Tr Cal_OvernightHint}">
-                            <TextBlock Text="＋1" FontSize="9" Foreground="White" />
-                          </Border>
-                          <Border IsVisible="{Binding IsContinuation}"
-                                  HorizontalAlignment="Left" VerticalAlignment="Top"
-                                  Background="#CC000000" CornerRadius="3" Padding="3,0" Margin="-1,-1,0,0"
-                                  ToolTip.Tip="{loc:Tr Cal_OvernightHint}">
-                            <TextBlock Text="↳" FontSize="11" Foreground="White" />
-                          </Border>
-                          <Border IsVisible="{Binding HasSwap}"
-                                  HorizontalAlignment="Right" VerticalAlignment="Top"
-                                  Background="#CC000000" CornerRadius="3" Padding="3,0" Margin="0,-1,-1,0">
-                            <TextBlock Text="⇄" FontSize="11" Foreground="White" />
-                          </Border>
+                          <Border IsVisible="{Binding IsToday}" Background="#142E86C1" />
+                          <TextBlock Text="+" IsVisible="{Binding ShowAddHint}" Opacity="0.22" FontSize="16"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+                          <ItemsControl ItemsSource="{Binding Entries}">
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate>
+                                <Border CornerRadius="4" Padding="4,2" Margin="0,0,0,2" Cursor="Hand"
+                                        Tapped="OnEntryTapped" ClipToBounds="True"
+                                        Background="{Binding OwnerColor, Converter={StaticResource ColorStringToBrushConverter}}">
+                                  <Grid>
+                                    <StackPanel Spacing="0">
+                                      <TextBlock Text="{Binding TimeRange}" FontSize="9.5" Foreground="White" Opacity="0.85"
+                                                 IsVisible="{Binding ShowsTime}" />
+                                      <TextBlock Text="{Binding DisplayType, Converter={x:Static cv:EntryTypeLabelConverter.Instance}}"
+                                                 FontSize="11" FontWeight="SemiBold" Foreground="White"
+                                                 TextTrimming="CharacterEllipsis" IsVisible="{Binding ShowsTypeLabel}" />
+                                      <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding HasActivity}">
+                                        <Border Width="8" Height="8" CornerRadius="4" VerticalAlignment="Center"
+                                                BorderBrush="#E6FFFFFF" BorderThickness="1"
+                                                Background="{Binding ActivityColor, Converter={StaticResource ColorStringToBrushConverter}}" />
+                                        <TextBlock Text="{Binding ActivityName}" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="White" TextTrimming="CharacterEllipsis" />
+                                      </StackPanel>
+                                      <TextBlock Text="{Binding DisplayTitle}" FontSize="10.5" Foreground="White" Opacity="0.9"
+                                                 TextTrimming="CharacterEllipsis"
+                                                 IsVisible="{Binding DisplayTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                      <TextBlock Text="{Binding AbsenceSpanLabel}" FontSize="10" Foreground="White" Opacity="0.85"
+                                                 IsVisible="{Binding ShowAbsenceSpan}" />
+                                      <TextBlock Text="{loc:Tr Recur_HolidayHint}" IsVisible="{Binding HolidayConflict}"
+                                                 FontSize="9.5" FontStyle="Italic" Foreground="White" Opacity="0.95"
+                                                 TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="2"
+                                                HorizontalAlignment="Right" VerticalAlignment="Top">
+                                      <Border IsVisible="{Binding IsRecurring}" Background="#33000000" CornerRadius="3" Padding="2,0"
+                                              ToolTip.Tip="{loc:Tr Recur_Title}">
+                                        <TextBlock Text="↻" FontSize="10" Foreground="White" />
+                                      </Border>
+                                      <Border IsVisible="{Binding HasSwap}" Background="#CC000000" CornerRadius="3" Padding="2,0">
+                                        <TextBlock Text="⇄" FontSize="10" Foreground="White" />
+                                      </Border>
+                                    </StackPanel>
+                                  </Grid>
+                                </Border>
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
                         </Grid>
                       </Border>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
+
               </Grid>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
+      </ScrollViewer>
 
-      </Grid>
-    </ScrollViewer>
+    </DockPanel>
 
   </DockPanel>
 </UserControl>
