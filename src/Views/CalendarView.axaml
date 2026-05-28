@@ -119,6 +119,9 @@
                 <StackPanel HorizontalAlignment="Center" Spacing="2">
                   <TextBlock Text="{Binding DayName}" HorizontalAlignment="Center" FontSize="13" FontWeight="SemiBold" />
                   <TextBlock Text="{Binding DateLabel}" HorizontalAlignment="Center" FontSize="12" Opacity="0.7" />
+                  <TextBlock Text="{Binding HolidayName}" IsVisible="{Binding ShowHoliday}"
+                             HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
+                             FontSize="11" FontWeight="SemiBold" Foreground="#E67E22" />
                   <Border IsVisible="{Binding IsToday}" Background="{DynamicResource SystemAccentColor}"
                           CornerRadius="3" Padding="6,1">
                     <TextBlock Text="{loc:Tr Cal_TodayBadge}" FontSize="10" Foreground="White" />
@@ -149,17 +152,13 @@
             <DataTemplate>
               <Border BorderThickness="1,1,0,0" Padding="4,4" MinHeight="34"
                       BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-                <StackPanel Spacing="2" HorizontalAlignment="Center">
-                  <TextBlock Text="{Binding HolidayName}" IsVisible="{Binding ShowHoliday}"
-                             TextAlignment="Center" TextWrapping="Wrap"
-                             FontSize="11" FontWeight="SemiBold" Foreground="#E67E22" />
-                  <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding DayNote}" IsVisible="{Binding HasNote}"
-                               TextAlignment="Center" TextWrapping="Wrap" FontSize="10" Opacity="0.75" />
-                    <Button Content="✎" Command="{Binding EditNoteCommand}" IsVisible="{Binding CanEditNote}"
-                            FontSize="10" Padding="4,0" CornerRadius="3"
-                            Background="Transparent" Opacity="0.6" ToolTip.Tip="{loc:Tr DayNote_Title}" />
-                  </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                  <TextBlock Text="{Binding DayNote}" IsVisible="{Binding HasNote}"
+                             TextAlignment="Center" TextWrapping="Wrap" FontSize="10" Opacity="0.75"
+                             VerticalAlignment="Center" />
+                  <Button Content="✎" Command="{Binding EditNoteCommand}" IsVisible="{Binding CanEditNote}"
+                          FontSize="10" Padding="4,0" CornerRadius="3"
+                          Background="Transparent" Opacity="0.6" ToolTip.Tip="{loc:Tr DayNote_Title}" />
                 </StackPanel>
               </Border>
             </DataTemplate>
