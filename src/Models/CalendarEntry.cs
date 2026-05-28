@@ -1,5 +1,13 @@
 namespace FlexFamilyCalendar.Models;
 
+/// <summary>Laufzeit-Markierung für eine offene Tausch-Anfrage an dieser Schicht (relativ zum aktuellen Benutzer).</summary>
+public enum SwapMark
+{
+    None = 0,
+    Incoming = 1,  // an mich gerichtet → ich kann annehmen/ablehnen
+    Outgoing = 2   // von mir gestellt → ausstehend, ich kann zurückziehen
+}
+
 public class CalendarEntry
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
@@ -42,4 +50,11 @@ public class CalendarEntry
     /// <summary>Datenschutz-maskierter Titel (Laufzeit; leer = verborgen).</summary>
     [Newtonsoft.Json.JsonIgnore]
     public string DisplayTitle { get; set; } = "";
+
+    /// <summary>Markierung einer offenen Tausch-Anfrage an dieser Schicht (Laufzeit, nicht persistiert).</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public SwapMark SwapMark { get; set; } = SwapMark.None;
+
+    [Newtonsoft.Json.JsonIgnore]
+    public bool HasSwap => SwapMark != SwapMark.None;
 }

@@ -12,6 +12,7 @@ public class StorageService : IStorageService
 
     private string UsersFile => Path.Combine(DataDirectory, "users.json");
     private string SettingsFile => Path.Combine(DataDirectory, "settings.json");
+    private string SwapRequestsFile => Path.Combine(DataDirectory, "swap-requests.json");
 
     public StorageService() => Directory.CreateDirectory(DataDirectory);
 
@@ -26,6 +27,19 @@ public class StorageService : IStorageService
     {
         await File.WriteAllTextAsync(UsersFile, JsonConvert.SerializeObject(users, Formatting.Indented));
         LogService.Debug("Benutzerdaten gespeichert ({0} Benutzer)", users.Count);
+    }
+
+    public async Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync()
+    {
+        if (!File.Exists(SwapRequestsFile)) return new();
+        var json = await File.ReadAllTextAsync(SwapRequestsFile);
+        return JsonConvert.DeserializeObject<List<ShiftSwapRequest>>(json) ?? new();
+    }
+
+    public async Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests)
+    {
+        await File.WriteAllTextAsync(SwapRequestsFile, JsonConvert.SerializeObject(requests, Formatting.Indented));
+        LogService.Debug("Tausch-Anfragen gespeichert ({0})", requests.Count);
     }
 
     public async Task<AppSettings> LoadSettingsAsync()

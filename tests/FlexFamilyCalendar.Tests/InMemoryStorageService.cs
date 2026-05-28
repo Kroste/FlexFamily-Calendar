@@ -9,6 +9,7 @@ public class InMemoryStorageService : IStorageService
     private List<User> _users = new();
     private AppSettings _settings = new();
     private readonly Dictionary<string, CalendarDay> _days = new();
+    private List<ShiftSwapRequest> _swapRequests = new();
 
     public Task<List<User>> LoadUsersAsync()
         // Kopie zurückgeben, damit Tests echtes Laden/Speichern abbilden
@@ -28,6 +29,23 @@ public class InMemoryStorageService : IStorageService
             ? d : new CalendarDay { DateString = date.ToString("yyyy-MM-dd") });
 
     public Task SaveDayAsync(CalendarDay day) { _days[day.DateString] = day; return Task.CompletedTask; }
+
+    public Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync()
+        => Task.FromResult(_swapRequests.Select(Clone).ToList());
+
+    public Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests)
+    {
+        _swapRequests = requests.Select(Clone).ToList();
+        return Task.CompletedTask;
+    }
+
+    private static ShiftSwapRequest Clone(ShiftSwapRequest r) => new()
+    {
+        Id = r.Id, CreatedAt = r.CreatedAt, RespondedAt = r.RespondedAt, Status = r.Status, Mode = r.Mode,
+        FromUserId = r.FromUserId, FromUserName = r.FromUserName, FromDate = r.FromDate, FromEntryId = r.FromEntryId,
+        ToUserId = r.ToUserId, ToUserName = r.ToUserName, ToDate = r.ToDate, ToEntryId = r.ToEntryId,
+        Message = r.Message
+    };
 
     private static User Clone(User u) => new()
     {

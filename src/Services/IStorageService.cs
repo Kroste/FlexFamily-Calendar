@@ -11,4 +11,6 @@ public interface IStorageService
     Task SaveSettingsAsync(AppSettings settings);
     Task<CalendarDay> LoadDayAsync(DateOnly date);
     Task SaveDayAsync(CalendarDay day);
+    Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync();
+    Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests);
 }
