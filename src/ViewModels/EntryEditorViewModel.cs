@@ -12,22 +12,28 @@ public record EntryTypeOption(EntryType Type, string Label);
 
 public enum EntryDialogAction { Save, Delete }
 
-public record EntryDialogResult(EntryDialogAction Action, CalendarEntry Entry);
+public record EntryDialogResult(EntryDialogAction Action, CalendarEntry Entry, DateOnly RangeStart, DateOnly RangeEnd);
 
 public partial class EntryEditorViewModel : ViewModelBase
 {
     private readonly string _entryId;
     private readonly IReadOnlyList<ActivityType> _allActivityTypes;
+    private string? _origGroupId;     // bestehende Abwesenheits-Gruppe (zum Aufräumen beim Bearbeiten)
+    private DateOnly? _origStart;
+    private DateOnly? _origEnd;
 
     [ObservableProperty] private User? _selectedUser;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowActivityType))]
+    [NotifyPropertyChangedFor(nameof(ShowDateRange))]
     private EntryTypeOption? _selectedType;
 
     [ObservableProperty] private ActivityType? _selectedActivityType;
     [ObservableProperty] private TimeSpan? _startTime = TimeSpan.FromHours(8);
     [ObservableProperty] private TimeSpan? _endTime = TimeSpan.FromHours(16);
+    [ObservableProperty] private DateTimeOffset? _absenceFrom;
+    [ObservableProperty] private DateTimeOffset? _absenceTo;
     [ObservableProperty] private string _title = "";
     [ObservableProperty] private string _notes = "";
     [ObservableProperty] private string _errorMessage = "";
@@ -44,6 +50,9 @@ public partial class EntryEditorViewModel : ViewModelBase
 
     /// <summary>Kategorie-Auswahl nur bei Typ „Aktivität".</summary>
     public bool ShowActivityType => SelectedType?.Type == EntryType.Activity;
+
+    /// <summary>Datumsbereich (von–bis) nur bei Abwesenheiten (Urlaub/Krank/Abwesend).</summary>
+    public bool ShowDateRange => SelectedType != null && EntryTypeInfo.IsAbsence(SelectedType.Type);
 
     /// <summary>Im Selbst-Antrag (Krank/Urlaub) ist der Benutzer fix → kein Benutzer-Dropdown.</summary>
     public bool CanPickUser { get; }
@@ -72,6 +81,10 @@ public partial class EntryEditorViewModel : ViewModelBase
         SelectedUser = users.FirstOrDefault();
         var defaultType = canPickUser ? EntryType.Work : types[0];
         SelectedType = EntryTypes.FirstOrDefault(t => t.Type == defaultType) ?? EntryTypes.FirstOrDefault();
+
+        var dateOffset = new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue));
+        AbsenceFrom = dateOffset;
+        AbsenceTo = dateOffset;
     }
 
     /// <summary>Bestehenden Eintrag bearbeiten.</summary>
@@ -89,6 +102,12 @@ public partial class EntryEditorViewModel : ViewModelBase
         Title = existing.Title;
         Notes = existing.Notes;
         SelectedActivityType = AvailableActivityTypes.FirstOrDefault(t => t.Id == existing.ActivityTypeId);
+
+        _origGroupId = existing.AbsenceGroupId;
+        _origStart = existing.AbsenceStart;
+        _origEnd = existing.AbsenceEnd;
+        AbsenceFrom = new DateTimeOffset((existing.AbsenceStart ?? date).ToDateTime(TimeOnly.MinValue));
+        AbsenceTo = new DateTimeOffset((existing.AbsenceEnd ?? date).ToDateTime(TimeOnly.MinValue));
     }
 
     partial void OnSelectedUserChanged(User? value) => RefreshActivityTypes();
@@ -112,7 +131,21 @@ public partial class EntryEditorViewModel : ViewModelBase
         if (SelectedType == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoType"]; return; }
         if (StartTime == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoStart"]; return; }
         if (EndTime == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoEnd"]; return; }
-        if (EndTime <= StartTime) { ErrorMessage = Localizer.Instance["Entry_ErrorEndBeforeStart"]; return; }
+        // EndTime < StartTime ist erlaubt (Schicht über Mitternacht); nur identische Zeiten sind ungültig.
+        if (EndTime == StartTime) { ErrorMessage = Localizer.Instance["Entry_ErrorSameTime"]; return; }
+
+        DateOnly rangeStart, rangeEnd;
+        if (ShowDateRange)
+        {
+            if (AbsenceFrom == null || AbsenceTo == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoDate"]; return; }
+            rangeStart = DateOnly.FromDateTime(AbsenceFrom.Value.Date);
+            rangeEnd = DateOnly.FromDateTime(AbsenceTo.Value.Date);
+            if (rangeEnd < rangeStart) (rangeStart, rangeEnd) = (rangeEnd, rangeStart);
+        }
+        else
+        {
+            rangeStart = rangeEnd = Date;
+        }
 
         var entry = new CalendarEntry
         {
@@ -124,10 +157,14 @@ public partial class EntryEditorViewModel : ViewModelBase
             EndTime = EndTime.Value,
             Title = Title.Trim(),
             Notes = Notes.Trim(),
-            ActivityTypeId = ShowActivityType ? SelectedActivityType?.Id : null
+            ActivityTypeId = ShowActivityType ? SelectedActivityType?.Id : null,
+            // bestehende Abwesenheits-Gruppe mitführen, damit sie beim Speichern aufgeräumt werden kann
+            AbsenceGroupId = _origGroupId,
+            AbsenceStart = _origStart,
+            AbsenceEnd = _origEnd
         };
         LogService.Debug("Eintrag-Dialog: Speichern ({0}, {1})", entry.TypeLabel, entry.UserDisplayName);
-        Closed?.Invoke(new EntryDialogResult(EntryDialogAction.Save, entry));
+        Closed?.Invoke(new EntryDialogResult(EntryDialogAction.Save, entry, rangeStart, rangeEnd));
     }
 
     [RelayCommand]
@@ -143,10 +180,13 @@ public partial class EntryEditorViewModel : ViewModelBase
             StartTime = StartTime ?? TimeSpan.Zero,
             EndTime = EndTime ?? TimeSpan.Zero,
             Title = Title,
-            Notes = Notes
+            Notes = Notes,
+            AbsenceGroupId = _origGroupId,
+            AbsenceStart = _origStart,
+            AbsenceEnd = _origEnd
         };
         LogService.Debug("Eintrag-Dialog: Löschen ({0})", entry.TypeLabel);
-        Closed?.Invoke(new EntryDialogResult(EntryDialogAction.Delete, entry));
+        Closed?.Invoke(new EntryDialogResult(EntryDialogAction.Delete, entry, _origStart ?? Date, _origEnd ?? Date));
     }
 
     [RelayCommand]

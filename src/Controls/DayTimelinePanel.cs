@@ -41,7 +41,8 @@ public class DayTimelinePanel : Panel
             var width = Math.Max(0, laneWidth - 2 * Gap);
 
             var y = entry.StartTime.TotalHours * CalendarMetrics.PixelsPerHour;
-            var rawHeight = (entry.EndTime - entry.StartTime).TotalHours * CalendarMetrics.PixelsPerHour;
+            var endHours = EffectiveEnd(entry).TotalHours;
+            var rawHeight = (endHours - entry.StartTime.TotalHours) * CalendarMetrics.PixelsPerHour;
             var height = Math.Max(MinEntryHeight, rawHeight - Gap);
 
             child.Arrange(new Rect(x, y, width, height));
@@ -56,6 +57,10 @@ public class DayTimelinePanel : Panel
     /// Überlappungs-Clusters bestimmt die Breite aller darin liegenden Einträge.
     /// Rückgabe in Eingabereihenfolge: (laneIndex, laneCountImCluster).
     /// </summary>
+    /// <summary>Effektives Ende fürs Layout: Schichten über Mitternacht reichen bis zum Tagesende (24:00).</summary>
+    public static TimeSpan EffectiveEnd(CalendarEntry e)
+        => e.CrossesMidnight ? TimeSpan.FromHours(CalendarMetrics.HourCount) : e.EndTime;
+
     public static IReadOnlyList<(int LaneIndex, int LaneCount)> AssignLanes(IReadOnlyList<CalendarEntry> entries)
     {
         var n = entries.Count;
@@ -65,7 +70,7 @@ public class DayTimelinePanel : Panel
         // nach Start sortierte Indizes
         var order = Enumerable.Range(0, n)
             .OrderBy(i => entries[i].StartTime)
-            .ThenBy(i => entries[i].EndTime)
+            .ThenBy(i => EffectiveEnd(entries[i]))
             .ToList();
 
         var laneIndexByOrig = new int[n];
@@ -86,6 +91,7 @@ public class DayTimelinePanel : Panel
         foreach (var orig in order)
         {
             var entry = entries[orig];
+            var end = EffectiveEnd(entry);
 
             // Cluster endet, sobald ein Eintrag erst nach dem bisherigen Cluster-Ende beginnt
             if (clusterMembers.Count > 0 && entry.StartTime >= clusterEnd)
@@ -100,16 +106,16 @@ public class DayTimelinePanel : Panel
             if (lane == -1)
             {
                 lane = laneEnds.Count;
-                laneEnds.Add(entry.EndTime);
+                laneEnds.Add(end);
             }
             else
             {
-                laneEnds[lane] = entry.EndTime;
+                laneEnds[lane] = end;
             }
 
             laneIndexByOrig[orig] = lane;
             clusterMembers.Add(orig);
-            if (entry.EndTime > clusterEnd) clusterEnd = entry.EndTime;
+            if (end > clusterEnd) clusterEnd = end;
         }
         FlushCluster();
 

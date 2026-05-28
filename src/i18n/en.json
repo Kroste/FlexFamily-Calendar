@@ -88,6 +88,7 @@
   "Cal_ShortRest": "Rest too short",
   "Cal_Overlap": "Time overlap",
   "Cal_ViewPersonal": "My view",
+  "Cal_OvernightHint": "Shift across midnight",
 
   "Swap_Title": "Swap shift",
   "Swap_IncomingTitle": "Swap request",
@@ -202,6 +203,8 @@
   "Entry_Type": "Type",
   "Entry_StartTime": "Start time",
   "Entry_EndTime": "End time",
+  "Entry_DateFrom": "From (date)",
+  "Entry_DateTo": "To (date)",
   "Entry_ActivityType": "Activity type",
   "Entry_ActivityNone": "(none)",
   "Entry_TitleLabel": "Label (optional)",
@@ -212,7 +215,8 @@
   "Entry_ErrorNoType": "Please select a type.",
   "Entry_ErrorNoStart": "Please enter a start time.",
   "Entry_ErrorNoEnd": "Please enter an end time.",
-  "Entry_ErrorEndBeforeStart": "The end time must be after the start time.",
+  "Entry_ErrorSameTime": "Start and end time must not be identical.",
+  "Entry_ErrorNoDate": "Please select a date range (from–to).",
 
   "EntryType_Work": "Work",
   "EntryType_Vacation": "Vacation",

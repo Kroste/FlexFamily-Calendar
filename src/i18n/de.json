@@ -88,6 +88,7 @@
   "Cal_ShortRest": "Ruhezeit zu kurz",
   "Cal_Overlap": "Zeitüberschneidung",
   "Cal_ViewPersonal": "Meine Sicht",
+  "Cal_OvernightHint": "Schicht über Mitternacht",
 
   "Swap_Title": "Schicht tauschen",
   "Swap_IncomingTitle": "Tausch-Anfrage",
@@ -202,6 +203,8 @@
   "Entry_Type": "Typ",
   "Entry_StartTime": "Startzeit",
   "Entry_EndTime": "Endzeit",
+  "Entry_DateFrom": "Von (Datum)",
+  "Entry_DateTo": "Bis (Datum)",
   "Entry_ActivityType": "Aktivitätstyp",
   "Entry_ActivityNone": "(keiner)",
   "Entry_TitleLabel": "Bezeichnung (optional)",
@@ -212,7 +215,8 @@
   "Entry_ErrorNoType": "Bitte einen Typ auswählen.",
   "Entry_ErrorNoStart": "Bitte eine Startzeit angeben.",
   "Entry_ErrorNoEnd": "Bitte eine Endzeit angeben.",
-  "Entry_ErrorEndBeforeStart": "Die Endzeit muss nach der Startzeit liegen.",
+  "Entry_ErrorSameTime": "Start- und Endzeit dürfen nicht identisch sein.",
+  "Entry_ErrorNoDate": "Bitte einen Zeitraum (von–bis) auswählen.",
 
   "EntryType_Work": "Arbeit",
   "EntryType_Vacation": "Urlaub",

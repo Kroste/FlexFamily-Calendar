@@ -279,12 +279,29 @@ public partial class CalendarViewModel : ViewModelBase
             ? (_allUsers.Count > 0 ? _allUsers : new List<User> { CurrentUser })
             : new List<User> { CurrentUser };
         var allowed = adminEdit ? AllTypes : AbsenceTypes(finalized);
-        EntryDialogRequested?.Invoke(date, entry, users.AsReadOnly(), adminEdit, allowed, _activityTypes);
+        // Abwesenheit: Editor auf den Beginn des Zeitraums öffnen (für die von-bis-Bearbeitung).
+        var editDate = EntryTypeInfo.IsAbsence(entry.Type) && entry.AbsenceStart is { } s ? s : date;
+        EntryDialogRequested?.Invoke(editDate, entry, users.AsReadOnly(), adminEdit, allowed, _activityTypes);
     }
 
     /// <summary>Speichert/löscht das Dialog-Ergebnis: ein Pfad für Neu, Edit und Delete.</summary>
     public async Task ApplyEntryResultAsync(DateOnly date, EntryDialogResult result)
     {
+        // Abwesenheiten (Urlaub/Krank/Abwesend) werden als Datumsbereich behandelt.
+        if (EntryTypeInfo.IsAbsence(result.Entry.Type))
+        {
+            await ApplyAbsenceResultAsync(date, result);
+            return;
+        }
+
+        // Umwandlung Abwesenheit → Arbeit/Aktivität: alte Abwesenheits-Gruppe aufräumen.
+        if (!string.IsNullOrEmpty(result.Entry.AbsenceGroupId)
+            && result.Entry.AbsenceStart is { } os && result.Entry.AbsenceEnd is { } oe)
+            await RemoveAbsenceGroupAsync(result.Entry.AbsenceGroupId!, os, oe);
+        result.Entry.AbsenceGroupId = null;
+        result.Entry.AbsenceStart = null;
+        result.Entry.AbsenceEnd = null;
+
         var day = await _storage.LoadDayAsync(date);
         day.Entries.RemoveAll(e => e.Id == result.Entry.Id);
         if (result.Action == EntryDialogAction.Save)
@@ -292,16 +309,69 @@ public partial class CalendarViewModel : ViewModelBase
         day.Entries.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
         await _storage.SaveDayAsync(day);
 
-        ApplyEntryDisplay(day);
-        var dayVm = Days.FirstOrDefault(d => d.Date == date);
-        dayVm?.LoadFromModel(day, BuildRecurring(date));
-        RecomputeWeeklyHours();
-
         var verb = result.Action == EntryDialogAction.Save ? "gespeichert" : "gelöscht";
         LogService.UserAction(CurrentUser.Username,
             $"Eintrag {verb}: {result.Entry.TypeLabel} für {result.Entry.UserDisplayName} am {date:dd.MM.yyyy}");
 
+        await LoadWeekAsync();
         await NotifyEntryChangeAsync(date, result);
+    }
+
+    /// <summary>Speichert/löscht eine Abwesenheit als Datumsbereich: je Tag ein Eintrag, verbunden über die GroupId.</summary>
+    private async Task ApplyAbsenceResultAsync(DateOnly originalDate, EntryDialogResult result)
+    {
+        var e = result.Entry;
+
+        // 1. Ursprünglichen Einzeleintrag entfernen (Ein-Tages-Bearbeitung oder Umwandlung Arbeit→Abwesenheit).
+        var origDay = await _storage.LoadDayAsync(originalDate);
+        if (origDay.Entries.RemoveAll(x => x.Id == e.Id) > 0)
+            await _storage.SaveDayAsync(origDay);
+
+        // 2. Vorhandene Gruppe (beim Bearbeiten/Löschen) über ihren Zeitraum entfernen.
+        if (!string.IsNullOrEmpty(e.AbsenceGroupId) && e.AbsenceStart is { } gs && e.AbsenceEnd is { } ge)
+            await RemoveAbsenceGroupAsync(e.AbsenceGroupId!, gs, ge);
+
+        if (result.Action == EntryDialogAction.Save)
+        {
+            var groupId = string.IsNullOrEmpty(e.AbsenceGroupId) ? Guid.NewGuid().ToString() : e.AbsenceGroupId!;
+            foreach (var (d, entry) in AbsencePlanner.Build(e, result.RangeStart, result.RangeEnd, groupId))
+            {
+                var day = await _storage.LoadDayAsync(d);
+                if (day.IsFinalized && entry.Type == EntryType.Vacation) continue;  // Urlaub nicht in finalisierte Tage
+                day.Entries.Add(entry);
+                day.Entries.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
+                await _storage.SaveDayAsync(day);
+            }
+            LogService.UserAction(CurrentUser.Username,
+                $"Abwesenheit ({e.TypeLabel}) für {e.UserDisplayName}: {result.RangeStart:dd.MM.}–{result.RangeEnd:dd.MM.}");
+
+            // Selbst-Krankmeldung → Admins benachrichtigen (einmal, mit Umplanungs-Einstieg am Startdatum).
+            if (!IsAdmin && e.Type == EntryType.SickLeave)
+            {
+                var admins = _allUsers.Where(u => u.Role == UserRole.Admin).Select(u => u.Id);
+                var who = string.IsNullOrEmpty(CurrentUser.DisplayName) ? CurrentUser.Username : CurrentUser.DisplayName;
+                await _notifications.AddSickReplanAsync(admins, CurrentUser.Id,
+                    result.RangeStart.ToString("yyyy-MM-dd"), who, result.RangeStart.ToString("dd.MM.yyyy"));
+            }
+        }
+        else
+        {
+            LogService.UserAction(CurrentUser.Username, $"Abwesenheit gelöscht: {e.TypeLabel} für {e.UserDisplayName}");
+        }
+
+        await LoadWeekAsync();
+    }
+
+    /// <summary>Entfernt alle Tageseinträge einer Abwesenheits-Gruppe über ihren (inklusiven) Zeitraum.</summary>
+    private async Task RemoveAbsenceGroupAsync(string groupId, DateOnly from, DateOnly to)
+    {
+        if (to < from) (from, to) = (to, from);
+        for (var d = from; d <= to; d = d.AddDays(1))
+        {
+            var day = await _storage.LoadDayAsync(d);
+            if (day.Entries.RemoveAll(x => x.AbsenceGroupId == groupId) > 0)
+                await _storage.SaveDayAsync(day);
+        }
     }
 
     /// <summary>Benachrichtigt Betroffene: Admin ändert/entfernt fremde Schicht; Mitarbeiter meldet sich krank → an Admins.</summary>
@@ -331,8 +401,8 @@ public partial class CalendarViewModel : ViewModelBase
     /// <summary>Antippen einer Schicht: offene Anfrage beantworten/zurückziehen, eigenen Tausch anbieten oder bearbeiten.</summary>
     public void ActivateEntry(DateOnly date, CalendarEntry entry)
     {
-        // Projizierte (wiederkehrende) Aktivitäten sind keine echten Tageseinträge → nicht editier-/tauschbar.
-        if (entry.IsRecurring) return;
+        // Projektionen/Fortsetzungen sind keine echten Tageseinträge → nicht editier-/tauschbar.
+        if (entry.IsRecurring || entry.IsContinuation) return;
 
         var dayStr = date.ToString("yyyy-MM-dd");
         bool Involves(ShiftSwapRequest r) =>
@@ -646,6 +716,22 @@ public partial class CalendarViewModel : ViewModelBase
         }
     }
 
+    /// <summary>Teilt die Tageseinträge in Raster (Arbeit/Aktivität + Nacht-Fortsetzungen + wiederkehrende) und Abwesenheits-Hinweise.</summary>
+    private (List<CalendarEntry> Timeline, List<CalendarEntry> Absences) BuildDisplay(
+        DateOnly date, IReadOnlyList<CalendarEntry> dayEntries, IReadOnlyList<CalendarEntry> prevDayEntries)
+    {
+        var timeline = new List<CalendarEntry>();
+        var absences = new List<CalendarEntry>();
+        foreach (var e in dayEntries)
+        {
+            if (EntryTypeInfo.IsAbsence(e.Type)) absences.Add(e);
+            else timeline.Add(e);
+        }
+        timeline.AddRange(OvernightShifts.Continuations(prevDayEntries));
+        timeline.AddRange(BuildRecurring(date));
+        return (timeline, absences);
+    }
+
     private bool IsHoliday(DateOnly date) => _weekHolidays.Any(h => h.Date == date);
 
     /// <summary>Projiziert die wiederkehrenden Regeln auf einen Tag und löst Anzeige (Farbe/Kategorie/Deckkraft) auf.</summary>
@@ -699,13 +785,21 @@ public partial class CalendarViewModel : ViewModelBase
         _activityTypes = await _storage.LoadActivityTypesAsync();
         _recurringActivities = await _storage.LoadRecurringActivitiesAsync();
         _weekHolidays = HolidayCalculator.ForRange(WeekStart, WeekStart.AddDays(6), _holidayState);
+
+        // Vortag mitladen, damit Nacht-Schichten (z.B. So→Mo) als Fortsetzung am Folgetag erscheinen.
+        var prev = await _storage.LoadDayAsync(WeekStart.AddDays(-1));
+        ApplyEntryDisplay(prev);
+        var prevEntries = (IReadOnlyList<CalendarEntry>)prev.Entries;
+
         for (int i = 0; i < 7; i++)
         {
             var date = WeekStart.AddDays(i);
             var day = await _storage.LoadDayAsync(date);
             ApplyEntryDisplay(day);
-            Days[i].LoadFromModel(day, BuildRecurring(date));
+            var (timeline, absences) = BuildDisplay(date, day.Entries, prevEntries);
+            Days[i].LoadFromModel(day, timeline, absences);
             Days[i].SetHoliday(_weekHolidays.FirstOrDefault(h => h.Date == date)?.NameKey, IsHolidaysVisible);
+            prevEntries = day.Entries;
         }
         IsWeekFinalized = Days.Count > 0 && Days.All(d => d.IsFinalized);
         RecomputeWeeklyHours();

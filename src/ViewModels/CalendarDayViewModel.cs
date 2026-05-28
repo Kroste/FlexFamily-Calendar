@@ -37,7 +37,14 @@ public partial class CalendarDayViewModel : ViewModelBase
     /// Urlaub bei Finalisierung im Editor ausgeblendet).</summary>
     public bool CanRequestAbsence => _parent.CurrentUser.Role != UserRole.Admin;
 
+    /// <summary>Alle echten, gespeicherten Einträge des Tages (für Stunden/Tausch/Regeln) — nicht direkt im Raster.</summary>
     public ObservableCollection<CalendarEntry> Entries { get; } = new();
+
+    /// <summary>Im 24h-Raster gezeigte Einträge: Arbeit + Aktivitäten + Nacht-Fortsetzungen + wiederkehrende Projektionen.</summary>
+    public ObservableCollection<CalendarEntry> TimelineEntries { get; } = new();
+
+    /// <summary>Abwesenheiten (Urlaub/Krank/Abwesend) als kompakter Hinweis unter dem Datum.</summary>
+    public ObservableCollection<CalendarEntry> AbsenceHints { get; } = new();
 
     public CalendarDayViewModel(DateOnly date, CalendarViewModel parent)
     {
@@ -63,14 +70,27 @@ public partial class CalendarDayViewModel : ViewModelBase
     [RelayCommand]
     private void EditNote() => _parent.RequestEditDayNote(Date);
 
-    public void LoadFromModel(CalendarDay day, IReadOnlyList<CalendarEntry>? recurring = null)
+    /// <summary>
+    /// Lädt den Tag: <paramref name="day"/> liefert echte Einträge (für Berechnungen);
+    /// <paramref name="timeline"/> ist die Raster-Anzeige, <paramref name="absences"/> die Hinweis-Liste.
+    /// </summary>
+    public void LoadFromModel(CalendarDay day,
+        IReadOnlyList<CalendarEntry> timeline, IReadOnlyList<CalendarEntry> absences)
     {
         IsFinalized = day.IsFinalized;
         DayNote = day.Note;
+
         Entries.Clear();
-        var combined = recurring is { Count: > 0 } ? day.Entries.Concat(recurring) : day.Entries;
-        foreach (var e in combined.OrderBy(x => x.StartTime))
+        foreach (var e in day.Entries.OrderBy(x => x.StartTime))
             Entries.Add(e);
+
+        TimelineEntries.Clear();
+        foreach (var e in timeline.OrderBy(x => x.StartTime))
+            TimelineEntries.Add(e);
+
+        AbsenceHints.Clear();
+        foreach (var e in absences.OrderBy(x => x.UserDisplayName))
+            AbsenceHints.Add(e);
     }
 
     /// <summary>Feiertag (oder keiner) samt Sichtbarkeit setzen; <paramref name="nameKey"/> ist ein i18n-Schlüssel.</summary>

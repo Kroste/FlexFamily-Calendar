@@ -75,7 +75,18 @@ public partial class CalendarView : UserControl
         if (_vm == null) return;
         if (sender is not Control { DataContext: CalendarEntry entry }) return;
 
-        var day = _vm.Days.FirstOrDefault(d => d.Entries.Contains(entry));
+        var day = _vm.Days.FirstOrDefault(d => d.TimelineEntries.Contains(entry));
+        if (day != null)
+            _vm.ActivateEntry(day.Date, entry);
+    }
+
+    /// <summary>Klick auf einen Abwesenheits-Hinweis → Bearbeiten (bzw. Umplanung bei Krank).</summary>
+    private void OnAbsenceTapped(object? sender, TappedEventArgs e)
+    {
+        if (_vm == null) return;
+        if (sender is not Control { DataContext: CalendarEntry entry }) return;
+
+        var day = _vm.Days.FirstOrDefault(d => d.AbsenceHints.Contains(entry));
         if (day != null)
             _vm.ActivateEntry(day.Date, entry);
     }

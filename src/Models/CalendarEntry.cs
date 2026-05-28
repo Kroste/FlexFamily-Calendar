@@ -20,11 +20,41 @@ public class CalendarEntry
     public string Notes { get; set; } = "";
     public string? ActivityTypeId { get; set; }   // optionale Kategorie bei Typ Activity
 
+    // Abwesenheiten (Urlaub/Krank/Abwesend) als Zeitraum: je Tag ein Eintrag, über GroupId verbunden.
+    public string? AbsenceGroupId { get; set; }    // verbindet die Tage einer Abwesenheit (null = keine)
+    public DateOnly? AbsenceStart { get; set; }    // erster Tag des Zeitraums
+    public DateOnly? AbsenceEnd { get; set; }      // letzter Tag des Zeitraums
+
+    /// <summary>Stunden der Schicht; Schichten über Mitternacht (EndTime ≤ StartTime) zählen den Folgetag-Anteil mit.</summary>
     [Newtonsoft.Json.JsonIgnore]
-    public double DurationHours => (EndTime - StartTime).TotalHours;
+    public double DurationHours
+    {
+        get
+        {
+            var d = (EndTime - StartTime).TotalHours;
+            return d > 0 ? d : d + 24;   // EndTime ≤ StartTime ⇒ über Mitternacht
+        }
+    }
+
+    /// <summary>Schicht überschreitet die Tagesgrenze (z.B. 20:00–06:00, auch 20:00–00:00).</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public bool CrossesMidnight => EndTime <= StartTime;
+
+    /// <summary>Hat einen sichtbaren Anteil am Folgetag (Endzeit > 00:00) → Fortsetzungs-Block.</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public bool ContinuesNextDay => CrossesMidnight && EndTime > TimeSpan.Zero;
+
+    /// <summary>Laufzeit: Folgetag-Anteil einer Schicht über Mitternacht (nicht editierbar, nicht gezählt).</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public bool IsContinuation { get; set; }
 
     [Newtonsoft.Json.JsonIgnore]
     public string TimeRange => $"{StartTime:hh\\:mm}–{EndTime:hh\\:mm}";
+
+    /// <summary>Kompakter Zeitraum einer mehrtägigen Abwesenheit (leer, wenn nur ein Tag).</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public string AbsenceSpanLabel =>
+        AbsenceStart is { } s && AbsenceEnd is { } e && e > s ? $"{s:dd.MM.}–{e:dd.MM.}" : "";
 
     [Newtonsoft.Json.JsonIgnore]
     public string EntryColor => EntryTypeInfo.Color(Type);

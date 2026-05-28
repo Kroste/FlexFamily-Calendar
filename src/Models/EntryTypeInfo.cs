@@ -9,6 +9,10 @@ public static class EntryTypeInfo
     /// <summary>Ist es tatsächliche Arbeit (für die Anzeige/Hervorhebung)?</summary>
     public static bool CountsAsWork(EntryType type) => type is EntryType.Work;
 
+    /// <summary>Abwesenheits-Typ (Urlaub/Krank/Abwesend) → wird als Hinweis unter dem Datum gezeigt, nicht im Raster.</summary>
+    public static bool IsAbsence(EntryType type)
+        => type is EntryType.Vacation or EntryType.SickLeave or EntryType.Absence;
+
     /// <summary>Zählt der Typ aufs Stundenkonto? Arbeit + angerechnete Abwesenheit (Krank/Urlaub).</summary>
     public static bool CountsTowardHours(EntryType type)
         => type is EntryType.Work or EntryType.SickLeave or EntryType.Vacation;

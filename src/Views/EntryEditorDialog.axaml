@@ -52,6 +52,18 @@
           </ComboBox>
         </StackPanel>
 
+        <!-- Datumsbereich (nur bei Abwesenheit: Urlaub/Krank/Abwesend) -->
+        <Grid ColumnDefinitions="*,16,*" IsVisible="{Binding ShowDateRange}">
+          <StackPanel Grid.Column="0" Spacing="4">
+            <TextBlock Text="{loc:Tr Entry_DateFrom}" FontSize="12" Opacity="0.7" />
+            <DatePicker SelectedDate="{Binding AbsenceFrom}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <StackPanel Grid.Column="2" Spacing="4">
+            <TextBlock Text="{loc:Tr Entry_DateTo}" FontSize="12" Opacity="0.7" />
+            <DatePicker SelectedDate="{Binding AbsenceTo}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+        </Grid>
+
         <!-- Aktivitäts-Kategorie (nur bei Typ „Aktivität") -->
         <StackPanel Spacing="4" IsVisible="{Binding ShowActivityType}">
           <TextBlock Text="{loc:Tr Entry_ActivityType}" FontSize="12" Opacity="0.7" />
