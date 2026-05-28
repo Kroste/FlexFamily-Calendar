@@ -36,7 +36,7 @@
                   <TextBlock Text="{Binding WeekdaysLabel}" FontWeight="SemiBold" />
                   <TextBlock Text="{Binding TimeRange}" FontWeight="SemiBold" Opacity="0.8" />
                 </StackPanel>
-                <TextBlock Text="{Binding Title}" FontSize="12" />
+                <TextBlock Text="{Binding CategoryName}" FontSize="12" />
                 <TextBlock Text="{Binding UserDisplayName}" FontSize="11" Opacity="0.6" />
               </StackPanel>
             </DataTemplate>
@@ -59,11 +59,6 @@
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
-        </StackPanel>
-
-        <StackPanel Spacing="4">
-          <TextBlock Text="{loc:Tr Entry_TitleLabel}" FontSize="12" Opacity="0.7" />
-          <TextBox Text="{Binding EditTitle}" PlaceholderText="{loc:Tr Entry_TitlePlaceholder}" CornerRadius="6" />
         </StackPanel>
 
         <StackPanel Spacing="4">

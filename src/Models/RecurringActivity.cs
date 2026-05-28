@@ -26,6 +26,10 @@ public class RecurringActivity
     /// <summary>Findet die Regel an diesem Datum statt? (Reine Wochentags-Prüfung.)</summary>
     public bool OccursOn(DateOnly date) => Weekdays.Contains(date.DayOfWeek);
 
+    /// <summary>Aufgelöster Kategoriename (Laufzeit; für die Verwaltungsliste). Die Kategorie ist der Name im Kalender.</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public string CategoryName { get; set; } = "";
+
     [Newtonsoft.Json.JsonIgnore]
     public string TimeRange => $"{StartTime:hh\\:mm}–{EndTime:hh\\:mm}";
 

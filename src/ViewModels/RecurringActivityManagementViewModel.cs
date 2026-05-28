@@ -22,7 +22,6 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
     [ObservableProperty] private RecurringActivity? _selectedActivity;
     [ObservableProperty] private User? _selectedUser;
     [ObservableProperty] private ActivityType? _selectedActivityType;
-    [ObservableProperty] private string _editTitle = "";
     [ObservableProperty] private TimeSpan? _startTime = TimeSpan.FromHours(16);
     [ObservableProperty] private TimeSpan? _endTime = TimeSpan.FromHours(17);
     [ObservableProperty] private bool _mon;
@@ -53,7 +52,10 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
 
         Activities.Clear();
         foreach (var a in _all.OrderBy(a => a.UserDisplayName).ThenBy(a => a.StartTime))
+        {
+            a.CategoryName = _activityTypes.FirstOrDefault(t => t.Id == a.ActivityTypeId)?.Name ?? "";
             Activities.Add(a);
+        }
     }
 
     partial void OnSelectedUserChanged(User? value) => RefreshActivityTypes();
@@ -73,7 +75,6 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
         if (value == null) return;
         ErrorMessage = "";
         SelectedUser = AvailableUsers.FirstOrDefault(u => u.Id == value.UserId);
-        EditTitle = value.Title;
         StartTime = value.StartTime;
         EndTime = value.EndTime;
         Mon = value.Weekdays.Contains(DayOfWeek.Monday);
@@ -105,7 +106,6 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
     {
         SelectedActivity = null;
         SelectedUser = AvailableUsers.FirstOrDefault();
-        EditTitle = "";
         StartTime = TimeSpan.FromHours(16);
         EndTime = TimeSpan.FromHours(17);
         Mon = Tue = Wed = Thu = Fri = Sat = Sun = false;
@@ -118,7 +118,7 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
     {
         ErrorMessage = "";
         if (SelectedUser == null) { ErrorMessage = Localizer.Instance["Recur_ErrorNoUser"]; return; }
-        if (string.IsNullOrWhiteSpace(EditTitle)) { ErrorMessage = Localizer.Instance["Recur_ErrorNoTitle"]; return; }
+        if (SelectedActivityType == null) { ErrorMessage = Localizer.Instance["Recur_ErrorNoCategory"]; return; }
         if (StartTime == null || EndTime == null) { ErrorMessage = Localizer.Instance["Recur_ErrorNoTime"]; return; }
         if (EndTime <= StartTime) { ErrorMessage = Localizer.Instance["Recur_ErrorEndBeforeStart"]; return; }
         var weekdays = CollectWeekdays();
@@ -132,8 +132,7 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
             {
                 UserId = SelectedUser.Id,
                 UserDisplayName = name,
-                Title = EditTitle.Trim(),
-                ActivityTypeId = SelectedActivityType?.Id,
+                ActivityTypeId = SelectedActivityType.Id,
                 StartTime = StartTime.Value,
                 EndTime = EndTime.Value,
                 Weekdays = weekdays,
@@ -144,8 +143,7 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
         {
             SelectedActivity.UserId = SelectedUser.Id;
             SelectedActivity.UserDisplayName = name;
-            SelectedActivity.Title = EditTitle.Trim();
-            SelectedActivity.ActivityTypeId = SelectedActivityType?.Id;
+            SelectedActivity.ActivityTypeId = SelectedActivityType.Id;
             SelectedActivity.StartTime = StartTime.Value;
             SelectedActivity.EndTime = EndTime.Value;
             SelectedActivity.Weekdays = weekdays;
