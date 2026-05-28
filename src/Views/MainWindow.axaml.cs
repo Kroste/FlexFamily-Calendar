@@ -20,6 +20,7 @@ public partial class MainWindow : Window
             _vm.MonthOverviewRequested -= OnMonthOverviewRequested;
             _vm.HoursAccountRequested -= OnHoursAccountRequested;
             _vm.NotificationsRequested -= OnNotificationsRequested;
+            _vm.AiSettingsRequested -= OnAiSettingsRequested;
         }
         _vm = DataContext as MainWindowViewModel;
         if (_vm != null)
@@ -29,7 +30,19 @@ public partial class MainWindow : Window
             _vm.MonthOverviewRequested += OnMonthOverviewRequested;
             _vm.HoursAccountRequested += OnHoursAccountRequested;
             _vm.NotificationsRequested += OnNotificationsRequested;
+            _vm.AiSettingsRequested += OnAiSettingsRequested;
         }
+    }
+
+    private async void OnAiSettingsRequested()
+    {
+        if (_vm == null) return;
+        try
+        {
+            var dialog = new AiSettingsDialog { DataContext = _vm.CreateAiSettings() };
+            await dialog.ShowDialog(this);
+        }
+        catch (Exception ex) { LogService.Error("Fehler in den KI-Einstellungen", ex); }
     }
 
     private async void OnNotificationsRequested()

@@ -41,6 +41,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public event Action? MonthOverviewRequested;
     public event Action? HoursAccountRequested;
     public event Action? NotificationsRequested;
+    public event Action? AiSettingsRequested;
 
     public MainWindowViewModel(AuthService auth, StorageService storage, NotificationService notifications, AiService ai, LoginViewModel loginVm)
     {
@@ -100,6 +101,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private void OpenNotifications() => NotificationsRequested?.Invoke();
 
     public NotificationsViewModel CreateNotifications() => new(_notifications, _currentUser!);
+
+    [RelayCommand]
+    private void OpenAiSettings() => AiSettingsRequested?.Invoke();
+
+    public AiSettingsViewModel CreateAiSettings() => new(_ai, _storage);
 
     [RelayCommand]
     private void OpenProfile() => ProfileRequested?.Invoke();
