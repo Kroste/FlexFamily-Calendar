@@ -34,6 +34,9 @@
           <ToggleButton Content="{loc:Tr Cal_Holidays}"
                         IsChecked="{Binding IsHolidaysVisible}"
                         Padding="12,6" CornerRadius="6" />
+          <Button Content="{loc:Tr Cal_ExportPdf}"
+                  Command="{Binding ExportPdfCommand}"
+                  Padding="12,6" CornerRadius="6" />
           <Button Content="{loc:Tr Cal_CopyWeek}"
                   Command="{Binding CopyWeekToNextCommand}"
                   IsVisible="{Binding IsAdmin}"

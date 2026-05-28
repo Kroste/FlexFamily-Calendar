@@ -91,6 +91,9 @@
   "Cal_Overlap": "Time overlap",
   "Cal_ViewPersonal": "My view",
   "Cal_OvernightHint": "Shift across midnight",
+  "Cal_ExportPdf": "PDF",
+  "Pdf_Title": "Weekly plan",
+  "Pdf_Generated": "Generated on {0}",
 
   "Swap_Title": "Swap shift",
   "Swap_IncomingTitle": "Swap request",

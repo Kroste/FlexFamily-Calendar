@@ -71,6 +71,9 @@ public partial class CalendarViewModel : ViewModelBase
     /// <summary>Öffnet den Tages-Hinweis-Dialog (Admin). Parameter: Datum + aktuelle Notiz.</summary>
     public event Action<DateOnly, string>? DayNoteDialogRequested;
 
+    /// <summary>Bittet das CalendarView-Code-Behind, einen Speichern-Dialog für den PDF-Export zu öffnen.</summary>
+    public event Action? ExportPdfRequested;
+
     private static readonly IReadOnlyList<EntryType> AllTypes = Enum.GetValues<EntryType>();
 
     // Selbst-Antrag: Urlaub nur wenn nicht finalisiert, Krank immer.
@@ -173,6 +176,41 @@ public partial class CalendarViewModel : ViewModelBase
     {
         IsHoursPanelVisible = !IsHoursPanelVisible;
         if (IsHoursPanelVisible) RecomputeWeeklyHours();
+    }
+
+    [RelayCommand]
+    private void ExportPdf()
+    {
+        LogService.Click(CurrentUser.Username, $"PDF-Export ({WeekLabel})");
+        ExportPdfRequested?.Invoke();
+    }
+
+    /// <summary>Vorgeschlagener Dateiname für den PDF-Export der aktuellen Woche.</summary>
+    public string ExportFileName
+    {
+        get
+        {
+            var kw = ISOWeek.GetWeekOfYear(WeekStart.ToDateTime(TimeOnly.MinValue));
+            return $"Plan_KW{kw:D2}_{WeekStart.Year}.pdf";
+        }
+    }
+
+    /// <summary>Baut das Export-Modell aus der aktuell aufgelösten Wochenansicht (Sicht/Datenschutz bereits angewendet).</summary>
+    public WeekExport CreateWeekExport()
+    {
+        string TypeLabel(EntryType t) => Localizer.Instance[EntryTypeInfo.Key(t)];
+
+        var days = Days.Select(d => new PlanExportDay(
+            d.DayName,
+            d.DateLabel,
+            d.HolidayName,
+            d.DayNote,
+            d.AbsenceHints.Select(e => PlanExportBuilder.AbsenceLine(e, TypeLabel)).ToList(),
+            d.TimelineEntries.Select(e => PlanExportBuilder.ShiftLine(e, TypeLabel)).ToList())).ToList();
+
+        var generated = string.Format(Localizer.Instance["Pdf_Generated"],
+            DateTime.Now.ToString("g", CultureInfo.CurrentCulture));
+        return new WeekExport(Localizer.Instance["Pdf_Title"], WeekLabel, generated, days);
     }
 
     /// <summary>Ist-Stunden je Person (Work+Au-Pair) der Woche; nur Personen mit Soll&gt;0.</summary>

@@ -91,6 +91,9 @@
   "Cal_Overlap": "Zeitüberschneidung",
   "Cal_ViewPersonal": "Meine Sicht",
   "Cal_OvernightHint": "Schicht über Mitternacht",
+  "Cal_ExportPdf": "PDF",
+  "Pdf_Title": "Wochenplan",
+  "Pdf_Generated": "Erstellt am {0}",
 
   "Swap_Title": "Schicht tauschen",
   "Swap_IncomingTitle": "Tausch-Anfrage",

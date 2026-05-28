@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using FlexFamilyCalendar.Controls;
 using FlexFamilyCalendar.Models;
@@ -38,6 +39,7 @@ public partial class CalendarView : UserControl
             _vm.SwapDialogRequested -= OnSwapDialogRequested;
             _vm.ReplanDialogRequested -= OnReplanDialogRequested;
             _vm.DayNoteDialogRequested -= OnDayNoteDialogRequested;
+            _vm.ExportPdfRequested -= OnExportPdfRequested;
         }
 
         _vm = DataContext as CalendarViewModel;
@@ -48,6 +50,34 @@ public partial class CalendarView : UserControl
             _vm.SwapDialogRequested += OnSwapDialogRequested;
             _vm.ReplanDialogRequested += OnReplanDialogRequested;
             _vm.DayNoteDialogRequested += OnDayNoteDialogRequested;
+            _vm.ExportPdfRequested += OnExportPdfRequested;
+        }
+    }
+
+    private async void OnExportPdfRequested()
+    {
+        if (_vm == null) return;
+        try
+        {
+            if (TopLevel.GetTopLevel(this) is not { } top) return;
+
+            var file = await top.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                SuggestedFileName = _vm.ExportFileName,
+                DefaultExtension = "pdf",
+                FileTypeChoices = new[] { new FilePickerFileType("PDF") { Patterns = new[] { "*.pdf" } } }
+            });
+            if (file is null) return;
+
+            var bytes = PdfExportService.Render(_vm.CreateWeekExport());
+            await using var stream = await file.OpenWriteAsync();
+            await stream.WriteAsync(bytes);
+
+            LogService.Info("PDF exportiert: {0}", file.Name);
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("Fehler beim PDF-Export", ex);
         }
     }
 
