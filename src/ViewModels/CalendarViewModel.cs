@@ -357,34 +357,54 @@ public partial class CalendarViewModel : ViewModelBase
         RequestReplan(absentUserId, date);
     }
 
-    /// <summary>Ermittelt Ersatzkandidaten für die (früheste) Arbeitsschicht der kranken Person und öffnet den Dialog.</summary>
+    /// <summary>Öffnet den Krankmeldungs-Dialog: gesund melden und – falls eine offene Arbeitsschicht besteht – umplanen.</summary>
     public void RequestReplan(string absentUserId, DateOnly date)
     {
         var dayVm = Days.FirstOrDefault(d => d.Date == date);
-        var absentShift = dayVm?.Entries
+        var hasSick = dayVm?.Entries.Any(e => e.UserId == absentUserId && e.Type == EntryType.SickLeave) ?? false;
+        if (!hasSick) { LogService.Warn(Localizer.Instance["Replan_NoSick"]); return; }
+
+        var absentShift = dayVm!.Entries
             .Where(e => e.UserId == absentUserId && e.Type == EntryType.Work)
             .OrderBy(e => e.StartTime)
             .FirstOrDefault();
-        if (absentShift == null) { LogService.Warn(Localizer.Instance["Replan_NoShift"]); return; }
 
-        var week = Days.Select(d => (d.Date, (IReadOnlyList<CalendarEntry>)d.Entries.ToList())).ToList();
-        var candidates = ReplanEngine.FindCandidates(absentShift, date, _allUsers, absentUserId, week);
-        LogService.Click(CurrentUser.Username, $"Umplanung ({date:dd.MM.yyyy})");
-        ReplanDialogRequested?.Invoke(new ReplanViewModel(_ai, absentShift, date, candidates));
+        var candidates = absentShift != null
+            ? ReplanEngine.FindCandidates(absentShift, date, _allUsers,
+                absentUserId, Days.Select(d => (d.Date, (IReadOnlyList<CalendarEntry>)d.Entries.ToList())).ToList())
+            : Array.Empty<ReplanEngine.ReplanCandidate>();
+
+        var person = _allUsers.FirstOrDefault(u => u.Id == absentUserId);
+        var personName = person == null ? absentUserId
+            : (string.IsNullOrEmpty(person.DisplayName) ? person.Username : person.DisplayName);
+
+        LogService.Click(CurrentUser.Username, $"Krankmeldung ({date:dd.MM.yyyy})");
+        ReplanDialogRequested?.Invoke(new ReplanViewModel(_ai, absentUserId, personName, date, absentShift, candidates));
     }
 
-    /// <summary>Bucht die ausgefallene Schicht auf den gewählten Ersatz um (Admin-Aktion, auch bei finalisierter Woche).</summary>
+    /// <summary>Verarbeitet das Dialog-Ergebnis: Krankmeldung aufheben oder Schicht an den Ersatz umbuchen.</summary>
     public async Task ApplyReplanResultAsync(ReplanResult result)
     {
-        var day = await _storage.LoadDayAsync(result.Date);
-        var shift = day.Entries.FirstOrDefault(e => e.Id == result.ShiftId);
-        if (shift == null) { LogService.Warn(Localizer.Instance["Replan_NoShift"]); return; }
+        if (result.Action == ReplanAction.MarkHealthy)
+        {
+            var day = await _storage.LoadDayAsync(result.Date);
+            var removed = day.Entries.RemoveAll(e => e.UserId == result.SickUserId && e.Type == EntryType.SickLeave);
+            if (removed > 0) await _storage.SaveDayAsync(day);
+            LogService.UserAction(CurrentUser.Username, $"Gesund gemeldet ({result.Date:dd.MM.yyyy})");
+            await LoadWeekAsync();
+            return;
+        }
+
+        // TakeOver: ausgefallene Schicht dem Ersatz zuweisen (auch bei finalisierter Woche)
+        var d = await _storage.LoadDayAsync(result.Date);
+        var shift = d.Entries.FirstOrDefault(e => e.Id == result.ShiftId);
+        if (shift == null || result.Replacement == null) { LogService.Warn(Localizer.Instance["Replan_NoShift"]); return; }
 
         var name = string.IsNullOrEmpty(result.Replacement.DisplayName)
             ? result.Replacement.Username : result.Replacement.DisplayName;
         shift.UserId = result.Replacement.Id;
         shift.UserDisplayName = name;
-        await _storage.SaveDayAsync(day);
+        await _storage.SaveDayAsync(d);
 
         await _notifications.AddAsync(result.Replacement.Id, "Notif_ShiftAssigned",
             result.Date.ToString("yyyy-MM-dd"), result.Date.ToString("dd.MM.yyyy"));

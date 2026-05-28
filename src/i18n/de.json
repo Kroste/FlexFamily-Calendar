@@ -122,7 +122,9 @@
   "Notif_WeekFinalized": "Die Woche {0}/{1} wurde finalisiert.",
   "Notif_ShiftAssigned": "Dir wurde eine Schicht am {0} zugewiesen (Krankheitsvertretung).",
 
-  "Replan_Title": "Schicht umplanen",
+  "Replan_Title": "Krankmeldung",
+  "Replan_MarkHealthy": "Gesund melden",
+  "Replan_NoSick": "Keine Krankmeldung an diesem Tag.",
   "Replan_AbsentShift": "Ausgefallene Schicht",
   "Replan_AiThinking": "KI sucht einen Vorschlag …",
   "Replan_AiUnavailable": "Keine KI konfiguriert – Vorschlag nach Auslastung sortiert.",

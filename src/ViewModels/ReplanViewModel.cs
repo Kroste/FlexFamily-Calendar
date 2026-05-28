@@ -28,59 +28,70 @@ public class ReplanCandidateViewModel
     }
 }
 
-/// <summary>Ergebnis des Umplanungs-Dialogs: die übernommene Schicht + der gewählte Ersatz.</summary>
-public record ReplanResult(string ShiftId, DateOnly Date, User Replacement);
+public enum ReplanAction { TakeOver, MarkHealthy }
+
+/// <summary>Ergebnis des Dialogs: Krankmeldung aufheben oder die ausgefallene Schicht übernehmen lassen.</summary>
+public record ReplanResult(ReplanAction Action, DateOnly Date, string SickUserId,
+    string? ShiftId = null, User? Replacement = null);
 
 public partial class ReplanViewModel : ViewModelBase
 {
     private readonly AiService _ai;
-    private readonly CalendarEntry _absentShift;
+    private readonly string _sickUserId;
     private readonly DateOnly _date;
+    private readonly CalendarEntry? _absentShift;
     private readonly IReadOnlyList<ReplanEngine.ReplanCandidate> _candidates;
 
+    public string PersonHeader { get; }
     public string ShiftLabel { get; }
+    public bool HasShift => _absentShift != null;
     public ObservableCollection<ReplanCandidateViewModel> Candidates { get; } = new();
     public bool HasCandidates => Candidates.Count > 0;
 
     [ObservableProperty] private string _aiRecommendation = "";
-    [ObservableProperty] private bool _aiBusy;
 
     public event Action<ReplanResult?>? Closed;
 
-    public ReplanViewModel(AiService ai, CalendarEntry absentShift, DateOnly date,
-        IReadOnlyList<ReplanEngine.ReplanCandidate> candidates)
+    public ReplanViewModel(AiService ai, string sickUserId, string personName, DateOnly date,
+        CalendarEntry? absentShift, IReadOnlyList<ReplanEngine.ReplanCandidate> candidates)
     {
         _ai = ai;
-        _absentShift = absentShift;
+        _sickUserId = sickUserId;
         _date = date;
+        _absentShift = absentShift;
         _candidates = candidates;
 
-        ShiftLabel = $"{date.ToString("dddd, dd.MM.yyyy", CultureInfo.CurrentCulture)} · {absentShift.TimeRange}";
+        PersonHeader = $"{personName} · {date.ToString("dddd, dd.MM.yyyy", CultureInfo.CurrentCulture)}";
+        ShiftLabel = absentShift != null ? absentShift.TimeRange : "";
         for (var i = 0; i < candidates.Count; i++)
             Candidates.Add(new ReplanCandidateViewModel((char)('A' + i), candidates[i]));
 
-        _ = LoadRecommendationAsync();
+        if (HasShift && HasCandidates)
+            _ = LoadRecommendationAsync();
     }
 
     private async Task LoadRecommendationAsync()
     {
-        if (_candidates.Count == 0) return;
-        AiBusy = true;
         AiRecommendation = Localizer.Instance["Replan_AiThinking"];
-        var prompt = ReplanEngine.BuildPrompt(_absentShift, _date, _candidates);
+        var prompt = ReplanEngine.BuildPrompt(_absentShift!, _date, _candidates);
         var answer = await _ai.SuggestAsync(prompt);
-        AiBusy = false;
         AiRecommendation = string.IsNullOrWhiteSpace(answer)
             ? Localizer.Instance["Replan_AiUnavailable"]
             : answer.Trim();
     }
 
     [RelayCommand]
+    private void MarkHealthy()
+    {
+        LogService.Debug("Umplanung: gesund melden ({0})", _sickUserId);
+        Closed?.Invoke(new ReplanResult(ReplanAction.MarkHealthy, _date, _sickUserId));
+    }
+
+    [RelayCommand]
     private void TakeOver(ReplanCandidateViewModel? candidate)
     {
-        if (candidate == null) return;
-        LogService.Debug("Umplanung: {0} übernimmt Schicht {1}", candidate.DisplayName, _absentShift.Id);
-        Closed?.Invoke(new ReplanResult(_absentShift.Id, _date, candidate.User));
+        if (candidate == null || _absentShift == null) return;
+        Closed?.Invoke(new ReplanResult(ReplanAction.TakeOver, _date, _sickUserId, _absentShift.Id, candidate.User));
     }
 
     [RelayCommand]
