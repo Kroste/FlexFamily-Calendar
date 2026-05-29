@@ -3,6 +3,13 @@
 # Stufe 1: WASM-SPA bauen (Avalonia.Browser, dotnet publish).
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
+
+# Emscripten (Native-AOT-Schritt im Release-Publish) ruft "python" auf — schlankes SDK-Image hat keins.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 \
+    && ln -sf /usr/bin/python3 /usr/bin/python \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN dotnet workload install wasm-tools
 
 # Erst nur die Projektdateien für gecachtes Restore.
