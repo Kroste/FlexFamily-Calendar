@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using FlexFamilyCalendar.Models;
@@ -20,6 +21,9 @@ public partial class CalendarView : UserControl
         DataFormat.CreateInProcessFormat<string>("ffc-entry-id");
     private static readonly DataFormat<string> SourceDateFormat =
         DataFormat.CreateInProcessFormat<string>("ffc-source-date");
+
+    private static readonly IBrush DropTargetBrush =
+        new SolidColorBrush(Color.FromArgb(0x55, 0x2E, 0x86, 0xC1));
 
     public CalendarView() => InitializeComponent();
 
@@ -210,6 +214,9 @@ public partial class CalendarView : UserControl
         var transfer = new DataTransfer();
         transfer.Add(item);
 
+        // Visuelles Feedback: Source-Chip leicht ausblenden, solange er „unterwegs" ist.
+        var originalOpacity = ctrl.Opacity;
+        ctrl.Opacity = 0.4;
         try
         {
             await DragDrop.DoDragDropAsync(e, transfer, DragDropEffects.Move | DragDropEffects.Copy);
@@ -218,6 +225,10 @@ public partial class CalendarView : UserControl
         {
             LogService.Error("Drag&Drop fehlgeschlagen", ex);
         }
+        finally
+        {
+            ctrl.Opacity = originalOpacity;
+        }
     }
 
     /// <summary>Wird beim ersten Layout der Tageszelle aufgerufen — registriert sie als Drop-Target.</summary>
@@ -225,16 +236,27 @@ public partial class CalendarView : UserControl
     {
         if (sender is not Control c) return;
         c.AddHandler(DragDrop.DragOverEvent, OnCellDragOver);
+        c.AddHandler(DragDrop.DragLeaveEvent, OnCellDragLeave);
         c.AddHandler(DragDrop.DropEvent, OnCellDrop);
     }
 
     private void OnCellDragOver(object? sender, DragEventArgs e)
     {
         if (e.DataTransfer.Contains(EntryIdFormat))
+        {
             e.DragEffects &= (DragDropEffects.Move | DragDropEffects.Copy);
+            if (sender is Border b) b.Background = DropTargetBrush;
+        }
         else
+        {
             e.DragEffects = DragDropEffects.None;
+        }
         e.Handled = true;
+    }
+
+    private void OnCellDragLeave(object? sender, DragEventArgs e)
+    {
+        if (sender is Border b) b.Background = Brushes.Transparent;
     }
 
     private async void OnCellDrop(object? sender, DragEventArgs e)
@@ -246,6 +268,7 @@ public partial class CalendarView : UserControl
         if (!DateOnly.TryParse(srcStr, out var srcDate)) return;
 
         e.Handled = true;
+        if (c is Border b) b.Background = Brushes.Transparent;
         if (_vm is null) return;
 
         try
