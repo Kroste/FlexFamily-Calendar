@@ -21,6 +21,14 @@ services:
       # Erst-Admin beim allerersten Start (nur wenn DB leer). Danach kann er weitere Benutzer anlegen.
       Seed__AdminUsername: "${ADMIN_USER:-}"
       Seed__AdminPassword: "${ADMIN_PASSWORD:-}"
+      # SMTP für /api/mail/send-week-plan — leer gelassen = der Endpunkt antwortet
+      # mit "SMTP serverseitig nicht konfiguriert". Operator setzt diese in der .env.
+      Smtp__Host: "${SMTP_HOST:-}"
+      Smtp__Port: "${SMTP_PORT:-587}"
+      Smtp__From: "${SMTP_FROM:-}"
+      Smtp__User: "${SMTP_USER:-}"
+      Smtp__Password: "${SMTP_PASSWORD:-}"
+      Smtp__UseSsl: "${SMTP_USE_SSL:-true}"
     # Kein öffentliches Port-Mapping mehr: die API ist nur intern über das Docker-Netz
     # erreichbar (Caddy → api:8080). Öffentlich ist ausschließlich Caddy (443).
     restart: unless-stopped

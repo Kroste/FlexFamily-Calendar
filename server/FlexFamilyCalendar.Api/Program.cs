@@ -5,6 +5,7 @@ using FlexFamilyCalendar.Api.Data;
 using FlexFamilyCalendar.Api.ActivityTypes;
 using FlexFamilyCalendar.Api.DayNotes;
 using FlexFamilyCalendar.Api.Entries;
+using FlexFamilyCalendar.Api.Mail;
 using FlexFamilyCalendar.Api.Models;
 using FlexFamilyCalendar.Api.Notifications;
 using FlexFamilyCalendar.Api.RecurringActivities;
@@ -19,6 +20,18 @@ var cfg = builder.Configuration;
 
 builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(cfg.GetConnectionString("Default")));
 builder.Services.AddScoped<TokenService>();
+
+// SMTP über ENV (Smtp__Host etc.) — Operator-Setting, kein DB-Schema.
+builder.Services.AddSingleton(new SmtpOptions
+{
+    Host = cfg["Smtp:Host"] ?? "",
+    Port = int.TryParse(cfg["Smtp:Port"], out var smtpPort) ? smtpPort : 587,
+    From = cfg["Smtp:From"] ?? "",
+    User = cfg["Smtp:User"] ?? "",
+    Password = cfg["Smtp:Password"] ?? "",
+    UseSsl = !string.Equals(cfg["Smtp:UseSsl"], "false", StringComparison.OrdinalIgnoreCase)
+});
+builder.Services.AddScoped<MailSender>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters
@@ -519,6 +532,42 @@ app.MapPut("/api/day-notes/{date}", async (DateOnly date, DayNoteDto body, AppDb
     meta.IsFinalized = body.IsFinalized;
     await db.SaveChangesAsync();
     return Results.Ok(new DayNoteDto(meta.Note, meta.IsFinalized));
+})
+    .RequireAuthorization("Admin");
+
+// Mail: Wochenplan-PDF an mehrere Empfänger senden. Jeder Empfänger bekommt sein vom Client
+// vorab gerendertes, aus seiner Sicht maskiertes PDF — der Server kennt die Anzeige-Regeln
+// nicht und vertraut dem Admin-Client. Serverseitig nur SMTP-Versand.
+app.MapPost("/api/mail/send-week-plan", async (SendWeekPlanRequest req, MailSender sender) =>
+{
+    if (string.IsNullOrWhiteSpace(req.Subject) || req.Recipients is null || req.Recipients.Count == 0)
+        return Results.BadRequest(new { error = "subject und recipients sind Pflicht." });
+
+    var sent = 0;
+    var failed = 0;
+    var errors = new List<string>();
+    foreach (var r in req.Recipients)
+    {
+        if (string.IsNullOrWhiteSpace(r.Email) || string.IsNullOrWhiteSpace(r.PdfBase64))
+        {
+            failed++;
+            errors.Add($"{r.Email}: Adresse oder PDF leer.");
+            continue;
+        }
+        try
+        {
+            var pdf = Convert.FromBase64String(r.PdfBase64);
+            var (ok, error) = await sender.SendAsync(r.Email, req.Subject, req.Body ?? "", pdf, req.FileName ?? "Plan.pdf");
+            if (ok) sent++;
+            else { failed++; if (error is not null) errors.Add($"{r.Email}: {error}"); }
+        }
+        catch (FormatException)
+        {
+            failed++;
+            errors.Add($"{r.Email}: PDF-Base64 ungültig.");
+        }
+    }
+    return Results.Ok(new SendWeekPlanResponse(sent, failed, errors));
 })
     .RequireAuthorization("Admin");
 
