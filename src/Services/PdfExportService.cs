@@ -35,9 +35,7 @@ public static class PdfExportService
         var dayX = left + PersonColW;
         var colW = (right - dayX) / 7;
         var bodyTop = HeaderTop + HeaderH;
-        var notesBottom = PageH - Margin;
-        var notesTop = notesBottom - NotesH;
-        var bodyBottom = notesTop - 2;
+        var bodyBottom = PageH - Margin - NotesH - 14;   // Platz für Hinweiszeile + Fußzeile
 
         // Kopf
         Fill(0, 0, 0); Text(Margin, 24, 16, true, export.Title);
@@ -91,7 +89,9 @@ public static class PdfExportService
             Stroke(0.88); Line(left, y, right, y);   // Zeilentrenner
         }
 
-        // Hinweiszeile unten (Tagesnotizen)
+        // Hinweiszeile direkt unter der letzten Person
+        var notesTop = y;
+        var tableBottom = notesTop + NotesH;
         Fill(0.4, 0.4, 0.4); Text(left + 6, notesTop + 16, 9, true, "Hinweise");
         for (int i = 0; i < export.Notes.Count && i < 7; i++)
         {
@@ -105,11 +105,11 @@ public static class PdfExportService
         Line(left, HeaderTop, right, HeaderTop);
         Line(left, bodyTop, right, bodyTop);
         Line(left, notesTop, right, notesTop);
-        Line(left, notesBottom, right, notesBottom);
-        Line(left, HeaderTop, left, notesBottom);
-        Line(dayX, HeaderTop, dayX, notesBottom);
+        Line(left, tableBottom, right, tableBottom);
+        Line(left, HeaderTop, left, tableBottom);
+        Line(dayX, HeaderTop, dayX, tableBottom);
         for (int i = 1; i <= 7; i++)
-            Line(dayX + i * colW, HeaderTop, dayX + i * colW, notesBottom);
+            Line(dayX + i * colW, HeaderTop, dayX + i * colW, tableBottom);
 
         // Fußzeile
         Fill(0.5, 0.5, 0.5);

@@ -13,12 +13,12 @@ public class PlanExportTests
     {
         var e = new CalendarEntry
         {
-            Type = EntryType.Work, DisplayType = EntryType.Work,
+            Type = EntryType.Work, UserId = "u1",
             StartTime = TimeSpan.FromHours(8), EndTime = TimeSpan.FromHours(16),
             OwnerColor = "#2E86C1"
         };
 
-        var c = PlanExportBuilder.CellEntry(e, TypeLabel);
+        var c = PlanExportBuilder.CellEntry(e, viewerIsAdmin: true, viewerId: "admin", TypeLabel);
 
         Assert.Equal("08:00–16:00", c.Time);
         Assert.Equal("Work", c.Label);
@@ -30,28 +30,49 @@ public class PlanExportTests
     {
         var e = new CalendarEntry
         {
-            Type = EntryType.Activity, DisplayType = EntryType.Activity,
+            Type = EntryType.Activity, UserId = "u1",
             StartTime = TimeSpan.FromHours(16), EndTime = TimeSpan.FromHours(17),
-            ActivityName = "Sprachkurs", DisplayTitle = "Online"
+            ActivityName = "Sprachkurs", Title = "Online"
         };
 
-        Assert.Equal("Sprachkurs · Online", PlanExportBuilder.CellEntry(e, TypeLabel).Label);
+        Assert.Equal("Sprachkurs · Online", PlanExportBuilder.CellEntry(e, true, "admin", TypeLabel).Label);
     }
 
     [Fact]
-    public void CellEntry_MultiDayAbsence_ShowsSpanNotTime()
+    public void CellEntry_MultiDayAbsence_AdminSeesReasonAndSpan()
     {
-        var e = new CalendarEntry
-        {
-            Type = EntryType.Vacation, DisplayType = EntryType.Vacation,
-            StartTime = TimeSpan.FromHours(8), EndTime = TimeSpan.FromHours(16),
-            AbsenceStart = new DateOnly(2026, 6, 1), AbsenceEnd = new DateOnly(2026, 6, 14)
-        };
+        var e = Vacation("u1");
 
-        var c = PlanExportBuilder.CellEntry(e, TypeLabel);
+        var c = PlanExportBuilder.CellEntry(e, viewerIsAdmin: true, viewerId: "admin", TypeLabel);
         Assert.Equal("01.06.–14.06.", c.Time);
-        Assert.Equal("Vacation", c.Label);
+        Assert.Equal("Vacation · Mallorca", c.Label);   // Admin sieht den Grund
     }
+
+    [Fact]
+    public void CellEntry_OthersAbsence_MaskedForNonAdmin()
+    {
+        var e = Vacation("u1");
+
+        // Empfänger u2 (kein Admin) sieht fremden Urlaub nur als „Abwesend", ohne Grund/Titel
+        var c = PlanExportBuilder.CellEntry(e, viewerIsAdmin: false, viewerId: "u2", TypeLabel);
+        Assert.Equal("Absence", c.Label);
+        Assert.Equal("01.06.–14.06.", c.Time);   // Zeitraum bleibt sichtbar, nur der Grund ist verborgen
+    }
+
+    [Fact]
+    public void CellEntry_OwnAbsence_VisibleToOwner()
+    {
+        var e = Vacation("u1");
+        Assert.Equal("Vacation · Mallorca", PlanExportBuilder.CellEntry(e, false, "u1", TypeLabel).Label);
+    }
+
+    private static CalendarEntry Vacation(string userId) => new()
+    {
+        Type = EntryType.Vacation, UserId = userId,
+        Title = "Mallorca",
+        StartTime = TimeSpan.FromHours(8), EndTime = TimeSpan.FromHours(16),
+        AbsenceStart = new DateOnly(2026, 6, 1), AbsenceEnd = new DateOnly(2026, 6, 14)
+    };
 
     [Fact]
     public void PdfExport_ProducesValidPdfBytes()

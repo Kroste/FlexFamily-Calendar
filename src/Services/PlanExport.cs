@@ -19,13 +19,21 @@ public record WeekExport(
 /// <summary>Reine Aufbereitung der Tabellen-Daten für den Export (UI-/Render-unabhängig, testbar).</summary>
 public static class PlanExportBuilder
 {
-    /// <summary>Ein Zellen-Eintrag: Uhrzeit (bzw. Abwesenheits-Zeitraum) + Kategorie/Typ (+ Titel), in Personenfarbe.</summary>
-    public static PlanCellEntry CellEntry(CalendarEntry e, Func<EntryType, string> typeLabel)
+    /// <summary>
+    /// Ein Zellen-Eintrag aus Sicht eines bestimmten Empfängers: Uhrzeit (bzw. Abwesenheits-Zeitraum)
+    /// + Kategorie/Typ (+ Titel), in Personenfarbe. Fremde private Abwesenheiten (Krank/Urlaub) werden
+    /// zu „Abwesend" ohne Grund maskiert (nur Admin oder der Betroffene sehen den Grund).
+    /// </summary>
+    public static PlanCellEntry CellEntry(CalendarEntry e, bool viewerIsAdmin, string viewerId, Func<EntryType, string> typeLabel)
     {
-        var label = e.HasActivity ? e.ActivityName : typeLabel(e.DisplayType);
-        if (!string.IsNullOrEmpty(e.DisplayTitle))
-            label += $" · {e.DisplayTitle}";
-        var time = e.IsAbsenceDisplay ? e.AbsenceSpanLabel : e.TimeRange;
+        var canSeeReason = viewerIsAdmin || e.UserId == viewerId;
+        var displayType = EntryPrivacy.DisplayType(e.Type, canSeeReason);
+
+        var label = e.HasActivity ? e.ActivityName : typeLabel(displayType);
+        if (EntryPrivacy.ShowReason(e.Type, canSeeReason) && !string.IsNullOrEmpty(e.Title))
+            label += $" · {e.Title}";
+
+        var time = EntryTypeInfo.IsAbsence(displayType) ? e.AbsenceSpanLabel : e.TimeRange;
         return new PlanCellEntry(string.IsNullOrEmpty(e.OwnerColor) ? "#7F8C8D" : e.OwnerColor, time, label);
     }
 }

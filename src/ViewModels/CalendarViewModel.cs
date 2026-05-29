@@ -201,10 +201,14 @@ public partial class CalendarViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Baut das Export-Modell als Tabelle (Person × Wochentag) aus der aufgelösten Wochenansicht.</summary>
-    public WeekExport CreateWeekExport()
+    /// <summary>Export-Modell aus Sicht des aktuellen Benutzers (für den „PDF"-Button).</summary>
+    public WeekExport CreateWeekExport() => CreateWeekExport(CurrentUser);
+
+    /// <summary>Baut das Export-Modell als Tabelle (Person × Wochentag) aus Sicht von <paramref name="viewer"/> (Datenschutz-Maskierung).</summary>
+    public WeekExport CreateWeekExport(User viewer)
     {
         string TypeLabel(EntryType t) => Localizer.Instance[EntryTypeInfo.Key(t)];
+        var isAdmin = viewer.Role == UserRole.Admin;
 
         var headers = Days.Select(d => new PlanDayHeader(d.DayName, d.DateLabel, d.HolidayName)).ToList();
         var notes = Days.Select(d => d.DayNote ?? "").ToList();
@@ -214,7 +218,7 @@ public partial class CalendarViewModel : ViewModelBase
         {
             var cells = r.Cells
                 .Select(c => (IReadOnlyList<PlanCellEntry>)c.Entries
-                    .Select(e => PlanExportBuilder.CellEntry(e, TypeLabel)).ToList())
+                    .Select(e => PlanExportBuilder.CellEntry(e, isAdmin, viewer.Id, TypeLabel)).ToList())
                 .ToList();
             rows.Add(new PlanPersonRow(r.Name, r.Color, r.CategoryLabel, cells));
         }
@@ -238,23 +242,32 @@ public partial class CalendarViewModel : ViewModelBase
         MailDialogRequested?.Invoke(new MailViewModel(recipients));
     }
 
-    /// <summary>Erzeugt das Wochen-PDF und versendet es an die gewählten Empfänger.</summary>
+    /// <summary>Sendet jedem Empfänger ein eigenes, aus seiner Sicht maskiertes Wochen-PDF (einzelne Mails).</summary>
     public async Task SendPlanMailAsync(IReadOnlyList<string> emails)
     {
         if (emails.Count == 0) return;
-        try
+        var settings = await _storage.LoadSettingsAsync();
+        var subject = $"{Localizer.Instance["Pdf_Title"]} {WeekLabel}";
+        var body = string.Format(Localizer.Instance["Mail_Body"], WeekLabel);
+
+        var sent = 0;
+        foreach (var email in emails)
         {
-            var settings = await _storage.LoadSettingsAsync();
-            var pdf = PdfExportService.Render(CreateWeekExport());
-            var subject = $"{Localizer.Instance["Pdf_Title"]} {WeekLabel}";
-            var body = string.Format(Localizer.Instance["Mail_Body"], WeekLabel);
-            await MailService.SendAsync(settings, emails, subject, body, pdf, ExportFileName);
-            LogService.Info(string.Format(Localizer.Instance["Mail_Sent"], emails.Count));
+            var viewer = _allUsers.FirstOrDefault(u =>
+                u.Email.Trim().Equals(email, StringComparison.OrdinalIgnoreCase));
+            if (viewer == null) continue;
+            try
+            {
+                var pdf = PdfExportService.Render(CreateWeekExport(viewer));   // aus Sicht des Empfängers
+                await MailService.SendAsync(settings, email, subject, body, pdf, ExportFileName);
+                sent++;
+            }
+            catch (Exception ex)
+            {
+                LogService.Error("Mail-Versand an einen Empfänger fehlgeschlagen", ex);
+            }
         }
-        catch (Exception ex)
-        {
-            LogService.Error("Fehler beim Mail-Versand", ex);
-        }
+        LogService.Info(string.Format(Localizer.Instance["Mail_Sent"], sent));
     }
 
     /// <summary>Ist-Stunden je Person (Work+Au-Pair) der Woche; nur Personen mit Soll&gt;0.</summary>
