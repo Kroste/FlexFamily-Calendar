@@ -5,7 +5,9 @@ public class AnthropicProvider : HttpAiProvider
     public AnthropicProvider(HttpClient? http = null) : base(http) { }
 
     public override string Name => "Anthropic";
-    protected override string DefaultModel => "claude-3-5-haiku-latest";
+    // Anthropic hat die 3.5-Generation abgekündigt; -latest-Aliasse antworten mit 404.
+    // Aktueller Stand 2026: Haiku 4.5 (schnellstes/günstigstes Cloud-Modell).
+    protected override string DefaultModel => "claude-haiku-4-5-20251001";
 
     public override async Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
     {
