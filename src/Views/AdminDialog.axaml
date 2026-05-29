@@ -8,22 +8,5 @@
         Width="900" Height="640"
         MinWidth="720" MinHeight="520"
         WindowStartupLocation="CenterOwner">
-
-  <TabControl Margin="8">
-    <TabItem Header="{loc:Tr Main_UserManagement}">
-      <views:UserManagementView DataContext="{Binding Users}" />
-    </TabItem>
-    <TabItem Header="{loc:Tr Main_ActivityTypes}">
-      <views:ActivityTypeManagementView DataContext="{Binding Categories}" />
-    </TabItem>
-    <TabItem Header="{loc:Tr Main_RecurringActivities}">
-      <views:RecurringActivityManagementView DataContext="{Binding Recurring}" />
-    </TabItem>
-    <TabItem Header="{loc:Tr Main_Settings}">
-      <views:SettingsView DataContext="{Binding Settings}" />
-    </TabItem>
-    <TabItem Header="{loc:Tr Main_AiSettings}">
-      <views:AiSettingsView DataContext="{Binding Ai}" />
-    </TabItem>
-  </TabControl>
+  <views:AdminView />
 </Window>

@@ -83,12 +83,10 @@ public partial class MainView : UserControl
     private async void OnAdminRequested()
     {
         if (_vm == null) return;
-        var owner = OwnerWindow();
-        if (owner is null) { LogService.Debug("Admin-Dialog im Browser noch nicht unterstützt."); return; }
+        if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
         try
         {
-            var dialog = new AdminDialog { DataContext = _vm.CreateAdmin() };
-            await dialog.ShowDialog(owner);
+            await App.DialogService.ShowAdminAsync(_vm.CreateAdmin());
             await _vm.RefreshCurrentUserAsync();
             if (_vm.CalendarVm != null)
                 await _vm.CalendarVm.RefreshAllAsync();

@@ -35,5 +35,8 @@ public class WindowDialogService : IDialogService
     public Task ShowMonthOverviewAsync(MonthOverviewViewModel vm)
         => new MonthOverviewDialog { DataContext = vm }.ShowDialog(_owner);
 
+    public Task ShowAdminAsync(AdminViewModel vm)
+        => new AdminDialog { DataContext = vm }.ShowDialog(_owner);
+
     public void CancelActive() { }   // Window fängt ESC/Außenklick selbst ab
 }

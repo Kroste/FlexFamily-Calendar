@@ -57,6 +57,9 @@ public class OverlayDialogService : IDialogService
     public Task ShowMonthOverviewAsync(MonthOverviewViewModel vm)
         => ShowVoidAsync(new MonthOverviewView { DataContext = vm });
 
+    public Task ShowAdminAsync(AdminViewModel vm)
+        => ShowVoidAsync(new AdminView { DataContext = vm });
+
     public void CancelActive() => _cancelCurrent?.Invoke();
 
     /// <summary>

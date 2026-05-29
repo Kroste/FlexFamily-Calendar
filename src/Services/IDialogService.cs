@@ -17,6 +17,7 @@ public interface IDialogService
     Task<NotificationResult?> ShowNotificationsAsync(NotificationsViewModel vm);
     Task ShowHoursAccountAsync(HoursAccountViewModel vm);
     Task ShowMonthOverviewAsync(MonthOverviewViewModel vm);
+    Task ShowAdminAsync(AdminViewModel vm);
 
     /// <summary>
     /// Abbruch des aktuell offenen Dialogs (ESC/Backdrop-Klick im Overlay-Backend).

@@ -48,7 +48,7 @@
                      VerticalAlignment="Center" FontSize="13" />
           <Button Content="{loc:Tr Main_Admin}"
                   Command="{Binding OpenAdminCommand}"
-                  IsVisible="{Binding IsAdminAndNotBrowser}"
+                  IsVisible="{Binding IsAdmin}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="12,5" />
           <Button Content="{loc:Tr Main_MonthOverview}"
