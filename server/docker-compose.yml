@@ -25,9 +25,12 @@ services:
     # erreichbar (Caddy → api:8080). Öffentlich ist ausschließlich Caddy (443).
     restart: unless-stopped
 
-  # Reverse-Proxy: terminiert HTTPS für flexfamily.cloud und leitet intern an die API weiter.
+  # Reverse-Proxy: terminiert HTTPS, serviert die WASM-SPA und leitet /api/* + /health an die API.
+  # Image wird selbst gebaut (Stufe 1 baut die SPA mit wasm-tools, Stufe 2 = caddy:2 mit SPA in /srv/spa).
   caddy:
-    image: caddy:2
+    build:
+      context: ..
+      dockerfile: server/Caddy.Dockerfile
     depends_on:
       - api
     ports:

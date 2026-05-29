@@ -1,0 +1,9 @@
+# Build-Ausgaben/IDE-Müll nicht in den Docker-Build-Kontext kopieren.
+**/bin
+**/obj
+.git
+.vscode
+.vs
+.idea
+**/*.user
+**/*.suo
