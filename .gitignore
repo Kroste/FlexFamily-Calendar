@@ -37,6 +37,11 @@ Thumbs.db
 # Logs
 *.log
 
+# Secrets / lokale Umgebungsvariablen (z.B. server/.env mit DB-Passwort, JWT-Key)
+.env
+*.env
+!*.env.example
+
 # Projekte
 **/f95zone/
 **/usv2/
