@@ -296,6 +296,7 @@ app.MapPost("/api/entries", async (CreateEntryRequest req, AppDbContext db, Clai
         EndTime = req.EndTime,
         EndsNextDay = req.EndsNextDay,
         CategoryLabel = string.IsNullOrWhiteSpace(req.CategoryLabel) ? null : req.CategoryLabel!.Trim(),
+        ActivityTypeId = string.IsNullOrWhiteSpace(req.ActivityTypeId) ? null : req.ActivityTypeId!.Trim(),
         Note = string.IsNullOrWhiteSpace(req.Note) ? null : req.Note!.Trim(),
         Status = EntryWriteRules.InitialStatus(req.Type, isAdmin),
         CreatedBy = requester.Value,
@@ -328,6 +329,7 @@ app.MapPut("/api/entries/{id:guid}", async (Guid id, UpdateEntryRequest req, App
     entry.EndTime = req.EndTime;
     entry.EndsNextDay = req.EndsNextDay;
     entry.CategoryLabel = string.IsNullOrWhiteSpace(req.CategoryLabel) ? null : req.CategoryLabel!.Trim();
+    entry.ActivityTypeId = string.IsNullOrWhiteSpace(req.ActivityTypeId) ? null : req.ActivityTypeId!.Trim();
     entry.Note = string.IsNullOrWhiteSpace(req.Note) ? null : req.Note!.Trim();
 
     if (!isAdmin && entry.Type == EntryTypes.Vacation)

@@ -11,7 +11,8 @@ public class CalendarEntry
     public TimeOnly? StartTime { get; set; }          // bei verplanten Schichten
     public TimeOnly? EndTime { get; set; }
     public bool EndsNextDay { get; set; }             // Übernachtung über Mitternacht
-    public string? CategoryLabel { get; set; }        // Pflicht-Label bei Aktivität (steht im Plan)
+    public string? CategoryLabel { get; set; }        // Freitext-Titel (Desktop: Title)
+    public string? ActivityTypeId { get; set; }       // Referenz auf eine Aktivitäts-Kategorie (Client-String-Id)
     public string? Note { get; set; }
     public string Status { get; set; } = EntryStatus.Approved;
     public Guid CreatedBy { get; set; }               // Wer den Eintrag angelegt hat (Audit)

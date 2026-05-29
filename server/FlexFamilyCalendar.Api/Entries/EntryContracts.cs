@@ -13,6 +13,7 @@ public record EntryDto(
     TimeOnly? EndTime,
     bool EndsNextDay,
     string? CategoryLabel,
+    string? ActivityTypeId,
     string? Note,
     string Status,
     bool Masked)
@@ -20,13 +21,13 @@ public record EntryDto(
     public static EntryDto Full(CalendarEntry e) => new(
         e.Id, e.UserId, e.Type, e.Date, e.EndDate,
         e.StartTime, e.EndTime, e.EndsNextDay,
-        e.CategoryLabel, e.Note, e.Status, Masked: false);
+        e.CategoryLabel, e.ActivityTypeId, e.Note, e.Status, Masked: false);
 
-    /// <summary>Privat-Eintrag für Fremde: nur „Abwesend" + Zeitraum, ohne Typ/Notiz/Uhrzeit.</summary>
+    /// <summary>Privat-Eintrag für Fremde: nur „Abwesend" + Zeitraum, ohne Typ/Notiz/Uhrzeit/Kategorie.</summary>
     public static EntryDto Mask(CalendarEntry e) => new(
         e.Id, e.UserId, EntryTypes.Absence, e.Date, e.EndDate,
         StartTime: null, EndTime: null, EndsNextDay: false,
-        CategoryLabel: null, Note: null, e.Status, Masked: true);
+        CategoryLabel: null, ActivityTypeId: null, Note: null, e.Status, Masked: true);
 }
 
 public record CreateEntryRequest(
@@ -38,7 +39,8 @@ public record CreateEntryRequest(
     TimeOnly? EndTime,
     bool EndsNextDay,
     string? CategoryLabel,
-    string? Note);
+    string? Note,
+    string? ActivityTypeId = null);
 
 public record UpdateEntryRequest(
     DateOnly Date,
@@ -47,4 +49,5 @@ public record UpdateEntryRequest(
     TimeOnly? EndTime,
     bool EndsNextDay,
     string? CategoryLabel,
-    string? Note);
+    string? Note,
+    string? ActivityTypeId = null);
