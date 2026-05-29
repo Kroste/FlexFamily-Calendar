@@ -9,7 +9,7 @@ namespace FlexFamilyCalendar.ViewModels;
 
 public partial class MonthOverviewViewModel : ViewModelBase
 {
-    private readonly StorageService _storage;
+    private readonly IStorageService _storage;
     private readonly User _currentUser;
     private readonly bool _personalView;
     private List<User> _allUsers = new();
@@ -23,7 +23,7 @@ public partial class MonthOverviewViewModel : ViewModelBase
 
     public string MonthLabel => MonthStart.ToString("MMMM yyyy", CultureInfo.CurrentCulture);
 
-    public MonthOverviewViewModel(StorageService storage, User currentUser, bool personalView)
+    public MonthOverviewViewModel(IStorageService storage, User currentUser, bool personalView)
     {
         _storage = storage;
         _currentUser = currentUser;

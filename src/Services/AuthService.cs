@@ -1,15 +1,36 @@
 using FlexFamilyCalendar.Models;
+using FlexFamilyCalendar.Services.Api;
 
 namespace FlexFamilyCalendar.Services;
 
 public class AuthService
 {
     private readonly IStorageService _storage;
+    private readonly ApiClient? _api;   // gesetzt = Server-Modus (Anmeldung gegen die API)
 
-    public AuthService(IStorageService storage) => _storage = storage;
+    public AuthService(IStorageService storage, ApiClient? api = null)
+    {
+        _storage = storage;
+        _api = api;
+    }
+
+    public bool IsServerMode => _api is not null;
 
     public async Task<User?> LoginAsync(string username, string password)
     {
+        if (_api is not null)
+        {
+            LogService.Debug("Server-Anmeldeversuch für Benutzer: {0}", username);
+            var login = await _api.LoginAsync(username, password);
+            if (login is null)
+            {
+                LogService.Warn("Server-Anmeldung fehlgeschlagen für '{0}'", username);
+                return null;
+            }
+            LogService.Info("Server-Anmeldung erfolgreich: {0} (Rolle: {1})", login.User.Username, login.User.Role);
+            return UserMapping.ToDesktop(login.User);
+        }
+
         LogService.Debug("Anmeldeversuch für Benutzer: {0}", username);
         var users = await _storage.LoadUsersAsync();
         var user = users.FirstOrDefault(u =>
@@ -36,7 +57,7 @@ public class AuthService
     }
 
     public async Task<bool> HasAnyUsersAsync()
-        => (await _storage.LoadUsersAsync()).Count > 0;
+        => _api is not null || (await _storage.LoadUsersAsync()).Count > 0;   // Server hat immer den Erst-Admin
 
     /// <summary>Merkt den Benutzernamen für Auto-Login (null/leer = Merker löschen). Kein Passwort.</summary>
     public async Task SetRememberedUsernameAsync(string? username)
@@ -52,6 +73,9 @@ public class AuthService
     /// <summary>Liefert den gemerkten Benutzer oder null. Leert den Merker, falls der Benutzer fehlt.</summary>
     public async Task<User?> GetRememberedUserAsync()
     {
+        // Im Server-Modus kein Auto-Login: ohne gespeichertes Token muss neu angemeldet werden.
+        if (_api is not null) return null;
+
         var settings = await _storage.LoadSettingsAsync();
         if (string.IsNullOrEmpty(settings.RememberedUsername))
             return null;

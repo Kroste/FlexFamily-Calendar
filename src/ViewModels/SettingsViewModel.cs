@@ -12,7 +12,7 @@ public record GermanStateOption(GermanState State, string Name);
 /// <summary>App-weite Einstellungen (Admin): Bundesland für Feiertage + pauschale Übernachtungs-Gutschrift.</summary>
 public partial class SettingsViewModel : ViewModelBase
 {
-    private readonly StorageService _storage;
+    private readonly IStorageService _storage;
     private AppSettings _settings = new();
 
     public IReadOnlyList<GermanStateOption> States { get; }
@@ -27,7 +27,7 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private string _smtpPassword = "";
     [ObservableProperty] private string _statusMessage = "";
 
-    public SettingsViewModel(StorageService storage)
+    public SettingsViewModel(IStorageService storage)
     {
         _storage = storage;
         States = Enum.GetValues<GermanState>()

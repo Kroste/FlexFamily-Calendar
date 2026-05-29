@@ -12,7 +12,7 @@ public class AdminViewModel : ViewModelBase
     public SettingsViewModel Settings { get; }
     public AiSettingsViewModel Ai { get; }
 
-    public AdminViewModel(AuthService auth, StorageService storage, AiService ai)
+    public AdminViewModel(AuthService auth, IStorageService storage, AiService ai)
     {
         Users = new UserManagementViewModel(auth);
         Categories = new ActivityTypeManagementViewModel(storage);

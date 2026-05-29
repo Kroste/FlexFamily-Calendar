@@ -10,7 +10,7 @@ namespace FlexFamilyCalendar.ViewModels;
 /// <summary>Verwaltung der konfigurierbaren Aktivitätstypen (Master-Detail in einem Dialog).</summary>
 public partial class ActivityTypeManagementViewModel : ViewModelBase
 {
-    private readonly StorageService _storage;
+    private readonly IStorageService _storage;
     private List<ActivityType> _all = new();
 
     public ObservableCollection<ActivityType> Types { get; } = new();
@@ -25,7 +25,7 @@ public partial class ActivityTypeManagementViewModel : ViewModelBase
     [ObservableProperty] private bool _editAuPair;
     [ObservableProperty] private string _errorMessage = "";
 
-    public ActivityTypeManagementViewModel(StorageService storage)
+    public ActivityTypeManagementViewModel(IStorageService storage)
     {
         _storage = storage;
         _editColor = Colors[0];

@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using FlexFamilyCalendar.Services;
 using FlexFamilyCalendar.Services.AI;
+using FlexFamilyCalendar.Services.Api;
 using FlexFamilyCalendar.ViewModels;
 using FlexFamilyCalendar.Views;
 
@@ -19,10 +20,27 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var storage = new StorageService();
+            var localStorage = new StorageService();
             SecretService.Initialize(StorageService.DataDirectory);
 
-            var auth = new AuthService(storage);
+            // Einstellungen sind lokale Installations-Config (enthalten u.a. die Server-URL).
+            var settings = Task.Run(() => localStorage.LoadSettingsAsync()).GetAwaiter().GetResult();
+
+            // Speicher-Modus: entweder lokal (JSON) oder Server (API) — kein Parallelbetrieb.
+            IStorageService storage = localStorage;
+            ApiClient? apiClient = null;
+            if (settings.UseServer && !string.IsNullOrWhiteSpace(settings.ServerUrl))
+            {
+                apiClient = new ApiClient(settings.ServerUrl);
+                storage = new ApiStorageService(apiClient, localStorage);
+                LogService.Info("Speicher-Modus: Server ({0})", settings.ServerUrl);
+            }
+            else
+            {
+                LogService.Info("Speicher-Modus: lokal (JSON)");
+            }
+
+            var auth = new AuthService(storage, apiClient);
             var notifications = new NotificationService(storage);
             var loginVm = new LoginViewModel(auth);
 
@@ -39,7 +57,6 @@ public partial class App : Application
                 new LlamaProvider()
             });
 
-            var settings = Task.Run(() => storage.LoadSettingsAsync()).GetAwaiter().GetResult();
             aiService.ApplySettings(settings);
 
             var mainVm = new MainWindowViewModel(auth, storage, notifications, aiService, loginVm);

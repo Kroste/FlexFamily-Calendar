@@ -10,7 +10,7 @@ namespace FlexFamilyCalendar.ViewModels;
 /// <summary>Verwaltung wiederkehrender Aktivitäten (Master-Detail in einem Dialog, nur Admin).</summary>
 public partial class RecurringActivityManagementViewModel : ViewModelBase
 {
-    private readonly StorageService _storage;
+    private readonly IStorageService _storage;
     private List<RecurringActivity> _all = new();
     private List<User> _users = new();
     private List<ActivityType> _activityTypes = new();
@@ -34,7 +34,7 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
     [ObservableProperty] private bool _skipOnHolidays = true;
     [ObservableProperty] private string _errorMessage = "";
 
-    public RecurringActivityManagementViewModel(StorageService storage)
+    public RecurringActivityManagementViewModel(IStorageService storage)
     {
         _storage = storage;
         _ = ReloadAsync();

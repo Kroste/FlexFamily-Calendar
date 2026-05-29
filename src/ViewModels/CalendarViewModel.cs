@@ -11,7 +11,7 @@ namespace FlexFamilyCalendar.ViewModels;
 
 public partial class CalendarViewModel : ViewModelBase
 {
-    private readonly StorageService _storage;
+    private readonly IStorageService _storage;
     private readonly NotificationService _notifications;
     private readonly AiService _ai;
     private List<User> _allUsers = new();
@@ -86,7 +86,7 @@ public partial class CalendarViewModel : ViewModelBase
     private static IReadOnlyList<EntryType> AbsenceTypes(bool finalized) =>
         finalized ? new[] { EntryType.SickLeave } : new[] { EntryType.SickLeave, EntryType.Vacation };
 
-    public CalendarViewModel(StorageService storage, User user, NotificationService notifications, AiService ai)
+    public CalendarViewModel(IStorageService storage, User user, NotificationService notifications, AiService ai)
     {
         _storage = storage;
         _notifications = notifications;

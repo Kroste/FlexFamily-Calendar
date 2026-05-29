@@ -11,7 +11,7 @@ namespace FlexFamilyCalendar.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly AuthService _auth;
-    private readonly StorageService _storage;
+    private readonly IStorageService _storage;
     private readonly NotificationService _notifications;
     private readonly AiService _ai;
     private User? _currentUser;
@@ -42,7 +42,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public event Action? NotificationsRequested;
     public event Action? AdminRequested;
 
-    public MainWindowViewModel(AuthService auth, StorageService storage, NotificationService notifications, AiService ai, LoginViewModel loginVm)
+    public MainWindowViewModel(AuthService auth, IStorageService storage, NotificationService notifications, AiService ai, LoginViewModel loginVm)
     {
         _auth = auth;
         _storage = storage;

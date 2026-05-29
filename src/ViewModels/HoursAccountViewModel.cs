@@ -38,7 +38,7 @@ public partial class HoursAccountViewModel : ViewModelBase
 {
     private const int MaxMonths = 36;
 
-    private readonly StorageService _storage;
+    private readonly IStorageService _storage;
     private readonly User _currentUser;
     private readonly bool _isAdmin;
 
@@ -50,7 +50,7 @@ public partial class HoursAccountViewModel : ViewModelBase
     public ObservableCollection<MonthBalanceRow> Rows { get; } = new();
     public bool CanSelectUser => _isAdmin;
 
-    public HoursAccountViewModel(StorageService storage, User currentUser, bool isAdmin)
+    public HoursAccountViewModel(IStorageService storage, User currentUser, bool isAdmin)
     {
         _storage = storage;
         _currentUser = currentUser;

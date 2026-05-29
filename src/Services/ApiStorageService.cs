@@ -27,14 +27,14 @@ public class ApiStorageService : IStorageService
         try
         {
             var dtos = await _api.GetUsersAsync();
-            return dtos.Select(MapUser).ToList();
+            return dtos.Select(UserMapping.ToDesktop).ToList();
         }
         catch (Exception ex)
         {
             // z.B. 403 für Nicht-Admins (Benutzerliste ist Admin-only). Slice ist Admin-orientiert;
             // damit die App nicht abstürzt, fällt sie auf den angemeldeten Benutzer zurück.
             LogService.Warn("Benutzerliste vom Server nicht ladbar: {0}", ex.Message);
-            return _api.CurrentUser is { } me ? new List<User> { MapUser(me) } : new();
+            return _api.CurrentUser is { } me ? new List<User> { UserMapping.ToDesktop(me) } : new();
         }
     }
 
@@ -44,16 +44,6 @@ public class ApiStorageService : IStorageService
         LogService.Debug("SaveUsersAsync im Server-Modus übersprungen (Benutzerverwaltung folgt mit Endpunkten).");
         return Task.CompletedTask;
     }
-
-    private static User MapUser(ServerUserDto d) => new()
-    {
-        Id = d.Id,
-        Username = d.Username,
-        DisplayName = string.IsNullOrWhiteSpace(d.DisplayName) ? d.Username : d.DisplayName,
-        Email = d.Email ?? "",
-        Role = string.Equals(d.Role, "Admin", StringComparison.OrdinalIgnoreCase) ? UserRole.Admin : UserRole.User,
-        Category = Enum.TryParse<PersonCategory>(d.Category, out var c) ? c : PersonCategory.Employee
-    };
 
     // --- Einstellungen (lokal, Installations-Config) ----------------------
 

@@ -10,7 +10,7 @@ namespace FlexFamilyCalendar.ViewModels;
 public partial class AiSettingsViewModel : ViewModelBase
 {
     private readonly AiService _ai;
-    private readonly StorageService _storage;
+    private readonly IStorageService _storage;
     private AppSettings _settings = new();
 
     public IReadOnlyList<string> Providers => _ai.AvailableProviders;
@@ -35,7 +35,7 @@ public partial class AiSettingsViewModel : ViewModelBase
 
     public event Action? Closed;
 
-    public AiSettingsViewModel(AiService ai, StorageService storage)
+    public AiSettingsViewModel(AiService ai, IStorageService storage)
     {
         _ai = ai;
         _storage = storage;

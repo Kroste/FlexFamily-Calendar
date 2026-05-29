@@ -2,6 +2,10 @@ namespace FlexFamilyCalendar.Models;
 
 public class AppSettings
 {
+    // Speicher-Modus: false = lokale JSON-Dateien, true = Server-API. Kein Parallelbetrieb (entweder/oder).
+    public bool UseServer { get; set; } = false;
+    public string ServerUrl { get; set; } = "";  // z.B. http://mein-vps:8080 (nur im Server-Modus genutzt)
+
     public string ActiveAiProvider { get; set; } = "";
     public string AiModel { get; set; } = "";
     public string HolidayState { get; set; } = "BY";  // Bundesland-Code (Feiertage), Admin-Einstellung
