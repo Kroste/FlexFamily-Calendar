@@ -104,6 +104,8 @@ public record ServerNotificationDto(
 
 public record ServerDayNoteDto(string Note, bool IsFinalized);
 
+public record UpdateProfileBody(string? DisplayName, string? Email, string? Language, string? Color);
+
 public record CreateEntryBody(
     string? UserId,
     string Type,

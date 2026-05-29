@@ -54,6 +54,24 @@ public class ApiClient
         return me;
     }
 
+    public async Task<ServerUserDto> UpdateMyProfileAsync(UpdateProfileBody body)
+    {
+        var resp = await _http.PutAsJsonAsync("api/auth/me", body);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Profil speichern");
+        var dto = await resp.Content.ReadFromJsonAsync<ServerUserDto>();
+        if (dto is not null) CurrentUser = dto;
+        LogService.Info("API eigenes Profil aktualisiert");
+        return dto!;
+    }
+
+    public async Task SetMyPasswordAsync(string password)
+    {
+        // Passwort nur im Body → wird durch den Logging-Handler nicht protokolliert.
+        var resp = await _http.PostAsJsonAsync("api/auth/me/password", new { password });
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Kennwort setzen");
+        LogService.Info("API eigenes Kennwort geändert");
+    }
+
     public async Task<List<ServerUserDto>> GetUsersAsync()
     {
         var list = await _http.GetFromJsonAsync<List<ServerUserDto>>("api/users") ?? new();

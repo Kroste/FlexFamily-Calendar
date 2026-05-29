@@ -144,6 +144,32 @@ public class AuthService
 
     public Task<List<User>> GetUsersAsync() => _storage.LoadUsersAsync();
 
+    /// <summary>Eigenes Profil speichern (selbst-editierbare Felder). Server-Modus nutzt den Self-Endpunkt.</summary>
+    public async Task UpdateOwnProfileAsync(User user)
+    {
+        if (_api is not null)
+        {
+            await _api.UpdateMyProfileAsync(new Api.UpdateProfileBody(user.DisplayName, user.Email, user.Language, user.Color));
+            LogService.Info("Eigenes Profil aktualisiert (Server): {0}", user.Username);
+            return;
+        }
+        await UpdateUserAsync(user);   // lokal: normale Aktualisierung
+    }
+
+    /// <summary>Eigenes Kennwort ändern. Server-Modus nutzt den Self-Endpunkt (nicht den Admin-Endpunkt).</summary>
+    public async Task SetOwnPasswordAsync(string userId, string newPassword)
+    {
+        if (string.IsNullOrEmpty(newPassword))
+            throw new InvalidOperationException("Kennwort darf nicht leer sein.");
+        if (_api is not null)
+        {
+            await _api.SetMyPasswordAsync(newPassword);
+            LogService.Info("Eigenes Kennwort geändert (Server)");
+            return;
+        }
+        await SetPasswordAsync(userId, newPassword);   // lokal
+    }
+
     /// <summary>Legt einen Benutzer an (Passwort wird als BCrypt-Hash gespeichert, nie Klartext).</summary>
     public async Task CreateUserAsync(User user, string password)
     {

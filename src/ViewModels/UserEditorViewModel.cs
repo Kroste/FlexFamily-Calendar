@@ -164,6 +164,13 @@ public partial class UserEditorViewModel : ViewModelBase
             {
                 await _auth.CreateUserAsync(target, Password);
             }
+            else if (IsSelfMode)
+            {
+                // Eigenes Profil → Self-Endpunkte (funktionieren auch für Nicht-Admins im Server-Modus).
+                await _auth.UpdateOwnProfileAsync(target);
+                if (!string.IsNullOrEmpty(Password))
+                    await _auth.SetOwnPasswordAsync(target.Id, Password);
+            }
             else
             {
                 await _auth.UpdateUserAsync(target);
