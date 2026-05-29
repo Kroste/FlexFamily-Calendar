@@ -346,9 +346,20 @@ app.MapPut("/api/entries/{id:guid}", async (Guid id, UpdateEntryRequest req, App
     if (!isAdmin && entry.UserId != requester.Value)
         return Results.Json(new { error = "Kein Zugriff." }, statusCode: StatusCodes.Status403Forbidden);
 
-    var valError = EntryWriteRules.Validate(entry.Type, req.Date, req.EndDate, req.StartTime, req.EndTime, req.CategoryLabel, req.ActivityTypeId);
+    // req.Type=null → Typ unverändert; sonst auf den neuen Typ wechseln.
+    // Permissions wie beim Anlegen: Nicht-Admin darf nur Krank/Urlaub.
+    var newType = string.IsNullOrWhiteSpace(req.Type) ? entry.Type : req.Type!.Trim();
+    if (newType != entry.Type)
+    {
+        var permError = EntryWriteRules.CheckCreate(newType, entry.UserId, requester.Value, isAdmin);
+        if (permError is not null)
+            return Results.Json(new { error = permError }, statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    var valError = EntryWriteRules.Validate(newType, req.Date, req.EndDate, req.StartTime, req.EndTime, req.CategoryLabel, req.ActivityTypeId);
     if (valError is not null) return Results.BadRequest(new { error = valError });
 
+    entry.Type = newType;
     entry.Date = req.Date;
     entry.EndDate = req.EndDate;
     entry.StartTime = req.StartTime;

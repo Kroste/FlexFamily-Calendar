@@ -127,6 +127,7 @@ public record UpdateEntryBody(
     bool EndsNextDay,
     string? CategoryLabel,
     string? Note,
+    string? Type = null,
     string? ActivityTypeId = null);
 
 public record ServerMailRecipientDto(string Email, string PdfBase64);

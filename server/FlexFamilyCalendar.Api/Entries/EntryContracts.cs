@@ -50,4 +50,5 @@ public record UpdateEntryRequest(
     bool EndsNextDay,
     string? CategoryLabel,
     string? Note,
+    string? Type = null,                 // null = Typ unverändert, sonst neuer Typ
     string? ActivityTypeId = null);

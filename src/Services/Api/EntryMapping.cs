@@ -81,11 +81,13 @@ public static class EntryMapping
             ActivityTypeId: NullIfEmpty(e.ActivityTypeId));
     }
 
-    /// <summary>Desktop-Eintrag (an einem konkreten Tag) → Server-Update-Body.</summary>
+    /// <summary>Desktop-Eintrag (an einem konkreten Tag) → Server-Update-Body. Type wird
+    /// mitgeschickt, damit ein Wechsel im Bearbeiten-Dialog (z.B. Arbeit → Aktivität) tatsächlich
+    /// auf dem Server landet — sonst rauscht die UPDATE-Sicht am Type vorbei.</summary>
     public static UpdateEntryBody ToUpdateBody(CalendarEntry e, DateOnly day)
     {
         var c = ToCreateBody(e, day);
-        return new UpdateEntryBody(c.Date, c.EndDate, c.StartTime, c.EndTime, c.EndsNextDay, c.CategoryLabel, c.Note, c.ActivityTypeId);
+        return new UpdateEntryBody(c.Date, c.EndDate, c.StartTime, c.EndTime, c.EndsNextDay, c.CategoryLabel, c.Note, c.Type, c.ActivityTypeId);
     }
 
     private static string? NullIfEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
