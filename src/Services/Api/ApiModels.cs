@@ -62,6 +62,8 @@ public record UpdateUserBody(
 
 public record ApiErrorBody(string? Error);
 
+public record ServerActivityTypeDto(string Id, string Name, string Color, List<string> Categories);
+
 public record CreateEntryBody(
     string? UserId,
     string Type,

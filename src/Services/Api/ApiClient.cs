@@ -76,6 +76,20 @@ public class ApiClient
         LogService.Info("API Kennwort gesetzt: id={0}", id);
     }
 
+    public async Task<List<ServerActivityTypeDto>> GetActivityTypesAsync()
+    {
+        var list = await _http.GetFromJsonAsync<List<ServerActivityTypeDto>>("api/activity-types") ?? new();
+        LogService.Debug("API Aktivitätstypen geladen: {0}", list.Count);
+        return list;
+    }
+
+    public async Task ReplaceActivityTypesAsync(List<ServerActivityTypeDto> items)
+    {
+        var resp = await _http.PutAsJsonAsync("api/activity-types", items);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Aktivitätstypen speichern");
+        LogService.Info("API Aktivitätstypen ersetzt: {0}", items.Count);
+    }
+
     /// <summary>Baut aus einer Fehlerantwort eine ApiException mit der Server-Meldung (falls vorhanden).</summary>
     private static async Task<ApiException> ErrorAsync(HttpResponseMessage resp, string what)
     {

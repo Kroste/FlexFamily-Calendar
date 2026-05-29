@@ -106,6 +106,17 @@ public class ApiStorageService : IStorageService
         return s.Id == e.Id;
     }
 
+    // --- Aktivitätstypen (Kategorien) über die API; Speichern ersetzt die ganze Liste ---
+
+    public async Task<List<ActivityType>> LoadActivityTypesAsync()
+    {
+        var dtos = await _api.GetActivityTypesAsync();
+        return dtos.Select(ActivityTypeMapping.ToDesktop).ToList();
+    }
+
+    public Task SaveActivityTypesAsync(List<ActivityType> types)
+        => _api.ReplaceActivityTypesAsync(types.Select(ActivityTypeMapping.ToServer).ToList());
+
     // --- Noch ohne Server-Endpunkt: leer/No-op (kein lokaler Fallback) ----
 
     public Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync() => Task.FromResult(new List<ShiftSwapRequest>());
@@ -113,9 +124,6 @@ public class ApiStorageService : IStorageService
 
     public Task<List<Notification>> LoadNotificationsAsync() => Task.FromResult(new List<Notification>());
     public Task SaveNotificationsAsync(List<Notification> notifications) => Task.CompletedTask;
-
-    public Task<List<ActivityType>> LoadActivityTypesAsync() => Task.FromResult(new List<ActivityType>());
-    public Task SaveActivityTypesAsync(List<ActivityType> types) => Task.CompletedTask;
 
     public Task<List<RecurringActivity>> LoadRecurringActivitiesAsync() => Task.FromResult(new List<RecurringActivity>());
     public Task SaveRecurringActivitiesAsync(List<RecurringActivity> activities) => Task.CompletedTask;
