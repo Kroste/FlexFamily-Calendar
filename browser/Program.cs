@@ -17,7 +17,7 @@ internal sealed partial class Program
         // + createDirs=true + throwConfigExceptions=true — das wirft im WASM-Sandbox-FS und killt die
         // Mono-Runtime beim ersten Log-Aufruf (Folge: "Assert failed: .NET runtime already exited with 1").
         var nlog = new LoggingConfiguration();
-        var console = new ConsoleTarget("console") { Layout = "${level:uppercase=true} | ${message}" };
+        var console = new ConsoleTarget("console") { Layout = "${level:uppercase=true} | ${message}${onexception:inner= | ${exception:format=toString}}" };
         nlog.AddRule(LogLevel.Debug, LogLevel.Fatal, console);
         LogManager.Configuration = nlog;
 

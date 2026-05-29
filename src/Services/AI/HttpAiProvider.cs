@@ -31,7 +31,14 @@ public abstract class HttpAiProvider : IAiProvider
         using var resp = await _http.SendAsync(request, ct);
         var body = await resp.Content.ReadAsStringAsync(ct);
         if (!resp.IsSuccessStatusCode)
-            throw new HttpRequestException($"{Name}: HTTP {(int)resp.StatusCode}");
+        {
+            // API-Body trägt fast immer den eigentlichen Grund (Anthropic/OpenAI/etc. liefern
+            // JSON mit error.message). Nur die ersten 500 Zeichen mitgeben, damit Logs nicht
+            // explodieren — reicht für Diagnose von Auth/Modell/Rate-Limit-Fehlern.
+            var snippet = body.Length > 500 ? body[..500] + "…" : body;
+            throw new HttpRequestException(
+                $"{Name}: HTTP {(int)resp.StatusCode} {resp.ReasonPhrase} — {snippet}");
+        }
         return JObject.Parse(body);
     }
 
