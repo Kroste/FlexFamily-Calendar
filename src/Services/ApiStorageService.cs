@@ -69,6 +69,8 @@ public class ApiStorageService : IStorageService
         // Nur persistente Einträge; Laufzeit-Projektionen (Nacht-Fortsetzung, Recurring-Overlay) nicht speichern.
         var desired = day.Entries.Where(e => !e.IsContinuation && !e.IsRecurring).ToList();
 
+        LogService.Debug("Tag {0:yyyy-MM-dd} speichern: {1} gewünscht, {2} auf Server", date, desired.Count, server.Count);
+
         // Löschen: Server-Einträge, zu denen kein gewünschter Eintrag mehr passt.
         foreach (var s in server)
             if (!desired.Any(e => Corresponds(s, e, date)))

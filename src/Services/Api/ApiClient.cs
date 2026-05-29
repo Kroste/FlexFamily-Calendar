@@ -15,12 +15,14 @@ public class ApiClient
 
     public ApiClient(string baseUrl)
     {
-        _http = new HttpClient { BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/") };
+        var handler = new ApiLoggingHandler(new HttpClientHandler());
+        _http = new HttpClient(handler) { BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/") };
     }
 
     /// <summary>Meldet an und merkt das Token für alle weiteren Aufrufe. Null = Anmeldung fehlgeschlagen.</summary>
     public async Task<LoginResponse?> LoginAsync(string username, string password)
     {
+        // Passwort wird NICHT geloggt (auch der Logging-Handler protokolliert keine Inhalte).
         var resp = await _http.PostAsJsonAsync("api/auth/login", new { username, password });
         if (!resp.IsSuccessStatusCode) return null;
 
@@ -30,25 +32,51 @@ public class ApiClient
         Token = login.Token;
         CurrentUser = login.User;
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
+        LogService.Debug("API Login: Token erhalten für {0} (Rolle {1})", login.User.Username, login.User.Role);
         return login;
     }
 
     public async Task<List<ServerUserDto>> GetUsersAsync()
-        => await _http.GetFromJsonAsync<List<ServerUserDto>>("api/users") ?? new();
+    {
+        var list = await _http.GetFromJsonAsync<List<ServerUserDto>>("api/users") ?? new();
+        LogService.Debug("API Benutzer geladen: {0}", list.Count);
+        return list;
+    }
 
     public async Task<List<ServerEntryDto>> GetEntriesAsync(DateOnly from, DateOnly to)
-        => await _http.GetFromJsonAsync<List<ServerEntryDto>>(
-               $"api/entries?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}") ?? new();
+    {
+        var list = await _http.GetFromJsonAsync<List<ServerEntryDto>>(
+            $"api/entries?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}") ?? new();
+        LogService.Debug("API Einträge {0:yyyy-MM-dd}..{1:yyyy-MM-dd}: {2} geladen", from, to, list.Count);
+        return list;
+    }
 
     public async Task<ServerEntryDto?> CreateEntryAsync(CreateEntryBody body)
     {
         var resp = await _http.PostAsJsonAsync("api/entries", body);
-        return resp.IsSuccessStatusCode ? await resp.Content.ReadFromJsonAsync<ServerEntryDto>() : null;
+        if (!resp.IsSuccessStatusCode)
+        {
+            LogService.Warn("API Eintrag anlegen fehlgeschlagen: Typ={0} Datum={1:yyyy-MM-dd} User={2} → {3}",
+                body.Type, body.Date, body.UserId, (int)resp.StatusCode);
+            return null;
+        }
+        var dto = await resp.Content.ReadFromJsonAsync<ServerEntryDto>();
+        LogService.Info("API Eintrag angelegt: id={0} Typ={1} Datum={2:yyyy-MM-dd} User={3}",
+            dto?.Id, body.Type, body.Date, body.UserId);
+        return dto;
     }
 
     public async Task<bool> UpdateEntryAsync(string id, UpdateEntryBody body)
-        => (await _http.PutAsJsonAsync($"api/entries/{id}", body)).IsSuccessStatusCode;
+    {
+        var ok = (await _http.PutAsJsonAsync($"api/entries/{id}", body)).IsSuccessStatusCode;
+        LogService.Info("API Eintrag aktualisiert: id={0} → {1}", id, ok ? "ok" : "fehlgeschlagen");
+        return ok;
+    }
 
     public async Task<bool> DeleteEntryAsync(string id)
-        => (await _http.DeleteAsync($"api/entries/{id}")).IsSuccessStatusCode;
+    {
+        var ok = (await _http.DeleteAsync($"api/entries/{id}")).IsSuccessStatusCode;
+        LogService.Info("API Eintrag gelöscht: id={0} → {1}", id, ok ? "ok" : "fehlgeschlagen");
+        return ok;
+    }
 }
