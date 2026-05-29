@@ -80,7 +80,9 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcN
 app.MapPost("/api/auth/login", async (LoginRequest req, AppDbContext db, TokenService tokens) =>
 {
     var user = await db.Users.FirstOrDefaultAsync(u => u.Username == req.Username);
-    if (user is null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
+    // Leerer Hash = Konto ohne Anmeldung (z.B. Kind) → nie anmeldbar (und BCrypt.Verify würfe sonst).
+    if (user is null || string.IsNullOrEmpty(user.PasswordHash)
+        || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
         return Results.Json(new { error = "Ungültiger Benutzername oder Passwort." },
             statusCode: StatusCodes.Status401Unauthorized);
 
@@ -97,8 +99,8 @@ app.MapGet("/api/users", async (AppDbContext db) =>
 
 app.MapPost("/api/users", async (CreateUserRequest req, AppDbContext db) =>
 {
-    if (string.IsNullOrWhiteSpace(req.Username) || string.IsNullOrWhiteSpace(req.Password))
-        return Results.BadRequest(new { error = "Username und Passwort sind erforderlich." });
+    if (string.IsNullOrWhiteSpace(req.Username))
+        return Results.BadRequest(new { error = "Benutzername ist erforderlich." });
     if (await db.Users.AnyAsync(u => u.Username == req.Username))
         return Results.Conflict(new { error = "Benutzername bereits vergeben." });
 
@@ -115,7 +117,8 @@ app.MapPost("/api/users", async (CreateUserRequest req, AppDbContext db) =>
         MinRestHours = req.MinRestHours,
         Color = req.Color?.Trim() ?? "",
         Language = string.IsNullOrWhiteSpace(req.Language) ? "de" : req.Language!.Trim(),
-        PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password)
+        // Leeres Passwort erlaubt = Konto ohne Anmeldung (z.B. Kind).
+        PasswordHash = string.IsNullOrWhiteSpace(req.Password) ? "" : BCrypt.Net.BCrypt.HashPassword(req.Password)
     };
     db.Users.Add(user);
     await db.SaveChangesAsync();
