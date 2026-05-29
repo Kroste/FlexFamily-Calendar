@@ -19,6 +19,12 @@ public partial class SettingsViewModel : ViewModelBase
 
     [ObservableProperty] private GermanStateOption? _selectedState;
     [ObservableProperty] private string _overnightHours = "2";
+    [ObservableProperty] private string _smtpHost = "";
+    [ObservableProperty] private string _smtpPort = "587";
+    [ObservableProperty] private string _smtpUser = "";
+    [ObservableProperty] private string _smtpFrom = "";
+    [ObservableProperty] private bool _smtpUseSsl = true;
+    [ObservableProperty] private string _smtpPassword = "";
     [ObservableProperty] private string _statusMessage = "";
 
     public SettingsViewModel(StorageService storage)
@@ -37,6 +43,11 @@ public partial class SettingsViewModel : ViewModelBase
         var current = GermanStates.Parse(_settings.HolidayState);
         SelectedState = States.FirstOrDefault(o => o.State == current) ?? States[0];
         OvernightHours = _settings.OvernightHoursPerDay.ToString(CultureInfo.CurrentCulture);
+        SmtpHost = _settings.SmtpHost;
+        SmtpPort = _settings.SmtpPort.ToString(CultureInfo.InvariantCulture);
+        SmtpUser = _settings.SmtpUser;
+        SmtpFrom = _settings.SmtpFrom;
+        SmtpUseSsl = _settings.SmtpUseSsl;
     }
 
     [RelayCommand]
@@ -47,7 +58,17 @@ public partial class SettingsViewModel : ViewModelBase
         if (double.TryParse(OvernightHours, NumberStyles.Any, CultureInfo.CurrentCulture, out var o) && o >= 0)
             _settings.OvernightHoursPerDay = o;
 
+        _settings.SmtpHost = SmtpHost.Trim();
+        _settings.SmtpUser = SmtpUser.Trim();
+        _settings.SmtpFrom = SmtpFrom.Trim();
+        _settings.SmtpUseSsl = SmtpUseSsl;
+        if (int.TryParse(SmtpPort, NumberStyles.Integer, CultureInfo.InvariantCulture, out var port) && port > 0)
+            _settings.SmtpPort = port;
+        if (!string.IsNullOrWhiteSpace(SmtpPassword))            // leer = bestehendes Passwort behalten
+            _settings.SmtpPasswordEnc = SecretService.Encrypt(SmtpPassword.Trim());
+
         await _storage.SaveSettingsAsync(_settings);
+        SmtpPassword = "";
         StatusMessage = Localizer.Instance["Settings_Saved"];
         LogService.UserAction("Admin", "Einstellungen gespeichert");
     }

@@ -77,6 +77,9 @@ public partial class CalendarViewModel : ViewModelBase
     /// <summary>Bittet das CalendarView-Code-Behind, einen Speichern-Dialog für den PDF-Export zu öffnen.</summary>
     public event Action? ExportPdfRequested;
 
+    /// <summary>Öffnet den Empfänger-Dialog für den Plan-Mailversand (vom Code-Behind abonniert).</summary>
+    public event Action<MailViewModel>? MailDialogRequested;
+
     private static readonly IReadOnlyList<EntryType> AllTypes = Enum.GetValues<EntryType>();
 
     // Selbst-Antrag: Urlaub nur wenn nicht finalisiert, Krank immer.
@@ -219,6 +222,39 @@ public partial class CalendarViewModel : ViewModelBase
         var generated = string.Format(Localizer.Instance["Pdf_Generated"],
             DateTime.Now.ToString("g", CultureInfo.CurrentCulture));
         return new WeekExport(Localizer.Instance["Pdf_Title"], WeekLabel, generated, headers, rows, notes);
+    }
+
+    /// <summary>Plan per E-Mail senden: prüft die SMTP-Konfiguration und öffnet die Empfänger-Auswahl (nur Admin).</summary>
+    [RelayCommand]
+    private async Task MailPlan()
+    {
+        if (!IsAdmin) return;
+        var settings = await _storage.LoadSettingsAsync();
+        if (!MailComposer.IsConfigured(settings)) { LogService.Warn(Localizer.Instance["Mail_NotConfigured"]); return; }
+        var recipients = MailComposer.RecipientsWithEmail(_allUsers);
+        if (recipients.Count == 0) { LogService.Warn(Localizer.Instance["Mail_NoRecipients"]); return; }
+
+        LogService.Click(CurrentUser.Username, $"Mail-Versand ({WeekLabel})");
+        MailDialogRequested?.Invoke(new MailViewModel(recipients));
+    }
+
+    /// <summary>Erzeugt das Wochen-PDF und versendet es an die gewählten Empfänger.</summary>
+    public async Task SendPlanMailAsync(IReadOnlyList<string> emails)
+    {
+        if (emails.Count == 0) return;
+        try
+        {
+            var settings = await _storage.LoadSettingsAsync();
+            var pdf = PdfExportService.Render(CreateWeekExport());
+            var subject = $"{Localizer.Instance["Pdf_Title"]} {WeekLabel}";
+            var body = string.Format(Localizer.Instance["Mail_Body"], WeekLabel);
+            await MailService.SendAsync(settings, emails, subject, body, pdf, ExportFileName);
+            LogService.Info(string.Format(Localizer.Instance["Mail_Sent"], emails.Count));
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("Fehler beim Mail-Versand", ex);
+        }
     }
 
     /// <summary>Ist-Stunden je Person (Work+Au-Pair) der Woche; nur Personen mit Soll&gt;0.</summary>

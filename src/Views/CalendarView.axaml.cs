@@ -24,6 +24,7 @@ public partial class CalendarView : UserControl
             _vm.ReplanDialogRequested -= OnReplanDialogRequested;
             _vm.DayNoteDialogRequested -= OnDayNoteDialogRequested;
             _vm.ExportPdfRequested -= OnExportPdfRequested;
+            _vm.MailDialogRequested -= OnMailDialogRequested;
         }
 
         _vm = DataContext as CalendarViewModel;
@@ -35,6 +36,26 @@ public partial class CalendarView : UserControl
             _vm.ReplanDialogRequested += OnReplanDialogRequested;
             _vm.DayNoteDialogRequested += OnDayNoteDialogRequested;
             _vm.ExportPdfRequested += OnExportPdfRequested;
+            _vm.MailDialogRequested += OnMailDialogRequested;
+        }
+    }
+
+    private async void OnMailDialogRequested(MailViewModel vm)
+    {
+        if (_vm == null) return;
+        try
+        {
+            if (TopLevel.GetTopLevel(this) is not Window owner) return;
+
+            var dialog = new MailDialog { DataContext = vm };
+            var result = await dialog.ShowDialog<IReadOnlyList<string>?>(owner);
+
+            if (result is { Count: > 0 })
+                await _vm.SendPlanMailAsync(result);
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("Fehler im Mail-Dialog", ex);
         }
     }
 
