@@ -105,21 +105,23 @@
         Background="#80000000"
         IsVisible="False"
         ZIndex="100">
+    <!-- Karte trägt KEIN festes MaxWidth/MaxHeight mehr — jeder UserControl bestimmt seine
+         eigene Soll-Breite (MaxWidth pro Dialog). Margin zum Viewport-Rand verhindert, dass
+         große Dialoge bündig an die Bildschirmkante anstoßen. -->
     <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
             CornerRadius="10"
-            MaxWidth="640"
+            Margin="24"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             BoxShadow="0 8 24 0 #66000000">
       <Grid>
         <ContentControl x:Name="DialogContent" />
         <!-- Browser-Modus: sichtbares Schließen-X (auf Desktop bleibt das OS-Window-X).
-             Für Dialoge ohne eigenen Cancel-Button (Notifications/MonthOverview/HoursAccount/Admin)
-             ist das der einzige fokuserbare Close-Pfad. -->
+             "×" (U+00D7) statt "✕" (U+2715), weil letzteres in Inter ein Fallback-Glyph rendert. -->
         <Button Click="OnOverlayCloseClick"
-                Content="✕" FontSize="14"
+                Content="×" FontSize="20" FontWeight="Bold"
                 HorizontalAlignment="Right" VerticalAlignment="Top"
-                Margin="0,6,6,0" Padding="8,3"
+                Margin="0,4,4,0" Padding="10,2"
                 Background="Transparent" BorderThickness="0" />
       </Grid>
     </Border>

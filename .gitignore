@@ -15,6 +15,7 @@ nuget.config
 *.userosscache
 *.sln.docstates
 .vs/
+.logins
 
 # Rider / JetBrains
 .idea/

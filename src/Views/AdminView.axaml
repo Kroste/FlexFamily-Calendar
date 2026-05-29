@@ -5,7 +5,9 @@
              x:Class="FlexFamilyCalendar.Views.AdminView"
              x:CompileBindings="False">
 
-  <TabControl Margin="8" MinWidth="860" Height="620">
+  <!-- MaxWidth/MaxHeight statt MinWidth/Height: bei kleinem Viewport skaliert die Karte runter
+       statt aus dem Bildschirm zu rinnen. -->
+  <TabControl Margin="8" MaxWidth="960" MaxHeight="720">
     <TabItem Header="{loc:Tr Main_UserManagement}">
       <views:UserManagementView DataContext="{Binding Users}" />
     </TabItem>
