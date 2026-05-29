@@ -22,8 +22,26 @@ services:
       Seed__AdminUsername: "${ADMIN_USER:-}"
       Seed__AdminPassword: "${ADMIN_PASSWORD:-}"
     ports:
+      # Fallback während der Umstellung. Nach erfolgreichem HTTPS-Test entfernen und
+      # Port 8080 in der VPS-Firewall schließen, damit nur noch Caddy (443) erreichbar ist.
       - "8080:8080"
+    restart: unless-stopped
+
+  # Reverse-Proxy: terminiert HTTPS für flexfamily.cloud und leitet intern an die API weiter.
+  caddy:
+    image: caddy:2
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     restart: unless-stopped
 
 volumes:
   pgdata:
+  caddy_data:
+  caddy_config:

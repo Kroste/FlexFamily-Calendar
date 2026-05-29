@@ -1,0 +1,7 @@
+# Reverse-Proxy mit automatischem HTTPS (Let's Encrypt) für die FlexFamily-Calendar-API.
+# Caddy holt/erneuert das Zertifikat selbst (Ports 80 + 443 müssen erreichbar sein,
+# und flexfamily.cloud muss auf diesen Server zeigen). TLS endet hier; intern geht es
+# unverschlüsselt an den API-Container (gleiches Docker-Netz) auf Port 8080.
+flexfamily.cloud {
+    reverse_proxy api:8080
+}
