@@ -69,6 +69,24 @@ public class EntryMappingTests
     }
 
     [Fact]
+    public void Activity_category_round_trips_via_activity_type_id()
+    {
+        var dto = new ServerEntryDto("id3", "u1", "Activity",
+            new DateOnly(2026, 6, 1), null,
+            new TimeOnly(10, 0), new TimeOnly(12, 0), false,
+            null, null, "Approved", false, ActivityTypeId: "cat-7");
+
+        var e = EntryMapping.ToDesktop(dto, new DateOnly(2026, 6, 1));
+        Assert.Equal("cat-7", e.ActivityTypeId);
+
+        var body = EntryMapping.ToCreateBody(e, new DateOnly(2026, 6, 1));
+        Assert.Equal("cat-7", body.ActivityTypeId);
+
+        var update = EntryMapping.ToUpdateBody(e, new DateOnly(2026, 6, 1));
+        Assert.Equal("cat-7", update.ActivityTypeId);
+    }
+
+    [Fact]
     public void ToCreateBody_timed_uses_day_and_times()
     {
         var e = new CalendarEntry

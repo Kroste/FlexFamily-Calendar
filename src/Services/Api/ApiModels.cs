@@ -15,7 +15,8 @@ public record ServerEntryDto(
     string? CategoryLabel,
     string? Note,
     string Status,
-    bool Masked);
+    bool Masked,
+    string? ActivityTypeId = null);
 
 public record ServerUserDto(
     string Id,
@@ -115,7 +116,8 @@ public record CreateEntryBody(
     TimeOnly? EndTime,
     bool EndsNextDay,
     string? CategoryLabel,
-    string? Note);
+    string? Note,
+    string? ActivityTypeId = null);
 
 public record UpdateEntryBody(
     DateOnly Date,
@@ -124,4 +126,5 @@ public record UpdateEntryBody(
     TimeOnly? EndTime,
     bool EndsNextDay,
     string? CategoryLabel,
-    string? Note);
+    string? Note,
+    string? ActivityTypeId = null);

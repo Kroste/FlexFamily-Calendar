@@ -35,6 +35,7 @@ public static class EntryMapping
             UserId = dto.UserId,
             Type = type,
             Title = dto.CategoryLabel ?? "",
+            ActivityTypeId = NullIfEmpty(dto.ActivityTypeId),   // Kategorie-Referenz → Desktop löst Name/Farbe auf
             Notes = dto.Note ?? ""
         };
 
@@ -65,7 +66,8 @@ public static class EntryMapping
                 Type: TypeToServer(e.Type),
                 Date: start, EndDate: end,
                 StartTime: null, EndTime: null, EndsNextDay: false,
-                CategoryLabel: NullIfEmpty(e.Title), Note: NullIfEmpty(e.Notes));
+                CategoryLabel: NullIfEmpty(e.Title), Note: NullIfEmpty(e.Notes),
+                ActivityTypeId: NullIfEmpty(e.ActivityTypeId));
         }
 
         return new CreateEntryBody(
@@ -75,14 +77,15 @@ public static class EntryMapping
             StartTime: TimeOnly.FromTimeSpan(e.StartTime),
             EndTime: TimeOnly.FromTimeSpan(e.EndTime),
             EndsNextDay: e.EndTime <= e.StartTime,   // über Mitternacht
-            CategoryLabel: NullIfEmpty(e.Title), Note: NullIfEmpty(e.Notes));
+            CategoryLabel: NullIfEmpty(e.Title), Note: NullIfEmpty(e.Notes),
+            ActivityTypeId: NullIfEmpty(e.ActivityTypeId));
     }
 
     /// <summary>Desktop-Eintrag (an einem konkreten Tag) → Server-Update-Body.</summary>
     public static UpdateEntryBody ToUpdateBody(CalendarEntry e, DateOnly day)
     {
         var c = ToCreateBody(e, day);
-        return new UpdateEntryBody(c.Date, c.EndDate, c.StartTime, c.EndTime, c.EndsNextDay, c.CategoryLabel, c.Note);
+        return new UpdateEntryBody(c.Date, c.EndDate, c.StartTime, c.EndTime, c.EndsNextDay, c.CategoryLabel, c.Note, c.ActivityTypeId);
     }
 
     private static string? NullIfEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
