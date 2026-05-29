@@ -21,8 +21,11 @@ internal sealed partial class Program
         nlog.AddRule(LogLevel.Debug, LogLevel.Fatal, console);
         LogManager.Configuration = nlog;
 
-        // localStorage-Adapter dem App-Statics geben, bevor die App startet.
+        // localStorage-Adapter + Browser-Origin dem App-Statics geben, bevor die App startet.
+        // Origin ist nötig, damit HttpClient eine absolute BaseAddress bekommt (relative "/" wäre
+        // unter file:// fatal und auch unter https brüchig, weil Uri("/") nicht absolut ist).
         App.BrowserStore = new BrowserLocalStorage();
+        App.BrowserOrigin = BrowserLocation.GetOrigin();
         await BuildAvaloniaApp().StartBrowserAppAsync("out");
     }
 

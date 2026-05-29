@@ -14,6 +14,9 @@ public partial class App : Application
     /// <summary>Vom Browser-Head vor dem Start gesetzt (localStorage-Interop). Auf Desktop unbenutzt.</summary>
     public static IBrowserKeyValueStore? BrowserStore { get; set; }
 
+    /// <summary>Vom Browser-Head vor dem Start gesetzt (window.location.origin). Auf Desktop unbenutzt.</summary>
+    public static string? BrowserOrigin { get; set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -92,8 +95,15 @@ public partial class App : Application
         // BrowserSettingsStorage.LoadSettingsAsync ist in-memory → Task ist abgeschlossen, kein WASM-Deadlock.
         var settings = settingsStore.LoadSettingsAsync().GetAwaiter().GetResult();
 
-        // Ohne explizite URL: gleicher Origin (Caddy serviert SPA + API → relative Pfade).
-        var serverUrl = string.IsNullOrWhiteSpace(settings.ServerUrl) ? "/" : settings.ServerUrl;
+        // HttpClient.BaseAddress MUSS absolut sein — relative "/" wirft im URI-Konstruktor bzw. löst
+        // unter file:// fatal auf. Fallback-Reihenfolge: explizite ServerUrl > Browser-Origin > "/".
+        var origin = BrowserOrigin?.TrimEnd('/');
+        var serverUrl = !string.IsNullOrWhiteSpace(settings.ServerUrl)
+            ? settings.ServerUrl
+            : (!string.IsNullOrEmpty(origin) ? origin! : "/");
+
+        if (origin is not null && origin.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+            LogService.Warn("SPA wurde via file:// geöffnet — API-Aufrufe schlagen fehl. Bitte über Caddy/HTTPS starten.");
 
         var apiClient = new ApiClient(serverUrl);
         var storage = new ApiStorageService(apiClient, settingsStore);
