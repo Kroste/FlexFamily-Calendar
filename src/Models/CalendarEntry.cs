@@ -40,14 +40,6 @@ public class CalendarEntry
     [Newtonsoft.Json.JsonIgnore]
     public bool CrossesMidnight => EndTime <= StartTime;
 
-    /// <summary>Hat einen sichtbaren Anteil am Folgetag (Endzeit > 00:00) → Fortsetzungs-Block.</summary>
-    [Newtonsoft.Json.JsonIgnore]
-    public bool ContinuesNextDay => CrossesMidnight && EndTime > TimeSpan.Zero;
-
-    /// <summary>Laufzeit: Folgetag-Anteil einer Schicht über Mitternacht (nicht editierbar, nicht gezählt).</summary>
-    [Newtonsoft.Json.JsonIgnore]
-    public bool IsContinuation { get; set; }
-
     [Newtonsoft.Json.JsonIgnore]
     public string TimeRange => $"{StartTime:hh\\:mm}–{EndTime:hh\\:mm}";
 
@@ -77,14 +69,6 @@ public class CalendarEntry
     /// <summary>Personenfarbe (zur Laufzeit aus dem Benutzer aufgelöst, nicht persistiert).</summary>
     [Newtonsoft.Json.JsonIgnore]
     public string OwnerColor { get; set; } = "#7F8C8D";
-
-    /// <summary>Effektive Deckkraft je Sichtmodus/Eigentümer (zur Laufzeit gesetzt).</summary>
-    [Newtonsoft.Json.JsonIgnore]
-    public double EffectiveOpacity { get; set; } = 1.0;
-
-    /// <summary>Eigene Schicht in der Normalsicht → Rahmen-Hervorhebung.</summary>
-    [Newtonsoft.Json.JsonIgnore]
-    public bool IsHighlighted { get; set; }
 
     /// <summary>Datenschutz-maskierter Anzeigetyp (Laufzeit; Default = echter Typ).</summary>
     [Newtonsoft.Json.JsonIgnore]

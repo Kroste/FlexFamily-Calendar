@@ -26,7 +26,7 @@ public static class EntryMoveCopy
     /// Wiederkehrende Projektionen sind read-only Overlays und nicht persistiert.</summary>
     public static bool CanDrag(CalendarEntry entry)
     {
-        if (entry.IsRecurring || entry.IsContinuation) return false;
+        if (entry.IsRecurring) return false;
         if (EntryTypeInfo.IsAbsence(entry.Type)) return false;
         return true;
     }

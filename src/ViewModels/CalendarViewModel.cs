@@ -48,10 +48,6 @@ public partial class CalendarViewModel : ViewModelBase
     public bool IsAdmin => CurrentUser.Role == UserRole.Admin;
     public bool CanSwitchView => IsAdmin;
 
-    // Plattform-Schalter: PDF-Speichern und SMTP-Mail laufen im Browser nicht — Buttons dort ausblenden.
-    public bool IsNotBrowser => !OperatingSystem.IsBrowser();
-    public bool IsAdminAndNotBrowser => IsAdmin && IsNotBrowser;
-
     [ObservableProperty] private bool _isHoursPanelVisible;
 
     /// <summary>true = Normalsicht (eigene hervorgehoben); false = Planungssicht (alle gleich, editierbar).</summary>
@@ -516,8 +512,8 @@ public partial class CalendarViewModel : ViewModelBase
     /// <summary>Antippen einer Schicht: offene Anfrage beantworten/zurückziehen, eigenen Tausch anbieten oder bearbeiten.</summary>
     public void ActivateEntry(DateOnly date, CalendarEntry entry)
     {
-        // Projektionen/Fortsetzungen sind keine echten Tageseinträge → nicht editier-/tauschbar.
-        if (entry.IsRecurring || entry.IsContinuation) return;
+        // Projektionen sind keine echten Tageseinträge → nicht editier-/tauschbar.
+        if (entry.IsRecurring) return;
 
         var dayStr = date.ToString("yyyy-MM-dd");
         bool Involves(ShiftSwapRequest r) =>
@@ -800,7 +796,6 @@ public partial class CalendarViewModel : ViewModelBase
         {
             e.OwnerColor = _userColors.GetValueOrDefault(e.UserId, "#7F8C8D");
             var isOwn = e.UserId == CurrentUser.Id;
-            (e.EffectiveOpacity, e.IsHighlighted) = EntryDisplay.Resolve(e.Type, isOwn, IsPersonalView);
 
             // Datenschutz: Krank/Urlaub für Fremde als „Abwesend" ohne Grund
             var canSeeReason = IsAdmin || isOwn;
@@ -823,9 +818,9 @@ public partial class CalendarViewModel : ViewModelBase
         }
     }
 
-    /// <summary>Teilt die Tageseinträge in Raster (Arbeit/Aktivität + Nacht-Fortsetzungen + wiederkehrende) und Abwesenheits-Hinweise.</summary>
+    /// <summary>Teilt die Tageseinträge in Raster (Arbeit/Aktivität + wiederkehrende) und Abwesenheits-Hinweise.</summary>
     private (List<CalendarEntry> Timeline, List<CalendarEntry> Absences) BuildDisplay(
-        DateOnly date, IReadOnlyList<CalendarEntry> dayEntries, IReadOnlyList<CalendarEntry> prevDayEntries)
+        DateOnly date, IReadOnlyList<CalendarEntry> dayEntries)
     {
         var timeline = new List<CalendarEntry>();
         var absences = new List<CalendarEntry>();
@@ -834,7 +829,6 @@ public partial class CalendarViewModel : ViewModelBase
             if (EntryTypeInfo.IsAbsence(e.Type)) absences.Add(e);
             else timeline.Add(e);
         }
-        timeline.AddRange(OvernightShifts.Continuations(prevDayEntries));
         timeline.AddRange(BuildRecurring(date));
         return (timeline, absences);
     }
@@ -853,8 +847,6 @@ public partial class CalendarViewModel : ViewModelBase
     private void ApplyRecurringDisplay(CalendarEntry e)
     {
         e.OwnerColor = _userColors.GetValueOrDefault(e.UserId, "#7F8C8D");
-        var isOwn = e.UserId == CurrentUser.Id;
-        (e.EffectiveOpacity, e.IsHighlighted) = EntryDisplay.Resolve(e.Type, isOwn, IsPersonalView);
         e.DisplayType = EntryType.Activity;
         e.DisplayTitle = e.Title;
 
@@ -893,20 +885,17 @@ public partial class CalendarViewModel : ViewModelBase
         _recurringActivities = await _storage.LoadRecurringActivitiesAsync();
         _weekHolidays = HolidayCalculator.ForRange(WeekStart, WeekStart.AddDays(6), _holidayState);
 
-        // Vortag mitladen, damit Nacht-Schichten (z.B. So→Mo) als Fortsetzung am Folgetag erscheinen.
-        var prev = await _storage.LoadDayAsync(WeekStart.AddDays(-1));
-        ApplyEntryDisplay(prev);
-        var prevEntries = (IReadOnlyList<CalendarEntry>)prev.Entries;
+        // (Vortag wurde früher für die Nacht-Fortsetzungs-Anzeige geladen — die Tabellen-Sicht
+        // braucht das nicht mehr; die Nacht-Schicht steht jetzt nur am Starttag.)
 
         for (int i = 0; i < 7; i++)
         {
             var date = WeekStart.AddDays(i);
             var day = await _storage.LoadDayAsync(date);
             ApplyEntryDisplay(day);
-            var (timeline, absences) = BuildDisplay(date, day.Entries, prevEntries);
+            var (timeline, absences) = BuildDisplay(date, day.Entries);
             Days[i].LoadFromModel(day, timeline, absences);
             Days[i].SetHoliday(_weekHolidays.FirstOrDefault(h => h.Date == date)?.NameKey, IsHolidaysVisible);
-            prevEntries = day.Entries;
         }
         IsWeekFinalized = Days.Count > 0 && Days.All(d => d.IsFinalized);
         RebuildRows();

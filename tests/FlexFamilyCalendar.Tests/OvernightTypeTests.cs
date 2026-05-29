@@ -27,7 +27,6 @@ public class OvernightTypeTests
     {
         var e = Overnight();
         Assert.True(e.CrossesMidnight);
-        Assert.True(e.ContinuesNextDay);
         Assert.Equal(10.0, e.DurationHours, 3);   // 20:00→06:00
     }
 
@@ -73,12 +72,5 @@ public class OvernightTypeTests
         var worked = WeeklyHoursCalculator.WorkedHoursByUser(entries);
 
         Assert.Equal(8.0, worked.GetValueOrDefault("u1"), 3);   // nur Arbeit zählt als geleistet
-    }
-
-    [Fact]
-    public void Display_Overnight_IsFullyOpaque_LikeWork()
-    {
-        var (opacity, _) = EntryDisplay.Resolve(EntryType.Overnight, isOwn: false, personalView: false);
-        Assert.Equal(1.0, opacity, 3);
     }
 }

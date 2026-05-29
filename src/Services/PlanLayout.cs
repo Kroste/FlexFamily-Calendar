@@ -27,12 +27,12 @@ public static class PlanLayout
             .ToList();
 
     /// <summary>
-    /// Einträge einer Person an einem Tag für die Zelle: Schichten/Aktivitäten (ohne Nacht-Fortsetzungen)
-    /// + Abwesenheiten, nach Startzeit sortiert.
+    /// Einträge einer Person an einem Tag für die Zelle: Schichten/Aktivitäten + Abwesenheiten,
+    /// nach Startzeit sortiert.
     /// </summary>
     public static List<CalendarEntry> CellEntries(
         IEnumerable<CalendarEntry> timeline, IEnumerable<CalendarEntry> absences, string userId)
-        => timeline.Where(e => e.UserId == userId && !e.IsContinuation)
+        => timeline.Where(e => e.UserId == userId)
             .Concat(absences.Where(e => e.UserId == userId))
             .OrderBy(e => e.StartTime)
             .ToList();

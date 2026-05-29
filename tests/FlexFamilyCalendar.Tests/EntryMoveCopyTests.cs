@@ -37,14 +37,6 @@ public class EntryMoveCopyTests
     }
 
     [Fact]
-    public void CanDrag_RejectsOvernightContinuation()
-    {
-        var e = Shift();
-        e.IsContinuation = true;
-        Assert.False(EntryMoveCopy.CanDrag(e));
-    }
-
-    [Fact]
     public void CanDrag_AcceptsWorkActivityOvernight()
     {
         Assert.True(EntryMoveCopy.CanDrag(Shift(type: EntryType.Work)));

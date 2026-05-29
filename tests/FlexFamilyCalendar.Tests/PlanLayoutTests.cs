@@ -25,14 +25,13 @@ public class PlanLayoutTests
     }
 
     [Fact]
-    public void CellEntries_FiltersByUser_ExcludesContinuations_IncludesAbsence_Sorted()
+    public void CellEntries_FiltersByUser_IncludesAbsences_Sorted()
     {
         var timeline = new[]
         {
             new CalendarEntry { UserId = "u1", Type = EntryType.Work, StartTime = TimeSpan.FromHours(8), EndTime = TimeSpan.FromHours(16) },
             new CalendarEntry { UserId = "u1", Type = EntryType.Activity, StartTime = TimeSpan.FromHours(16), EndTime = TimeSpan.FromHours(17) },
             new CalendarEntry { UserId = "u2", Type = EntryType.Work, StartTime = TimeSpan.FromHours(9), EndTime = TimeSpan.FromHours(15) },
-            new CalendarEntry { UserId = "u1", Type = EntryType.Overnight, StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromHours(6), IsContinuation = true },
         };
         var absences = new[]
         {
@@ -42,10 +41,9 @@ public class PlanLayoutTests
 
         var cell = PlanLayout.CellEntries(timeline, absences, "u1");
 
-        Assert.Equal(3, cell.Count);                           // u2 + Fortsetzung ausgeschlossen
+        Assert.Equal(3, cell.Count);                           // u2 ausgeschlossen
         Assert.Equal(EntryType.Vacation, cell[0].Type);        // 06:00
         Assert.Equal(EntryType.Work, cell[1].Type);            // 08:00
         Assert.Equal(EntryType.Activity, cell[2].Type);        // 16:00
-        Assert.DoesNotContain(cell, e => e.IsContinuation);
     }
 }

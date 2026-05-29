@@ -68,8 +68,8 @@ public class ApiStorageService : IStorageService
         var date = day.Date;
         var server = await _api.GetEntriesAsync(date, date);
 
-        // Nur persistente Einträge; Laufzeit-Projektionen (Nacht-Fortsetzung, Recurring-Overlay) nicht speichern.
-        var desired = day.Entries.Where(e => !e.IsContinuation && !e.IsRecurring).ToList();
+        // Nur persistente Einträge; Recurring-Overlay-Projektionen nicht speichern.
+        var desired = day.Entries.Where(e => !e.IsRecurring).ToList();
 
         LogService.Debug("Tag {0:yyyy-MM-dd} speichern: {1} gewünscht, {2} auf Server", date, desired.Count, server.Count);
 
