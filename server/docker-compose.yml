@@ -18,6 +18,9 @@ services:
       Jwt__Key: "${JWT_KEY:-please-change-this-to-a-long-random-secret-min-32-bytes}"
       Jwt__Issuer: "FlexFamilyCalendar"
       Jwt__Audience: "FlexFamilyCalendar"
+      # Erst-Admin beim allerersten Start (nur wenn DB leer). Danach kann er weitere Benutzer anlegen.
+      Seed__AdminUsername: "${ADMIN_USER:-}"
+      Seed__AdminPassword: "${ADMIN_PASSWORD:-}"
     ports:
       - "8080:8080"
     restart: unless-stopped

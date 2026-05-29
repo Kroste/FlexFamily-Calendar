@@ -1,6 +1,7 @@
 using System.Text;
 using FlexFamilyCalendar.Api.Auth;
 using FlexFamilyCalendar.Api.Data;
+using FlexFamilyCalendar.Api.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -35,6 +36,22 @@ using (var scope = app.Services.CreateScope())
         try { db.Database.EnsureCreated(); break; }
         catch when (attempt < 10) { Thread.Sleep(3000); }   // DB evtl. noch nicht bereit
     }
+
+    // Erst-Admin anlegen (idempotent): nur wenn per Konfiguration gesetzt UND noch keine Benutzer existieren.
+    var seedUser = cfg["Seed:AdminUsername"];
+    var seedPass = cfg["Seed:AdminPassword"];
+    if (!string.IsNullOrWhiteSpace(seedUser) && !string.IsNullOrWhiteSpace(seedPass) && !db.Users.Any())
+    {
+        db.Users.Add(new UserEntity
+        {
+            Username = seedUser.Trim(),
+            DisplayName = seedUser.Trim(),
+            Role = "Admin",
+            Category = "Parent",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(seedPass)
+        });
+        db.SaveChanges();
+    }
 }
 
 app.UseAuthentication();
@@ -61,6 +78,30 @@ app.MapGet("/api/users", async (AppDbContext db) =>
         .ToListAsync())
     .RequireAuthorization("Admin");
 
+app.MapPost("/api/users", async (CreateUserRequest req, AppDbContext db) =>
+{
+    if (string.IsNullOrWhiteSpace(req.Username) || string.IsNullOrWhiteSpace(req.Password))
+        return Results.BadRequest(new { error = "Username und Passwort sind erforderlich." });
+    if (await db.Users.AnyAsync(u => u.Username == req.Username))
+        return Results.Conflict(new { error = "Benutzername bereits vergeben." });
+
+    var user = new UserEntity
+    {
+        Username = req.Username.Trim(),
+        DisplayName = string.IsNullOrWhiteSpace(req.DisplayName) ? req.Username.Trim() : req.DisplayName!.Trim(),
+        Email = req.Email?.Trim() ?? "",
+        Role = req.Role == "Admin" ? "Admin" : "User",
+        Category = string.IsNullOrWhiteSpace(req.Category) ? "Employee" : req.Category!.Trim(),
+        PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password)
+    };
+    db.Users.Add(user);
+    await db.SaveChangesAsync();
+    return Results.Created($"/api/users/{user.Id}",
+        new { user.Id, user.Username, user.DisplayName, user.Email, user.Role, user.Category });
+})
+    .RequireAuthorization("Admin");
+
 app.Run();
 
 internal record LoginRequest(string Username, string Password);
+internal record CreateUserRequest(string Username, string Password, string? DisplayName, string? Email, string? Role, string? Category);
