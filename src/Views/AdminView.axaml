@@ -6,8 +6,9 @@
              x:CompileBindings="False">
 
   <!-- MaxWidth/MaxHeight statt MinWidth/Height: bei kleinem Viewport skaliert die Karte runter
-       statt aus dem Bildschirm zu rinnen. -->
-  <TabControl Margin="8" MaxWidth="960" MaxHeight="720">
+       statt aus dem Bildschirm zu rinnen. Right-Margin = 48 reserviert Platz für den Overlay-X
+       in der MainView-Border, damit der letzte Tab-Header (KI) nicht damit kollidiert. -->
+  <TabControl Margin="8,8,48,8" MaxWidth="960" MaxHeight="720">
     <TabItem Header="{loc:Tr Main_UserManagement}">
       <views:UserManagementView DataContext="{Binding Users}" />
     </TabItem>
