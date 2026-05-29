@@ -135,6 +135,20 @@ public class ApiClient
         LogService.Info("API Schichttausch-Anfragen ersetzt: {0}", items.Count);
     }
 
+    public async Task<List<ServerNotificationDto>> GetNotificationsAsync()
+    {
+        var list = await _http.GetFromJsonAsync<List<ServerNotificationDto>>("api/notifications") ?? new();
+        LogService.Debug("API Benachrichtigungen geladen: {0}", list.Count);
+        return list;
+    }
+
+    public async Task ReplaceNotificationsAsync(List<ServerNotificationDto> items)
+    {
+        var resp = await _http.PutAsJsonAsync("api/notifications", items);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Benachrichtigungen speichern");
+        LogService.Info("API Benachrichtigungen ersetzt: {0}", items.Count);
+    }
+
     /// <summary>Baut aus einer Fehlerantwort eine ApiException mit der Server-Meldung (falls vorhanden).</summary>
     private static async Task<ApiException> ErrorAsync(HttpResponseMessage resp, string what)
     {

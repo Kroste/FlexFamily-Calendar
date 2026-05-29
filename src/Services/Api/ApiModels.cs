@@ -91,6 +91,17 @@ public record ServerSwapRequestDto(
     string? ToEntryId,
     string Message);
 
+public record ServerNotificationDto(
+    string Id,
+    string UserId,
+    string CreatedAt,
+    bool IsRead,
+    string MessageKey,
+    List<string> Args,
+    string? RelatedDate,
+    string? Action,
+    string? RelatedUserId);
+
 public record CreateEntryBody(
     string? UserId,
     string Type,

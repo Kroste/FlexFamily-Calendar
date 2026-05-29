@@ -5,9 +5,9 @@ namespace FlexFamilyCalendar.Services;
 
 /// <summary>
 /// Server-gestützte Persistenz (entweder/oder zur lokalen <see cref="StorageService"/> — kein Parallelbetrieb).
-/// Benutzer und Kalender laufen über die API. Flächen ohne Server-Endpunkt (Aktivitätstypen,
-/// wiederkehrende Aktivitäten, Tausch, Benachrichtigungen) liefern vorerst leer/No-op — KEIN lokaler Fallback.
-/// Einstellungen sind Installations-Config und werden lokal gehalten (enthalten u.a. die Server-URL).
+/// Alle Domänendaten (Benutzer, Kalender, Aktivitätstypen, wiederkehrende Aktivitäten, Schichttausch,
+/// Benachrichtigungen) laufen über die API — kein lokaler Fallback. Nur <see cref="AppSettings"/> sind
+/// lokale Installations-Config (enthalten u.a. die Server-URL).
 /// </summary>
 public class ApiStorageService : IStorageService
 {
@@ -135,8 +135,12 @@ public class ApiStorageService : IStorageService
     public Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests)
         => _api.ReplaceSwapRequestsAsync(requests.Select(ShiftSwapMapping.ToServer).ToList());
 
-    // --- Noch ohne Server-Endpunkt: leer/No-op (kein lokaler Fallback) ----
+    public async Task<List<Notification>> LoadNotificationsAsync()
+    {
+        var dtos = await _api.GetNotificationsAsync();
+        return dtos.Select(NotificationMapping.ToDesktop).ToList();
+    }
 
-    public Task<List<Notification>> LoadNotificationsAsync() => Task.FromResult(new List<Notification>());
-    public Task SaveNotificationsAsync(List<Notification> notifications) => Task.CompletedTask;
+    public Task SaveNotificationsAsync(List<Notification> notifications)
+        => _api.ReplaceNotificationsAsync(notifications.Select(NotificationMapping.ToServer).ToList());
 }
