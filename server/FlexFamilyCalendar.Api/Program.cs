@@ -4,6 +4,7 @@ using FlexFamilyCalendar.Api.Auth;
 using FlexFamilyCalendar.Api.Data;
 using FlexFamilyCalendar.Api.Entries;
 using FlexFamilyCalendar.Api.Models;
+using FlexFamilyCalendar.Api.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -86,14 +87,12 @@ app.MapPost("/api/auth/login", async (LoginRequest req, AppDbContext db, TokenSe
     return Results.Ok(new
     {
         token = tokens.Create(user),
-        user = new { user.Id, user.Username, user.DisplayName, user.Role, user.Category }
+        user = UserDto.From(user)
     });
 });
 
 app.MapGet("/api/users", async (AppDbContext db) =>
-    await db.Users.OrderBy(u => u.DisplayName)
-        .Select(u => new { u.Id, u.Username, u.DisplayName, u.Email, u.Role, u.Category })
-        .ToListAsync())
+    (await db.Users.OrderBy(u => u.DisplayName).ToListAsync()).Select(UserDto.From))
     .RequireAuthorization("Admin");
 
 app.MapPost("/api/users", async (CreateUserRequest req, AppDbContext db) =>
@@ -108,14 +107,82 @@ app.MapPost("/api/users", async (CreateUserRequest req, AppDbContext db) =>
         Username = req.Username.Trim(),
         DisplayName = string.IsNullOrWhiteSpace(req.DisplayName) ? req.Username.Trim() : req.DisplayName!.Trim(),
         Email = req.Email?.Trim() ?? "",
-        Role = req.Role == "Admin" ? "Admin" : "User",
+        Role = UserRules.NormalizeRole(req.Role),
         Category = string.IsNullOrWhiteSpace(req.Category) ? "Employee" : req.Category!.Trim(),
+        WeeklyHoursQuota = req.WeeklyHoursQuota,
+        MaxWeeklyHours = req.MaxWeeklyHours,
+        MaxDailyHours = req.MaxDailyHours,
+        MinRestHours = req.MinRestHours,
+        Color = req.Color?.Trim() ?? "",
+        Language = string.IsNullOrWhiteSpace(req.Language) ? "de" : req.Language!.Trim(),
         PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password)
     };
     db.Users.Add(user);
     await db.SaveChangesAsync();
-    return Results.Created($"/api/users/{user.Id}",
-        new { user.Id, user.Username, user.DisplayName, user.Email, user.Role, user.Category });
+    return Results.Created($"/api/users/{user.Id}", UserDto.From(user));
+})
+    .RequireAuthorization("Admin");
+
+app.MapPut("/api/users/{id:guid}", async (Guid id, UpdateUserRequest req, AppDbContext db) =>
+{
+    var user = await db.Users.FindAsync(id);
+    if (user is null) return Results.NotFound();
+
+    if (string.IsNullOrWhiteSpace(req.Username))
+        return Results.BadRequest(new { error = "Benutzername darf nicht leer sein." });
+    if (await db.Users.AnyAsync(u => u.Id != id && u.Username == req.Username))
+        return Results.Conflict(new { error = "Benutzername bereits vergeben." });
+
+    var newRole = UserRules.NormalizeRole(req.Role);
+    var totalAdmins = await db.Users.CountAsync(u => u.Role == UserRules.Admin);
+    var roleError = UserRules.CheckRoleChange(user.Role == UserRules.Admin, newRole == UserRules.Admin, totalAdmins);
+    if (roleError is not null) return Results.BadRequest(new { error = roleError });
+
+    user.Username = req.Username.Trim();
+    user.DisplayName = string.IsNullOrWhiteSpace(req.DisplayName) ? user.Username : req.DisplayName!.Trim();
+    user.Email = req.Email?.Trim() ?? "";
+    user.Role = newRole;
+    user.Category = string.IsNullOrWhiteSpace(req.Category) ? user.Category : req.Category!.Trim();
+    user.WeeklyHoursQuota = req.WeeklyHoursQuota;
+    user.MaxWeeklyHours = req.MaxWeeklyHours;
+    user.MaxDailyHours = req.MaxDailyHours;
+    user.MinRestHours = req.MinRestHours;
+    if (req.Color is not null) user.Color = req.Color.Trim();
+    if (!string.IsNullOrWhiteSpace(req.Language)) user.Language = req.Language!.Trim();
+
+    await db.SaveChangesAsync();
+    return Results.Ok(UserDto.From(user));
+})
+    .RequireAuthorization("Admin");
+
+app.MapDelete("/api/users/{id:guid}", async (Guid id, AppDbContext db) =>
+{
+    var user = await db.Users.FindAsync(id);
+    if (user is null) return Results.NotFound();
+
+    var totalAdmins = await db.Users.CountAsync(u => u.Role == UserRules.Admin);
+    var delError = UserRules.CheckDelete(user.Role == UserRules.Admin, totalAdmins);
+    if (delError is not null) return Results.BadRequest(new { error = delError });
+
+    // Einträge des Benutzers mitlöschen, damit keine verwaisten Schichten zurückbleiben.
+    var entries = await db.Entries.Where(e => e.UserId == id).ToListAsync();
+    db.Entries.RemoveRange(entries);
+    db.Users.Remove(user);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+})
+    .RequireAuthorization("Admin");
+
+app.MapPost("/api/users/{id:guid}/password", async (Guid id, SetPasswordRequest req, AppDbContext db) =>
+{
+    if (string.IsNullOrWhiteSpace(req.Password))
+        return Results.BadRequest(new { error = "Kennwort darf nicht leer sein." });
+    var user = await db.Users.FindAsync(id);
+    if (user is null) return Results.NotFound();
+
+    user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
 })
     .RequireAuthorization("Admin");
 
@@ -261,4 +328,15 @@ app.MapPost("/api/entries/{id:guid}/reject", async (Guid id, AppDbContext db) =>
 app.Run();
 
 internal record LoginRequest(string Username, string Password);
-internal record CreateUserRequest(string Username, string Password, string? DisplayName, string? Email, string? Role, string? Category);
+
+internal record CreateUserRequest(
+    string Username, string Password, string? DisplayName, string? Email, string? Role, string? Category,
+    double WeeklyHoursQuota = 0, double MaxWeeklyHours = 0, double MaxDailyHours = 0, double MinRestHours = 0,
+    string? Color = null, string? Language = null);
+
+internal record UpdateUserRequest(
+    string Username, string? DisplayName, string? Email, string? Role, string? Category,
+    double WeeklyHoursQuota = 0, double MaxWeeklyHours = 0, double MaxDailyHours = 0, double MinRestHours = 0,
+    string? Color = null, string? Language = null);
+
+internal record SetPasswordRequest(string Password);
