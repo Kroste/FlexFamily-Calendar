@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     public DbSet<UserEntity> Users => Set<UserEntity>();
     public DbSet<CalendarEntry> Entries => Set<CalendarEntry>();
     public DbSet<ActivityTypeEntity> ActivityTypes => Set<ActivityTypeEntity>();
+    public DbSet<RecurringActivityEntity> RecurringActivities => Set<RecurringActivityEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

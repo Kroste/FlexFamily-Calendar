@@ -5,6 +5,7 @@ using FlexFamilyCalendar.Api.Data;
 using FlexFamilyCalendar.Api.ActivityTypes;
 using FlexFamilyCalendar.Api.Entries;
 using FlexFamilyCalendar.Api.Models;
+using FlexFamilyCalendar.Api.RecurringActivities;
 using FlexFamilyCalendar.Api.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -360,6 +361,35 @@ app.MapPut("/api/activity-types", async (List<ActivityTypeDto> items, AppDbConte
         });
     await db.SaveChangesAsync();
     return Results.Ok((await db.ActivityTypes.OrderBy(a => a.Name).ToListAsync()).Select(ActivityTypeDto.From));
+})
+    .RequireAuthorization("Admin");
+
+// --- Wiederkehrende Aktivitäten ------------------------------------------
+
+// Liste: alle Angemeldeten (das Overlay wird in jedem Plan projiziert).
+app.MapGet("/api/recurring-activities", async (AppDbContext db) =>
+    (await db.RecurringActivities.ToListAsync()).Select(RecurringActivityDto.From))
+    .RequireAuthorization();
+
+// Komplett ersetzen (Admin) — passt zum „ganze Liste speichern" des Clients.
+app.MapPut("/api/recurring-activities", async (List<RecurringActivityDto> items, AppDbContext db) =>
+{
+    await db.RecurringActivities.ExecuteDeleteAsync();
+    foreach (var i in items)
+        db.RecurringActivities.Add(new RecurringActivityEntity
+        {
+            Id = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id,
+            UserId = i.UserId,
+            UserDisplayName = i.UserDisplayName ?? "",
+            Title = i.Title ?? "",
+            ActivityTypeId = string.IsNullOrWhiteSpace(i.ActivityTypeId) ? null : i.ActivityTypeId,
+            StartTime = i.StartTime,
+            EndTime = i.EndTime,
+            Weekdays = i.Weekdays ?? new(),
+            SkipOnHolidays = i.SkipOnHolidays
+        });
+    await db.SaveChangesAsync();
+    return Results.Ok((await db.RecurringActivities.ToListAsync()).Select(RecurringActivityDto.From));
 })
     .RequireAuthorization("Admin");
 
