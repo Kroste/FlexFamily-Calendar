@@ -29,6 +29,12 @@ services:
       Smtp__User: "${SMTP_USER:-}"
       Smtp__Password: "${SMTP_PASSWORD:-}"
       Smtp__UseSsl: "${SMTP_USE_SSL:-true}"
+      # AI-Provider-Schlüssel für /api/ai/complete — pro Provider eigener ENV-Wert,
+      # leer = Provider antwortet mit "Schlüssel serverseitig nicht gesetzt".
+      Ai__Anthropic__Key: "${AI_ANTHROPIC_KEY:-}"
+      Ai__OpenAi__Key: "${AI_OPENAI_KEY:-}"
+      Ai__Gemini__Key: "${AI_GEMINI_KEY:-}"
+      Ai__Perplexity__Key: "${AI_PERPLEXITY_KEY:-}"
     # Kein öffentliches Port-Mapping mehr: die API ist nur intern über das Docker-Netz
     # erreichbar (Caddy → api:8080). Öffentlich ist ausschließlich Caddy (443).
     restart: unless-stopped

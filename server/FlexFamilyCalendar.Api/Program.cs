@@ -4,6 +4,7 @@ using FlexFamilyCalendar.Api.Auth;
 using FlexFamilyCalendar.Api.Data;
 using FlexFamilyCalendar.Api.ActivityTypes;
 using FlexFamilyCalendar.Api.DayNotes;
+using FlexFamilyCalendar.Api.Ai;
 using FlexFamilyCalendar.Api.Entries;
 using FlexFamilyCalendar.Api.Mail;
 using FlexFamilyCalendar.Api.Models;
@@ -32,6 +33,18 @@ builder.Services.AddSingleton(new SmtpOptions
     UseSsl = !string.Equals(cfg["Smtp:UseSsl"], "false", StringComparison.OrdinalIgnoreCase)
 });
 builder.Services.AddScoped<MailSender>();
+
+// AI über ENV (Ai__<Provider>__Key) — Operator-Setting. Client schickt Provider+Prompt,
+// Server proxiet zum Cloud-Provider mit dem ENV-Schlüssel; CORS und Geheimnis bleiben
+// dadurch serverseitig.
+builder.Services.AddSingleton(new AiOptions
+{
+    AnthropicKey = cfg["Ai:Anthropic:Key"] ?? "",
+    OpenAiKey = cfg["Ai:OpenAi:Key"] ?? "",
+    GeminiKey = cfg["Ai:Gemini:Key"] ?? "",
+    PerplexityKey = cfg["Ai:Perplexity:Key"] ?? ""
+});
+builder.Services.AddHttpClient<AiSender>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters
@@ -570,6 +583,19 @@ app.MapPost("/api/mail/send-week-plan", async (SendWeekPlanRequest req, MailSend
     return Results.Ok(new SendWeekPlanResponse(sent, failed, errors));
 })
     .RequireAuthorization("Admin");
+
+// AI-Proxy: Client schickt Provider+Prompt, Server ruft den jeweiligen Cloud-Endpoint mit dem
+// serverseitigen API-Key. Eingeloggte User dürfen — KI-Vorschläge sind nicht admin-exklusiv.
+app.MapPost("/api/ai/complete", async (AiCompleteRequest req, AiSender sender, CancellationToken ct) =>
+{
+    if (string.IsNullOrWhiteSpace(req.Provider) || string.IsNullOrWhiteSpace(req.Prompt))
+        return Results.BadRequest(new { error = "provider und prompt sind Pflicht." });
+
+    var (ok, text, error) = await sender.CompleteAsync(req.Provider, req.Prompt, req.Model, ct);
+    if (!ok) return Results.Json(new { error = error ?? "Unbekannter Fehler" }, statusCode: StatusCodes.Status502BadGateway);
+    return Results.Ok(new AiCompleteResponse(text));
+})
+    .RequireAuthorization();
 
 app.Run();
 
