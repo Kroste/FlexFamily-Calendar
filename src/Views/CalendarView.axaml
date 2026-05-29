@@ -140,10 +140,41 @@
         </ItemsControl>
       </Grid>
 
-      <!-- Personenzeilen + Hinweiszeile (scrollen gemeinsam; Hinweise direkt unter der letzten Zeile) -->
-      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel>
-        <ItemsControl ItemsSource="{Binding Rows}">
+      <!-- Hinweiszeile unten: Feiertag-Notizen, sitzt direkt unter den (das Fenster füllenden) Zeilen -->
+      <Grid DockPanel.Dock="Bottom" ColumnDefinitions="160,*"
+            Background="{DynamicResource SystemControlBackgroundChromeLowBrush}">
+        <Border Grid.Column="0" BorderThickness="0,1,1,1" Padding="8,4"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <TextBlock Text="{loc:Tr Cal_Hints}" FontSize="11" FontWeight="SemiBold" Opacity="0.7"
+                     VerticalAlignment="Center" />
+        </Border>
+        <ItemsControl Grid.Column="1" ItemsSource="{Binding Days}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><UniformGrid Columns="7" /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border BorderThickness="1,1,0,1" Padding="4,4" MinHeight="34"
+                      BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                  <TextBlock Text="{Binding DayNote}" IsVisible="{Binding HasNote}"
+                             TextAlignment="Center" TextWrapping="Wrap" FontSize="10" Opacity="0.75"
+                             VerticalAlignment="Center" />
+                  <Button Content="✎" Command="{Binding EditNoteCommand}" IsVisible="{Binding CanEditNote}"
+                          FontSize="10" Padding="4,0" CornerRadius="3"
+                          Background="Transparent" Opacity="0.6" ToolTip.Tip="{loc:Tr DayNote_Title}" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Grid>
+
+      <!-- Personenzeilen — füllen die verbleibende Fensterhöhe (gleichmäßig) -->
+      <ItemsControl ItemsSource="{Binding Rows}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><UniformGrid Columns="1" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <Grid ColumnDefinitions="160,*">
@@ -169,7 +200,7 @@
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
                       <Border BorderThickness="1,0,0,1" MinHeight="46" Padding="3" Cursor="Hand"
-                              Tapped="OnCellTapped" Background="Transparent"
+                              Tapped="OnCellTapped" Background="Transparent" ClipToBounds="True"
                               BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
                         <Grid>
                           <Border IsVisible="{Binding IsToday}" Background="#142E86C1" />
@@ -230,38 +261,6 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-
-        <!-- Hinweiszeile: Feiertag-Notizen direkt unter der letzten Person -->
-        <Grid ColumnDefinitions="160,*" Background="{DynamicResource SystemControlBackgroundChromeLowBrush}">
-          <Border Grid.Column="0" BorderThickness="0,1,1,1" Padding="8,4"
-                  BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-            <TextBlock Text="{loc:Tr Cal_Hints}" FontSize="11" FontWeight="SemiBold" Opacity="0.7"
-                       VerticalAlignment="Center" />
-          </Border>
-          <ItemsControl Grid.Column="1" ItemsSource="{Binding Days}">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate><UniformGrid Columns="7" /></ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Border BorderThickness="1,1,0,1" Padding="4,4" MinHeight="34"
-                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-                  <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
-                    <TextBlock Text="{Binding DayNote}" IsVisible="{Binding HasNote}"
-                               TextAlignment="Center" TextWrapping="Wrap" FontSize="10" Opacity="0.75"
-                               VerticalAlignment="Center" />
-                    <Button Content="✎" Command="{Binding EditNoteCommand}" IsVisible="{Binding CanEditNote}"
-                            FontSize="10" Padding="4,0" CornerRadius="3"
-                            Background="Transparent" Opacity="0.6" ToolTip.Tip="{loc:Tr DayNote_Title}" />
-                  </StackPanel>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </Grid>
-
-        </StackPanel>
-      </ScrollViewer>
 
     </DockPanel>
 
