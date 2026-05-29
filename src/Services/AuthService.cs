@@ -96,6 +96,13 @@ public class AuthService
 
     public async Task SetUserLanguageAsync(string userId, string language)
     {
+        if (_api is not null)
+        {
+            // Self-Profil-Änderung; eigener Endpunkt fehlt noch (Admin-PUT würde Nicht-Admins 403 geben).
+            LogService.Debug("Sprachänderung im Server-Modus noch nicht persistiert (Self-Profil-Endpunkt folgt): {0}", language);
+            return;
+        }
+
         var users = await _storage.LoadUsersAsync();
         var user = users.FirstOrDefault(u => u.Id == userId);
         if (user == null || user.Language == language) return;
@@ -122,9 +129,6 @@ public class AuthService
         if (users.Any(u => u.Username.Equals(user.Username, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException($"Benutzer '{user.Username}' existiert bereits.");
 
-        user.PasswordHash = needsPassword && !string.IsNullOrEmpty(password)
-            ? BCrypt.Net.BCrypt.HashPassword(password)
-            : "";
         if (string.IsNullOrWhiteSpace(user.DisplayName)) user.DisplayName = user.Username;
         if (string.IsNullOrWhiteSpace(user.Color)) user.Color = UserColorPalette.ColorAt(users.Count);
         if (user.AccountStart == default)
@@ -132,6 +136,18 @@ public class AuthService
             var today = DateOnly.FromDateTime(DateTime.Today);
             user.AccountStart = new DateOnly(today.Year, today.Month, 1);
         }
+
+        if (_api is not null)
+        {
+            // Server hasht das Passwort; der Klartext steht nur im Body (wird nicht geloggt).
+            await _api.CreateUserAsync(UserMapping.ToCreateBody(user, needsPassword ? password : ""));
+            LogService.Info("Benutzer angelegt (Server): {0} (Rolle: {1}, Typ: {2})", user.Username, user.Role, user.Category);
+            return;
+        }
+
+        user.PasswordHash = needsPassword && !string.IsNullOrEmpty(password)
+            ? BCrypt.Net.BCrypt.HashPassword(password)
+            : "";
         users.Add(user);
         await _storage.SaveUsersAsync(users);
         LogService.Info("Benutzer angelegt: {0} (Rolle: {1}, Typ: {2})", user.Username, user.Role, user.Category);
@@ -140,6 +156,16 @@ public class AuthService
     /// <summary>Aktualisiert Stammdaten (ohne Passwort). Wahrt eindeutigen Usernamen.</summary>
     public async Task UpdateUserAsync(User user)
     {
+        if (user.Category == PersonCategory.Parent) user.Role = UserRole.Admin;
+
+        if (_api is not null)
+        {
+            // Server erzwingt Eindeutigkeit + Letzter-Admin-Schutz und liefert die Fehlermeldung.
+            await _api.UpdateUserAsync(user.Id, UserMapping.ToUpdateBody(user));
+            LogService.Info("Benutzer aktualisiert (Server): {0}", user.Username);
+            return;
+        }
+
         var users = await _storage.LoadUsersAsync();
         var existing = users.FirstOrDefault(u => u.Id == user.Id)
             ?? throw new InvalidOperationException("Benutzer nicht gefunden.");
@@ -180,6 +206,14 @@ public class AuthService
     {
         if (string.IsNullOrEmpty(newPassword))
             throw new InvalidOperationException("Kennwort darf nicht leer sein.");
+
+        if (_api is not null)
+        {
+            await _api.SetUserPasswordAsync(userId, newPassword);
+            LogService.Info("Kennwort geändert (Server): id={0}", userId);
+            return;
+        }
+
         var users = await _storage.LoadUsersAsync();
         var user = users.FirstOrDefault(u => u.Id == userId)
             ?? throw new InvalidOperationException("Benutzer nicht gefunden.");
@@ -190,6 +224,13 @@ public class AuthService
 
     public async Task DeleteUserAsync(string userId)
     {
+        if (_api is not null)
+        {
+            await _api.DeleteUserAsync(userId);   // Server prüft den Letzter-Admin-Schutz
+            LogService.Info("Benutzer gelöscht (Server): id={0}", userId);
+            return;
+        }
+
         var users = await _storage.LoadUsersAsync();
         var user = users.FirstOrDefault(u => u.Id == userId)
             ?? throw new InvalidOperationException("Benutzer nicht gefunden.");

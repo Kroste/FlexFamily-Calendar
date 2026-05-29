@@ -43,6 +43,49 @@ public class ApiClient
         return list;
     }
 
+    public async Task<ServerUserDto> CreateUserAsync(CreateUserBody body)
+    {
+        var resp = await _http.PostAsJsonAsync("api/users", body);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, $"Benutzer anlegen ({body.Username})");
+        var dto = await resp.Content.ReadFromJsonAsync<ServerUserDto>();
+        LogService.Info("API Benutzer angelegt: {0} (Rolle {1})", body.Username, body.Role);
+        return dto!;
+    }
+
+    public async Task<ServerUserDto> UpdateUserAsync(string id, UpdateUserBody body)
+    {
+        var resp = await _http.PutAsJsonAsync($"api/users/{id}", body);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, $"Benutzer ändern ({body.Username})");
+        var dto = await resp.Content.ReadFromJsonAsync<ServerUserDto>();
+        LogService.Info("API Benutzer aktualisiert: {0}", body.Username);
+        return dto!;
+    }
+
+    public async Task DeleteUserAsync(string id)
+    {
+        var resp = await _http.DeleteAsync($"api/users/{id}");
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Benutzer löschen");
+        LogService.Info("API Benutzer gelöscht: id={0}", id);
+    }
+
+    public async Task SetUserPasswordAsync(string id, string password)
+    {
+        // Passwort steht nur im Body → wird durch den Logging-Handler nicht protokolliert.
+        var resp = await _http.PostAsJsonAsync($"api/users/{id}/password", new { password });
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Kennwort setzen");
+        LogService.Info("API Kennwort gesetzt: id={0}", id);
+    }
+
+    /// <summary>Baut aus einer Fehlerantwort eine ApiException mit der Server-Meldung (falls vorhanden).</summary>
+    private static async Task<ApiException> ErrorAsync(HttpResponseMessage resp, string what)
+    {
+        string? msg = null;
+        try { msg = (await resp.Content.ReadFromJsonAsync<ApiErrorBody>())?.Error; } catch { /* kein JSON-Body */ }
+        return new ApiException(string.IsNullOrWhiteSpace(msg)
+            ? $"{what} fehlgeschlagen ({(int)resp.StatusCode})."
+            : msg!);
+    }
+
     public async Task<List<ServerEntryDto>> GetEntriesAsync(DateOnly from, DateOnly to)
     {
         var list = await _http.GetFromJsonAsync<List<ServerEntryDto>>(
