@@ -8,7 +8,10 @@ namespace FlexFamilyCalendar.Services;
 /// </summary>
 public static class WorkTimeRules
 {
-    /// <summary>Verdichtete Arbeitszeit eines Tages: Summe sowie erster/letzter Schicht-Rand.</summary>
+    /// <summary>Verdichtete Arbeitszeit eines Tages: Summe sowie erster/letzter Schicht-Rand.
+    /// <see cref="LastWorkEnd"/> ist relativ zum <see cref="Date"/>-Start gemessen und kann
+    /// &gt; 24h sein, wenn die letzte Schicht über Mitternacht ging (z.B. 20:00→06:00 → 30:00).
+    /// So bleibt die Ruhezeit-Berechnung zwischen Tagen einfach.</summary>
     public record DaySummary(DateOnly Date, double WorkedHours, TimeSpan? FirstWorkStart, TimeSpan? LastWorkEnd);
 
     /// <summary>Fasst die Arbeitseinträge eines Tages zusammen.</summary>
@@ -21,15 +24,21 @@ public static class WorkTimeRules
             date,
             work.Sum(e => e.DurationHours),
             work.Min(e => e.StartTime),
-            work.Max(e => e.EndTime));
+            // Nacht-Schicht (EndTime ≤ StartTime, z.B. 20:00→06:00) endet erst am Folgetag —
+            // EndTime + 24h, damit die Ruhezeit-Differenz korrekt bleibt.
+            work.Max(e => e.CrossesMidnight ? e.EndTime + TimeSpan.FromHours(24) : e.EndTime));
     }
 
-    /// <summary>Ruhezeit (Stunden) zwischen dem Arbeitsende eines Tages und dem Arbeitsbeginn des Folgetags.</summary>
+    /// <summary>Ruhezeit (Stunden) zwischen dem Arbeitsende eines Tages und dem Arbeitsbeginn des Folgetags.
+    /// Wenn das prev-Schichtende über Mitternacht ging, ist <see cref="DaySummary.LastWorkEnd"/>
+    /// &gt; 24h (siehe <see cref="Summarize"/>) — die Formel funktioniert dadurch ohne Sonderfall.</summary>
     public static double? RestHoursBetween(DaySummary prev, DaySummary next)
     {
         if (prev.LastWorkEnd is not { } end || next.FirstWorkStart is not { } start)
             return null;
-        return (24 - end.TotalHours) + start.TotalHours;
+        // next.FirstWorkStart liegt 24h nach Beginn von prev.Date; rest = nextStart+24 − end.
+        var rest = (24 + start.TotalHours) - end.TotalHours;
+        return rest >= 0 ? rest : (double?)null;   // negativ = Überlappung
     }
 
     /// <summary>Tage, deren gearbeitete Zeit die Tages-Höchstarbeitszeit überschreitet (leer, wenn kein Limit).</summary>
