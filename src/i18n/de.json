@@ -248,5 +248,10 @@
   "EntryType_SickLeave": "Krank",
   "EntryType_Activity": "Aktivität",
   "EntryType_Absence": "Abwesend",
-  "EntryType_Overnight": "Übernachtung"
+  "EntryType_Overnight": "Übernachtung",
+
+  "MoveCopy_Title": "Eintrag verschieben oder kopieren?",
+  "MoveCopy_Move": "Verschieben",
+  "MoveCopy_Copy": "Kopieren",
+  "MoveCopy_Description": "{0} nach {1}"
 }

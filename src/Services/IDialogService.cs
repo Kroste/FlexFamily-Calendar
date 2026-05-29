@@ -18,6 +18,7 @@ public interface IDialogService
     Task ShowHoursAccountAsync(HoursAccountViewModel vm);
     Task ShowMonthOverviewAsync(MonthOverviewViewModel vm);
     Task ShowAdminAsync(AdminViewModel vm);
+    Task<MoveCopyResult?> ShowMoveCopyAsync(MoveCopyViewModel vm);
 
     /// <summary>
     /// Abbruch des aktuell offenen Dialogs (ESC/Backdrop-Klick im Overlay-Backend).

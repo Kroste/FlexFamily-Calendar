@@ -60,6 +60,11 @@ public class OverlayDialogService : IDialogService
     public Task ShowAdminAsync(AdminViewModel vm)
         => ShowVoidAsync(new AdminView { DataContext = vm });
 
+    public Task<MoveCopyResult?> ShowMoveCopyAsync(MoveCopyViewModel vm)
+        => ShowAsync<MoveCopyResult>(new MoveCopyView { DataContext = vm },
+            h => vm.Closed += h, h => vm.Closed -= h,
+            () => vm.CancelCommand.Execute(null));
+
     public void CancelActive() => _cancelCurrent?.Invoke();
 
     /// <summary>
