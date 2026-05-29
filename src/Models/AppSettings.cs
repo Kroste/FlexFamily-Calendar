@@ -4,7 +4,8 @@ public class AppSettings
 {
     // Speicher-Modus: false = lokale JSON-Dateien, true = Server-API. Kein Parallelbetrieb (entweder/oder).
     public bool UseServer { get; set; } = false;
-    public string ServerUrl { get; set; } = "";  // z.B. http://mein-vps:8080 (nur im Server-Modus genutzt)
+    public string ServerUrl { get; set; } = "";  // z.B. https://flexfamily.cloud (nur im Server-Modus genutzt)
+    public string ServerTokenEnc { get; set; } = "";  // AES-verschlüsseltes JWT für „Login merken" (kein Passwort)
 
     public string ActiveAiProvider { get; set; } = "";
     public string AiModel { get; set; } = "";

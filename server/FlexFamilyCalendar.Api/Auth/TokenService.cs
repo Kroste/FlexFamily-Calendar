@@ -16,7 +16,7 @@ public class TokenService(IConfiguration config)
         {
             Issuer = config["Jwt:Issuer"],
             Audience = config["Jwt:Audience"],
-            Expires = DateTime.UtcNow.AddHours(12),
+            Expires = DateTime.UtcNow.AddDays(30),   // länger gültig, damit „Login merken" nicht täglich nervt
             SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256),
             Subject = new ClaimsIdentity(new[]
             {

@@ -64,6 +64,13 @@ public class AuthService
     {
         var settings = await _storage.LoadSettingsAsync();
         settings.RememberedUsername = username ?? "";
+
+        // Im Server-Modus zusätzlich das JWT (kein Passwort!) verschlüsselt merken bzw. löschen.
+        if (_api is not null)
+            settings.ServerTokenEnc = !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(_api.Token)
+                ? SecretService.Encrypt(_api.Token!)
+                : "";
+
         await _storage.SaveSettingsAsync(settings);
         LogService.Info(string.IsNullOrEmpty(settings.RememberedUsername)
             ? "Login merken deaktiviert"
@@ -73,8 +80,32 @@ public class AuthService
     /// <summary>Liefert den gemerkten Benutzer oder null. Leert den Merker, falls der Benutzer fehlt.</summary>
     public async Task<User?> GetRememberedUserAsync()
     {
-        // Im Server-Modus kein Auto-Login: ohne gespeichertes Token muss neu angemeldet werden.
-        if (_api is not null) return null;
+        // Im Server-Modus: gemerktes JWT wiederverwenden (kein Passwort gespeichert).
+        if (_api is not null)
+        {
+            var s = await _storage.LoadSettingsAsync();
+            if (string.IsNullOrEmpty(s.RememberedUsername) || string.IsNullOrEmpty(s.ServerTokenEnc))
+                return null;
+            try
+            {
+                _api.SetToken(SecretService.Decrypt(s.ServerTokenEnc));
+                var me = await _api.GetMeAsync();
+                if (me is not null)
+                {
+                    LogService.Info("Auto-Login (Server) per gemerktem Token: {0}", me.Username);
+                    return UserMapping.ToDesktop(me);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.Warn("Auto-Login (Server) fehlgeschlagen: {0}", ex.Message);
+            }
+            // Token ungültig/abgelaufen → Merker leeren, normaler Login folgt.
+            s.ServerTokenEnc = "";
+            s.RememberedUsername = "";
+            await _storage.SaveSettingsAsync(s);
+            return null;
+        }
 
         var settings = await _storage.LoadSettingsAsync();
         if (string.IsNullOrEmpty(settings.RememberedUsername))

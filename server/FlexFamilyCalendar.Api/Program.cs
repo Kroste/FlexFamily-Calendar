@@ -94,6 +94,16 @@ app.MapPost("/api/auth/login", async (LoginRequest req, AppDbContext db, TokenSe
     });
 });
 
+// Aktueller Benutzer laut Token — für „Login merken": Client prüft beim Start ein gespeichertes Token.
+app.MapGet("/api/auth/me", async (AppDbContext db, ClaimsPrincipal principal) =>
+{
+    var id = CurrentUserId(principal);
+    if (id is null) return Results.Unauthorized();
+    var user = await db.Users.FindAsync(id.Value);
+    return user is null ? Results.Unauthorized() : Results.Ok(UserDto.From(user));
+})
+    .RequireAuthorization();
+
 app.MapGet("/api/users", async (AppDbContext db) =>
     (await db.Users.OrderBy(u => u.DisplayName).ToListAsync()).Select(UserDto.From))
     .RequireAuthorization("Admin");

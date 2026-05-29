@@ -36,6 +36,23 @@ public class ApiClient
         return login;
     }
 
+    /// <summary>Setzt ein bereits vorhandenes Token (z.B. gemerkt) ohne erneute Anmeldung.</summary>
+    public void SetToken(string token)
+    {
+        Token = token;
+        _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    }
+
+    /// <summary>Prüft das aktuelle Token und liefert den zugehörigen Benutzer (null, wenn ungültig/abgelaufen).</summary>
+    public async Task<ServerUserDto?> GetMeAsync()
+    {
+        var resp = await _http.GetAsync("api/auth/me");
+        if (!resp.IsSuccessStatusCode) return null;
+        var me = await resp.Content.ReadFromJsonAsync<ServerUserDto>();
+        if (me is not null) CurrentUser = me;
+        return me;
+    }
+
     public async Task<List<ServerUserDto>> GetUsersAsync()
     {
         var list = await _http.GetFromJsonAsync<List<ServerUserDto>>("api/users") ?? new();
