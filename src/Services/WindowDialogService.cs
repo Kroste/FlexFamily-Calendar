@@ -22,4 +22,6 @@ public class WindowDialogService : IDialogService
 
     public Task<string?> ShowDayNoteAsync(DayNoteViewModel vm)
         => new DayNoteDialog { DataContext = vm }.ShowDialog<string?>(_owner);
+
+    public void CancelActive() { }   // Window fängt ESC/Außenklick selbst ab
 }

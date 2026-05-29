@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using FlexFamilyCalendar.Services;
 using FlexFamilyCalendar.ViewModels;
 
@@ -7,6 +8,7 @@ namespace FlexFamilyCalendar.Views;
 public partial class MainView : UserControl
 {
     private MainWindowViewModel? _vm;
+    private Panel? _overlay;
 
     public MainView() => InitializeComponent();
 
@@ -19,11 +21,37 @@ public partial class MainView : UserControl
         // Browser-Lifetime hat kein MainWindow → DialogService bleibt sonst null und Klicks
         // (z.B. neuer Eintrag) wären stille No-Ops. Auf Desktop hat App.axaml.cs den
         // WindowDialogService bereits gesetzt; hier nur den Overlay-Pfad nachziehen.
+        _overlay = this.FindControl<Panel>("DialogOverlay");
         if (App.DialogService is null
-            && this.FindControl<Panel>("DialogOverlay") is { } overlay
+            && _overlay is not null
             && this.FindControl<ContentControl>("DialogContent") is { } content)
         {
-            App.DialogService = new OverlayDialogService(overlay, content);
+            App.DialogService = new OverlayDialogService(_overlay, content);
+        }
+
+        // Backdrop-Klick (Klick neben den Dialog-Inhalt) = Abbruch.
+        if (_overlay is not null)
+            _overlay.PointerPressed += OnOverlayPointerPressed;
+
+        // ESC = Abbruch. TextBox & Co. lassen ESC durchbubbeln, also reicht der normale Handler
+        // am TopLevel (existiert im Browser als EmbeddableControlRoot).
+        if (TopLevel.GetTopLevel(this) is { } top)
+            top.KeyDown += OnTopLevelKeyDown;
+    }
+
+    private void OnOverlayPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        // Klicks auf den Inhalts-Border bzw. dessen Kinder durchlassen — nur Klick auf
+        // den nackten Backdrop schließt. e.Source ist im Backdrop-Fall das Overlay-Panel selbst.
+        if (e.Source == _overlay) App.DialogService?.CancelActive();
+    }
+
+    private void OnTopLevelKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && _overlay?.IsVisible == true)
+        {
+            App.DialogService?.CancelActive();
+            e.Handled = true;
         }
     }
 

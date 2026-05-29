@@ -7,6 +7,8 @@
              x:DataType="vm:MainWindowViewModel"
              x:CompileBindings="False">
 
+  <Grid>
+
   <DockPanel>
 
     <!-- Kopfzeile (nur wenn angemeldet) -->
@@ -96,22 +98,26 @@
       <Border IsVisible="{Binding IsNotLoggedIn}">
         <views:LoginView DataContext="{Binding LoginVm}" />
       </Border>
-
-      <!-- Modal-Overlay für den Browser (kein Window verfügbar). Desktop nutzt diesen Pfad nicht. -->
-      <Grid x:Name="DialogOverlay"
-            Background="#80000000"
-            IsVisible="False"
-            ZIndex="100">
-        <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
-                CornerRadius="10"
-                MaxWidth="640"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                BoxShadow="0 8 24 0 #66000000">
-          <ContentControl x:Name="DialogContent" />
-        </Border>
-      </Grid>
     </Grid>
 
   </DockPanel>
+
+  <!-- Modal-Overlay für den Browser (kein Window verfügbar). Desktop nutzt diesen Pfad nicht.
+       Liegt über dem DockPanel, deckt also auch Header und Statusleiste ab — Logout/Glocke
+       sind während eines offenen Dialogs nicht klickbar. -->
+  <Grid x:Name="DialogOverlay"
+        Background="#80000000"
+        IsVisible="False"
+        ZIndex="100">
+    <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+            CornerRadius="10"
+            MaxWidth="640"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            BoxShadow="0 8 24 0 #66000000">
+      <ContentControl x:Name="DialogContent" />
+    </Border>
+  </Grid>
+
+  </Grid>
 </UserControl>

@@ -13,4 +13,10 @@ public interface IDialogService
     Task<SwapDialogResult?> ShowShiftSwapAsync(ShiftSwapViewModel vm);
     Task<ReplanResult?> ShowReplanAsync(ReplanViewModel vm);
     Task<string?> ShowDayNoteAsync(DayNoteViewModel vm);
+
+    /// <summary>
+    /// Abbruch des aktuell offenen Dialogs (ESC/Backdrop-Klick im Overlay-Backend).
+    /// Desktop-Backend ist No-op — Avalonia-Windows fangen ESC und Außenklicks selbst ab.
+    /// </summary>
+    void CancelActive();
 }
