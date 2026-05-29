@@ -51,7 +51,33 @@ public class OverlayDialogService : IDialogService
             h => vm.CloseRequested += h, h => vm.CloseRequested -= h,
             () => vm.CloseCommand.Execute(null));
 
+    public Task ShowHoursAccountAsync(HoursAccountViewModel vm)
+        => ShowVoidAsync(new HoursAccountView { DataContext = vm });
+
+    public Task ShowMonthOverviewAsync(MonthOverviewViewModel vm)
+        => ShowVoidAsync(new MonthOverviewView { DataContext = vm });
+
     public void CancelActive() => _cancelCurrent?.Invoke();
+
+    /// <summary>
+    /// Für read-only Dialoge ohne eigenes VM-Close-Event: Schließen geschieht ausschließlich
+    /// über <see cref="CancelActive"/> (ESC, Backdrop-Klick, X-Button).
+    /// </summary>
+    private Task ShowVoidAsync(Control content)
+    {
+        var tcs = new TaskCompletionSource<object?>();
+        _cancelCurrent = () =>
+        {
+            _cancelCurrent = null;
+            _content.Content = null;
+            _overlay.IsVisible = false;
+            tcs.TrySetResult(null);
+        };
+
+        _content.Content = content;
+        _overlay.IsVisible = true;
+        return tcs.Task;
+    }
 
     private Task<TResult?> ShowAsync<TResult>(
         Control content,

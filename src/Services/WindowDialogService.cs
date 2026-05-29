@@ -29,5 +29,11 @@ public class WindowDialogService : IDialogService
     public Task<NotificationResult?> ShowNotificationsAsync(NotificationsViewModel vm)
         => new NotificationsDialog { DataContext = vm }.ShowDialog<NotificationResult?>(_owner);
 
+    public Task ShowHoursAccountAsync(HoursAccountViewModel vm)
+        => new HoursAccountDialog { DataContext = vm }.ShowDialog(_owner);
+
+    public Task ShowMonthOverviewAsync(MonthOverviewViewModel vm)
+        => new MonthOverviewDialog { DataContext = vm }.ShowDialog(_owner);
+
     public void CancelActive() { }   // Window fängt ESC/Außenklick selbst ab
 }

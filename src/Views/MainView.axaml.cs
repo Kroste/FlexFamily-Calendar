@@ -117,12 +117,10 @@ public partial class MainView : UserControl
     private async void OnHoursAccountRequested()
     {
         if (_vm == null) return;
-        var owner = OwnerWindow();
-        if (owner is null) { LogService.Debug("Stundenkonto-Dialog im Browser noch nicht unterstützt."); return; }
+        if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
         try
         {
-            var dialog = new HoursAccountDialog { DataContext = _vm.CreateHoursAccount() };
-            await dialog.ShowDialog(owner);
+            await App.DialogService.ShowHoursAccountAsync(_vm.CreateHoursAccount());
         }
         catch (Exception ex) { LogService.Error("Fehler im Stundenkonto", ex); }
     }
@@ -130,12 +128,10 @@ public partial class MainView : UserControl
     private async void OnMonthOverviewRequested()
     {
         if (_vm == null) return;
-        var owner = OwnerWindow();
-        if (owner is null) { LogService.Debug("Monatsübersicht-Dialog im Browser noch nicht unterstützt."); return; }
+        if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
         try
         {
-            var dialog = new MonthOverviewDialog { DataContext = _vm.CreateMonthOverview() };
-            await dialog.ShowDialog(owner);
+            await App.DialogService.ShowMonthOverviewAsync(_vm.CreateMonthOverview());
         }
         catch (Exception ex) { LogService.Error("Fehler in der Monatsübersicht", ex); }
     }
