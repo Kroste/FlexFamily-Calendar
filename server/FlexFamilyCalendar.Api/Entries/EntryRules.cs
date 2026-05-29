@@ -48,13 +48,17 @@ public static class EntryWriteRules
 
     /// <summary>Inhaltliche Prüfung (Pflichtfelder je Typ). Gibt eine Fehlermeldung zurück, sonst null.</summary>
     public static string? Validate(string type, DateOnly date, DateOnly? endDate,
-        TimeOnly? start, TimeOnly? end, string? categoryLabel)
+        TimeOnly? start, TimeOnly? end, string? categoryLabel, string? activityTypeId = null)
     {
         if (endDate is { } ed && ed < date)
             return "Enddatum liegt vor dem Startdatum.";
         if (EntryTypes.IsTimed(type) && (start is null || end is null))
             return "Schichten brauchen Start- und Endzeit.";
-        if (type == EntryTypes.Activity && string.IsNullOrWhiteSpace(categoryLabel))
+        // Bei Aktivitäten reicht ENTWEDER eine ActivityTypeId-Referenz (übliche Auswahl aus Admin-Kategorien)
+        // ODER ein Freitext-Label (categoryLabel). Beide leer = ungültig.
+        if (type == EntryTypes.Activity
+            && string.IsNullOrWhiteSpace(categoryLabel)
+            && string.IsNullOrWhiteSpace(activityTypeId))
             return "Aktivitäten brauchen eine Kategorie.";
         return null;
     }

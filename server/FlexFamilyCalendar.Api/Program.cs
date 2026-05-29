@@ -280,7 +280,7 @@ app.MapPost("/api/entries", async (CreateEntryRequest req, AppDbContext db, Clai
     if (permError is not null)
         return Results.Json(new { error = permError }, statusCode: StatusCodes.Status403Forbidden);
 
-    var valError = EntryWriteRules.Validate(req.Type, req.Date, req.EndDate, req.StartTime, req.EndTime, req.CategoryLabel);
+    var valError = EntryWriteRules.Validate(req.Type, req.Date, req.EndDate, req.StartTime, req.EndTime, req.CategoryLabel, req.ActivityTypeId);
     if (valError is not null) return Results.BadRequest(new { error = valError });
 
     if (!await db.Users.AnyAsync(u => u.Id == targetUserId))
@@ -320,7 +320,7 @@ app.MapPut("/api/entries/{id:guid}", async (Guid id, UpdateEntryRequest req, App
     if (!isAdmin && entry.UserId != requester.Value)
         return Results.Json(new { error = "Kein Zugriff." }, statusCode: StatusCodes.Status403Forbidden);
 
-    var valError = EntryWriteRules.Validate(entry.Type, req.Date, req.EndDate, req.StartTime, req.EndTime, req.CategoryLabel);
+    var valError = EntryWriteRules.Validate(entry.Type, req.Date, req.EndDate, req.StartTime, req.EndTime, req.CategoryLabel, req.ActivityTypeId);
     if (valError is not null) return Results.BadRequest(new { error = valError });
 
     entry.Date = req.Date;

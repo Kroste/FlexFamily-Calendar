@@ -137,8 +137,16 @@ public class EntryWriteRulesTests
         => Assert.NotNull(EntryWriteRules.Validate(EntryTypes.Work, new DateOnly(2026, 5, 25), null, null, null, null));
 
     [Fact]
-    public void Activity_requires_category()
-        => Assert.NotNull(EntryWriteRules.Validate(EntryTypes.Activity, new DateOnly(2026, 5, 25), null, new TimeOnly(10, 0), new TimeOnly(12, 0), null));
+    public void Activity_with_no_label_and_no_category_is_rejected()
+        => Assert.NotNull(EntryWriteRules.Validate(EntryTypes.Activity, new DateOnly(2026, 5, 25), null, new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: null, activityTypeId: null));
+
+    [Fact]
+    public void Activity_with_only_activity_type_id_is_accepted()
+        => Assert.Null(EntryWriteRules.Validate(EntryTypes.Activity, new DateOnly(2026, 5, 25), null, new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: null, activityTypeId: "act-123"));
+
+    [Fact]
+    public void Activity_with_only_free_text_label_is_accepted()
+        => Assert.Null(EntryWriteRules.Validate(EntryTypes.Activity, new DateOnly(2026, 5, 25), null, new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: "Klavier", activityTypeId: null));
 
     [Fact]
     public void Range_with_end_before_start_is_rejected()

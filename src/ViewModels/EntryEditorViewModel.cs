@@ -153,6 +153,17 @@ public partial class EntryEditorViewModel : ViewModelBase
             rangeStart = rangeEnd = Date;
         }
 
+        // Bei Typ "Aktivität" ist die Kategorie die Bezeichnung — wenn der Nutzer kein abweichendes
+        // Title-Freifeld nutzt, automatisch den Kategoriename übernehmen. Sonst wäre der Eintrag im
+        // Plan ohne Titel ("Aktivität" als generisches Label) und der Server würde ihn ablehnen,
+        // solange seine Pflichtfeldprüfung Title/categoryLabel verlangt.
+        var effectiveTitle = ShowActivityType
+                             && string.IsNullOrWhiteSpace(Title)
+                             && SelectedActivityType is { } cat
+                             && !string.IsNullOrWhiteSpace(cat.Name)
+            ? cat.Name
+            : Title.Trim();
+
         var entry = new CalendarEntry
         {
             Id = _entryId,
@@ -161,7 +172,7 @@ public partial class EntryEditorViewModel : ViewModelBase
             Type = SelectedType.Type,
             StartTime = StartTime.Value,
             EndTime = EndTime.Value,
-            Title = Title.Trim(),
+            Title = effectiveTitle,
             Notes = Notes.Trim(),
             ActivityTypeId = ShowActivityType ? SelectedActivityType?.Id : null,
             // bestehende Abwesenheits-Gruppe mitführen, damit sie beim Speichern aufgeräumt werden kann
