@@ -142,12 +142,10 @@ public partial class MainView : UserControl
     private async void OnProfileRequested()
     {
         if (_vm == null) return;
-        var owner = OwnerWindow();
-        if (owner is null) { LogService.Debug("Profil-Dialog im Browser noch nicht unterstützt."); return; }
+        if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
         try
         {
-            var dialog = new UserEditorDialog { DataContext = _vm.CreateProfileEditor() };
-            await dialog.ShowDialog<UserEditorResult?>(owner);
+            await App.DialogService.ShowUserEditorAsync(_vm.CreateProfileEditor());
             await _vm.RefreshCurrentUserAsync();
         }
         catch (Exception ex) { LogService.Error("Fehler im Profil-Dialog", ex); }

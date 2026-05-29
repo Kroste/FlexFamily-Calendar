@@ -64,7 +64,6 @@
                   CornerRadius="6" Padding="12,5" />
           <Button Content="{loc:Tr Main_Profile}"
                   Command="{Binding OpenProfileCommand}"
-                  IsVisible="{Binding IsNotBrowser}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="12,5" />
           <Button Content="{loc:Tr Main_Logout}"

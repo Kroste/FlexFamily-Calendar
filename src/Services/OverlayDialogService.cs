@@ -41,6 +41,11 @@ public class OverlayDialogService : IDialogService
             h => vm.Closed += h, h => vm.Closed -= h,
             () => vm.CancelCommand.Execute(null));
 
+    public Task<UserEditorResult?> ShowUserEditorAsync(UserEditorViewModel vm)
+        => ShowAsync<UserEditorResult>(new UserEditorView { DataContext = vm },
+            h => vm.Closed += h, h => vm.Closed -= h,
+            () => vm.CancelCommand.Execute(null));
+
     public void CancelActive() => _cancelCurrent?.Invoke();
 
     private Task<TResult?> ShowAsync<TResult>(

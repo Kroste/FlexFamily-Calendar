@@ -13,6 +13,7 @@ public interface IDialogService
     Task<SwapDialogResult?> ShowShiftSwapAsync(ShiftSwapViewModel vm);
     Task<ReplanResult?> ShowReplanAsync(ReplanViewModel vm);
     Task<string?> ShowDayNoteAsync(DayNoteViewModel vm);
+    Task<UserEditorResult?> ShowUserEditorAsync(UserEditorViewModel vm);
 
     /// <summary>
     /// Abbruch des aktuell offenen Dialogs (ESC/Backdrop-Klick im Overlay-Backend).

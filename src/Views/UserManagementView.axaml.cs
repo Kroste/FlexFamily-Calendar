@@ -22,11 +22,10 @@ public partial class UserManagementView : UserControl
     private async void OnEditRequested(User? user)
     {
         if (_vm == null) return;
+        if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
         try
         {
-            if (TopLevel.GetTopLevel(this) is not Window owner) return;
-            var dialog = new UserEditorDialog { DataContext = _vm.CreateEditor(user) };
-            var result = await dialog.ShowDialog<UserEditorResult?>(owner);
+            var result = await App.DialogService.ShowUserEditorAsync(_vm.CreateEditor(user));
             if (result != null)
                 await _vm.ReloadAsync();
         }
