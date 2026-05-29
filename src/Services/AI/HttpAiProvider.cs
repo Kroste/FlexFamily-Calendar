@@ -17,6 +17,7 @@ public abstract class HttpAiProvider : IAiProvider
     protected abstract string DefaultModel { get; }
 
     public virtual bool RequiresApiKey => true;
+    public virtual bool IsServerConfigured => false;
     public virtual bool IsConfigured => !string.IsNullOrEmpty(ApiKey);
     public virtual void SetApiKey(string key) => ApiKey = key ?? "";
     public void SetModel(string model) => Model = model ?? "";

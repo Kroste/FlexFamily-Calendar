@@ -253,5 +253,7 @@
   "MoveCopy_Title": "Move or copy entry?",
   "MoveCopy_Move": "Move",
   "MoveCopy_Copy": "Copy",
-  "MoveCopy_Description": "{0} to {1}"
+  "MoveCopy_Description": "{0} to {1}",
+
+  "Ai_ServerConfigured": "The API key is configured on the server (Ai__<Provider>__Key). Only pick the provider and an optional model here."
 }

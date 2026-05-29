@@ -21,6 +21,7 @@ public class ApiAiProvider : IAiProvider
 
     /// <summary>Serverseitiger Provider — kein clientseitiger Schlüssel nötig.</summary>
     public bool RequiresApiKey => false;
+    public bool IsServerConfigured => true;   // Key liegt serverseitig in ENV
     public bool IsConfigured => true;   // Server entscheidet beim Call
     public void SetApiKey(string key) { /* serverseitig */ }
     public void SetModel(string model) => _model = model ?? "";

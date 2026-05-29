@@ -253,5 +253,7 @@
   "MoveCopy_Title": "Eintrag verschieben oder kopieren?",
   "MoveCopy_Move": "Verschieben",
   "MoveCopy_Copy": "Kopieren",
-  "MoveCopy_Description": "{0} nach {1}"
+  "MoveCopy_Description": "{0} nach {1}",
+
+  "Ai_ServerConfigured": "Der API-Schlüssel ist serverseitig konfiguriert (Ai__<Provider>__Key). Hier nur Anbieter und optional Modell wählen."
 }

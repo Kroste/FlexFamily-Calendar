@@ -15,6 +15,7 @@ public class AiServiceTests
         public string? AppliedKey;
         public string? AppliedModel;
         public bool RequiresApiKey => true;
+        public bool IsServerConfigured => false;
         public bool IsConfigured => !string.IsNullOrEmpty(AppliedKey);
         public void SetApiKey(string key) => AppliedKey = key;
         public void SetModel(string model) => AppliedModel = model;

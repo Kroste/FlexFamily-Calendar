@@ -18,6 +18,9 @@ public partial class AiSettingsViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(RequiresKey))]
     [NotifyPropertyChangedFor(nameof(IsLocal))]
+    [NotifyPropertyChangedFor(nameof(IsServerConfigured))]
+    [NotifyPropertyChangedFor(nameof(ShowApiKey))]
+    [NotifyPropertyChangedFor(nameof(ShowEndpoint))]
     [NotifyPropertyChangedFor(nameof(KeyPlaceholder))]
     private string? _selectedProvider;
 
@@ -26,7 +29,13 @@ public partial class AiSettingsViewModel : ViewModelBase
     [ObservableProperty] private string _statusMessage = "";
 
     public bool RequiresKey => _ai.GetProvider(SelectedProvider ?? "")?.RequiresApiKey ?? true;
-    public bool IsLocal => !RequiresKey;
+    public bool IsServerConfigured => _ai.GetProvider(SelectedProvider ?? "")?.IsServerConfigured ?? false;
+    public bool IsLocal => !RequiresKey && !IsServerConfigured;
+
+    /// <summary>Schlüssel-Feld nur, wenn der Provider den Schlüssel im Client erwartet.</summary>
+    public bool ShowApiKey => RequiresKey && !IsServerConfigured;
+    /// <summary>Endpoint-Feld nur für lokale Provider (z.B. Llama auf localhost).</summary>
+    public bool ShowEndpoint => IsLocal;
 
     private bool HasStoredKey => SelectedProvider != null
         && _settings.EncryptedApiKeys.TryGetValue(SelectedProvider, out var v) && !string.IsNullOrEmpty(v);
@@ -58,7 +67,14 @@ public partial class AiSettingsViewModel : ViewModelBase
         _settings.ActiveAiProvider = SelectedProvider;
         _settings.AiModel = Model.Trim();
         if (!string.IsNullOrWhiteSpace(ApiKey))
-            _settings.EncryptedApiKeys[SelectedProvider] = SecretService.Encrypt(ApiKey.Trim());
+        {
+            // SecretService.Initialize läuft nur im Desktop (Disk-Keyfile). Im Browser nimmt
+            // localStorage den Klartext — die Origin-Isolation ist dort die Schutzgrenze
+            // (gleiches Muster wie AuthService.SetRememberedUsernameAsync mit dem JWT).
+            _settings.EncryptedApiKeys[SelectedProvider] = SecretService.IsAvailable
+                ? SecretService.Encrypt(ApiKey.Trim())
+                : ApiKey.Trim();
+        }
     }
 
     [RelayCommand]
