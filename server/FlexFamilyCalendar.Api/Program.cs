@@ -6,6 +6,7 @@ using FlexFamilyCalendar.Api.ActivityTypes;
 using FlexFamilyCalendar.Api.Entries;
 using FlexFamilyCalendar.Api.Models;
 using FlexFamilyCalendar.Api.RecurringActivities;
+using FlexFamilyCalendar.Api.Swaps;
 using FlexFamilyCalendar.Api.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -392,6 +393,41 @@ app.MapPut("/api/recurring-activities", async (List<RecurringActivityDto> items,
     return Results.Ok((await db.RecurringActivities.ToListAsync()).Select(RecurringActivityDto.From));
 })
     .RequireAuthorization("Admin");
+
+// --- Schichttausch -------------------------------------------------------
+// Hinweis: Speichern ersetzt die ganze Liste (passt zum Client). Da jeder Mitarbeiter Tausch
+// anlegt/beantwortet, ist PUT für alle Angemeldeten offen → letzter-Schreiber-gewinnt; eine
+// granulare Tausch-API (anlegen/annehmen/ablehnen mit Rechteprüfung) ist eine spätere Verfeinerung.
+
+app.MapGet("/api/swap-requests", async (AppDbContext db) =>
+    (await db.SwapRequests.ToListAsync()).Select(ShiftSwapRequestDto.From))
+    .RequireAuthorization();
+
+app.MapPut("/api/swap-requests", async (List<ShiftSwapRequestDto> items, AppDbContext db) =>
+{
+    await db.SwapRequests.ExecuteDeleteAsync();
+    foreach (var i in items)
+        db.SwapRequests.Add(new ShiftSwapRequestEntity
+        {
+            Id = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id,
+            CreatedAt = i.CreatedAt ?? "",
+            RespondedAt = i.RespondedAt,
+            Status = i.Status,
+            Mode = i.Mode,
+            FromUserId = i.FromUserId ?? "",
+            FromUserName = i.FromUserName ?? "",
+            FromDate = i.FromDate ?? "",
+            FromEntryId = i.FromEntryId ?? "",
+            ToUserId = i.ToUserId ?? "",
+            ToUserName = i.ToUserName ?? "",
+            ToDate = i.ToDate,
+            ToEntryId = i.ToEntryId,
+            Message = i.Message ?? ""
+        });
+    await db.SaveChangesAsync();
+    return Results.Ok((await db.SwapRequests.ToListAsync()).Select(ShiftSwapRequestDto.From));
+})
+    .RequireAuthorization();
 
 app.Run();
 
