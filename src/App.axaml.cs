@@ -17,6 +17,9 @@ public partial class App : Application
     /// <summary>Vom Browser-Head vor dem Start gesetzt (window.location.origin). Auf Desktop unbenutzt.</summary>
     public static string? BrowserOrigin { get; set; }
 
+    /// <summary>Plattform-Backend für modale Dialoge — Desktop nutzt Window, Browser ein Overlay.</summary>
+    public static IDialogService? DialogService { get; set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -83,7 +86,9 @@ public partial class App : Application
                 mainVm.AutoLogin(remembered);
         }
 
-        desktop.MainWindow = new MainWindow { DataContext = mainVm };
+        var mainWindow = new MainWindow { DataContext = mainVm };
+        desktop.MainWindow = mainWindow;
+        DialogService = new WindowDialogService(mainWindow);
     }
 
     private void InitializeBrowser(ISingleViewApplicationLifetime singleView)

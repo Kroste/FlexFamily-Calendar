@@ -12,6 +12,21 @@ public partial class MainView : UserControl
 
     private Window? OwnerWindow() => TopLevel.GetTopLevel(this) as Window;
 
+    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+
+        // Browser-Lifetime hat kein MainWindow → DialogService bleibt sonst null und Klicks
+        // (z.B. neuer Eintrag) wären stille No-Ops. Auf Desktop hat App.axaml.cs den
+        // WindowDialogService bereits gesetzt; hier nur den Overlay-Pfad nachziehen.
+        if (App.DialogService is null
+            && this.FindControl<Panel>("DialogOverlay") is { } overlay
+            && this.FindControl<ContentControl>("DialogContent") is { } content)
+        {
+            App.DialogService = new OverlayDialogService(overlay, content);
+        }
+    }
+
     protected override void OnDataContextChanged(EventArgs e)
     {
         base.OnDataContextChanged(e);

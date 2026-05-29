@@ -131,14 +131,13 @@ public partial class CalendarView : UserControl
     {
         try
         {
-            if (TopLevel.GetTopLevel(this) is not Window owner) return;
+            if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
 
             var vm = existing is null
                 ? new EntryEditorViewModel(date, users, canPickUser, allowedTypes, activityTypes)
                 : new EntryEditorViewModel(date, users, existing, canPickUser, allowedTypes, activityTypes);
 
-            var dialog = new EntryEditorDialog { DataContext = vm };
-            var result = await dialog.ShowDialog<EntryDialogResult?>(owner);
+            var result = await App.DialogService.ShowEntryEditorAsync(vm);
 
             if (result is not null && _vm is not null)
                 await _vm.ApplyEntryResultAsync(date, result);
