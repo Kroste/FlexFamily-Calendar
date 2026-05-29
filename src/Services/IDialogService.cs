@@ -19,6 +19,7 @@ public interface IDialogService
     Task ShowMonthOverviewAsync(MonthOverviewViewModel vm);
     Task ShowAdminAsync(AdminViewModel vm);
     Task<MoveCopyResult?> ShowMoveCopyAsync(MoveCopyViewModel vm);
+    Task<IReadOnlyList<string>?> ShowMailAsync(MailViewModel vm);
 
     /// <summary>
     /// Abbruch des aktuell offenen Dialogs (ESC/Backdrop-Klick im Overlay-Backend).

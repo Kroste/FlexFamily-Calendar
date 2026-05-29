@@ -66,13 +66,10 @@ public partial class CalendarView : UserControl
     private async void OnMailDialogRequested(MailViewModel vm)
     {
         if (_vm == null) return;
+        if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
         try
         {
-            if (TopLevel.GetTopLevel(this) is not Window owner) return;
-
-            var dialog = new MailDialog { DataContext = vm };
-            var result = await dialog.ShowDialog<IReadOnlyList<string>?>(owner);
-
+            var result = await App.DialogService.ShowMailAsync(vm);
             if (result is { Count: > 0 })
                 await _vm.SendPlanMailAsync(result);
         }

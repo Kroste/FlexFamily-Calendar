@@ -65,6 +65,11 @@ public class OverlayDialogService : IDialogService
             h => vm.Closed += h, h => vm.Closed -= h,
             () => vm.CancelCommand.Execute(null));
 
+    public Task<IReadOnlyList<string>?> ShowMailAsync(MailViewModel vm)
+        => ShowAsync<IReadOnlyList<string>>(new MailView { DataContext = vm },
+            h => vm.Closed += h, h => vm.Closed -= h,
+            () => vm.CancelCommand.Execute(null));
+
     public void CancelActive() => _cancelCurrent?.Invoke();
 
     /// <summary>

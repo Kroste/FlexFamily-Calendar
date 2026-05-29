@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.MailView"
+             x:CompileBindings="False">
+
+  <Grid Margin="20" RowDefinitions="Auto,*,Auto" MinWidth="400" Height="440">
+
+    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+      <TextBlock Text="{loc:Tr Mail_Title}" FontSize="18" FontWeight="Bold" />
+      <TextBlock Text="{loc:Tr Mail_Recipients}" FontSize="12" Opacity="0.7" Margin="0,4,0,0" />
+    </StackPanel>
+
+    <Border Grid.Row="1" BorderThickness="1" CornerRadius="6"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <ScrollViewer>
+        <ItemsControl ItemsSource="{Binding Recipients}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <CheckBox IsChecked="{Binding IsSelected}" Margin="6,3">
+                <StackPanel>
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding Email}" FontSize="11" Opacity="0.6" />
+                </StackPanel>
+              </CheckBox>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12"
+                HorizontalAlignment="Right" Margin="0,16,0,0">
+      <Button Content="{loc:Tr Common_Cancel}" Command="{Binding CancelCommand}"
+              Padding="16,8" CornerRadius="6" />
+      <Button Content="{loc:Tr Mail_Send}" Command="{Binding SendCommand}"
+              Padding="16,8" CornerRadius="6"
+              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+    </StackPanel>
+
+  </Grid>
+</UserControl>

@@ -41,5 +41,8 @@ public class WindowDialogService : IDialogService
     public Task<MoveCopyResult?> ShowMoveCopyAsync(MoveCopyViewModel vm)
         => new MoveCopyDialog { DataContext = vm }.ShowDialog<MoveCopyResult?>(_owner);
 
+    public Task<IReadOnlyList<string>?> ShowMailAsync(MailViewModel vm)
+        => new MailDialog { DataContext = vm }.ShowDialog<IReadOnlyList<string>?>(_owner);
+
     public void CancelActive() { }   // Window fängt ESC/Außenklick selbst ab
 }
