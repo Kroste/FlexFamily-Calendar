@@ -8,9 +8,12 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<UserEntity> Users => Set<UserEntity>();
+    public DbSet<CalendarEntry> Entries => Set<CalendarEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UserEntity>().HasIndex(u => u.Username).IsUnique();
+        modelBuilder.Entity<CalendarEntry>().HasIndex(e => new { e.UserId, e.Date });
+        modelBuilder.Entity<CalendarEntry>().HasIndex(e => e.Status);
     }
 }

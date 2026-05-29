@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using System.Text;
 using FlexFamilyCalendar.Api.Auth;
 using FlexFamilyCalendar.Api.Data;
+using FlexFamilyCalendar.Api.Entries;
 using FlexFamilyCalendar.Api.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -63,6 +65,15 @@ using (var scope = app.Services.CreateScope())
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Benutzer-Id des Anfragenden aus dem JWT (robust gegen verschiedene Claim-Namen).
+static Guid? CurrentUserId(ClaimsPrincipal p)
+{
+    var raw = p.FindFirstValue(ClaimTypes.NameIdentifier)
+              ?? p.FindFirstValue("sub")
+              ?? p.FindFirstValue("nameid");
+    return Guid.TryParse(raw, out var id) ? id : null;
+}
+
 app.MapGet("/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
 
 app.MapPost("/api/auth/login", async (LoginRequest req, AppDbContext db, TokenService tokens) =>
@@ -105,6 +116,145 @@ app.MapPost("/api/users", async (CreateUserRequest req, AppDbContext db) =>
     await db.SaveChangesAsync();
     return Results.Created($"/api/users/{user.Id}",
         new { user.Id, user.Username, user.DisplayName, user.Email, user.Role, user.Category });
+})
+    .RequireAuthorization("Admin");
+
+// --- Kalender-Einträge ---------------------------------------------------
+
+// Woche/Zeitraum laden. Serverseitig maskiert: Fremde sehen private Einträge (Urlaub/Krank)
+// nur als „Abwesend" und ungenehmigte Einträge gar nicht.
+app.MapGet("/api/entries", async (DateOnly from, DateOnly to, AppDbContext db, ClaimsPrincipal principal) =>
+{
+    var requester = CurrentUserId(principal);
+    if (requester is null) return Results.Unauthorized();
+    var isAdmin = principal.IsInRole("Admin");
+
+    var raw = await db.Entries
+        .Where(e => e.Date <= to && (e.EndDate ?? e.Date) >= from)
+        .ToListAsync();
+
+    var dtos = raw.Select(e => EntryVisibility.Project(e, requester.Value, isAdmin))
+                  .Where(d => d is not null)
+                  .ToList();
+    return Results.Ok(dtos);
+})
+    .RequireAuthorization();
+
+// Offene Urlaubswünsche (Genehmigungs-Warteschlange) – nur Admin.
+app.MapGet("/api/entries/pending", async (AppDbContext db) =>
+{
+    var list = await db.Entries.Where(e => e.Status == EntryStatus.Pending)
+        .OrderBy(e => e.Date).ToListAsync();
+    return Results.Ok(list.Select(EntryDto.Full));
+})
+    .RequireAuthorization("Admin");
+
+// Eintrag anlegen. Admin: alles für jeden. Nicht-Admin: nur eigener Urlaubswunsch/Krankmeldung.
+app.MapPost("/api/entries", async (CreateEntryRequest req, AppDbContext db, ClaimsPrincipal principal) =>
+{
+    var requester = CurrentUserId(principal);
+    if (requester is null) return Results.Unauthorized();
+    var isAdmin = principal.IsInRole("Admin");
+    var targetUserId = req.UserId ?? requester.Value;
+
+    var permError = EntryWriteRules.CheckCreate(req.Type, targetUserId, requester.Value, isAdmin);
+    if (permError is not null)
+        return Results.Json(new { error = permError }, statusCode: StatusCodes.Status403Forbidden);
+
+    var valError = EntryWriteRules.Validate(req.Type, req.Date, req.EndDate, req.StartTime, req.EndTime, req.CategoryLabel);
+    if (valError is not null) return Results.BadRequest(new { error = valError });
+
+    if (!await db.Users.AnyAsync(u => u.Id == targetUserId))
+        return Results.BadRequest(new { error = "Benutzer existiert nicht." });
+
+    var entry = new CalendarEntry
+    {
+        UserId = targetUserId,
+        Type = req.Type,
+        Date = req.Date,
+        EndDate = req.EndDate,
+        StartTime = req.StartTime,
+        EndTime = req.EndTime,
+        EndsNextDay = req.EndsNextDay,
+        CategoryLabel = string.IsNullOrWhiteSpace(req.CategoryLabel) ? null : req.CategoryLabel!.Trim(),
+        Note = string.IsNullOrWhiteSpace(req.Note) ? null : req.Note!.Trim(),
+        Status = EntryWriteRules.InitialStatus(req.Type, isAdmin),
+        CreatedBy = requester.Value,
+        CreatedAtUtc = DateTime.UtcNow
+    };
+    db.Entries.Add(entry);
+    await db.SaveChangesAsync();
+    return Results.Created($"/api/entries/{entry.Id}", EntryDto.Full(entry));
+})
+    .RequireAuthorization();
+
+// Eintrag bearbeiten. Admin: jeden. Nicht-Admin: nur eigene; ein geänderter Urlaub muss neu genehmigt werden.
+app.MapPut("/api/entries/{id:guid}", async (Guid id, UpdateEntryRequest req, AppDbContext db, ClaimsPrincipal principal) =>
+{
+    var requester = CurrentUserId(principal);
+    if (requester is null) return Results.Unauthorized();
+    var isAdmin = principal.IsInRole("Admin");
+
+    var entry = await db.Entries.FindAsync(id);
+    if (entry is null) return Results.NotFound();
+    if (!isAdmin && entry.UserId != requester.Value)
+        return Results.Json(new { error = "Kein Zugriff." }, statusCode: StatusCodes.Status403Forbidden);
+
+    var valError = EntryWriteRules.Validate(entry.Type, req.Date, req.EndDate, req.StartTime, req.EndTime, req.CategoryLabel);
+    if (valError is not null) return Results.BadRequest(new { error = valError });
+
+    entry.Date = req.Date;
+    entry.EndDate = req.EndDate;
+    entry.StartTime = req.StartTime;
+    entry.EndTime = req.EndTime;
+    entry.EndsNextDay = req.EndsNextDay;
+    entry.CategoryLabel = string.IsNullOrWhiteSpace(req.CategoryLabel) ? null : req.CategoryLabel!.Trim();
+    entry.Note = string.IsNullOrWhiteSpace(req.Note) ? null : req.Note!.Trim();
+
+    if (!isAdmin && entry.Type == EntryTypes.Vacation)
+        entry.Status = EntryStatus.Pending;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(EntryDto.Full(entry));
+})
+    .RequireAuthorization();
+
+// Eintrag löschen. Admin: jeden. Nicht-Admin: nur eigene.
+app.MapDelete("/api/entries/{id:guid}", async (Guid id, AppDbContext db, ClaimsPrincipal principal) =>
+{
+    var requester = CurrentUserId(principal);
+    if (requester is null) return Results.Unauthorized();
+    var isAdmin = principal.IsInRole("Admin");
+
+    var entry = await db.Entries.FindAsync(id);
+    if (entry is null) return Results.NotFound();
+    if (!isAdmin && entry.UserId != requester.Value)
+        return Results.Json(new { error = "Kein Zugriff." }, statusCode: StatusCodes.Status403Forbidden);
+
+    db.Entries.Remove(entry);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+})
+    .RequireAuthorization();
+
+// Urlaubswunsch genehmigen / ablehnen – nur Admin.
+app.MapPost("/api/entries/{id:guid}/approve", async (Guid id, AppDbContext db) =>
+{
+    var entry = await db.Entries.FindAsync(id);
+    if (entry is null) return Results.NotFound();
+    entry.Status = EntryStatus.Approved;
+    await db.SaveChangesAsync();
+    return Results.Ok(EntryDto.Full(entry));
+})
+    .RequireAuthorization("Admin");
+
+app.MapPost("/api/entries/{id:guid}/reject", async (Guid id, AppDbContext db) =>
+{
+    var entry = await db.Entries.FindAsync(id);
+    if (entry is null) return Results.NotFound();
+    entry.Status = EntryStatus.Rejected;
+    await db.SaveChangesAsync();
+    return Results.Ok(EntryDto.Full(entry));
 })
     .RequireAuthorization("Admin");
 
