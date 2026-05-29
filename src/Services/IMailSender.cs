@@ -11,6 +11,10 @@ public record MailSendResult(int Sent, int Failed, IReadOnlyList<string> Errors)
 /// </summary>
 public interface IMailSender
 {
+    /// <summary>True = SMTP-Konfig liegt serverseitig (ENV, Smtp__Host etc.); der Settings-Tab
+    /// blendet seine SMTP-Sektion dann aus, weil die Werte nicht benutzt werden.</summary>
+    bool IsServerConfigured { get; }
+
     /// <summary>Schneller Vorabcheck, ob Versand grundsätzlich möglich ist
     /// (Local: SMTP-Felder gesetzt; Server: immer true — Server entscheidet beim Senden).</summary>
     Task<bool> IsConfiguredAsync();

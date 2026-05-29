@@ -11,6 +11,8 @@ public class LocalMailSender : IMailSender
 
     public LocalMailSender(IStorageService storage) => _storage = storage;
 
+    public bool IsServerConfigured => false;
+
     public async Task<bool> IsConfiguredAsync()
     {
         var s = await _storage.LoadSettingsAsync();

@@ -13,7 +13,12 @@ public record GermanStateOption(GermanState State, string Name);
 public partial class SettingsViewModel : ViewModelBase
 {
     private readonly IStorageService _storage;
+    private readonly IMailSender _mailSender;
     private AppSettings _settings = new();
+
+    /// <summary>SMTP-Sektion nur anzeigen, wenn der Mail-Versand clientseitig läuft (Local-Modus).
+    /// Im Server-/Browser-Modus liegt die SMTP-Konfig in ENV (Smtp__Host etc.) — UI würde nur verwirren.</summary>
+    public bool ShowSmtpSection => !_mailSender.IsServerConfigured;
 
     public IReadOnlyList<GermanStateOption> States { get; }
 
@@ -27,9 +32,10 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private string _smtpPassword = "";
     [ObservableProperty] private string _statusMessage = "";
 
-    public SettingsViewModel(IStorageService storage)
+    public SettingsViewModel(IStorageService storage, IMailSender mailSender)
     {
         _storage = storage;
+        _mailSender = mailSender;
         States = Enum.GetValues<GermanState>()
             .Select(s => new GermanStateOption(s, GermanStates.Names[s]))
             .OrderBy(o => o.Name)

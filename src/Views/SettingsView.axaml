@@ -22,37 +22,40 @@
       <TextBox Text="{Binding OvernightHours}" CornerRadius="6" />
     </StackPanel>
 
-    <!-- E-Mail-Versand (SMTP) -->
-    <TextBlock Text="{loc:Tr Settings_Smtp}" FontSize="14" FontWeight="SemiBold" Margin="0,8,0,0" />
+    <!-- E-Mail-Versand (SMTP) — nur im Local-Modus (Desktop+JSON). Im Server-/Browser-Modus läuft
+         SMTP serverseitig über die ENV-Variablen Smtp__Host etc., dieses UI würde nur verwirren. -->
+    <StackPanel Spacing="14" IsVisible="{Binding ShowSmtpSection}">
+      <TextBlock Text="{loc:Tr Settings_Smtp}" FontSize="14" FontWeight="SemiBold" Margin="0,8,0,0" />
 
-    <StackPanel Spacing="4">
-      <TextBlock Text="{loc:Tr Settings_SmtpFrom}" FontSize="12" Opacity="0.7" />
-      <TextBox Text="{Binding SmtpFrom}" CornerRadius="6" PlaceholderText="plan@example.com" />
-    </StackPanel>
-
-    <Grid ColumnDefinitions="*,12,Auto">
-      <StackPanel Grid.Column="0" Spacing="4">
-        <TextBlock Text="{loc:Tr Settings_SmtpHost}" FontSize="12" Opacity="0.7" />
-        <TextBox Text="{Binding SmtpHost}" CornerRadius="6" PlaceholderText="smtp.example.com" />
+      <StackPanel Spacing="4">
+        <TextBlock Text="{loc:Tr Settings_SmtpFrom}" FontSize="12" Opacity="0.7" />
+        <TextBox Text="{Binding SmtpFrom}" CornerRadius="6" PlaceholderText="plan@example.com" />
       </StackPanel>
-      <StackPanel Grid.Column="2" Spacing="4" Width="80">
-        <TextBlock Text="{loc:Tr Settings_SmtpPort}" FontSize="12" Opacity="0.7" />
-        <TextBox Text="{Binding SmtpPort}" CornerRadius="6" />
+
+      <Grid ColumnDefinitions="*,12,Auto">
+        <StackPanel Grid.Column="0" Spacing="4">
+          <TextBlock Text="{loc:Tr Settings_SmtpHost}" FontSize="12" Opacity="0.7" />
+          <TextBox Text="{Binding SmtpHost}" CornerRadius="6" PlaceholderText="smtp.example.com" />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Spacing="4" Width="80">
+          <TextBlock Text="{loc:Tr Settings_SmtpPort}" FontSize="12" Opacity="0.7" />
+          <TextBox Text="{Binding SmtpPort}" CornerRadius="6" />
+        </StackPanel>
+      </Grid>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="{loc:Tr Settings_SmtpUser}" FontSize="12" Opacity="0.7" />
+        <TextBox Text="{Binding SmtpUser}" CornerRadius="6" />
       </StackPanel>
-    </Grid>
 
-    <StackPanel Spacing="4">
-      <TextBlock Text="{loc:Tr Settings_SmtpUser}" FontSize="12" Opacity="0.7" />
-      <TextBox Text="{Binding SmtpUser}" CornerRadius="6" />
+      <StackPanel Spacing="4">
+        <TextBlock Text="{loc:Tr Settings_SmtpPassword}" FontSize="12" Opacity="0.7" />
+        <TextBox Text="{Binding SmtpPassword}" PasswordChar="*" CornerRadius="6"
+                 PlaceholderText="{loc:Tr Settings_SmtpPasswordHint}" />
+      </StackPanel>
+
+      <CheckBox Content="{loc:Tr Settings_SmtpSsl}" IsChecked="{Binding SmtpUseSsl}" />
     </StackPanel>
-
-    <StackPanel Spacing="4">
-      <TextBlock Text="{loc:Tr Settings_SmtpPassword}" FontSize="12" Opacity="0.7" />
-      <TextBox Text="{Binding SmtpPassword}" PasswordChar="*" CornerRadius="6"
-               PlaceholderText="{loc:Tr Settings_SmtpPasswordHint}" />
-    </StackPanel>
-
-    <CheckBox Content="{loc:Tr Settings_SmtpSsl}" IsChecked="{Binding SmtpUseSsl}" />
 
     <StackPanel Orientation="Horizontal" Spacing="12">
       <Button Content="{loc:Tr Common_Save}" Command="{Binding SaveCommand}"

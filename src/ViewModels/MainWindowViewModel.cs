@@ -114,7 +114,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void OpenAdmin() => AdminRequested?.Invoke();
 
-    public AdminViewModel CreateAdmin() => new(_auth, _storage, _ai);
+    public AdminViewModel CreateAdmin() => new(_auth, _storage, _ai, _mailSender);
 
     [RelayCommand]
     private void OpenProfile() => ProfileRequested?.Invoke();

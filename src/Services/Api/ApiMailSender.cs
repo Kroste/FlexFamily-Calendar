@@ -8,6 +8,8 @@ public class ApiMailSender : IMailSender
 
     public ApiMailSender(ApiClient api) => _api = api;
 
+    public bool IsServerConfigured => true;
+
     public Task<bool> IsConfiguredAsync() => Task.FromResult(true);   // Server entscheidet
 
     public async Task<MailSendResult> SendWeekPlanAsync(
