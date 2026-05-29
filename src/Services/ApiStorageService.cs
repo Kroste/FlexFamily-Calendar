@@ -57,7 +57,9 @@ public class ApiStorageService : IStorageService
         var day = new CalendarDay { DateString = date.ToString("yyyy-MM-dd") };
         var dtos = await _api.GetEntriesAsync(date, date);
         day.Entries = dtos.Select(d => EntryMapping.ToDesktop(d, date)).ToList();
-        // Hinweis: Tagesnotiz/Finalisiert haben noch keinen Server-Endpunkt → bleiben leer.
+        var note = await _api.GetDayNoteAsync(date);
+        day.Note = note.Note ?? "";
+        day.IsFinalized = note.IsFinalized;
         return day;
     }
 
@@ -86,6 +88,10 @@ public class ApiStorageService : IStorageService
                 await _api.UpdateEntryAsync(match.Id, EntryMapping.ToUpdateBody(e, date));
             // Abwesenheit per Zeitraum schon vorhanden → nichts zu tun.
         }
+
+        // Tagesnotiz/Finalisiert sind Admin-Sache (Endpunkt Admin-only) → nur als Admin schreiben.
+        if (_api.CurrentUserIsAdmin)
+            await _api.SetDayNoteAsync(date, new ServerDayNoteDto(day.Note ?? "", day.IsFinalized));
     }
 
     /// <summary>

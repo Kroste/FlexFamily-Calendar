@@ -102,6 +102,8 @@ public record ServerNotificationDto(
     string? Action,
     string? RelatedUserId);
 
+public record ServerDayNoteDto(string Note, bool IsFinalized);
+
 public record CreateEntryBody(
     string? UserId,
     string Type,

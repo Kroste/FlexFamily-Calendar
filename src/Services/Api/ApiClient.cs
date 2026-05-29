@@ -12,6 +12,7 @@ public class ApiClient
     public string? Token { get; private set; }
     public ServerUserDto? CurrentUser { get; private set; }
     public bool IsAuthenticated => !string.IsNullOrEmpty(Token);
+    public bool CurrentUserIsAdmin => string.Equals(CurrentUser?.Role, "Admin", StringComparison.OrdinalIgnoreCase);
 
     public ApiClient(string baseUrl)
     {
@@ -147,6 +148,17 @@ public class ApiClient
         var resp = await _http.PutAsJsonAsync("api/notifications", items);
         if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Benachrichtigungen speichern");
         LogService.Info("API Benachrichtigungen ersetzt: {0}", items.Count);
+    }
+
+    public async Task<ServerDayNoteDto> GetDayNoteAsync(DateOnly date)
+        => await _http.GetFromJsonAsync<ServerDayNoteDto>($"api/day-notes/{date:yyyy-MM-dd}")
+           ?? new ServerDayNoteDto("", false);
+
+    public async Task SetDayNoteAsync(DateOnly date, ServerDayNoteDto note)
+    {
+        var resp = await _http.PutAsJsonAsync($"api/day-notes/{date:yyyy-MM-dd}", note);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Tagesnotiz speichern");
+        LogService.Debug("API Tagesnotiz gesetzt: {0:yyyy-MM-dd}", date);
     }
 
     /// <summary>Baut aus einer Fehlerantwort eine ApiException mit der Server-Meldung (falls vorhanden).</summary>
