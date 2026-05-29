@@ -65,7 +65,13 @@ public partial class SettingsViewModel : ViewModelBase
         if (int.TryParse(SmtpPort, NumberStyles.Integer, CultureInfo.InvariantCulture, out var port) && port > 0)
             _settings.SmtpPort = port;
         if (!string.IsNullOrWhiteSpace(SmtpPassword))            // leer = bestehendes Passwort behalten
-            _settings.SmtpPasswordEnc = SecretService.Encrypt(SmtpPassword.Trim());
+        {
+            // SecretService.Initialize läuft nur im Desktop (Disk-Keyfile). Im Browser nimmt
+            // localStorage den Klartext — Origin-Isolation ist dort die Schutzgrenze.
+            _settings.SmtpPasswordEnc = SecretService.IsAvailable
+                ? SecretService.Encrypt(SmtpPassword.Trim())
+                : SmtpPassword.Trim();
+        }
 
         await _storage.SaveSettingsAsync(_settings);
         SmtpPassword = "";
