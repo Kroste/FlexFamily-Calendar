@@ -64,6 +64,17 @@ public record ApiErrorBody(string? Error);
 
 public record ServerActivityTypeDto(string Id, string Name, string Color, List<string> Categories);
 
+public record ServerRecurringActivityDto(
+    string Id,
+    string UserId,
+    string UserDisplayName,
+    string Title,
+    string? ActivityTypeId,
+    TimeOnly StartTime,
+    TimeOnly EndTime,
+    List<int> Weekdays,
+    bool SkipOnHolidays);
+
 public record CreateEntryBody(
     string? UserId,
     string Type,

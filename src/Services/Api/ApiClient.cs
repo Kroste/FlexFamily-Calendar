@@ -107,6 +107,20 @@ public class ApiClient
         LogService.Info("API Aktivitätstypen ersetzt: {0}", items.Count);
     }
 
+    public async Task<List<ServerRecurringActivityDto>> GetRecurringActivitiesAsync()
+    {
+        var list = await _http.GetFromJsonAsync<List<ServerRecurringActivityDto>>("api/recurring-activities") ?? new();
+        LogService.Debug("API Wiederkehrende Aktivitäten geladen: {0}", list.Count);
+        return list;
+    }
+
+    public async Task ReplaceRecurringActivitiesAsync(List<ServerRecurringActivityDto> items)
+    {
+        var resp = await _http.PutAsJsonAsync("api/recurring-activities", items);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Wiederkehrende Aktivitäten speichern");
+        LogService.Info("API Wiederkehrende Aktivitäten ersetzt: {0}", items.Count);
+    }
+
     /// <summary>Baut aus einer Fehlerantwort eine ApiException mit der Server-Meldung (falls vorhanden).</summary>
     private static async Task<ApiException> ErrorAsync(HttpResponseMessage resp, string what)
     {
