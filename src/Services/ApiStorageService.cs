@@ -106,7 +106,7 @@ public class ApiStorageService : IStorageService
         return s.Id == e.Id;
     }
 
-    // --- Kataloge über die API (Speichern ersetzt jeweils die ganze Liste) ---
+    // --- Server-Listen (Speichern ersetzt jeweils die ganze Liste) ---
 
     public async Task<List<ActivityType>> LoadActivityTypesAsync()
     {
@@ -126,10 +126,16 @@ public class ApiStorageService : IStorageService
     public Task SaveRecurringActivitiesAsync(List<RecurringActivity> activities)
         => _api.ReplaceRecurringActivitiesAsync(activities.Select(RecurringActivityMapping.ToServer).ToList());
 
-    // --- Noch ohne Server-Endpunkt: leer/No-op (kein lokaler Fallback) ----
+    public async Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync()
+    {
+        var dtos = await _api.GetSwapRequestsAsync();
+        return dtos.Select(ShiftSwapMapping.ToDesktop).ToList();
+    }
 
-    public Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync() => Task.FromResult(new List<ShiftSwapRequest>());
-    public Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests) => Task.CompletedTask;
+    public Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests)
+        => _api.ReplaceSwapRequestsAsync(requests.Select(ShiftSwapMapping.ToServer).ToList());
+
+    // --- Noch ohne Server-Endpunkt: leer/No-op (kein lokaler Fallback) ----
 
     public Task<List<Notification>> LoadNotificationsAsync() => Task.FromResult(new List<Notification>());
     public Task SaveNotificationsAsync(List<Notification> notifications) => Task.CompletedTask;

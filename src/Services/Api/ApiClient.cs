@@ -121,6 +121,20 @@ public class ApiClient
         LogService.Info("API Wiederkehrende Aktivitäten ersetzt: {0}", items.Count);
     }
 
+    public async Task<List<ServerSwapRequestDto>> GetSwapRequestsAsync()
+    {
+        var list = await _http.GetFromJsonAsync<List<ServerSwapRequestDto>>("api/swap-requests") ?? new();
+        LogService.Debug("API Schichttausch-Anfragen geladen: {0}", list.Count);
+        return list;
+    }
+
+    public async Task ReplaceSwapRequestsAsync(List<ServerSwapRequestDto> items)
+    {
+        var resp = await _http.PutAsJsonAsync("api/swap-requests", items);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Schichttausch-Anfragen speichern");
+        LogService.Info("API Schichttausch-Anfragen ersetzt: {0}", items.Count);
+    }
+
     /// <summary>Baut aus einer Fehlerantwort eine ApiException mit der Server-Meldung (falls vorhanden).</summary>
     private static async Task<ApiException> ErrorAsync(HttpResponseMessage resp, string what)
     {

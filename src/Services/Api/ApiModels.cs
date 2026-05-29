@@ -75,6 +75,22 @@ public record ServerRecurringActivityDto(
     List<int> Weekdays,
     bool SkipOnHolidays);
 
+public record ServerSwapRequestDto(
+    string Id,
+    string CreatedAt,
+    string? RespondedAt,
+    int Status,
+    int Mode,
+    string FromUserId,
+    string FromUserName,
+    string FromDate,
+    string FromEntryId,
+    string ToUserId,
+    string ToUserName,
+    string? ToDate,
+    string? ToEntryId,
+    string Message);
+
 public record CreateEntryBody(
     string? UserId,
     string Type,
