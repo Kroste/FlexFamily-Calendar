@@ -25,6 +25,11 @@ public partial class ActivityTypeManagementViewModel : ViewModelBase
     [ObservableProperty] private bool _editAuPair;
     [ObservableProperty] private string _errorMessage = "";
 
+    /// <summary>Wird nach jedem ReloadAsync gefeuert (inkl. nach Save/Delete) — Konsumenten wie
+    /// die wiederkehrenden Aktivitäten halten ihre Kategorien-Auswahl damit aktuell, ohne dass
+    /// der Admin-Dialog geschlossen werden muss.</summary>
+    public event Action? Changed;
+
     public ActivityTypeManagementViewModel(IStorageService storage)
     {
         _storage = storage;
@@ -38,6 +43,7 @@ public partial class ActivityTypeManagementViewModel : ViewModelBase
         Types.Clear();
         foreach (var t in _all.OrderBy(t => t.Name))
             Types.Add(t);
+        Changed?.Invoke();
     }
 
     partial void OnSelectedTypeChanged(ActivityType? value)

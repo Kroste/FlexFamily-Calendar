@@ -19,5 +19,10 @@ public class AdminViewModel : ViewModelBase
         Recurring = new RecurringActivityManagementViewModel(storage);
         Settings = new SettingsViewModel(storage);
         Ai = new AiSettingsViewModel(ai, storage);
+
+        // Wenn der Admin im jeweiligen Tab speichert, müssen die ComboBoxen im Wiederkehrend-Tab
+        // sofort die neue Auswahl zeigen — ohne Schließen/Neuöffnen des Admin-Dialogs.
+        Categories.Changed += () => _ = Recurring.RefreshActivityTypesAsync();
+        Users.Changed += () => _ = Recurring.RefreshUsersAsync();
     }
 }

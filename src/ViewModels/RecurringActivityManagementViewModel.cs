@@ -58,6 +58,29 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
         }
     }
 
+    /// <summary>Aktualisiert nur die Benutzer-Auswahl (z.B. nach Neuanlage im Benutzer-Tab),
+    /// ohne die laufende Eingabe (Wochentage, Zeit, ausgewählter Eintrag) zu verwerfen.</summary>
+    public async Task RefreshUsersAsync()
+    {
+        var prevId = SelectedUser?.Id;
+        _users = await _storage.LoadUsersAsync();
+        AvailableUsers.Clear();
+        foreach (var u in _users.OrderBy(u => string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName))
+            AvailableUsers.Add(u);
+        SelectedUser = AvailableUsers.FirstOrDefault(u => u.Id == prevId);
+    }
+
+    /// <summary>Aktualisiert nur die Kategorien-Auswahl (z.B. nach Neuanlage im Kategorien-Tab),
+    /// ohne die laufende Eingabe zu verwerfen.</summary>
+    public async Task RefreshActivityTypesAsync()
+    {
+        _activityTypes = await _storage.LoadActivityTypesAsync();
+        // Anzeigename umbenannter Kategorien in der Activities-Liste mit auffrischen.
+        foreach (var a in _all)
+            a.CategoryName = _activityTypes.FirstOrDefault(t => t.Id == a.ActivityTypeId)?.Name ?? "";
+        RefreshActivityTypes();
+    }
+
     partial void OnSelectedUserChanged(User? value) => RefreshActivityTypes();
 
     private void RefreshActivityTypes()

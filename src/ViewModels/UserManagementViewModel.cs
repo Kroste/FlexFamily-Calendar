@@ -18,6 +18,11 @@ public partial class UserManagementViewModel : ViewModelBase
     /// <summary>null = neuer Benutzer; sonst der zu bearbeitende.</summary>
     public event Action<User?>? EditRequested;
 
+    /// <summary>Wird nach jedem ReloadAsync gefeuert (inkl. nach Edit/Delete) — Konsumenten wie
+    /// die wiederkehrenden Aktivitäten halten ihre Benutzer-Auswahl damit aktuell, ohne dass
+    /// der Admin-Dialog geschlossen werden muss.</summary>
+    public event Action? Changed;
+
     public UserManagementViewModel(AuthService auth)
     {
         _auth = auth;
@@ -34,6 +39,7 @@ public partial class UserManagementViewModel : ViewModelBase
         Users.Clear();
         foreach (var u in users.OrderBy(u => u.DisplayName))
             Users.Add(u);
+        Changed?.Invoke();
     }
 
     [RelayCommand]
