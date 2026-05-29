@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text;
 using FlexFamilyCalendar.Api.Auth;
 using FlexFamilyCalendar.Api.Data;
+using FlexFamilyCalendar.Api.ActivityTypes;
 using FlexFamilyCalendar.Api.Entries;
 using FlexFamilyCalendar.Api.Models;
 using FlexFamilyCalendar.Api.Users;
@@ -325,6 +326,30 @@ app.MapPost("/api/entries/{id:guid}/reject", async (Guid id, AppDbContext db) =>
     entry.Status = EntryStatus.Rejected;
     await db.SaveChangesAsync();
     return Results.Ok(EntryDto.Full(entry));
+})
+    .RequireAuthorization("Admin");
+
+// --- Aktivitätstypen (Kategorien) ---------------------------------------
+
+// Liste: alle angemeldeten Benutzer (zum Anzeigen von Kategoriename/-farbe im Plan).
+app.MapGet("/api/activity-types", async (AppDbContext db) =>
+    (await db.ActivityTypes.OrderBy(a => a.Name).ToListAsync()).Select(ActivityTypeDto.From))
+    .RequireAuthorization();
+
+// Komplett ersetzen (Admin): passt zum „ganze Liste speichern" des Clients. Letzter-Schreiber-gewinnt.
+app.MapPut("/api/activity-types", async (List<ActivityTypeDto> items, AppDbContext db) =>
+{
+    await db.ActivityTypes.ExecuteDeleteAsync();
+    foreach (var i in items)
+        db.ActivityTypes.Add(new ActivityTypeEntity
+        {
+            Id = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id,
+            Name = i.Name.Trim(),
+            Color = i.Color ?? "",
+            Categories = i.Categories ?? new()
+        });
+    await db.SaveChangesAsync();
+    return Results.Ok((await db.ActivityTypes.OrderBy(a => a.Name).ToListAsync()).Select(ActivityTypeDto.From));
 })
     .RequireAuthorization("Admin");
 
