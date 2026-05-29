@@ -8,6 +8,10 @@
     <RootNamespace>FlexFamilyCalendar.Browser</RootNamespace>
     <WasmMainJSPath>wwwroot/main.js</WasmMainJSPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Avalonia-XAML verwendet x:CompileBindings="False" → Bindings via Reflection. Trimming wirft
+         die nötige Reflection-Metadaten weg (IL2026), Bindings schlagen dann still fehl (sichtbare
+         IsVisible-Defaults). Trim global abschalten, bis wir auf CompiledBindings umstellen. -->
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 
   <ItemGroup>
