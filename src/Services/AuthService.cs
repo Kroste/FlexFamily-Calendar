@@ -65,10 +65,12 @@ public class AuthService
         var settings = await _storage.LoadSettingsAsync();
         settings.RememberedUsername = username ?? "";
 
-        // Im Server-Modus zusätzlich das JWT (kein Passwort!) verschlüsselt merken bzw. löschen.
+        // Im Server-Modus zusätzlich das JWT (kein Passwort!) merken bzw. löschen.
+        // Desktop verschlüsselt (SecretService verfügbar); Browser legt es plain in localStorage ab
+        // (Browser-Origin-Isolation ist die Schutzgrenze, AES-Schlüssel-Datei wäre dort wirkungslos).
         if (_api is not null)
             settings.ServerTokenEnc = !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(_api.Token)
-                ? SecretService.Encrypt(_api.Token!)
+                ? (SecretService.IsAvailable ? SecretService.Encrypt(_api.Token!) : _api.Token!)
                 : "";
 
         await _storage.SaveSettingsAsync(settings);
@@ -88,7 +90,7 @@ public class AuthService
                 return null;
             try
             {
-                _api.SetToken(SecretService.Decrypt(s.ServerTokenEnc));
+                _api.SetToken(SecretService.IsAvailable ? SecretService.Decrypt(s.ServerTokenEnc) : s.ServerTokenEnc);
                 var me = await _api.GetMeAsync();
                 if (me is not null)
                 {

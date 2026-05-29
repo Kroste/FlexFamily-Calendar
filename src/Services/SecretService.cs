@@ -8,6 +8,9 @@ public static class SecretService
 {
     private static byte[]? _key;
 
+    /// <summary>True, wenn ein Schlüssel verfügbar ist (Desktop: nach Initialize; Browser: nie).</summary>
+    public static bool IsAvailable => _key != null;
+
     public static void Initialize(string dataDir)
     {
         Directory.CreateDirectory(dataDir);

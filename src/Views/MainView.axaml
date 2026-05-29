@@ -1,0 +1,98 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+             xmlns:views="using:FlexFamilyCalendar.Views"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.MainView"
+             x:DataType="vm:MainWindowViewModel"
+             x:CompileBindings="False">
+
+  <DockPanel>
+
+    <!-- Kopfzeile (nur wenn angemeldet) -->
+    <Border DockPanel.Dock="Top"
+            IsVisible="{Binding IsLoggedIn}"
+            Padding="16,10"
+            BorderThickness="0,0,0,1"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            Background="{DynamicResource AppHeaderBrush}">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+          <TextBlock Text="📅" FontSize="22" />
+          <TextBlock Text="{loc:Tr App_Title}"
+                     FontSize="18" FontWeight="Bold"
+                     Foreground="White"
+                     VerticalAlignment="Center" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+          <!-- Benachrichtigungs-Glocke mit Ungelesen-Badge -->
+          <Button Command="{Binding OpenNotificationsCommand}"
+                  Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  CornerRadius="6" Padding="10,5" VerticalAlignment="Center"
+                  ToolTip.Tip="{loc:Tr Notif_Title}">
+            <Grid>
+              <TextBlock Text="🔔" FontSize="15" Foreground="White" />
+              <Border IsVisible="{Binding HasUnread}"
+                      Background="#E74C3C" CornerRadius="8" MinWidth="16" Height="16"
+                      Padding="4,0" Margin="0,-8,-10,0"
+                      HorizontalAlignment="Right" VerticalAlignment="Top">
+                <TextBlock Text="{Binding UnreadBadge}" FontSize="10" FontWeight="Bold"
+                           Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Border>
+            </Grid>
+          </Button>
+          <TextBlock Text="{Binding CurrentUserDisplay}"
+                     Foreground="White" Opacity="0.85"
+                     VerticalAlignment="Center" FontSize="13" />
+          <Button Content="{loc:Tr Main_Admin}"
+                  Command="{Binding OpenAdminCommand}"
+                  IsVisible="{Binding IsAdmin}"
+                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  CornerRadius="6" Padding="12,5" />
+          <Button Content="{loc:Tr Main_MonthOverview}"
+                  Command="{Binding OpenMonthOverviewCommand}"
+                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  CornerRadius="6" Padding="12,5" />
+          <Button Content="{loc:Tr Main_HoursAccount}"
+                  Command="{Binding OpenHoursAccountCommand}"
+                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  CornerRadius="6" Padding="12,5" />
+          <Button Content="{loc:Tr Main_Profile}"
+                  Command="{Binding OpenProfileCommand}"
+                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  CornerRadius="6" Padding="12,5" />
+          <Button Content="{loc:Tr Main_Logout}"
+                  Command="{Binding LogoutCommand}"
+                  Foreground="White"
+                  Background="#33FFFFFF"
+                  BorderBrush="#55FFFFFF"
+                  CornerRadius="6"
+                  Padding="12,5" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Statusleiste -->
+    <Border DockPanel.Dock="Bottom"
+            Padding="12,5"
+            BorderThickness="0,1,0,0"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            Background="{DynamicResource SystemControlBackgroundChromeLowBrush}">
+      <TextBlock Text="{Binding StatusMessage}"
+                 FontSize="12"
+                 Opacity="0.75"
+                 VerticalAlignment="Center" />
+    </Border>
+
+    <!-- Inhaltsfläche -->
+    <Grid>
+      <Border IsVisible="{Binding IsLoggedIn}">
+        <views:CalendarView DataContext="{Binding CalendarVm}" />
+      </Border>
+      <Border IsVisible="{Binding IsNotLoggedIn}">
+        <views:LoginView DataContext="{Binding LoginVm}" />
+      </Border>
+    </Grid>
+
+  </DockPanel>
+</UserControl>
