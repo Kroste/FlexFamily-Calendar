@@ -10,4 +10,7 @@ namespace FlexFamilyCalendar.Services;
 public interface IDialogService
 {
     Task<EntryDialogResult?> ShowEntryEditorAsync(EntryEditorViewModel vm);
+    Task<SwapDialogResult?> ShowShiftSwapAsync(ShiftSwapViewModel vm);
+    Task<ReplanResult?> ShowReplanAsync(ReplanViewModel vm);
+    Task<string?> ShowDayNoteAsync(DayNoteViewModel vm);
 }

@@ -1,6 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+        xmlns:views="using:FlexFamilyCalendar.Views"
         xmlns:loc="using:FlexFamilyCalendar.Localization"
         x:Class="FlexFamilyCalendar.Views.DayNoteDialog"
         x:CompileBindings="False"
@@ -8,25 +8,5 @@
         Width="420" SizeToContent="Height"
         CanResize="False"
         WindowStartupLocation="CenterOwner">
-
-  <Grid Margin="24,20,24,20" RowDefinitions="Auto,Auto,Auto">
-
-    <StackPanel Grid.Row="0" Margin="0,0,0,14">
-      <TextBlock Text="{loc:Tr DayNote_Title}" FontSize="18" FontWeight="Bold" />
-      <TextBlock Text="{Binding DateLabel}" Opacity="0.6" FontSize="13" Margin="0,2,0,0" />
-    </StackPanel>
-
-    <TextBox Grid.Row="1" Text="{Binding Note}" AcceptsReturn="True" Height="90"
-             TextWrapping="Wrap" CornerRadius="6"
-             PlaceholderText="{loc:Tr DayNote_Placeholder}" />
-
-    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" Margin="0,16,0,0">
-      <Button Content="{loc:Tr Common_Cancel}" Command="{Binding CancelCommand}"
-              Padding="16,8" CornerRadius="6" />
-      <Button Content="{loc:Tr Common_Save}" Command="{Binding SaveCommand}"
-              Padding="16,8" CornerRadius="6"
-              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
-    </StackPanel>
-
-  </Grid>
+  <views:DayNoteView />
 </Window>

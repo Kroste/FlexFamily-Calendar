@@ -90,10 +90,9 @@ public partial class CalendarView : UserControl
     {
         try
         {
-            if (TopLevel.GetTopLevel(this) is not Window owner) return;
+            if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
 
-            var dialog = new DayNoteDialog { DataContext = new DayNoteViewModel(date, note) };
-            var result = await dialog.ShowDialog<string?>(owner);
+            var result = await App.DialogService.ShowDayNoteAsync(new DayNoteViewModel(date, note));
 
             if (result is not null && _vm is not null)
                 await _vm.ApplyDayNoteAsync(date, result);
@@ -152,10 +151,9 @@ public partial class CalendarView : UserControl
     {
         try
         {
-            if (TopLevel.GetTopLevel(this) is not Window owner) return;
+            if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
 
-            var dialog = new ShiftSwapDialog { DataContext = vm };
-            var result = await dialog.ShowDialog<SwapDialogResult?>(owner);
+            var result = await App.DialogService.ShowShiftSwapAsync(vm);
 
             if (result is not null && _vm is not null)
                 await _vm.ApplySwapResultAsync(result);
@@ -170,10 +168,9 @@ public partial class CalendarView : UserControl
     {
         try
         {
-            if (TopLevel.GetTopLevel(this) is not Window owner) return;
+            if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
 
-            var dialog = new ReplanDialog { DataContext = vm };
-            var result = await dialog.ShowDialog<ReplanResult?>(owner);
+            var result = await App.DialogService.ShowReplanAsync(vm);
 
             if (result is not null && _vm is not null)
                 await _vm.ApplyReplanResultAsync(result);

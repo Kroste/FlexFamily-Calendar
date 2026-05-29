@@ -21,21 +21,36 @@ public class OverlayDialogService : IDialogService
     }
 
     public Task<EntryDialogResult?> ShowEntryEditorAsync(EntryEditorViewModel vm)
-    {
-        var tcs = new TaskCompletionSource<EntryDialogResult?>();
+        => ShowAsync<EntryDialogResult>(new EntryEditorView { DataContext = vm }, h => vm.Closed += h, h => vm.Closed -= h);
 
-        void OnClosed(EntryDialogResult? result)
+    public Task<SwapDialogResult?> ShowShiftSwapAsync(ShiftSwapViewModel vm)
+        => ShowAsync<SwapDialogResult>(new ShiftSwapView { DataContext = vm }, h => vm.Closed += h, h => vm.Closed -= h);
+
+    public Task<ReplanResult?> ShowReplanAsync(ReplanViewModel vm)
+        => ShowAsync<ReplanResult>(new ReplanView { DataContext = vm }, h => vm.Closed += h, h => vm.Closed -= h);
+
+    public Task<string?> ShowDayNoteAsync(DayNoteViewModel vm)
+        => ShowAsync<string>(new DayNoteView { DataContext = vm }, h => vm.Closed += h, h => vm.Closed -= h);
+
+    private Task<TResult?> ShowAsync<TResult>(
+        Control content,
+        Action<Action<TResult?>> subscribe,
+        Action<Action<TResult?>> unsubscribe) where TResult : class
+    {
+        var tcs = new TaskCompletionSource<TResult?>();
+
+        Action<TResult?> handler = null!;
+        handler = result =>
         {
-            vm.Closed -= OnClosed;
+            unsubscribe(handler);
             _content.Content = null;
             _overlay.IsVisible = false;
             tcs.TrySetResult(result);
-        }
-        vm.Closed += OnClosed;
+        };
+        subscribe(handler);
 
-        _content.Content = new EntryEditorView { DataContext = vm };
+        _content.Content = content;
         _overlay.IsVisible = true;
-
         return tcs.Task;
     }
 }

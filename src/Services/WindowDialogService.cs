@@ -12,8 +12,14 @@ public class WindowDialogService : IDialogService
     public WindowDialogService(Window owner) => _owner = owner;
 
     public Task<EntryDialogResult?> ShowEntryEditorAsync(EntryEditorViewModel vm)
-    {
-        var dialog = new EntryEditorDialog { DataContext = vm };
-        return dialog.ShowDialog<EntryDialogResult?>(_owner);
-    }
+        => new EntryEditorDialog { DataContext = vm }.ShowDialog<EntryDialogResult?>(_owner);
+
+    public Task<SwapDialogResult?> ShowShiftSwapAsync(ShiftSwapViewModel vm)
+        => new ShiftSwapDialog { DataContext = vm }.ShowDialog<SwapDialogResult?>(_owner);
+
+    public Task<ReplanResult?> ShowReplanAsync(ReplanViewModel vm)
+        => new ReplanDialog { DataContext = vm }.ShowDialog<ReplanResult?>(_owner);
+
+    public Task<string?> ShowDayNoteAsync(DayNoteViewModel vm)
+        => new DayNoteDialog { DataContext = vm }.ShowDialog<string?>(_owner);
 }
