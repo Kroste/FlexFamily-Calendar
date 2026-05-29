@@ -215,6 +215,8 @@
                                 <Border CornerRadius="4" Padding="4,2" Margin="0,0,0,2" Cursor="Hand"
                                         Tapped="OnEntryTapped"
                                         PointerPressed="OnEntryPointerPressed"
+                                        PointerMoved="OnEntryPointerMoved"
+                                        PointerReleased="OnEntryPointerReleased"
                                         ClipToBounds="True"
                                         Background="{Binding OwnerColor, Converter={StaticResource ColorStringToBrushConverter}}">
                                   <Grid>

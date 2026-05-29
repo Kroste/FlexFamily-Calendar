@@ -25,6 +25,15 @@ public partial class CalendarView : UserControl
     private static readonly IBrush DropTargetBrush =
         new SolidColorBrush(Color.FromArgb(0x55, 0x2E, 0x86, 0xC1));
 
+    // Drag-Pending: erst nach echter Bewegung > 5px wird DragDrop gestartet — sonst
+    // verschluckt DoDragDropAsync das Tapped-Event und Klick öffnet den Editor nicht mehr.
+    private PointerPressedEventArgs? _pendingDragArgs;
+    private CalendarEntry? _pendingDragEntry;
+    private PersonDayCellViewModel? _pendingDragCell;
+    private Control? _pendingDragCtrl;
+    private Point? _pendingDragStart;
+    private bool _dragStarted;
+
     public CalendarView() => InitializeComponent();
 
     protected override void OnDataContextChanged(EventArgs e)
@@ -197,10 +206,11 @@ public partial class CalendarView : UserControl
 
     // ───────── Drag&Drop: Schicht-Chip → andere Zelle ─────────
 
-    /// <summary>Startet den Drag eines Eintrag-Chips. Avalonia kümmert sich selbst um den Bewegungs-
-    /// Threshold; ein reiner Klick (ohne Bewegung) feuert weiterhin Tapped → Eintrag bearbeiten.</summary>
-    private async void OnEntryPointerPressed(object? sender, PointerPressedEventArgs e)
+    /// <summary>Pointer-Pressed merkt nur die Start-Position; der echte Drag startet erst, wenn
+    /// PointerMoved eine Bewegung > 5px sieht. Sonst verschluckt DoDragDropAsync das Tapped-Event.</summary>
+    private void OnEntryPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        ClearPendingDrag();
         if (_vm?.IsAdmin != true) return;
         if (sender is not Control ctrl || ctrl.DataContext is not CalendarEntry entry) return;
         if (!EntryMoveCopy.CanDrag(entry)) return;
@@ -208,18 +218,38 @@ public partial class CalendarView : UserControl
         var cell = FindAncestorContext<PersonDayCellViewModel>(ctrl);
         if (cell is null) return;
 
+        _pendingDragArgs = e;
+        _pendingDragEntry = entry;
+        _pendingDragCell = cell;
+        _pendingDragCtrl = ctrl;
+        _pendingDragStart = e.GetPosition(this);
+    }
+
+    private async void OnEntryPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_pendingDragArgs is null || _pendingDragStart is null || _dragStarted) return;
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) { ClearPendingDrag(); return; }
+
+        var p = e.GetPosition(this);
+        var dx = p.X - _pendingDragStart.Value.X;
+        var dy = p.Y - _pendingDragStart.Value.Y;
+        if (dx * dx + dy * dy < 25) return;   // unter 5px = Klick, kein Drag
+
+        _dragStarted = true;
+
         var item = new DataTransferItem();
-        item.Set(EntryIdFormat, entry.Id);
-        item.Set(SourceDateFormat, cell.Date.ToString("yyyy-MM-dd"));
+        item.Set(EntryIdFormat, _pendingDragEntry!.Id);
+        item.Set(SourceDateFormat, _pendingDragCell!.Date.ToString("yyyy-MM-dd"));
         var transfer = new DataTransfer();
         transfer.Add(item);
 
-        // Visuelles Feedback: Source-Chip leicht ausblenden, solange er „unterwegs" ist.
-        var originalOpacity = ctrl.Opacity;
-        ctrl.Opacity = 0.4;
+        var ctrl = _pendingDragCtrl;
+        var originalOpacity = ctrl?.Opacity ?? 1.0;
+        if (ctrl is not null) ctrl.Opacity = 0.4;
+
         try
         {
-            await DragDrop.DoDragDropAsync(e, transfer, DragDropEffects.Move | DragDropEffects.Copy);
+            await DragDrop.DoDragDropAsync(_pendingDragArgs, transfer, DragDropEffects.Move | DragDropEffects.Copy);
         }
         catch (Exception ex)
         {
@@ -227,8 +257,25 @@ public partial class CalendarView : UserControl
         }
         finally
         {
-            ctrl.Opacity = originalOpacity;
+            if (ctrl is not null) ctrl.Opacity = originalOpacity;
+            ClearPendingDrag();
         }
+    }
+
+    private void OnEntryPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        // Maus-Up ohne überschrittenen Threshold → Klick, Tapped läuft normal weiter.
+        if (!_dragStarted) ClearPendingDrag();
+    }
+
+    private void ClearPendingDrag()
+    {
+        _pendingDragArgs = null;
+        _pendingDragEntry = null;
+        _pendingDragCell = null;
+        _pendingDragCtrl = null;
+        _pendingDragStart = null;
+        _dragStarted = false;
     }
 
     /// <summary>Wird beim ersten Layout der Tageszelle aufgerufen — registriert sie als Drop-Target.</summary>
