@@ -5,6 +5,7 @@ using FlexFamilyCalendar.Api.Data;
 using FlexFamilyCalendar.Api.ActivityTypes;
 using FlexFamilyCalendar.Api.Entries;
 using FlexFamilyCalendar.Api.Models;
+using FlexFamilyCalendar.Api.Notifications;
 using FlexFamilyCalendar.Api.RecurringActivities;
 using FlexFamilyCalendar.Api.Swaps;
 using FlexFamilyCalendar.Api.Users;
@@ -426,6 +427,35 @@ app.MapPut("/api/swap-requests", async (List<ShiftSwapRequestDto> items, AppDbCo
         });
     await db.SaveChangesAsync();
     return Results.Ok((await db.SwapRequests.ToListAsync()).Select(ShiftSwapRequestDto.From));
+})
+    .RequireAuthorization();
+
+// --- Benachrichtigungen --------------------------------------------------
+// Wie Schichttausch: Replace-all (passt zum Client), für alle Angemeldeten. Gleiche Grenze
+// (letzter-Schreiber-gewinnt; Filterung nach Empfänger macht weiterhin der Client).
+
+app.MapGet("/api/notifications", async (AppDbContext db) =>
+    (await db.Notifications.ToListAsync()).Select(NotificationDto.From))
+    .RequireAuthorization();
+
+app.MapPut("/api/notifications", async (List<NotificationDto> items, AppDbContext db) =>
+{
+    await db.Notifications.ExecuteDeleteAsync();
+    foreach (var i in items)
+        db.Notifications.Add(new NotificationEntity
+        {
+            Id = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id,
+            UserId = i.UserId ?? "",
+            CreatedAt = i.CreatedAt ?? "",
+            IsRead = i.IsRead,
+            MessageKey = i.MessageKey ?? "",
+            Args = i.Args ?? new(),
+            RelatedDate = i.RelatedDate,
+            Action = i.Action,
+            RelatedUserId = i.RelatedUserId
+        });
+    await db.SaveChangesAsync();
+    return Results.Ok((await db.Notifications.ToListAsync()).Select(NotificationDto.From));
 })
     .RequireAuthorization();
 
