@@ -225,4 +225,13 @@ public class ApiClient
         LogService.Info("API Eintrag gelöscht: id={0} → {1}", id, ok ? "ok" : "fehlgeschlagen");
         return ok;
     }
+
+    public async Task<SendWeekPlanResponseDto> SendWeekPlanAsync(SendWeekPlanBody body)
+    {
+        var resp = await _http.PostAsJsonAsync("api/mail/send-week-plan", body);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Mail-Versand");
+        var dto = await resp.Content.ReadFromJsonAsync<SendWeekPlanResponseDto>();
+        LogService.Info("API Mail-Versand: gesendet={0} fehlgeschlagen={1}", dto?.Sent ?? 0, dto?.Failed ?? 0);
+        return dto ?? new SendWeekPlanResponseDto(0, 0, new List<string>());
+    }
 }

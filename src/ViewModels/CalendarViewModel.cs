@@ -14,6 +14,7 @@ public partial class CalendarViewModel : ViewModelBase
     private readonly IStorageService _storage;
     private readonly NotificationService _notifications;
     private readonly AiService _ai;
+    private readonly IMailSender _mailSender;
     private List<User> _allUsers = new();
     private List<ShiftSwapRequest> _swapRequests = new();
     private List<ActivityType> _activityTypes = new();
@@ -90,11 +91,12 @@ public partial class CalendarViewModel : ViewModelBase
     private static IReadOnlyList<EntryType> AbsenceTypes(bool finalized) =>
         finalized ? new[] { EntryType.SickLeave } : new[] { EntryType.SickLeave, EntryType.Vacation };
 
-    public CalendarViewModel(IStorageService storage, User user, NotificationService notifications, AiService ai)
+    public CalendarViewModel(IStorageService storage, User user, NotificationService notifications, AiService ai, IMailSender mailSender)
     {
         _storage = storage;
         _notifications = notifications;
         _ai = ai;
+        _mailSender = mailSender;
         CurrentUser = user;
         // Admin startet in der Planungssicht; alle anderen fest in der Normalsicht
         _isPersonalView = user.Role != UserRole.Admin;
@@ -237,8 +239,8 @@ public partial class CalendarViewModel : ViewModelBase
     private async Task MailPlan()
     {
         if (!IsAdmin) return;
-        var settings = await _storage.LoadSettingsAsync();
-        if (!MailComposer.IsConfigured(settings)) { LogService.Warn(Localizer.Instance["Mail_NotConfigured"]); return; }
+        // Local-Modus prüft SMTP-Settings hier; Server-Modus lässt durch (Server entscheidet beim Senden).
+        if (!await _mailSender.IsConfiguredAsync()) { LogService.Warn(Localizer.Instance["Mail_NotConfigured"]); return; }
         var recipients = MailComposer.RecipientsWithEmail(_allUsers);
         if (recipients.Count == 0) { LogService.Warn(Localizer.Instance["Mail_NoRecipients"]); return; }
 
@@ -246,32 +248,37 @@ public partial class CalendarViewModel : ViewModelBase
         MailDialogRequested?.Invoke(new MailViewModel(recipients));
     }
 
-    /// <summary>Sendet jedem Empfänger ein eigenes, aus seiner Sicht maskiertes Wochen-PDF (einzelne Mails).</summary>
+    /// <summary>Sendet jedem Empfänger ein eigenes, aus seiner Sicht maskiertes Wochen-PDF (Local: pro Adresse
+    /// ein SmtpClient.SendMail; Server: ein Batch-POST an /api/mail/send-week-plan).</summary>
     public async Task SendPlanMailAsync(IReadOnlyList<string> emails)
     {
         if (emails.Count == 0) return;
-        var settings = await _storage.LoadSettingsAsync();
         var subject = $"{Localizer.Instance["Pdf_Title"]} {WeekLabel}";
         var body = string.Format(Localizer.Instance["Mail_Body"], WeekLabel);
 
-        var sent = 0;
+        // PDFs pro Empfänger client-seitig rendern (Datenschutz: jeder bekommt seine Sicht).
+        var items = new List<MailSendItem>();
         foreach (var email in emails)
         {
             var viewer = _allUsers.FirstOrDefault(u =>
                 u.Email.Trim().Equals(email, StringComparison.OrdinalIgnoreCase));
-            if (viewer == null) continue;
-            try
-            {
-                var pdf = PdfExportService.Render(CreateWeekExport(viewer));   // aus Sicht des Empfängers
-                await MailService.SendAsync(settings, email, subject, body, pdf, ExportFileName);
-                sent++;
-            }
-            catch (Exception ex)
-            {
-                LogService.Error("Mail-Versand an einen Empfänger fehlgeschlagen", ex);
-            }
+            if (viewer is null) continue;
+            var pdf = PdfExportService.Render(CreateWeekExport(viewer));
+            items.Add(new MailSendItem(email, pdf));
         }
-        LogService.Info(string.Format(Localizer.Instance["Mail_Sent"], sent));
+        if (items.Count == 0) { LogService.Warn(Localizer.Instance["Mail_NoRecipients"]); return; }
+
+        try
+        {
+            var result = await _mailSender.SendWeekPlanAsync(subject, body, ExportFileName, items);
+            LogService.Info(string.Format(Localizer.Instance["Mail_Sent"], result.Sent));
+            foreach (var err in result.Errors)
+                LogService.Warn("Mail: {0}", err);
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("Mail-Versand fehlgeschlagen", ex);
+        }
     }
 
     /// <summary>Ist-Stunden je Person (Work+Au-Pair) der Woche; nur Personen mit Soll&gt;0.</summary>

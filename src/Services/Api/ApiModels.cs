@@ -128,3 +128,13 @@ public record UpdateEntryBody(
     string? CategoryLabel,
     string? Note,
     string? ActivityTypeId = null);
+
+public record ServerMailRecipientDto(string Email, string PdfBase64);
+
+public record SendWeekPlanBody(
+    string Subject,
+    string Body,
+    string FileName,
+    List<ServerMailRecipientDto> Recipients);
+
+public record SendWeekPlanResponseDto(int Sent, int Failed, List<string> Errors);

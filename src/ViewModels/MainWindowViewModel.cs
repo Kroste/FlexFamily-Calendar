@@ -14,6 +14,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IStorageService _storage;
     private readonly NotificationService _notifications;
     private readonly AiService _ai;
+    private readonly IMailSender _mailSender;
     private User? _currentUser;
 
     [ObservableProperty]
@@ -48,12 +49,13 @@ public partial class MainWindowViewModel : ViewModelBase
     public event Action? NotificationsRequested;
     public event Action? AdminRequested;
 
-    public MainWindowViewModel(AuthService auth, IStorageService storage, NotificationService notifications, AiService ai, LoginViewModel loginVm)
+    public MainWindowViewModel(AuthService auth, IStorageService storage, NotificationService notifications, AiService ai, IMailSender mailSender, LoginViewModel loginVm)
     {
         _auth = auth;
         _storage = storage;
         _notifications = notifications;
         _ai = ai;
+        _mailSender = mailSender;
         LoginVm = loginVm;
         LoginVm.LoginSuccessful += OnLoginSuccessful;
         LogService.StatusUpdated += msg =>
@@ -74,7 +76,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         CurrentUserDisplay = string.IsNullOrEmpty(user.DisplayName) ? user.Username : user.DisplayName;
         CalendarVm?.Cleanup();
-        CalendarVm = new CalendarViewModel(_storage, user, _notifications, _ai);
+        CalendarVm = new CalendarViewModel(_storage, user, _notifications, _ai, _mailSender);
         IsLoggedIn = true;
         OnPropertyChanged(nameof(IsAdmin));
         OnPropertyChanged(nameof(IsAdminAndNotBrowser));

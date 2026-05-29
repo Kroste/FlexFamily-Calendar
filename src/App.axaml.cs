@@ -59,6 +59,10 @@ public partial class App : Application
 
         var auth = new AuthService(storage, apiClient);
         var notifications = new NotificationService(storage);
+        // Mail-Backend folgt dem Speicher-Modus: Server → API-Endpoint, Lokal → SMTP-Versand direkt.
+        IMailSender mailSender = apiClient is not null
+            ? new ApiMailSender(apiClient)
+            : new LocalMailSender(localStorage);
         var loginVm = new LoginViewModel(auth);
 
         // Erstkonfiguration erkennen (async, aber wir warten kurz)
@@ -76,7 +80,7 @@ public partial class App : Application
 
         aiService.ApplySettings(settings);
 
-        var mainVm = new MainWindowViewModel(auth, storage, notifications, aiService, loginVm);
+        var mainVm = new MainWindowViewModel(auth, storage, notifications, aiService, mailSender, loginVm);
 
         // Auto-Login: gemerkten Benutzer vor dem Anzeigen anmelden (kein Login-Screen-Flackern)
         if (hasUsers)
@@ -114,6 +118,7 @@ public partial class App : Application
         var storage = new ApiStorageService(apiClient, settingsStore);
         var auth = new AuthService(storage, apiClient);
         var notifications = new NotificationService(storage);
+        IMailSender mailSender = new ApiMailSender(apiClient);
         var loginVm = new LoginViewModel(auth) { IsFirstRun = false };   // Server hat immer den Erst-Admin
 
         var aiService = new AiService(new IAiProvider[]
@@ -126,7 +131,7 @@ public partial class App : Application
         });
         aiService.ApplySettings(settings);
 
-        var mainVm = new MainWindowViewModel(auth, storage, notifications, aiService, loginVm);
+        var mainVm = new MainWindowViewModel(auth, storage, notifications, aiService, mailSender, loginVm);
 
         // View sofort setzen (Login-Screen), Auto-Login per Token läuft asynchron — würde sonst in WASM blockieren.
         singleView.MainView = new MainView { DataContext = mainVm };

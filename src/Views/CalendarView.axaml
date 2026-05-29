@@ -38,7 +38,7 @@
                   Padding="12,6" CornerRadius="6" />
           <Button Content="{loc:Tr Cal_Mail}"
                   Command="{Binding MailPlanCommand}"
-                  IsVisible="{Binding IsAdminAndNotBrowser}"
+                  IsVisible="{Binding IsAdmin}"
                   Padding="12,6" CornerRadius="6" />
           <Button Content="{loc:Tr Cal_CopyWeek}"
                   Command="{Binding CopyWeekToNextCommand}"
