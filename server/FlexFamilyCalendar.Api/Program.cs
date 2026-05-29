@@ -108,6 +108,40 @@ app.MapGet("/api/auth/me", async (AppDbContext db, ClaimsPrincipal principal) =>
 })
     .RequireAuthorization();
 
+// Eigenes Profil ändern (jeder für sich) — NUR selbst-editierbare Felder, niemals Rolle/Kategorie/Stunden.
+app.MapPut("/api/auth/me", async (UpdateProfileRequest req, AppDbContext db, ClaimsPrincipal principal) =>
+{
+    var id = CurrentUserId(principal);
+    if (id is null) return Results.Unauthorized();
+    var user = await db.Users.FindAsync(id.Value);
+    if (user is null) return Results.Unauthorized();
+
+    if (!string.IsNullOrWhiteSpace(req.DisplayName)) user.DisplayName = req.DisplayName.Trim();
+    if (req.Email is not null) user.Email = req.Email.Trim();
+    if (!string.IsNullOrWhiteSpace(req.Language)) user.Language = req.Language.Trim();
+    if (req.Color is not null) user.Color = req.Color.Trim();
+
+    await db.SaveChangesAsync();
+    return Results.Ok(UserDto.From(user));
+})
+    .RequireAuthorization();
+
+// Eigenes Kennwort ändern (jeder für sich).
+app.MapPost("/api/auth/me/password", async (SetPasswordRequest req, AppDbContext db, ClaimsPrincipal principal) =>
+{
+    if (string.IsNullOrWhiteSpace(req.Password))
+        return Results.BadRequest(new { error = "Kennwort darf nicht leer sein." });
+    var id = CurrentUserId(principal);
+    if (id is null) return Results.Unauthorized();
+    var user = await db.Users.FindAsync(id.Value);
+    if (user is null) return Results.Unauthorized();
+
+    user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+})
+    .RequireAuthorization();
+
 app.MapGet("/api/users", async (AppDbContext db) =>
     (await db.Users.OrderBy(u => u.DisplayName).ToListAsync()).Select(UserDto.From))
     .RequireAuthorization("Admin");
@@ -501,3 +535,5 @@ internal record UpdateUserRequest(
     string? Color = null, string? Language = null);
 
 internal record SetPasswordRequest(string Password);
+
+internal record UpdateProfileRequest(string? DisplayName, string? Email, string? Language, string? Color);
