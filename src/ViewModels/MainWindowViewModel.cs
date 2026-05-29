@@ -31,6 +31,12 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public bool IsNotLoggedIn => !IsLoggedIn;
     public bool IsAdmin => _currentUser?.Role == UserRole.Admin;
+
+    // Plattform-Schalter: Window-basierte Dialoge/Features werden im Browser ausgeblendet, bis Inline-Ersatz da ist.
+    public bool IsBrowser => OperatingSystem.IsBrowser();
+    public bool IsNotBrowser => !OperatingSystem.IsBrowser();
+    public bool IsAdminAndNotBrowser => IsAdmin && IsNotBrowser;
+
     public bool HasUnread => UnreadCount > 0;
     public string UnreadBadge => UnreadCount > 9 ? "9+" : UnreadCount.ToString();
     public LoginViewModel LoginVm { get; }
@@ -71,6 +77,7 @@ public partial class MainWindowViewModel : ViewModelBase
         CalendarVm = new CalendarViewModel(_storage, user, _notifications, _ai);
         IsLoggedIn = true;
         OnPropertyChanged(nameof(IsAdmin));
+        OnPropertyChanged(nameof(IsAdminAndNotBrowser));
         LogService.UserAction(user.Username, logVerb);
         _ = RefreshUnreadCountAsync();
     }
@@ -92,6 +99,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _currentUser = null;
         UnreadCount = 0;
         OnPropertyChanged(nameof(IsAdmin));
+        OnPropertyChanged(nameof(IsAdminAndNotBrowser));
         LoginVm.Username = "";
         LoginVm.RememberMe = false;
     }
@@ -143,5 +151,6 @@ public partial class MainWindowViewModel : ViewModelBase
         ThemeManager.Instance.Apply(fresh.ThemeVariant);
         CurrentUserDisplay = string.IsNullOrEmpty(fresh.DisplayName) ? fresh.Username : fresh.DisplayName;
         OnPropertyChanged(nameof(IsAdmin));
+        OnPropertyChanged(nameof(IsAdminAndNotBrowser));
     }
 }

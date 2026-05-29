@@ -47,6 +47,10 @@ public partial class CalendarViewModel : ViewModelBase
     public bool IsAdmin => CurrentUser.Role == UserRole.Admin;
     public bool CanSwitchView => IsAdmin;
 
+    // Plattform-Schalter: PDF-Speichern und SMTP-Mail laufen im Browser nicht — Buttons dort ausblenden.
+    public bool IsNotBrowser => !OperatingSystem.IsBrowser();
+    public bool IsAdminAndNotBrowser => IsAdmin && IsNotBrowser;
+
     [ObservableProperty] private bool _isHoursPanelVisible;
 
     /// <summary>true = Normalsicht (eigene hervorgehoben); false = Planungssicht (alle gleich, editierbar).</summary>

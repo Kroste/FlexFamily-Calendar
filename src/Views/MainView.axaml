@@ -27,6 +27,7 @@
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
           <!-- Benachrichtigungs-Glocke mit Ungelesen-Badge -->
           <Button Command="{Binding OpenNotificationsCommand}"
+                  IsVisible="{Binding IsNotBrowser}"
                   Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="10,5" VerticalAlignment="Center"
                   ToolTip.Tip="{loc:Tr Notif_Title}">
@@ -46,19 +47,22 @@
                      VerticalAlignment="Center" FontSize="13" />
           <Button Content="{loc:Tr Main_Admin}"
                   Command="{Binding OpenAdminCommand}"
-                  IsVisible="{Binding IsAdmin}"
+                  IsVisible="{Binding IsAdminAndNotBrowser}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="12,5" />
           <Button Content="{loc:Tr Main_MonthOverview}"
                   Command="{Binding OpenMonthOverviewCommand}"
+                  IsVisible="{Binding IsNotBrowser}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="12,5" />
           <Button Content="{loc:Tr Main_HoursAccount}"
                   Command="{Binding OpenHoursAccountCommand}"
+                  IsVisible="{Binding IsNotBrowser}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="12,5" />
           <Button Content="{loc:Tr Main_Profile}"
                   Command="{Binding OpenProfileCommand}"
+                  IsVisible="{Binding IsNotBrowser}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="12,5" />
           <Button Content="{loc:Tr Main_Logout}"
