@@ -3,6 +3,7 @@ using System.Text;
 using FlexFamilyCalendar.Api.Auth;
 using FlexFamilyCalendar.Api.Data;
 using FlexFamilyCalendar.Api.ActivityTypes;
+using FlexFamilyCalendar.Api.DayNotes;
 using FlexFamilyCalendar.Api.Entries;
 using FlexFamilyCalendar.Api.Models;
 using FlexFamilyCalendar.Api.Notifications;
@@ -458,6 +459,32 @@ app.MapPut("/api/notifications", async (List<NotificationDto> items, AppDbContex
     return Results.Ok((await db.Notifications.ToListAsync()).Select(NotificationDto.From));
 })
     .RequireAuthorization();
+
+// --- Tagesnotiz / Finalisiert (pro Datum) --------------------------------
+
+app.MapGet("/api/day-notes/{date}", async (DateOnly date, AppDbContext db) =>
+{
+    var meta = await db.DayMeta.FindAsync(date);
+    return Results.Ok(new DayNoteDto(meta?.Note ?? "", meta?.IsFinalized ?? false));
+})
+    .RequireAuthorization();
+
+// Setzen ist Admin-Sache (allgemeiner Tageshinweis + Finalisieren). Leere Notiz ohne Finalisiert → Zeile entfernen.
+app.MapPut("/api/day-notes/{date}", async (DateOnly date, DayNoteDto body, AppDbContext db) =>
+{
+    var meta = await db.DayMeta.FindAsync(date);
+    if (string.IsNullOrWhiteSpace(body.Note) && !body.IsFinalized)
+    {
+        if (meta is not null) { db.DayMeta.Remove(meta); await db.SaveChangesAsync(); }
+        return Results.NoContent();
+    }
+    if (meta is null) { meta = new CalendarDayMeta { Date = date }; db.DayMeta.Add(meta); }
+    meta.Note = body.Note?.Trim() ?? "";
+    meta.IsFinalized = body.IsFinalized;
+    await db.SaveChangesAsync();
+    return Results.Ok(new DayNoteDto(meta.Note, meta.IsFinalized));
+})
+    .RequireAuthorization("Admin");
 
 app.Run();
 

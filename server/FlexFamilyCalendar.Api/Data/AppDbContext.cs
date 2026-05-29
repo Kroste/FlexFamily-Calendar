@@ -13,11 +13,13 @@ public class AppDbContext : DbContext
     public DbSet<RecurringActivityEntity> RecurringActivities => Set<RecurringActivityEntity>();
     public DbSet<ShiftSwapRequestEntity> SwapRequests => Set<ShiftSwapRequestEntity>();
     public DbSet<NotificationEntity> Notifications => Set<NotificationEntity>();
+    public DbSet<CalendarDayMeta> DayMeta => Set<CalendarDayMeta>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UserEntity>().HasIndex(u => u.Username).IsUnique();
         modelBuilder.Entity<CalendarEntry>().HasIndex(e => new { e.UserId, e.Date });
         modelBuilder.Entity<CalendarEntry>().HasIndex(e => e.Status);
+        modelBuilder.Entity<CalendarDayMeta>().HasKey(m => m.Date);
     }
 }
