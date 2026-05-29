@@ -234,4 +234,14 @@ public class ApiClient
         LogService.Info("API Mail-Versand: gesendet={0} fehlgeschlagen={1}", dto?.Sent ?? 0, dto?.Failed ?? 0);
         return dto ?? new SendWeekPlanResponseDto(0, 0, new List<string>());
     }
+
+    public async Task<string> AiCompleteAsync(string provider, string prompt, string? model, CancellationToken ct)
+    {
+        var body = new AiCompleteBody(provider, prompt, model);
+        var resp = await _http.PostAsJsonAsync("api/ai/complete", body, ct);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, $"AI ({provider})");
+        var dto = await resp.Content.ReadFromJsonAsync<AiCompleteResponseDto>(cancellationToken: ct);
+        LogService.Debug("API AI-Antwort von {0}: {1} Zeichen", provider, dto?.Text?.Length ?? 0);
+        return dto?.Text ?? "";
+    }
 }

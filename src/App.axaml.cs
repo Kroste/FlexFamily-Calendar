@@ -121,13 +121,14 @@ public partial class App : Application
         IMailSender mailSender = new ApiMailSender(apiClient);
         var loginVm = new LoginViewModel(auth) { IsFirstRun = false };   // Server hat immer den Erst-Admin
 
+        // KI im Browser nur über den Server-Proxy — Schlüssel liegen ENV-seitig im Server.
+        // Lokales Llama gibt's hier nicht; der Browser kann nicht auf den Localhost des Users.
         var aiService = new AiService(new IAiProvider[]
         {
-            new GeminiProvider(),
-            new OpenAiProvider(),
-            new AnthropicProvider(),
-            new PerplexityProvider(),
-            new LlamaProvider()
+            new ApiAiProvider(apiClient, "Gemini"),
+            new ApiAiProvider(apiClient, "ChatGPT"),
+            new ApiAiProvider(apiClient, "Anthropic"),
+            new ApiAiProvider(apiClient, "Perplexity")
         });
         aiService.ApplySettings(settings);
 

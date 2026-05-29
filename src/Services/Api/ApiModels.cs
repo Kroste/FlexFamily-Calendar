@@ -138,3 +138,7 @@ public record SendWeekPlanBody(
     List<ServerMailRecipientDto> Recipients);
 
 public record SendWeekPlanResponseDto(int Sent, int Failed, List<string> Errors);
+
+public record AiCompleteBody(string Provider, string Prompt, string? Model);
+
+public record AiCompleteResponseDto(string Text);
