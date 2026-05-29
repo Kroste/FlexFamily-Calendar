@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: flexfamily
+      POSTGRES_USER: flexfamily
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  api:
+    build: ./FlexFamilyCalendar.Api
+    depends_on:
+      - db
+    environment:
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=flexfamily;Username=flexfamily;Password=${DB_PASSWORD:-changeme}"
+      Jwt__Key: "${JWT_KEY:-please-change-this-to-a-long-random-secret-min-32-bytes}"
+      Jwt__Issuer: "FlexFamilyCalendar"
+      Jwt__Audience: "FlexFamilyCalendar"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
