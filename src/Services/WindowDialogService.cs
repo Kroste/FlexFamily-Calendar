@@ -26,5 +26,8 @@ public class WindowDialogService : IDialogService
     public Task<UserEditorResult?> ShowUserEditorAsync(UserEditorViewModel vm)
         => new UserEditorDialog { DataContext = vm }.ShowDialog<UserEditorResult?>(_owner);
 
+    public Task<NotificationResult?> ShowNotificationsAsync(NotificationsViewModel vm)
+        => new NotificationsDialog { DataContext = vm }.ShowDialog<NotificationResult?>(_owner);
+
     public void CancelActive() { }   // Window fängt ESC/Außenklick selbst ab
 }

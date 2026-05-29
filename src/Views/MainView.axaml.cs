@@ -55,6 +55,9 @@ public partial class MainView : UserControl
         }
     }
 
+    private void OnOverlayCloseClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        => App.DialogService?.CancelActive();
+
     protected override void OnDataContextChanged(EventArgs e)
     {
         base.OnDataContextChanged(e);
@@ -96,12 +99,10 @@ public partial class MainView : UserControl
     private async void OnNotificationsRequested()
     {
         if (_vm == null) return;
-        var owner = OwnerWindow();
-        if (owner is null) { LogService.Debug("Benachrichtigungs-Dialog im Browser noch nicht unterstützt."); return; }
+        if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
         try
         {
-            var dialog = new NotificationsDialog { DataContext = _vm.CreateNotifications() };
-            var result = await dialog.ShowDialog<NotificationResult?>(owner);
+            var result = await App.DialogService.ShowNotificationsAsync(_vm.CreateNotifications());
             await _vm.RefreshUnreadCountAsync();
             if (result is null || _vm.CalendarVm is null) return;
 

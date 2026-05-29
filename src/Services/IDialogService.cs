@@ -14,6 +14,7 @@ public interface IDialogService
     Task<ReplanResult?> ShowReplanAsync(ReplanViewModel vm);
     Task<string?> ShowDayNoteAsync(DayNoteViewModel vm);
     Task<UserEditorResult?> ShowUserEditorAsync(UserEditorViewModel vm);
+    Task<NotificationResult?> ShowNotificationsAsync(NotificationsViewModel vm);
 
     /// <summary>
     /// Abbruch des aktuell offenen Dialogs (ESC/Backdrop-Klick im Overlay-Backend).

@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.NotificationsView"
+             x:CompileBindings="False">
+
+  <DockPanel Margin="20" MinWidth="432" Height="560">
+
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+      <TextBlock Grid.Column="0" Text="{loc:Tr Notif_Title}"
+                 FontSize="18" FontWeight="Bold" VerticalAlignment="Center" />
+      <Button Grid.Column="1" Content="{loc:Tr Notif_MarkAllRead}"
+              Command="{Binding MarkAllReadCommand}"
+              IsVisible="{Binding HasItems}"
+              Padding="12,6" CornerRadius="6" />
+    </Grid>
+
+    <TextBlock DockPanel.Dock="Top" Text="{loc:Tr Notif_Empty}"
+               Opacity="0.6" FontSize="13" Margin="0,8,0,0"
+               IsVisible="{Binding IsEmpty}" />
+
+    <ScrollViewer>
+      <ItemsControl ItemsSource="{Binding Items}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Button Command="{Binding $parent[ItemsControl].DataContext.OpenCommand}"
+                    CommandParameter="{Binding}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                    Background="Transparent" BorderThickness="0" Padding="0"
+                    Margin="0,0,0,8" Cursor="Hand">
+              <Border Padding="12,10" CornerRadius="6" HorizontalAlignment="Stretch"
+                      Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+                <StackPanel Spacing="4">
+                  <Grid ColumnDefinitions="Auto,*">
+                    <Ellipse Grid.Column="0" Width="8" Height="8" Margin="0,0,8,0"
+                             VerticalAlignment="Center" Fill="#2E86C1"
+                             IsVisible="{Binding !IsRead}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Text}" TextWrapping="Wrap" FontSize="14" />
+                  </Grid>
+                  <TextBlock Text="{Binding TimeLabel}" FontSize="11" Opacity="0.6" />
+                </StackPanel>
+              </Border>
+            </Button>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+  </DockPanel>
+</UserControl>

@@ -29,7 +29,6 @@
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
           <!-- Benachrichtigungs-Glocke mit Ungelesen-Badge -->
           <Button Command="{Binding OpenNotificationsCommand}"
-                  IsVisible="{Binding IsNotBrowser}"
                   Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="10,5" VerticalAlignment="Center"
                   ToolTip.Tip="{loc:Tr Notif_Title}">
@@ -114,7 +113,17 @@
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             BoxShadow="0 8 24 0 #66000000">
-      <ContentControl x:Name="DialogContent" />
+      <Grid>
+        <ContentControl x:Name="DialogContent" />
+        <!-- Browser-Modus: sichtbares Schließen-X (auf Desktop bleibt das OS-Window-X).
+             Für Dialoge ohne eigenen Cancel-Button (Notifications/MonthOverview/HoursAccount/Admin)
+             ist das der einzige fokuserbare Close-Pfad. -->
+        <Button Click="OnOverlayCloseClick"
+                Content="✕" FontSize="14"
+                HorizontalAlignment="Right" VerticalAlignment="Top"
+                Margin="0,6,6,0" Padding="8,3"
+                Background="Transparent" BorderThickness="0" />
+      </Grid>
     </Border>
   </Grid>
 

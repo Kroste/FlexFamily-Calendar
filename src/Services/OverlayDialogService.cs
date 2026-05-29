@@ -46,6 +46,11 @@ public class OverlayDialogService : IDialogService
             h => vm.Closed += h, h => vm.Closed -= h,
             () => vm.CancelCommand.Execute(null));
 
+    public Task<NotificationResult?> ShowNotificationsAsync(NotificationsViewModel vm)
+        => ShowAsync<NotificationResult>(new NotificationsView { DataContext = vm },
+            h => vm.CloseRequested += h, h => vm.CloseRequested -= h,
+            () => vm.CloseCommand.Execute(null));
+
     public void CancelActive() => _cancelCurrent?.Invoke();
 
     private Task<TResult?> ShowAsync<TResult>(
