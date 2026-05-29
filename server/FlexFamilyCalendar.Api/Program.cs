@@ -38,9 +38,14 @@ using (var scope = app.Services.CreateScope())
     }
 
     // Erst-Admin anlegen (idempotent): nur wenn per Konfiguration gesetzt UND noch keine Benutzer existieren.
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     var seedUser = cfg["Seed:AdminUsername"];
     var seedPass = cfg["Seed:AdminPassword"];
-    if (!string.IsNullOrWhiteSpace(seedUser) && !string.IsNullOrWhiteSpace(seedPass) && !db.Users.Any())
+    if (string.IsNullOrWhiteSpace(seedUser) || string.IsNullOrWhiteSpace(seedPass))
+        logger.LogWarning("Kein Erst-Admin angelegt: Seed__AdminUsername/Seed__AdminPassword sind nicht gesetzt.");
+    else if (db.Users.Any())
+        logger.LogInformation("Seed übersprungen: es existieren bereits Benutzer.");
+    else
     {
         db.Users.Add(new UserEntity
         {
@@ -51,6 +56,7 @@ using (var scope = app.Services.CreateScope())
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(seedPass)
         });
         db.SaveChanges();
+        logger.LogInformation("Erst-Admin '{User}' angelegt.", seedUser.Trim());
     }
 }
 
@@ -63,7 +69,8 @@ app.MapPost("/api/auth/login", async (LoginRequest req, AppDbContext db, TokenSe
 {
     var user = await db.Users.FirstOrDefaultAsync(u => u.Username == req.Username);
     if (user is null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
-        return Results.Unauthorized();
+        return Results.Json(new { error = "Ungültiger Benutzername oder Passwort." },
+            statusCode: StatusCodes.Status401Unauthorized);
 
     return Results.Ok(new
     {
