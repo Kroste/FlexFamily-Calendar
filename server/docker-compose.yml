@@ -21,10 +21,8 @@ services:
       # Erst-Admin beim allerersten Start (nur wenn DB leer). Danach kann er weitere Benutzer anlegen.
       Seed__AdminUsername: "${ADMIN_USER:-}"
       Seed__AdminPassword: "${ADMIN_PASSWORD:-}"
-    ports:
-      # Fallback während der Umstellung. Nach erfolgreichem HTTPS-Test entfernen und
-      # Port 8080 in der VPS-Firewall schließen, damit nur noch Caddy (443) erreichbar ist.
-      - "8080:8080"
+    # Kein öffentliches Port-Mapping mehr: die API ist nur intern über das Docker-Netz
+    # erreichbar (Caddy → api:8080). Öffentlich ist ausschließlich Caddy (443).
     restart: unless-stopped
 
   # Reverse-Proxy: terminiert HTTPS für flexfamily.cloud und leitet intern an die API weiter.
