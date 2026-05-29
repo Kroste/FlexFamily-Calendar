@@ -29,13 +29,13 @@ builder.Services.AddAuthorization(o => o.AddPolicy("Admin", p => p.RequireRole("
 
 var app = builder.Build();
 
-// Schema sicherstellen (Dev). TODO: vor Produktion auf EF-Migrationen umstellen. DB-Start abwarten (Retry).
+// Ausstehende EF-Migrationen anwenden (legt das Schema an bzw. aktualisiert es). DB-Start abwarten (Retry).
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     for (var attempt = 1; attempt <= 10; attempt++)
     {
-        try { db.Database.EnsureCreated(); break; }
+        try { db.Database.Migrate(); break; }
         catch when (attempt < 10) { Thread.Sleep(3000); }   // DB evtl. noch nicht bereit
     }
 
