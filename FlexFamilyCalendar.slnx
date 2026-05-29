@@ -5,6 +5,9 @@
   <Folder Name="/desktop/">
     <Project Path="desktop/FlexFamilyCalendar.Desktop.csproj" />
   </Folder>
+  <Folder Name="/browser/">
+    <Project Path="browser/FlexFamilyCalendar.Browser.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/FlexFamilyCalendar.Tests/FlexFamilyCalendar.Tests.csproj" />
     <Project Path="tests/FlexFamilyCalendar.Api.Tests/FlexFamilyCalendar.Api.Tests.csproj" />
