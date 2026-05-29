@@ -926,6 +926,57 @@ public partial class CalendarViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Drag&amp;Drop einer Schicht von einer Zelle auf eine andere (Person oder Tag). Öffnet den
+    /// „Verschieben/Kopieren?"-Dialog und führt das Resultat aus. Nur Admin (Nicht-Admins nutzen
+    /// den Schichttausch-Workflow). Abwesenheiten, wiederkehrende Overlays und finalisierte Tage
+    /// werden bewusst ignoriert.
+    /// </summary>
+    public async Task HandleEntryDropAsync(string entryId, DateOnly sourceDate, PersonDayCellViewModel target)
+    {
+        if (!IsAdmin) return;
+        if (App.DialogService is null) return;
+
+        var source = Days.SelectMany(d => d.Entries).FirstOrDefault(e => e.Id == entryId);
+        if (source is null) return;
+
+        // Engine entscheidet Erlaubnis (Recurring, Abwesenheit, No-Op).
+        var probe = EntryMoveCopy.Plan(source, sourceDate, target.Date, target.Person.Id,
+            target.Person.DisplayName ?? target.Person.Username, MoveCopyAction.Move);
+        if (probe is null) return;
+
+        // Drop in finalisierte Wochen vorerst sperren — sonst überschriebene Genehmigungen.
+        var targetDay = Days.FirstOrDefault(d => d.Date == target.Date);
+        if (targetDay?.IsFinalized == true) { LogService.Warn("Drop in finalisierter Woche abgelehnt."); return; }
+
+        var personLabel = string.IsNullOrEmpty(target.Person.DisplayName) ? target.Person.Username : target.Person.DisplayName;
+        var description = string.Format(
+            Localizer.Instance["MoveCopy_Description"],
+            $"{source.UserDisplayName} {sourceDate:dd.MM.}",
+            $"{personLabel} {target.Date:dd.MM.}");
+
+        var dialogVm = new MoveCopyViewModel(Localizer.Instance["MoveCopy_Title"], description);
+        var result = await App.DialogService.ShowMoveCopyAsync(dialogVm);
+        if (result is null) return;
+
+        var plan = EntryMoveCopy.Plan(source, sourceDate, target.Date, target.Person.Id,
+            personLabel, result.Action);
+        if (plan is null) return;
+
+        if (plan.Delete is not null && plan.DeleteFromDate is not null)
+        {
+            await ApplyEntryResultAsync(plan.DeleteFromDate.Value,
+                new EntryDialogResult(EntryDialogAction.Delete, plan.Delete,
+                    plan.DeleteFromDate.Value, plan.DeleteFromDate.Value));
+        }
+        await ApplyEntryResultAsync(plan.SaveToDate,
+            new EntryDialogResult(EntryDialogAction.Save, plan.Save, plan.SaveToDate, plan.SaveToDate));
+
+        LogService.UserAction(CurrentUser.Username,
+            $"Eintrag {(result.Action == MoveCopyAction.Move ? "verschoben" : "kopiert")}: " +
+            $"{source.UserDisplayName} {sourceDate:dd.MM.} → {personLabel} {target.Date:dd.MM.}");
+    }
+
     /// <summary>Klick in eine Tabellenzelle: Admin plant für die Person, Mitarbeiter trägt sich krank/Urlaub ein.</summary>
     public void AddForCell(User person, DateOnly date)
     {

@@ -202,6 +202,7 @@
                     <DataTemplate>
                       <Border BorderThickness="1,0,0,1" MinHeight="46" Padding="3" Cursor="Hand"
                               Tapped="OnCellTapped" Background="Transparent" ClipToBounds="True"
+                              DragDrop.AllowDrop="True" Loaded="OnCellLoaded"
                               BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
                         <Grid>
                           <Border IsVisible="{Binding IsToday}" Background="#142E86C1" />
@@ -212,7 +213,9 @@
                             <ItemsControl.ItemTemplate>
                               <DataTemplate>
                                 <Border CornerRadius="4" Padding="4,2" Margin="0,0,0,2" Cursor="Hand"
-                                        Tapped="OnEntryTapped" ClipToBounds="True"
+                                        Tapped="OnEntryTapped"
+                                        PointerPressed="OnEntryPointerPressed"
+                                        ClipToBounds="True"
                                         Background="{Binding OwnerColor, Converter={StaticResource ColorStringToBrushConverter}}">
                                   <Grid>
                                     <StackPanel Spacing="0">

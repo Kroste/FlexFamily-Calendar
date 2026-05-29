@@ -1,6 +1,9 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
 using FlexFamilyCalendar.ViewModels;
@@ -10,6 +13,13 @@ namespace FlexFamilyCalendar.Views;
 public partial class CalendarView : UserControl
 {
     private CalendarViewModel? _vm;
+
+    // Avalonia 12 verlangt DataFormat-Instanzen für DragDrop-Payloads. In-Process-Format reicht,
+    // weil wir die Daten nur zwischen Controls in derselben App reichen.
+    private static readonly DataFormat<string> EntryIdFormat =
+        DataFormat.CreateInProcessFormat<string>("ffc-entry-id");
+    private static readonly DataFormat<string> SourceDateFormat =
+        DataFormat.CreateInProcessFormat<string>("ffc-source-date");
 
     public CalendarView() => InitializeComponent();
 
@@ -179,5 +189,83 @@ public partial class CalendarView : UserControl
         {
             LogService.Error("Fehler im Umplanungs-Dialog", ex);
         }
+    }
+
+    // ───────── Drag&Drop: Schicht-Chip → andere Zelle ─────────
+
+    /// <summary>Startet den Drag eines Eintrag-Chips. Avalonia kümmert sich selbst um den Bewegungs-
+    /// Threshold; ein reiner Klick (ohne Bewegung) feuert weiterhin Tapped → Eintrag bearbeiten.</summary>
+    private async void OnEntryPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (_vm?.IsAdmin != true) return;
+        if (sender is not Control ctrl || ctrl.DataContext is not CalendarEntry entry) return;
+        if (!EntryMoveCopy.CanDrag(entry)) return;
+
+        var cell = FindAncestorContext<PersonDayCellViewModel>(ctrl);
+        if (cell is null) return;
+
+        var item = new DataTransferItem();
+        item.Set(EntryIdFormat, entry.Id);
+        item.Set(SourceDateFormat, cell.Date.ToString("yyyy-MM-dd"));
+        var transfer = new DataTransfer();
+        transfer.Add(item);
+
+        try
+        {
+            await DragDrop.DoDragDropAsync(e, transfer, DragDropEffects.Move | DragDropEffects.Copy);
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("Drag&Drop fehlgeschlagen", ex);
+        }
+    }
+
+    /// <summary>Wird beim ersten Layout der Tageszelle aufgerufen — registriert sie als Drop-Target.</summary>
+    private void OnCellLoaded(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Control c) return;
+        c.AddHandler(DragDrop.DragOverEvent, OnCellDragOver);
+        c.AddHandler(DragDrop.DropEvent, OnCellDrop);
+    }
+
+    private void OnCellDragOver(object? sender, DragEventArgs e)
+    {
+        if (e.DataTransfer.Contains(EntryIdFormat))
+            e.DragEffects &= (DragDropEffects.Move | DragDropEffects.Copy);
+        else
+            e.DragEffects = DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private async void OnCellDrop(object? sender, DragEventArgs e)
+    {
+        if (sender is not Control c || c.DataContext is not PersonDayCellViewModel cell) return;
+        var entryId = e.DataTransfer.TryGetValue(EntryIdFormat);
+        var srcStr = e.DataTransfer.TryGetValue(SourceDateFormat);
+        if (string.IsNullOrEmpty(entryId) || string.IsNullOrEmpty(srcStr)) return;
+        if (!DateOnly.TryParse(srcStr, out var srcDate)) return;
+
+        e.Handled = true;
+        if (_vm is null) return;
+
+        try
+        {
+            await _vm.HandleEntryDropAsync(entryId, srcDate, cell);
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("Drop-Verarbeitung fehlgeschlagen", ex);
+        }
+    }
+
+    private static T? FindAncestorContext<T>(Control? start) where T : class
+    {
+        Visual? v = start;
+        while (v is not null)
+        {
+            if (v is Control x && x.DataContext is T t) return t;
+            v = v.GetVisualParent();
+        }
+        return null;
     }
 }
