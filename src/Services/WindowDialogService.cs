@@ -54,5 +54,8 @@ public class WindowDialogService : IDialogService
     public Task ShowAiPlannerAsync(AiPlannerViewModel vm)
         => new AiPlannerDialog { DataContext = vm }.ShowDialog(_owner);
 
+    public Task<ConnectionSettingsResult?> ShowConnectionSettingsAsync(ConnectionSettingsViewModel vm)
+        => new ConnectionSettingsDialog { DataContext = vm }.ShowDialog<ConnectionSettingsResult?>(_owner);
+
     public void CancelActive() { }   // Window fängt ESC/Außenklick selbst ab
 }

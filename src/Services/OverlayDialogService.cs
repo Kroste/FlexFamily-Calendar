@@ -98,6 +98,11 @@ public class OverlayDialogService : IDialogService
             h => vm.Closed += h, h => vm.Closed -= h,
             () => vm.CancelCommand.Execute(null));
 
+    public Task<ConnectionSettingsResult?> ShowConnectionSettingsAsync(ConnectionSettingsViewModel vm)
+        => ShowAsync<ConnectionSettingsResult>(new ConnectionSettingsView { DataContext = vm },
+            h => vm.Closed += h, h => vm.Closed -= h,
+            () => vm.CancelCommand.Execute(null));
+
     public Task ShowAiPlannerAsync(AiPlannerViewModel vm)
     {
         // KI-Planner hat kein „Ergebnis" — Close wird über CloseRequested oder Backdrop ausgelöst.

@@ -96,6 +96,13 @@
                      IsIndeterminate="True"
                      Height="3"
                      CornerRadius="2" />
+
+        <!-- Verbindungs-Modus: lokal oder Server (URL einstellen) -->
+        <Button Content="{Binding ConnectionLabel}" Click="OnConnectionClick"
+                Background="Transparent" BorderThickness="0"
+                HorizontalAlignment="Center" Padding="6,4" CornerRadius="6"
+                FontSize="11" Opacity="0.65" Cursor="Hand"
+                ToolTip.Tip="{loc:Tr Connection_Tooltip}" />
       </StackPanel>
     </Border>
   </Grid>

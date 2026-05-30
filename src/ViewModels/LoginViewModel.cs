@@ -18,6 +18,7 @@ public partial class LoginViewModel : ViewModelBase
     [ObservableProperty] private bool _isFirstRun;
     [ObservableProperty] private bool _rememberMe;
     [ObservableProperty] private LanguageOption? _selectedLanguage;
+    [ObservableProperty] private string _connectionLabel = "";
 
     public IReadOnlyList<LanguageOption> AvailableLanguages => Localizer.Instance.AvailableLanguages;
 
