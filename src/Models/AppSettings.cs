@@ -24,4 +24,10 @@ public class AppSettings
     public string RememberedUsername { get; set; } = "";
     // Values are AES-encrypted base64 — never store API keys in plaintext
     public Dictionary<string, string> EncryptedApiKeys { get; set; } = new();
+
+    // Auto-Update gegen das GitHub-Repo. Browser-Modus ignoriert das (Server rollt aus).
+    public bool UpdateCheckEnabled { get; set; } = true;
+    public int UpdateCheckIntervalHours { get; set; } = 24;                       // 0 = nur manuell
+    public DateTime? UpdateLastCheckedAtUtc { get; set; }
+    public List<string> UpdateSkippedVersions { get; set; } = new();              // "v1.2.3" — Dialog nicht mehr zeigen
 }
