@@ -111,4 +111,8 @@ public class CalendarEntry
     /// <summary>Laufzeit: projizierter Eintrag liegt in einer aktiven Aussetzung (Urlaub/Krank/…). UI: grau + „(pausiert)".</summary>
     [Newtonsoft.Json.JsonIgnore]
     public bool IsPaused { get; set; }
+
+    /// <summary>Anzeige-Opacity: pausierte Einträge wirken durchscheinend, alles andere voll.</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public double DisplayOpacity => IsPaused ? 0.45 : 1.0;
 }

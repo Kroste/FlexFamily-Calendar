@@ -217,6 +217,7 @@
                                         PointerMoved="OnEntryPointerMoved"
                                         PointerReleased="OnEntryPointerReleased"
                                         ClipToBounds="True"
+                                        Opacity="{Binding DisplayOpacity}"
                                         Background="{Binding OwnerColor, Converter={StaticResource ColorStringToBrushConverter}}">
                                   <Grid>
                                     <StackPanel Spacing="0">
@@ -240,6 +241,8 @@
                                       <TextBlock Text="{loc:Tr Recur_HolidayHint}" IsVisible="{Binding HolidayConflict}"
                                                  FontSize="9.5" FontStyle="Italic" Foreground="White" Opacity="0.95"
                                                  TextWrapping="Wrap" />
+                                      <TextBlock Text="{loc:Tr RecurrencePause_PausedSuffix}" IsVisible="{Binding IsPaused}"
+                                                 FontSize="9.5" FontStyle="Italic" Foreground="White" Opacity="0.95" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="2"
                                                 HorizontalAlignment="Right" VerticalAlignment="Top">
