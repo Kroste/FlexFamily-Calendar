@@ -8,6 +8,19 @@ flexfamily.cloud {
     }
     handle {
         root * /srv/spa
+
+        # SRI-Schutz: nach einem Update darf der Browser KEIN altes index.html / Manifest aus
+        # seinem Cache verwenden, sonst referenziert er WASM-Dateien mit veralteten integrity-
+        # Hashes und blockt sie ("Failed to find a valid digest …"). WASM/JS-Assets darunter
+        # bleiben cachable — der Browser revalidiert sie über ihre Hashes.
+        @no-cache {
+            path /
+            path /index.html
+            path /_framework/*.json
+            path /_framework/dotnet.js
+        }
+        header @no-cache Cache-Control "no-cache, must-revalidate"
+
         try_files {path} /index.html
         file_server
     }
