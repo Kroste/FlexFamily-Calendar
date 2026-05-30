@@ -22,16 +22,24 @@ public partial class CalendarDayViewModel : ViewModelBase
 
     [ObservableProperty] private bool _showHoliday;
 
+    /// <summary>Sichtbar gerenderter Hinweistext: bei nicht-Berechtigten leer, damit das UI nichts zeigt.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasNote))]
     private string _dayNote = "";
+
+    /// <summary>Roher Hinweistext aus dem Storage — auch wenn er der aktuelle User nicht sehen darf,
+    /// damit der Edit-Dialog (Admin/Eltern) ihn bearbeiten kann.</summary>
+    public string RawNote { get; private set; } = "";
+
+    /// <summary>Adressat des Hinweises (null = für alle).</summary>
+    public string? NoteUserId { get; private set; }
 
     private bool _isHoliday;
     public string HolidayName { get; private set; } = "";
     public bool HasNote => !string.IsNullOrWhiteSpace(DayNote);
 
-    /// <summary>Admin darf pro Tag einen allgemeinen Hinweis pflegen.</summary>
-    public bool CanEditNote => _parent.IsAdmin;
+    /// <summary>Admin und Eltern dürfen pro Tag einen Hinweis pflegen (Adressat einstellbar).</summary>
+    public bool CanEditNote => _parent.CanFinalize;
 
     /// <summary>Nicht-Admins dürfen sich immer krank/Urlaub eintragen (Krank auch bei finalisierter Woche;
     /// Urlaub bei Finalisierung im Editor ausgeblendet).</summary>
@@ -75,10 +83,13 @@ public partial class CalendarDayViewModel : ViewModelBase
     /// <paramref name="timeline"/> ist die Raster-Anzeige, <paramref name="absences"/> die Hinweis-Liste.
     /// </summary>
     public void LoadFromModel(CalendarDay day,
-        IReadOnlyList<CalendarEntry> timeline, IReadOnlyList<CalendarEntry> absences)
+        IReadOnlyList<CalendarEntry> timeline, IReadOnlyList<CalendarEntry> absences,
+        bool canSeeNote)
     {
         IsFinalized = day.IsFinalized;
-        DayNote = day.Note;
+        RawNote = day.Note;
+        NoteUserId = day.NoteUserId;
+        DayNote = canSeeNote ? day.Note : "";
 
         Entries.Clear();
         foreach (var e in day.Entries.OrderBy(x => x.StartTime))
@@ -104,4 +115,12 @@ public partial class CalendarDayViewModel : ViewModelBase
 
     /// <summary>Nur die Feiertags-Sichtbarkeit umschalten (Header-Toggle), ohne Neuberechnung.</summary>
     public void SetHolidayVisible(bool visible) => ShowHoliday = _isHoliday && visible;
+
+    /// <summary>Nach dem Speichern: Hinweis-Felder gezielt aktualisieren ohne kompletten Reload.</summary>
+    public void SetNote(string rawNote, string? noteUserId, bool canSeeNote)
+    {
+        RawNote = rawNote;
+        NoteUserId = noteUserId;
+        DayNote = canSeeNote ? rawNote : "";
+    }
 }

@@ -13,7 +13,7 @@ public interface IDialogService
     Task<EntryDialogResult?> ShowEntryEditorAsync(EntryEditorViewModel vm);
     Task<SwapDialogResult?> ShowShiftSwapAsync(ShiftSwapViewModel vm);
     Task<ReplanResult?> ShowReplanAsync(ReplanViewModel vm);
-    Task<string?> ShowDayNoteAsync(DayNoteViewModel vm);
+    Task<DayNoteResult?> ShowDayNoteAsync(DayNoteViewModel vm);
     Task<UserEditorResult?> ShowUserEditorAsync(UserEditorViewModel vm);
     Task<NotificationResult?> ShowNotificationsAsync(NotificationsViewModel vm);
     Task ShowHoursAccountAsync(HoursAccountViewModel vm);

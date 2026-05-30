@@ -106,16 +106,18 @@ public partial class CalendarView : UserControl
         }
     }
 
-    private async void OnDayNoteDialogRequested(DateOnly date, string note)
+    private async void OnDayNoteDialogRequested(DateOnly date, string note, string? noteUserId)
     {
         try
         {
             if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
+            if (_vm is null) return;
 
-            var result = await App.DialogService.ShowDayNoteAsync(new DayNoteViewModel(date, note));
+            var result = await App.DialogService.ShowDayNoteAsync(
+                new DayNoteViewModel(date, note, noteUserId, _vm.AllUsers));
 
-            if (result is not null && _vm is not null)
-                await _vm.ApplyDayNoteAsync(date, result);
+            if (result is not null)
+                await _vm.ApplyDayNoteAsync(date, result.Note, result.NoteUserId);
         }
         catch (Exception ex)
         {

@@ -58,7 +58,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         ValidAudience = cfg["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(cfg["Jwt:Key"]!))
     });
-builder.Services.AddAuthorization(o => o.AddPolicy("Admin", p => p.RequireRole("Admin")));
+builder.Services.AddAuthorization(o =>
+{
+    o.AddPolicy("Admin", p => p.RequireRole("Admin"));
+    // Finalisieren + Tageshinweise pflegen: Admin oder Eltern. Eltern bekommen damit das
+    // organisatorische Mitspracherecht, ohne die volle Admin-UI (Users/Settings/KI).
+    o.AddPolicy("AdminOrParent", p => p.RequireAssertion(c =>
+        c.User.IsInRole("Admin") || c.User.HasClaim("category", "Parent")));
+});
 
 var app = builder.Build();
 
@@ -576,7 +583,7 @@ app.MapPut("/api/notifications", async (List<NotificationDto> items, AppDbContex
 app.MapGet("/api/day-notes/{date}", async (DateOnly date, AppDbContext db) =>
 {
     var meta = await db.DayMeta.FindAsync(date);
-    return Results.Ok(new DayNoteDto(meta?.Note ?? "", meta?.IsFinalized ?? false));
+    return Results.Ok(new DayNoteDto(meta?.Note ?? "", meta?.IsFinalized ?? false, meta?.NoteUserId));
 })
     .RequireAuthorization();
 
@@ -591,11 +598,12 @@ app.MapPut("/api/day-notes/{date}", async (DateOnly date, DayNoteDto body, AppDb
     }
     if (meta is null) { meta = new CalendarDayMeta { Date = date }; db.DayMeta.Add(meta); }
     meta.Note = body.Note?.Trim() ?? "";
+    meta.NoteUserId = string.IsNullOrWhiteSpace(body.NoteUserId) ? null : body.NoteUserId;
     meta.IsFinalized = body.IsFinalized;
     await db.SaveChangesAsync();
-    return Results.Ok(new DayNoteDto(meta.Note, meta.IsFinalized));
+    return Results.Ok(new DayNoteDto(meta.Note, meta.IsFinalized, meta.NoteUserId));
 })
-    .RequireAuthorization("Admin");
+    .RequireAuthorization("AdminOrParent");
 
 // Mail: Wochenplan-PDF an mehrere Empfänger senden. Jeder Empfänger bekommt sein vom Client
 // vorab gerendertes, aus seiner Sicht maskiertes PDF — der Server kennt die Anzeige-Regeln

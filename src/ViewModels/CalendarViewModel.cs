@@ -26,6 +26,10 @@ public partial class CalendarViewModel : ViewModelBase
 
     public User CurrentUser { get; }
 
+    /// <summary>Aktuell geladene Benutzerliste — für View-Code-Behind, das ohne Storage-Zugriff
+    /// Personen ins UI lifern muss (z.B. Hinweis-Dialog).</summary>
+    public IReadOnlyList<User> AllUsers => _allUsers;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WeekLabel))]
     private DateOnly _weekStart;
@@ -48,6 +52,9 @@ public partial class CalendarViewModel : ViewModelBase
     public bool IsAdmin => CurrentUser.Role == UserRole.Admin;
     public bool CanSwitchView => EffectiveIsAdmin;
 
+    /// <summary>Eltern dürfen finalisieren (organisatorisches Mitspracherecht), sind aber kein Admin.</summary>
+    public bool CanFinalize => EffectiveIsAdmin || CurrentUser.Category == PersonCategory.Parent;
+
     /// <summary>
     /// Admin-only „View-as": Wenn gesetzt, rendert der Kalender alles aus der Perspektive dieses
     /// Users (Privatsphäre-Maskierung wie bei nicht-Admin). Admin-Aktionen (Bearbeiten, Hinzufügen)
@@ -55,7 +62,8 @@ public partial class CalendarViewModel : ViewModelBase
     /// </summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsImpersonating), nameof(ViewAsBanner),
-        nameof(EffectiveUserId), nameof(EffectiveIsAdmin), nameof(CanSwitchView))]
+        nameof(EffectiveUserId), nameof(EffectiveIsAdmin),
+        nameof(CanSwitchView), nameof(CanFinalize))]
     private string? _viewAsUserId;
 
     public bool IsImpersonating => ViewAsUserId is not null;
@@ -117,7 +125,7 @@ public partial class CalendarViewModel : ViewModelBase
     public event Action<ReplanViewModel>? ReplanDialogRequested;
 
     /// <summary>Öffnet den Tages-Hinweis-Dialog (Admin). Parameter: Datum + aktuelle Notiz.</summary>
-    public event Action<DateOnly, string>? DayNoteDialogRequested;
+    public event Action<DateOnly, string, string?>? DayNoteDialogRequested;
 
     /// <summary>Bittet das CalendarView-Code-Behind, einen Speichern-Dialog für den PDF-Export zu öffnen.</summary>
     public event Action? ExportPdfRequested;
@@ -198,7 +206,7 @@ public partial class CalendarViewModel : ViewModelBase
     [RelayCommand]
     private async Task ToggleFinalizeWeekAsync()
     {
-        if (!IsAdmin) return;
+        if (!CanFinalize) return;
         var target = !IsWeekFinalized;
         for (int i = 0; i < 7; i++)
         {
@@ -973,22 +981,36 @@ public partial class CalendarViewModel : ViewModelBase
         if (u != null) { u.ShowHolidays = value; await _storage.SaveUsersAsync(users); }
     }
 
-    /// <summary>Admin pflegt den allgemeinen Tages-Hinweis (Hinweisspalte, für alle sichtbar).</summary>
+    /// <summary>Tages-Hinweis pflegen (Admin oder Eltern). Sichtbarkeit pro Eintrag: null = alle, sonst Admin + Adressat.</summary>
     public void RequestEditDayNote(DateOnly date)
     {
-        if (!IsAdmin) return;
-        var note = Days.FirstOrDefault(d => d.Date == date)?.DayNote ?? "";
-        DayNoteDialogRequested?.Invoke(date, note);
+        if (!CanFinalize) return;
+        var dayVm = Days.FirstOrDefault(d => d.Date == date);
+        var note = dayVm?.RawNote ?? "";
+        var assigned = dayVm?.NoteUserId;
+        DayNoteDialogRequested?.Invoke(date, note, assigned);
     }
 
-    public async Task ApplyDayNoteAsync(DateOnly date, string note)
+    public async Task ApplyDayNoteAsync(DateOnly date, string note, string? noteUserId)
     {
         var day = await _storage.LoadDayAsync(date);
         day.Note = note.Trim();
+        day.NoteUserId = string.IsNullOrWhiteSpace(noteUserId) ? null : noteUserId;
         await _storage.SaveDayAsync(day);
         var dayVm = Days.FirstOrDefault(d => d.Date == date);
-        if (dayVm != null) dayVm.DayNote = day.Note;
+        if (dayVm != null)
+        {
+            dayVm.SetNote(day.Note, day.NoteUserId, CanSeeNote(day.NoteUserId));
+        }
         LogService.UserAction(CurrentUser.Username, $"Tages-Hinweis gespeichert ({date:dd.MM.yyyy})");
+    }
+
+    /// <summary>Sichtbarkeitsregel: null = alle; sonst nur Admin und die adressierte Person (auch unter View-as).</summary>
+    private bool CanSeeNote(string? noteUserId)
+    {
+        if (string.IsNullOrEmpty(noteUserId)) return true;
+        if (EffectiveIsAdmin) return true;
+        return noteUserId == EffectiveUserId;
     }
 
     private void RebuildUserColors()
@@ -1100,7 +1122,7 @@ public partial class CalendarViewModel : ViewModelBase
             var day = await _storage.LoadDayAsync(date);
             ApplyEntryDisplay(day);
             var (timeline, absences) = BuildDisplay(date, day.Entries);
-            Days[i].LoadFromModel(day, timeline, absences);
+            Days[i].LoadFromModel(day, timeline, absences, CanSeeNote(day.NoteUserId));
             Days[i].SetHoliday(_weekHolidays.FirstOrDefault(h => h.Date == date)?.NameKey, IsHolidaysVisible);
         }
         IsWeekFinalized = Days.Count > 0 && Days.All(d => d.IsFinalized);

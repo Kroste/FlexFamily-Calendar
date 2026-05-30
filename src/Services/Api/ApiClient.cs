@@ -13,6 +13,7 @@ public class ApiClient
     public ServerUserDto? CurrentUser { get; private set; }
     public bool IsAuthenticated => !string.IsNullOrEmpty(Token);
     public bool CurrentUserIsAdmin => string.Equals(CurrentUser?.Role, "Admin", StringComparison.OrdinalIgnoreCase);
+    public bool CurrentUserIsParent => string.Equals(CurrentUser?.Category, "Parent", StringComparison.OrdinalIgnoreCase);
 
     public ApiClient(string baseUrl)
     {

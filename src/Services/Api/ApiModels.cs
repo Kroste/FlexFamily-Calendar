@@ -108,7 +108,7 @@ public record ServerNotificationDto(
     string? Action,
     string? RelatedUserId);
 
-public record ServerDayNoteDto(string Note, bool IsFinalized);
+public record ServerDayNoteDto(string Note, bool IsFinalized, string? NoteUserId = null);
 
 public record UpdateProfileBody(string? DisplayName, string? Email, string? Language, string? Color);
 

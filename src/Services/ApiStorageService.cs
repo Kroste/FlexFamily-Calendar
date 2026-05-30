@@ -59,6 +59,7 @@ public class ApiStorageService : IStorageService
         day.Entries = dtos.Select(d => EntryMapping.ToDesktop(d, date)).ToList();
         var note = await _api.GetDayNoteAsync(date);
         day.Note = note.Note ?? "";
+        day.NoteUserId = note.NoteUserId;
         day.IsFinalized = note.IsFinalized;
         return day;
     }
@@ -89,9 +90,10 @@ public class ApiStorageService : IStorageService
             // Abwesenheit per Zeitraum schon vorhanden → nichts zu tun.
         }
 
-        // Tagesnotiz/Finalisiert sind Admin-Sache (Endpunkt Admin-only) → nur als Admin schreiben.
-        if (_api.CurrentUserIsAdmin)
-            await _api.SetDayNoteAsync(date, new ServerDayNoteDto(day.Note ?? "", day.IsFinalized));
+        // Tagesnotiz/Finalisiert: Admin oder Eltern. Im Client setzen wir's einfach immer und
+        // verlassen uns auf die Server-Policy (AdminOrParent), die nicht-erlaubten Aufrufern 403 gibt.
+        if (_api.CurrentUserIsAdmin || _api.CurrentUserIsParent)
+            await _api.SetDayNoteAsync(date, new ServerDayNoteDto(day.Note ?? "", day.IsFinalized, day.NoteUserId));
     }
 
     /// <summary>

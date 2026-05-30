@@ -21,8 +21,8 @@ public class WindowDialogService : IDialogService
     public Task<ReplanResult?> ShowReplanAsync(ReplanViewModel vm)
         => new ReplanDialog { DataContext = vm }.ShowDialog<ReplanResult?>(_owner);
 
-    public Task<string?> ShowDayNoteAsync(DayNoteViewModel vm)
-        => new DayNoteDialog { DataContext = vm }.ShowDialog<string?>(_owner);
+    public Task<DayNoteResult?> ShowDayNoteAsync(DayNoteViewModel vm)
+        => new DayNoteDialog { DataContext = vm }.ShowDialog<DayNoteResult?>(_owner);
 
     public Task<UserEditorResult?> ShowUserEditorAsync(UserEditorViewModel vm)
         => new UserEditorDialog { DataContext = vm }.ShowDialog<UserEditorResult?>(_owner);

@@ -37,8 +37,8 @@ public class OverlayDialogService : IDialogService
             h => vm.Closed += h, h => vm.Closed -= h,
             () => vm.CancelCommand.Execute(null));
 
-    public Task<string?> ShowDayNoteAsync(DayNoteViewModel vm)
-        => ShowAsync<string>(new DayNoteView { DataContext = vm },
+    public Task<DayNoteResult?> ShowDayNoteAsync(DayNoteViewModel vm)
+        => ShowAsync<DayNoteResult>(new DayNoteView { DataContext = vm },
             h => vm.Closed += h, h => vm.Closed -= h,
             () => vm.CancelCommand.Execute(null));
 

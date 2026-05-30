@@ -62,7 +62,7 @@
                   Padding="12,6" CornerRadius="6" />
           <Button Content="{Binding FinalizeButtonKey, Converter={x:Static loc:LocKeyConverter.Instance}}"
                   Command="{Binding ToggleFinalizeWeekCommand}"
-                  IsVisible="{Binding EffectiveIsAdmin}"
+                  IsVisible="{Binding CanFinalize}"
                   Padding="12,6" CornerRadius="6" />
         </StackPanel>
         <TextBlock Grid.Column="2" Text="{Binding WeekLabel}"

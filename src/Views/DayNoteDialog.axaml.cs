@@ -17,5 +17,5 @@ public partial class DayNoteDialog : Window
         if (_vm != null) _vm.Closed += OnClosed;
     }
 
-    private void OnClosed(string? note) => Close(note);
+    private void OnClosed(DayNoteResult? result) => Close(result);
 }
