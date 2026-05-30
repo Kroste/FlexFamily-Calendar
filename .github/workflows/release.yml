@@ -120,7 +120,7 @@ jobs:
         run: |
           mkdir -p AppDir/usr/bin AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/256x256/apps
           cp -r publish/* AppDir/usr/bin/
-          chmod +x AppDir/usr/bin/FlexFamilyCalendar
+          chmod +x AppDir/usr/bin/FlexFamilyCalendar.Desktop
 
           # Icon aus dem vorhandenen .ico (Avalonia-Default) — kann später durch ein
           # branded Icon im Repo ersetzt werden.
@@ -132,7 +132,7 @@ jobs:
           [Desktop Entry]
           Name=FlexFamily Calendar
           Comment=Familienplaner für Arbeitszeiten und Aktivitäten
-          Exec=FlexFamilyCalendar
+          Exec=FlexFamilyCalendar.Desktop
           Icon=flexfamily-calendar
           Terminal=false
           Type=Application
@@ -143,7 +143,7 @@ jobs:
           cat > AppDir/AppRun <<'EOF'
           #!/bin/sh
           HERE="$(dirname "$(readlink -f "$0")")"
-          exec "$HERE/usr/bin/FlexFamilyCalendar" "$@"
+          exec "$HERE/usr/bin/FlexFamilyCalendar.Desktop" "$@"
           EOF
           chmod +x AppDir/AppRun
 
