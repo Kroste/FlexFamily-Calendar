@@ -18,10 +18,32 @@ permissions:
 
 env:
   DOTNET_VERSION: '10.0.x'
+  DESKTOP_PROJECT: desktop/FlexFamilyCalendar.Desktop.csproj
+  ASSEMBLY_NAME: FlexFamilyCalendar
   # Aus Tag-Push: github.ref_name = vX.Y.Z. Aus workflow_dispatch: aus den Inputs.
   RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
 
 jobs:
+
+  # ─────────── Precheck: sind die Docker-Hub-Secrets gesetzt? ───────────
+  # Job-Level `if:` darf nicht direkt auf `secrets.X` zugreifen — Workaround
+  # über einen Precheck-Step, der das Ergebnis als Output exportiert.
+  precheck:
+    runs-on: ubuntu-latest
+    outputs:
+      docker_ready: ${{ steps.check.outputs.docker_ready }}
+    steps:
+      - id: check
+        env:
+          DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -n "$DH_USER" ] && [ -n "$DH_TOKEN" ]; then
+            echo "docker_ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "docker_ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::DOCKERHUB_USERNAME/DOCKERHUB_TOKEN nicht gesetzt — Docker-Push übersprungen."
+          fi
 
   # ─────────── Desktop: Linux + Windows als self-contained Single-File ───────────
   desktop:
@@ -47,11 +69,12 @@ jobs:
       - name: Publish
         shell: bash
         run: |
-          dotnet publish src/FlexFamilyCalendar.csproj \
+          dotnet publish "$DESKTOP_PROJECT" \
             -c Release -r ${{ matrix.rid }} \
             --self-contained true \
             -p:PublishSingleFile=true \
             -p:IncludeNativeLibrariesForSelfExtract=true \
+            -p:AssemblyName=$ASSEMBLY_NAME \
             -p:DebugType=embedded \
             -o publish
 
@@ -89,9 +112,10 @@ jobs:
 
       - name: Publish
         run: |
-          dotnet publish src/FlexFamilyCalendar.csproj \
+          dotnet publish "$DESKTOP_PROJECT" \
             -c Release -r linux-x64 \
             --self-contained true \
+            -p:AssemblyName=$ASSEMBLY_NAME \
             -p:DebugType=embedded \
             -o publish
 
@@ -142,6 +166,8 @@ jobs:
   # ─────────── Docker: API ───────────
   docker-api:
     name: Docker Image (API)
+    needs: precheck
+    if: needs.precheck.outputs.docker_ready == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -168,6 +194,8 @@ jobs:
   # ─────────── Docker: Caddy + eingebettete WASM-SPA ───────────
   docker-caddy:
     name: Docker Image (Caddy + SPA)
+    needs: precheck
+    if: needs.precheck.outputs.docker_ready == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
