@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using FlexFamilyCalendar.Localization;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
+using FlexFamilyCalendar.Services.Update;
 using System.Globalization;
 
 namespace FlexFamilyCalendar.ViewModels;
@@ -39,8 +40,28 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private string _statusMessage = "";
 
     [ObservableProperty] private bool _updateCheckEnabled = true;
-    [ObservableProperty] private string _updateIntervalHours = "24";
+    [ObservableProperty] private string _updateIntervalHours = "6";
     [ObservableProperty] private string _updateLastCheckedLabel = "";
+
+    /// <summary>Anzeigbare App-Version im About-Block (kommt aus AssemblyInformationalVersion).</summary>
+    public string AppVersion => UpdateService.CurrentVersion();
+    public string GitHubUrl => "https://github.com/Kroste/FlexFamily-Calendar";
+    public string CoffeeUrl => "https://buymeacoffee.com/kroste";
+
+    [RelayCommand]
+    private void OpenGitHub() => OpenUrl(GitHubUrl);
+
+    [RelayCommand]
+    private void OpenCoffee() => OpenUrl(CoffeeUrl);
+
+    private static void OpenUrl(string url)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception ex) { LogService.Warn("Browser-Öffnen schlug fehl: {0}", ex.Message); }
+    }
 
     public SettingsViewModel(IStorageService storage, IMailSender mailSender, UpdateCheckRunner? runUpdateCheck = null)
     {

@@ -27,7 +27,7 @@ public class AppSettings
 
     // Auto-Update gegen das GitHub-Repo. Browser-Modus ignoriert das (Server rollt aus).
     public bool UpdateCheckEnabled { get; set; } = true;
-    public int UpdateCheckIntervalHours { get; set; } = 24;                       // 0 = nur manuell
+    public int UpdateCheckIntervalHours { get; set; } = 6;                        // 0 = nur manuell
     public DateTime? UpdateLastCheckedAtUtc { get; set; }
     public List<string> UpdateSkippedVersions { get; set; } = new();              // "v1.2.3" — Dialog nicht mehr zeigen
 }

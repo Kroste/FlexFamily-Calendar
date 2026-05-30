@@ -81,6 +81,25 @@
                  Foreground="#27AE60" FontSize="13" />
     </StackPanel>
 
+    <!-- Über die App: Version + Links -->
+    <Border Background="#F8F8F8" CornerRadius="6" Padding="14,12" Margin="0,16,0,0">
+      <StackPanel Spacing="6">
+        <TextBlock Text="{loc:Tr Settings_About}" FontSize="13" FontWeight="SemiBold" />
+        <TextBlock FontSize="12" Opacity="0.85">
+          <Run Text="{loc:Tr Settings_AboutVersion}" />
+          <Run Text=" " />
+          <Run Text="{Binding AppVersion}" FontWeight="SemiBold" />
+        </TextBlock>
+        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+          <Button Content="{loc:Tr Settings_AboutGithub}" Command="{Binding OpenGitHubCommand}"
+                  Padding="10,5" CornerRadius="6" FontSize="12" />
+          <Button Content="{loc:Tr Settings_AboutCoffee}" Command="{Binding OpenCoffeeCommand}"
+                  Padding="10,5" CornerRadius="6" FontSize="12"
+                  Background="#FFDD00" Foreground="#0D0C22" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
   </StackPanel>
   </ScrollViewer>
 </UserControl>

@@ -316,5 +316,9 @@
   "Settings_UpdateCheckNow": "Jetzt prüfen",
   "Settings_UpdateLastChecked": "Zuletzt geprüft: {0}",
   "Settings_UpdateNever": "noch nie",
-  "Settings_UpdateNothingFound": "Du hast die aktuelle Version."
+  "Settings_UpdateNothingFound": "Du hast die aktuelle Version.",
+  "Settings_About": "Über FlexFamily Calendar",
+  "Settings_AboutVersion": "Version",
+  "Settings_AboutGithub": "GitHub-Repository",
+  "Settings_AboutCoffee": "☕ Buy me a coffee"
 }
