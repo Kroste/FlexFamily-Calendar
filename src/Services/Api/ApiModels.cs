@@ -65,6 +65,8 @@ public record ApiErrorBody(string? Error);
 
 public record ServerActivityTypeDto(string Id, string Name, string Color, List<string> Categories);
 
+public record ServerRecurrenceSkipDto(string Id, DateOnly From, DateOnly To, string? Reason);
+
 public record ServerRecurringActivityDto(
     string Id,
     string UserId,
@@ -74,7 +76,8 @@ public record ServerRecurringActivityDto(
     TimeOnly StartTime,
     TimeOnly EndTime,
     List<int> Weekdays,
-    bool SkipOnHolidays);
+    bool SkipOnHolidays,
+    List<ServerRecurrenceSkipDto>? Skips);
 
 public record ServerSwapRequestDto(
     string Id,

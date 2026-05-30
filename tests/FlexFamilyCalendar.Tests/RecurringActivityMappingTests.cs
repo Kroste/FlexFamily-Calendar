@@ -11,7 +11,7 @@ public class RecurringActivityMappingTests
         var dto = new ServerRecurringActivityDto(
             "r1", "u1", "Mia", "Fußball", "cat1",
             new TimeOnly(16, 0), new TimeOnly(17, 30),
-            new List<int> { 4, 2 }, SkipOnHolidays: true);   // 4=Thursday, 2=Tuesday
+            new List<int> { 4, 2 }, SkipOnHolidays: true, Skips: null);   // 4=Thursday, 2=Tuesday
 
         var a = RecurringActivityMapping.ToDesktop(dto);
 
@@ -30,7 +30,7 @@ public class RecurringActivityMappingTests
     public void Empty_activity_type_id_becomes_null()
     {
         var dto = new ServerRecurringActivityDto("r1", "u1", "X", "T", "",
-            new TimeOnly(8, 0), new TimeOnly(9, 0), new List<int> { 1 }, false);
+            new TimeOnly(8, 0), new TimeOnly(9, 0), new List<int> { 1 }, false, null);
         Assert.Null(RecurringActivityMapping.ToDesktop(dto).ActivityTypeId);
     }
 
@@ -70,5 +70,30 @@ public class RecurringActivityMappingTests
         Assert.Equal(a.StartTime, back.StartTime);
         Assert.Equal(a.EndTime, back.EndTime);
         Assert.True(back.SkipOnHolidays);
+    }
+
+    [Fact]
+    public void Skips_roundtrip_through_server_dto()
+    {
+        var a = new RecurringActivity
+        {
+            Id = "r4", UserId = "u1", Title = "Yoga",
+            StartTime = new TimeSpan(7, 0, 0), EndTime = new TimeSpan(8, 0, 0),
+            Weekdays = new List<DayOfWeek> { DayOfWeek.Monday },
+            Skips =
+            {
+                new RecurrenceSkip { Id = "s1", From = new(2026, 7, 1), To = new(2026, 7, 14), Reason = "Urlaub" },
+                new RecurrenceSkip { Id = "s2", From = new(2026, 12, 24), To = new(2027, 1, 6), Reason = null }
+            }
+        };
+
+        var back = RecurringActivityMapping.ToDesktop(RecurringActivityMapping.ToServer(a));
+
+        Assert.Equal(2, back.Skips.Count);
+        Assert.Equal("s1", back.Skips[0].Id);
+        Assert.Equal(new DateOnly(2026, 7, 14), back.Skips[0].To);
+        Assert.Equal("Urlaub", back.Skips[0].Reason);
+        Assert.Null(back.Skips[1].Reason);
+        Assert.Equal(new DateOnly(2027, 1, 6), back.Skips[1].To);
     }
 }

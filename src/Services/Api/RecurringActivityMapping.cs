@@ -15,12 +15,20 @@ public static class RecurringActivityMapping
         StartTime = d.StartTime.ToTimeSpan(),
         EndTime = d.EndTime.ToTimeSpan(),
         Weekdays = (d.Weekdays ?? new()).Select(i => (DayOfWeek)i).ToList(),
-        SkipOnHolidays = d.SkipOnHolidays
+        SkipOnHolidays = d.SkipOnHolidays,
+        Skips = (d.Skips ?? new()).Select(s => new RecurrenceSkip
+        {
+            Id = s.Id,
+            From = s.From,
+            To = s.To,
+            Reason = s.Reason
+        }).ToList()
     };
 
     public static ServerRecurringActivityDto ToServer(RecurringActivity a) => new(
         a.Id, a.UserId, a.UserDisplayName, a.Title,
         string.IsNullOrWhiteSpace(a.ActivityTypeId) ? null : a.ActivityTypeId,
         TimeOnly.FromTimeSpan(a.StartTime), TimeOnly.FromTimeSpan(a.EndTime),
-        a.Weekdays.Select(d => (int)d).ToList(), a.SkipOnHolidays);
+        a.Weekdays.Select(d => (int)d).ToList(), a.SkipOnHolidays,
+        a.Skips.Select(s => new ServerRecurrenceSkipDto(s.Id, s.From, s.To, s.Reason)).ToList());
 }

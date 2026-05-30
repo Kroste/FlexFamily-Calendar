@@ -12,4 +12,7 @@ public class RecurringActivityEntity
     public TimeOnly EndTime { get; set; }
     public List<int> Weekdays { get; set; } = new();  // DayOfWeek-Werte 0..6 → integer[]
     public bool SkipOnHolidays { get; set; }
+
+    /// <summary>Tagesgenaue Aussetzungen (Urlaub/Krank/…). Cascade delete via EF (1:n).</summary>
+    public List<RecurrenceSkipEntity> Skips { get; set; } = new();
 }

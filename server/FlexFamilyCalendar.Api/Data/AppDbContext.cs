@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
     public DbSet<CalendarEntry> Entries => Set<CalendarEntry>();
     public DbSet<ActivityTypeEntity> ActivityTypes => Set<ActivityTypeEntity>();
     public DbSet<RecurringActivityEntity> RecurringActivities => Set<RecurringActivityEntity>();
+    public DbSet<RecurrenceSkipEntity> RecurrenceSkips => Set<RecurrenceSkipEntity>();
     public DbSet<ShiftSwapRequestEntity> SwapRequests => Set<ShiftSwapRequestEntity>();
     public DbSet<NotificationEntity> Notifications => Set<NotificationEntity>();
     public DbSet<CalendarDayMeta> DayMeta => Set<CalendarDayMeta>();
@@ -21,5 +22,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<CalendarEntry>().HasIndex(e => new { e.UserId, e.Date });
         modelBuilder.Entity<CalendarEntry>().HasIndex(e => e.Status);
         modelBuilder.Entity<CalendarDayMeta>().HasKey(m => m.Date);
+
+        modelBuilder.Entity<RecurrenceSkipEntity>()
+            .HasOne(s => s.RecurringActivity)
+            .WithMany(r => r.Skips)
+            .HasForeignKey(s => s.RecurringActivityId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -444,17 +444,20 @@ app.MapPut("/api/activity-types", async (List<ActivityTypeDto> items, AppDbConte
 
 // Liste: alle Angemeldeten (das Overlay wird in jedem Plan projiziert).
 app.MapGet("/api/recurring-activities", async (AppDbContext db) =>
-    (await db.RecurringActivities.ToListAsync()).Select(RecurringActivityDto.From))
+    (await db.RecurringActivities.Include(r => r.Skips).ToListAsync()).Select(RecurringActivityDto.From))
     .RequireAuthorization();
 
 // Komplett ersetzen (Admin) — passt zum „ganze Liste speichern" des Clients.
+// Skips werden über die FK-Cascade beim ExecuteDelete automatisch mit entfernt.
 app.MapPut("/api/recurring-activities", async (List<RecurringActivityDto> items, AppDbContext db) =>
 {
     await db.RecurringActivities.ExecuteDeleteAsync();
     foreach (var i in items)
+    {
+        var ruleId = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id;
         db.RecurringActivities.Add(new RecurringActivityEntity
         {
-            Id = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id,
+            Id = ruleId,
             UserId = i.UserId,
             UserDisplayName = i.UserDisplayName ?? "",
             Title = i.Title ?? "",
@@ -462,10 +465,19 @@ app.MapPut("/api/recurring-activities", async (List<RecurringActivityDto> items,
             StartTime = i.StartTime,
             EndTime = i.EndTime,
             Weekdays = i.Weekdays ?? new(),
-            SkipOnHolidays = i.SkipOnHolidays
+            SkipOnHolidays = i.SkipOnHolidays,
+            Skips = (i.Skips ?? new()).Select(s => new RecurrenceSkipEntity
+            {
+                Id = s.Id == Guid.Empty ? Guid.NewGuid() : s.Id,
+                RecurringActivityId = ruleId,
+                From = s.From,
+                To = s.To,
+                Reason = string.IsNullOrWhiteSpace(s.Reason) ? null : s.Reason
+            }).ToList()
         });
+    }
     await db.SaveChangesAsync();
-    return Results.Ok((await db.RecurringActivities.ToListAsync()).Select(RecurringActivityDto.From));
+    return Results.Ok((await db.RecurringActivities.Include(r => r.Skips).ToListAsync()).Select(RecurringActivityDto.From));
 })
     .RequireAuthorization("Admin");
 
