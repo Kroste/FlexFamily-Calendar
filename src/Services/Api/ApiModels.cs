@@ -115,7 +115,8 @@ public record ServerNotificationDto(
 
 public record ServerDayNoteDto(string Note, bool IsFinalized, string? NoteUserId = null);
 
-public record UpdateProfileBody(string? DisplayName, string? Email, string? Language, string? Color);
+public record UpdateProfileBody(string? DisplayName, string? Email, string? Language, string? Color,
+    string? AiStyleHint = null);
 
 public record CreateEntryBody(
     string? UserId,

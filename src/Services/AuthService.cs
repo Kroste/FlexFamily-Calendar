@@ -151,11 +151,23 @@ public class AuthService
     {
         if (_api is not null)
         {
-            await _api.UpdateMyProfileAsync(new Api.UpdateProfileBody(user.DisplayName, user.Email, user.Language, user.Color));
+            await _api.UpdateMyProfileAsync(new Api.UpdateProfileBody(
+                user.DisplayName, user.Email, user.Language, user.Color, user.AiStyleHint));
             LogService.Info("Eigenes Profil aktualisiert (Server): {0}", user.Username);
             return;
         }
-        await UpdateUserAsync(user);   // lokal: normale Aktualisierung
+        // Lokal: nur die selbst-editierbaren Felder im persistierten User aktualisieren —
+        // damit gehen Admin-Felder (Role/Category/Stunden) hier nicht versehentlich verloren.
+        var users = await _storage.LoadUsersAsync();
+        var existing = users.FirstOrDefault(u => u.Id == user.Id);
+        if (existing is null) return;
+        existing.DisplayName = user.DisplayName;
+        existing.Email = user.Email;
+        existing.Language = user.Language;
+        existing.Color = user.Color;
+        existing.AiStyleHint = user.AiStyleHint;
+        await _storage.SaveUsersAsync(users);
+        LogService.Info("Eigenes Profil aktualisiert (lokal): {0}", user.Username);
     }
 
     /// <summary>Eigenes Kennwort ändern. Server-Modus nutzt den Self-Endpunkt (nicht den Admin-Endpunkt).</summary>
@@ -178,8 +190,9 @@ public class AuthService
         if (string.IsNullOrWhiteSpace(user.Username))
             throw new InvalidOperationException("Benutzername darf nicht leer sein.");
 
-        // Eltern sind automatisch Admin; Kinder haben kein Anmeldekonto (kein Passwort).
-        if (user.Category == PersonCategory.Parent) user.Role = UserRole.Admin;
+        // Seit v0.8.0 sind Admin (Role) und Eltern (Category) explizit getrennt — der frühere
+        // Auto-Upgrade „Eltern → Admin" wird hier nicht mehr erzwungen. Kinder haben kein
+        // Anmeldekonto (kein Passwort).
         var needsPassword = user.Category != PersonCategory.Child;
         if (needsPassword && string.IsNullOrEmpty(password))
             throw new InvalidOperationException("Kennwort darf nicht leer sein.");
@@ -215,8 +228,7 @@ public class AuthService
     /// <summary>Aktualisiert Stammdaten (ohne Passwort). Wahrt eindeutigen Usernamen.</summary>
     public async Task UpdateUserAsync(User user)
     {
-        if (user.Category == PersonCategory.Parent) user.Role = UserRole.Admin;
-
+        // Admin (Role) und Eltern (Category) sind seit v0.8.0 getrennt — keine Auto-Promotion mehr.
         if (_api is not null)
         {
             // Server erzwingt Eindeutigkeit + Letzter-Admin-Schutz und liefert die Fehlermeldung.
@@ -232,9 +244,6 @@ public class AuthService
         if (users.Any(u => u.Id != user.Id &&
             u.Username.Equals(user.Username, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException($"Benutzer '{user.Username}' existiert bereits.");
-
-        // Eltern sind automatisch Admin
-        if (user.Category == PersonCategory.Parent) user.Role = UserRole.Admin;
 
         // Letzten Admin nicht zum Nicht-Admin herabstufen
         if (existing.Role == UserRole.Admin && user.Role != UserRole.Admin &&
@@ -256,6 +265,7 @@ public class AuthService
         existing.OpeningBalanceHours = user.OpeningBalanceHours;
         existing.AccountStart = user.AccountStart;
         existing.ShowHolidays = user.ShowHolidays;
+        existing.AiStyleHint = user.AiStyleHint;
 
         await _storage.SaveUsersAsync(users);
         LogService.Info("Benutzer aktualisiert: {0}", existing.Username);
