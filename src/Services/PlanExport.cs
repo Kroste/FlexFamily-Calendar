@@ -36,4 +36,20 @@ public static class PlanExportBuilder
         var time = EntryTypeInfo.IsAbsence(displayType) ? e.AbsenceSpanLabel : e.TimeRange;
         return new PlanCellEntry(string.IsNullOrEmpty(e.OwnerColor) ? "#7F8C8D" : e.OwnerColor, time, label);
     }
+
+    /// <summary>
+    /// Personalisierter Tages-Hinweis aus Sicht des Empfängers:
+    /// <list type="bullet">
+    ///   <item>Hinweis ohne Adressat → für alle sichtbar.</item>
+    ///   <item>Admin → sieht alles, auch wenn der Hinweis an jemand anderen adressiert ist.</item>
+    ///   <item>Sonst nur sichtbar, wenn der Empfänger selbst der Adressat ist.</item>
+    /// </list>
+    /// </summary>
+    public static string NoteFor(string rawNote, string? noteUserId, bool viewerIsAdmin, string viewerId)
+    {
+        if (string.IsNullOrWhiteSpace(rawNote)) return "";
+        if (string.IsNullOrEmpty(noteUserId)) return rawNote;
+        if (viewerIsAdmin) return rawNote;
+        return noteUserId == viewerId ? rawNote : "";
+    }
 }

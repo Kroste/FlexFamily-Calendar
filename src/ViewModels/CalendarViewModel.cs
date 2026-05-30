@@ -265,7 +265,9 @@ public partial class CalendarViewModel : ViewModelBase
         var isAdmin = viewer.Role == UserRole.Admin;
 
         var headers = Days.Select(d => new PlanDayHeader(d.DayName, d.DateLabel, d.HolidayName)).ToList();
-        var notes = Days.Select(d => d.DayNote ?? "").ToList();
+        // Personalisierte Hinweise: jeder Empfänger sieht nur die für ihn relevanten (oder alle, wenn Admin).
+        var notes = Days.Select(d =>
+            PlanExportBuilder.NoteFor(d.RawNote, d.NoteUserId, isAdmin, viewer.Id)).ToList();
 
         var rows = new List<PlanPersonRow>();
         foreach (var r in Rows)
