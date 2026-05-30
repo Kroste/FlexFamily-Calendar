@@ -103,6 +103,14 @@ public partial class AiPlannerViewModel : ViewModelBase
         return string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
     }
 
+    /// <summary>Beschriftung „A → B" für einen Tausch-Vorschlag.</summary>
+    internal string ResolveSwapPersons(string? fromEntryId, string? toUserId)
+    {
+        var fromName = ResolvePersonByEntry(fromEntryId) ?? (fromEntryId ?? "?");
+        var toName = !string.IsNullOrEmpty(toUserId) ? ResolvePersonName(toUserId!) : "?";
+        return $"{fromName} → {toName}";
+    }
+
     /// <summary>Resolved (RuleId, SkipId) → der konkrete Skip-Eintrag aus der Regel. null = nicht gefunden.</summary>
     internal RecurrenceSkip? ResolveSkip(string? ruleId, string? skipId)
     {
@@ -274,6 +282,7 @@ public partial class SuggestionCard : ObservableObject
         SuggestionAction.Delete => Localizer.Instance["AiPlanner_ActionDelete"],
         SuggestionAction.Pause => Localizer.Instance["AiPlanner_ActionPause"],
         SuggestionAction.Resume => Localizer.Instance["AiPlanner_ActionResume"],
+        SuggestionAction.Swap => Localizer.Instance["AiPlanner_ActionSwap"],
         _ => Source.Action.ToString()
     };
     public string Date
@@ -340,6 +349,7 @@ public partial class SuggestionCard : ObservableObject
             SuggestionAction.Add when !string.IsNullOrEmpty(s.UserId) => parent.ResolvePersonName(s.UserId),
             SuggestionAction.Pause or SuggestionAction.Resume
                 => parent.ResolveRuleLabel(s.RecurringActivityId) ?? (s.RecurringActivityId ?? ""),
+            SuggestionAction.Swap => parent.ResolveSwapPersons(s.FromEntryId, s.ToUserId),
             _ => parent.ResolvePersonByEntry(s.EntryId) ?? (s.EntryId ?? "")
         };
 

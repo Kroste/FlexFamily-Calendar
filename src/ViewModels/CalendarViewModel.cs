@@ -303,11 +303,13 @@ public partial class CalendarViewModel : ViewModelBase
     /// </summary>
     private async Task<bool> ApplyAiSuggestionAsync(Services.AI.PlannerSuggestion s)
     {
-        // Pause/Resume sind Sonderfälle — schreiben nicht in den Tages-Storage, sondern an die Regel.
+        // Pause/Resume/Swap sind Sonderfälle — schreiben nicht in den Tages-Storage.
         if (s.Action == Services.AI.SuggestionAction.Pause)
             return await ApplyPauseAsync(s);
         if (s.Action == Services.AI.SuggestionAction.Resume)
             return await ApplyResumeAsync(s);
+        if (s.Action == Services.AI.SuggestionAction.Swap)
+            return await ApplySwapAsync(s);
 
         var day = await _storage.LoadDayAsync(s.Date);
         bool changed;
@@ -350,6 +352,67 @@ public partial class CalendarViewModel : ViewModelBase
         await _storage.SaveRecurringActivitiesAsync(_recurringActivities);
         LogService.UserAction("Admin",
             $"KI-Vorschlag übernommen: Pause für {rule.Title} {s.From:dd.MM.}–{s.To:dd.MM.}");
+        await RefreshAllAsync(silent: true);
+        return true;
+    }
+
+    /// <summary>
+    /// Übernimmt einen Schicht-Tausch-Vorschlag der KI: legt einen ShiftSwapRequest in der
+    /// üblichen Pending-Form an, sodass der Empfänger ihn im Kalender bestätigt/ablehnt.
+    /// Initiator ist der Owner der FromEntry-Schicht — der Admin ist hier Vermittler.
+    /// </summary>
+    private async Task<bool> ApplySwapAsync(Services.AI.PlannerSuggestion s)
+    {
+        if (string.IsNullOrEmpty(s.FromEntryId) || string.IsNullOrEmpty(s.ToUserId)) return false;
+
+        // From-Eintrag im aktuellen Tag-Snapshot suchen — er muss real existieren.
+        CalendarEntry? fromEntry = null;
+        DateOnly fromDate = default;
+        foreach (var d in Days)
+        {
+            var e = d.Entries.FirstOrDefault(x => x.Id == s.FromEntryId && !x.IsRecurring);
+            if (e is not null) { fromEntry = e; fromDate = d.Date; break; }
+        }
+        if (fromEntry is null) { LogService.Warn("KI-Vorschlag Swap: From-Schicht {0} nicht gefunden", s.FromEntryId); return false; }
+
+        var toUser = _allUsers.FirstOrDefault(u => u.Id == s.ToUserId);
+        if (toUser is null) { LogService.Warn("KI-Vorschlag Swap: Empfänger {0} nicht gefunden", s.ToUserId); return false; }
+
+        var mode = string.Equals(s.SwapMode, "exchange", StringComparison.OrdinalIgnoreCase)
+            ? SwapMode.Exchange : SwapMode.GiveAway;
+
+        CalendarEntry? toEntry = null;
+        DateOnly toDate = default;
+        if (mode == SwapMode.Exchange)
+        {
+            if (string.IsNullOrEmpty(s.ToEntryId)) return false;
+            foreach (var d in Days)
+            {
+                var e = d.Entries.FirstOrDefault(x => x.Id == s.ToEntryId && !x.IsRecurring);
+                if (e is not null) { toEntry = e; toDate = d.Date; break; }
+            }
+            if (toEntry is null) { LogService.Warn("KI-Vorschlag Swap: Gegen-Schicht {0} nicht gefunden", s.ToEntryId); return false; }
+        }
+
+        var req = new ShiftSwapRequest
+        {
+            Mode = mode,
+            FromUserId = fromEntry.UserId,
+            FromUserName = fromEntry.UserDisplayName,
+            FromDate = fromDate.ToString("yyyy-MM-dd"),
+            FromEntryId = fromEntry.Id,
+            ToUserId = toUser.Id,
+            ToUserName = string.IsNullOrEmpty(toUser.DisplayName) ? toUser.Username : toUser.DisplayName,
+            ToDate = toEntry is null ? null : toDate.ToString("yyyy-MM-dd"),
+            ToEntryId = toEntry?.Id,
+            Message = s.Message ?? ""
+        };
+        _swapRequests.Add(req);
+        await _storage.SaveSwapRequestsAsync(_swapRequests);
+        await _notifications.AddAsync(req.ToUserId, "Notif_SwapOffered",
+            req.FromDate, req.FromUserName, FmtDate(req.FromDate));
+        LogService.UserAction("Admin",
+            $"KI-Vorschlag übernommen: Tausch {req.FromUserName} → {req.ToUserName} ({mode}) {fromDate:dd.MM.}");
         await RefreshAllAsync(silent: true);
         return true;
     }

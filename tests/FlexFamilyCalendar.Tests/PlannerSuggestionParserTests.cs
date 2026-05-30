@@ -135,6 +135,43 @@ public class PlannerSuggestionParserTests
     }
 
     [Fact]
+    public void Extract_Swap_GiveAway_Valid()
+    {
+        var s = Assert.Single(PlannerSuggestionParser.Extract(
+            "```json\n{\"action\":\"swap\",\"mode\":\"giveAway\",\"fromEntryId\":\"e1\",\"toUserId\":\"u2\",\"message\":\"Tausch?\"}\n```"));
+        Assert.Equal(SuggestionAction.Swap, s.Action);
+        Assert.Equal("e1", s.FromEntryId);
+        Assert.Equal("u2", s.ToUserId);
+        Assert.Equal("giveaway", s.SwapMode);
+        Assert.Equal("Tausch?", s.Message);
+    }
+
+    [Fact]
+    public void Extract_Swap_Exchange_RequiresToEntryId()
+    {
+        var ok = "```json\n{\"action\":\"swap\",\"mode\":\"exchange\",\"fromEntryId\":\"e1\",\"toUserId\":\"u2\",\"toEntryId\":\"e2\"}\n```";
+        var s = Assert.Single(PlannerSuggestionParser.Extract(ok));
+        Assert.Equal("exchange", s.SwapMode);
+        Assert.Equal("e2", s.ToEntryId);
+
+        var missingTo = "```json\n{\"action\":\"swap\",\"mode\":\"exchange\",\"fromEntryId\":\"e1\",\"toUserId\":\"u2\"}\n```";
+        Assert.Empty(PlannerSuggestionParser.Extract(missingTo));
+    }
+
+    [Fact]
+    public void Extract_Swap_MissingPrimaryFields_IsRejected()
+    {
+        var noFrom = "```json\n{\"action\":\"swap\",\"mode\":\"giveAway\",\"toUserId\":\"u2\"}\n```";
+        Assert.Empty(PlannerSuggestionParser.Extract(noFrom));
+
+        var noTo = "```json\n{\"action\":\"swap\",\"mode\":\"giveAway\",\"fromEntryId\":\"e1\"}\n```";
+        Assert.Empty(PlannerSuggestionParser.Extract(noTo));
+
+        var badMode = "```json\n{\"action\":\"swap\",\"mode\":\"weirdo\",\"fromEntryId\":\"e1\",\"toUserId\":\"u2\"}\n```";
+        Assert.Empty(PlannerSuggestionParser.Extract(badMode));
+    }
+
+    [Fact]
     public void Extract_Resume_RequiresRuleAndSkipId()
     {
         var ok = "```json\n{\"action\":\"resume\",\"recurringActivityId\":\"r1\",\"skipId\":\"sk1\"}\n```";

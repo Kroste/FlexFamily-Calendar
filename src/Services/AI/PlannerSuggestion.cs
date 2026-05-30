@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace FlexFamilyCalendar.Services.AI;
 
-public enum SuggestionAction { Add, Update, Delete, Pause, Resume }
+public enum SuggestionAction { Add, Update, Delete, Pause, Resume, Swap }
 
 /// <summary>
 /// Strukturierter Vorschlag, den die KI in einem JSON-Codeblock liefert. Fünf Aktionen:
@@ -33,7 +33,14 @@ public record PlannerSuggestion(
     DateOnly? From = null,
     DateOnly? To = null,
     string? Reason = null,
-    string? SkipId = null);
+    string? SkipId = null,
+    // Swap-spezifisch: FromEntryId = Schicht des Initiators, ToUserId = Empfänger,
+    // ToEntryId (nur bei Exchange) = Gegen-Schicht des Empfängers.
+    string? FromEntryId = null,
+    string? ToUserId = null,
+    string? ToEntryId = null,
+    string? SwapMode = null,
+    string? Message = null);
 
 public static class PlannerSuggestionParser
 {
@@ -83,6 +90,14 @@ public static class PlannerSuggestionParser
                 ? rEl.GetString() : null;
             string? skipId = root.TryGetProperty("skipId", out var sidEl) ? sidEl.GetString() : null;
 
+            // Swap-spezifische Felder
+            string? fromEntryId = root.TryGetProperty("fromEntryId", out var feEl) ? feEl.GetString() : null;
+            string? toUserId = root.TryGetProperty("toUserId", out var tuEl) ? tuEl.GetString() : null;
+            string? toEntryId = root.TryGetProperty("toEntryId", out var teEl) ? teEl.GetString() : null;
+            string? swapMode = root.TryGetProperty("mode", out var smEl) ? smEl.GetString() : null;
+            string? message = root.TryGetProperty("message", out var mEl) && mEl.ValueKind == System.Text.Json.JsonValueKind.String
+                ? mEl.GetString() : null;
+
             // Pause + Resume haben from als Datums-Quelle; sonst kommt date aus dem JSON.
             DateOnly date;
             if (action == SuggestionAction.Pause)
@@ -90,10 +105,11 @@ public static class PlannerSuggestionParser
                 if (from is null) return false;
                 date = from.Value;
             }
-            else if (action == SuggestionAction.Resume)
+            else if (action == SuggestionAction.Resume || action == SuggestionAction.Swap)
             {
-                // Resume kann „date" optional liefern. Wenn nicht, springen wir nur ungefähr — der
-                // CalendarVM resolvet beim Apply die echte From-Datums aus dem Skip im _recurringActivities.
+                // Resume + Swap haben kein Pflicht-Datum — der CalendarVM resolvet's beim Apply
+                // aus dem referenzierten Skip bzw. Entry. Optional gelieferte „date" trotzdem
+                // respektieren, sonst Fallback auf heute.
                 date = from ?? (root.TryGetProperty("date", out var dEl)
                     && DateOnly.TryParseExact(dEl.GetString(), "yyyy-MM-dd", CultureInfo.InvariantCulture,
                         DateTimeStyles.None, out var dParsed)
@@ -127,10 +143,18 @@ public static class PlannerSuggestionParser
                 case SuggestionAction.Resume:
                     if (string.IsNullOrWhiteSpace(recurringId) || string.IsNullOrWhiteSpace(skipId)) return false;
                     break;
+                case SuggestionAction.Swap:
+                    if (string.IsNullOrWhiteSpace(fromEntryId) || string.IsNullOrWhiteSpace(toUserId)) return false;
+                    var mode = (swapMode ?? "giveAway").ToLowerInvariant();
+                    if (mode != "giveaway" && mode != "exchange") return false;
+                    if (mode == "exchange" && string.IsNullOrWhiteSpace(toEntryId)) return false;
+                    swapMode = mode;   // normalisieren
+                    break;
             }
 
             suggestion = new PlannerSuggestion(action, date, entryId, userId, type, start, end, title,
-                recurringId, from, to, reason, skipId);
+                recurringId, from, to, reason, skipId,
+                fromEntryId, toUserId, toEntryId, swapMode, message);
             return true;
         }
         catch
