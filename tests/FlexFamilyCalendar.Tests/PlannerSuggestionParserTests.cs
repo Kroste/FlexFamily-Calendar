@@ -133,4 +133,20 @@ public class PlannerSuggestionParserTests
         Assert.Equal(s.From, s.To);
         Assert.Null(s.Reason);
     }
+
+    [Fact]
+    public void Extract_Resume_RequiresRuleAndSkipId()
+    {
+        var ok = "```json\n{\"action\":\"resume\",\"recurringActivityId\":\"r1\",\"skipId\":\"sk1\"}\n```";
+        var s = Assert.Single(PlannerSuggestionParser.Extract(ok));
+        Assert.Equal(SuggestionAction.Resume, s.Action);
+        Assert.Equal("r1", s.RecurringActivityId);
+        Assert.Equal("sk1", s.SkipId);
+
+        var noRule = "```json\n{\"action\":\"resume\",\"skipId\":\"sk1\"}\n```";
+        Assert.Empty(PlannerSuggestionParser.Extract(noRule));
+
+        var noSkip = "```json\n{\"action\":\"resume\",\"recurringActivityId\":\"r1\"}\n```";
+        Assert.Empty(PlannerSuggestionParser.Extract(noSkip));
+    }
 }

@@ -83,6 +83,15 @@ public partial class AiPlannerViewModel : ViewModelBase
         return string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
     }
 
+    /// <summary>Resolved (RuleId, SkipId) → der konkrete Skip-Eintrag aus der Regel. null = nicht gefunden.</summary>
+    internal RecurrenceSkip? ResolveSkip(string? ruleId, string? skipId)
+    {
+        if (string.IsNullOrEmpty(ruleId) || string.IsNullOrEmpty(skipId)) return null;
+        var ctx = _buildContext();
+        var rule = ctx.RecurringActivities.FirstOrDefault(r => r.Id == ruleId);
+        return rule?.Skips.FirstOrDefault(s => s.Id == skipId);
+    }
+
     /// <summary>Resolved Recurring-Activity-Id → kompaktes „Person · Titel"-Label. null = nicht gefunden.</summary>
     internal string? ResolveRuleLabel(string? ruleId)
     {
@@ -215,12 +224,23 @@ public partial class SuggestionCard : ObservableObject
         SuggestionAction.Update => Localizer.Instance["AiPlanner_ActionUpdate"],
         SuggestionAction.Delete => Localizer.Instance["AiPlanner_ActionDelete"],
         SuggestionAction.Pause => Localizer.Instance["AiPlanner_ActionPause"],
+        SuggestionAction.Resume => Localizer.Instance["AiPlanner_ActionResume"],
         _ => Source.Action.ToString()
     };
-    public string Date => Source.Action == SuggestionAction.Pause && Source.From is { } f && Source.To is { } t
-        ? (f == t ? f.ToString("dddd, dd.MM.yyyy", CultureInfo.GetCultureInfo("de-DE"))
-                  : $"{f:dd.MM.yyyy} – {t:dd.MM.yyyy}")
-        : Source.Date.ToString("dddd, dd.MM.yyyy", CultureInfo.GetCultureInfo("de-DE"));
+    public string Date
+    {
+        get
+        {
+            var ci = CultureInfo.GetCultureInfo("de-DE");
+            if (Source.Action == SuggestionAction.Pause && Source.From is { } pf && Source.To is { } pt)
+                return pf == pt ? pf.ToString("dddd, dd.MM.yyyy", ci) : $"{pf:dd.MM.yyyy} – {pt:dd.MM.yyyy}";
+            // Resume: Datum wird im Create-Helper aus der Regel/Skip resolvet; falls Resume-spezifisch
+            // ein From kam, zeigen wir das, sonst das Suggestion-Date als Fallback.
+            if (Source.Action == SuggestionAction.Resume && Source.From is { } rf)
+                return rf.ToString("dddd, dd.MM.yyyy", ci);
+            return Source.Date.ToString("dddd, dd.MM.yyyy", ci);
+        }
+    }
     public string Person { get; }
     public string TimeRange => Source.Start is { } s && Source.End is { } e
         ? $"{s:hh\\:mm}–{e:hh\\:mm}" : "";
@@ -265,14 +285,24 @@ public partial class SuggestionCard : ObservableObject
 
     public static SuggestionCard Create(PlannerSuggestion s, AiPlannerViewModel parent)
     {
-        // Bei Add: UserId aus dem Vorschlag. Bei Update/Delete: aus dem referenzierten Entry,
-        // den die Calendar-VM kennt. Bei Pause: aus der referenzierten Regel (Person + Titel).
+        // Personen-/Regel-Bezug auflösen, damit die Karte aussagekräftig ist.
         string person = s.Action switch
         {
             SuggestionAction.Add when !string.IsNullOrEmpty(s.UserId) => parent.ResolvePersonName(s.UserId),
-            SuggestionAction.Pause => parent.ResolveRuleLabel(s.RecurringActivityId) ?? (s.RecurringActivityId ?? ""),
+            SuggestionAction.Pause or SuggestionAction.Resume
+                => parent.ResolveRuleLabel(s.RecurringActivityId) ?? (s.RecurringActivityId ?? ""),
             _ => parent.ResolvePersonByEntry(s.EntryId) ?? (s.EntryId ?? "")
         };
+
+        // Bei Resume das Datum (From/To) der zu entfernenden Pause aus der Regel mitnehmen,
+        // damit die Karte den Zeitraum zeigt — die KI muss das selbst nicht doppelt mitschicken.
+        if (s.Action == SuggestionAction.Resume && s.RecurringActivityId is not null && s.SkipId is not null)
+        {
+            var skip = parent.ResolveSkip(s.RecurringActivityId, s.SkipId);
+            if (skip is not null)
+                s = s with { From = skip.From, To = skip.To, Reason = skip.Reason };
+        }
+
         var card = new SuggestionCard(parent, s, person);
         foreach (var w in parent.ValidateSuggestion(s))
             card.WarningRows.Add(new WarningRow(parent, w));

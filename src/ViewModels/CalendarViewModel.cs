@@ -303,9 +303,11 @@ public partial class CalendarViewModel : ViewModelBase
     /// </summary>
     private async Task<bool> ApplyAiSuggestionAsync(Services.AI.PlannerSuggestion s)
     {
-        // Pause ist ein Sonderfall — schreibt nicht in den Tages-Storage, sondern an die Regel.
+        // Pause/Resume sind Sonderfälle — schreiben nicht in den Tages-Storage, sondern an die Regel.
         if (s.Action == Services.AI.SuggestionAction.Pause)
             return await ApplyPauseAsync(s);
+        if (s.Action == Services.AI.SuggestionAction.Resume)
+            return await ApplyResumeAsync(s);
 
         var day = await _storage.LoadDayAsync(s.Date);
         bool changed;
@@ -348,6 +350,22 @@ public partial class CalendarViewModel : ViewModelBase
         await _storage.SaveRecurringActivitiesAsync(_recurringActivities);
         LogService.UserAction("Admin",
             $"KI-Vorschlag übernommen: Pause für {rule.Title} {s.From:dd.MM.}–{s.To:dd.MM.}");
+        await RefreshAllAsync(silent: true);
+        return true;
+    }
+
+    private async Task<bool> ApplyResumeAsync(Services.AI.PlannerSuggestion s)
+    {
+        if (s.RecurringActivityId is null || s.SkipId is null) return false;
+        var rule = _recurringActivities.FirstOrDefault(r => r.Id == s.RecurringActivityId);
+        if (rule is null) { LogService.Warn("KI-Vorschlag: Regel {0} nicht gefunden", s.RecurringActivityId); return false; }
+        var skip = rule.Skips.FirstOrDefault(x => x.Id == s.SkipId);
+        if (skip is null) { LogService.Warn("KI-Vorschlag: Pause {0} an Regel {1} nicht gefunden", s.SkipId, rule.Id); return false; }
+
+        rule.Skips.Remove(skip);
+        await _storage.SaveRecurringActivitiesAsync(_recurringActivities);
+        LogService.UserAction("Admin",
+            $"KI-Vorschlag übernommen: Pause {skip.From:dd.MM.}–{skip.To:dd.MM.} für {rule.Title} aufgehoben");
         await RefreshAllAsync(silent: true);
         return true;
     }

@@ -124,6 +124,7 @@
   "AiPlanner_ActionUpdate": "Eintrag ändern",
   "AiPlanner_ActionDelete": "Eintrag löschen",
   "AiPlanner_ActionPause": "Wiederkehrende Aktivität pausieren",
+  "AiPlanner_ActionResume": "Pause aufheben (Aktivität wiederbeleben)",
   "AiPlanner_JumpToDate": "Im Kalender zu diesem Tag springen",
   "Common_Close": "Schließen",
   "Cal_Hints": "Hinweise",

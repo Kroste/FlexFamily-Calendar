@@ -95,6 +95,17 @@ public static class PlannerContextBuilder
         sb.AppendLine("}");
         sb.AppendLine("```");
         sb.AppendLine();
+        sb.AppendLine("Bestehende Pause an einer wiederkehrenden Aktivität aufheben (z.B. wenn der");
+        sb.AppendLine("Urlaub verkürzt wurde oder die Klassenfahrt ausfällt). Die skipId steht");
+        sb.AppendLine("hinter dem jeweiligen 'Pause:'-Eintrag in der Liste oben:");
+        sb.AppendLine("```json");
+        sb.AppendLine("{");
+        sb.AppendLine("  \"action\": \"resume\",");
+        sb.AppendLine("  \"recurringActivityId\": \"<id>\",");
+        sb.AppendLine("  \"skipId\": \"<id der zu entfernenden Pause>\"");
+        sb.AppendLine("}");
+        sb.AppendLine("```");
+        sb.AppendLine();
         sb.AppendLine("Hinweis: Mehrere Personen dürfen sich zeitlich überlappen — Überlappung ist nur bei");
         sb.AppendLine("derselben Person ein Problem. Achte auf die persönliche Mindest-Ruhezeit. Vermeide");
         sb.AppendLine("Vorschläge, die das Wochensoll bzw. die gesetzliche Höchstarbeitszeit der Person");
@@ -152,7 +163,7 @@ public static class PlannerContextBuilder
             {
                 var span = s.From == s.To ? $"{s.From:dd.MM.yyyy}" : $"{s.From:dd.MM.yyyy}–{s.To:dd.MM.yyyy}";
                 var reason = string.IsNullOrWhiteSpace(s.Reason) ? "" : $" ({s.Reason})";
-                sb.AppendLine($"    Pause: {span}{reason}");
+                sb.AppendLine($"    Pause: {span}{reason} · skipId={s.Id}");
             }
         }
         sb.AppendLine();

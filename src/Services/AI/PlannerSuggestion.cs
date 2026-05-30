@@ -4,16 +4,18 @@ using System.Text.RegularExpressions;
 
 namespace FlexFamilyCalendar.Services.AI;
 
-public enum SuggestionAction { Add, Update, Delete, Pause }
+public enum SuggestionAction { Add, Update, Delete, Pause, Resume }
 
 /// <summary>
-/// Strukturierter Vorschlag, den die KI in einem JSON-Codeblock liefert. Vier Aktionen:
+/// Strukturierter Vorschlag, den die KI in einem JSON-Codeblock liefert. Fünf Aktionen:
 /// <list type="bullet">
 ///   <item><b>Add</b>: neuen Eintrag anlegen (UserId, Type, Start, End, optional Title).</item>
 ///   <item><b>Update</b>: bestehenden Eintrag ändern (EntryId, optional Start/End/Title/UserId/Type).</item>
 ///   <item><b>Delete</b>: bestehenden Eintrag entfernen (EntryId).</item>
 ///   <item><b>Pause</b>: tagesgenaue Pause für eine wiederkehrende Aktivität anlegen
 ///     (RecurringActivityId, From, To, optional Reason). Date wird auf From gespiegelt.</item>
+///   <item><b>Resume</b>: eine bestehende Pause an einer wiederkehrenden Aktivität aufheben
+///     (RecurringActivityId, SkipId). Date wird auf das From der Pause gespiegelt.</item>
 /// </list>
 /// Felder, die für eine Aktion irrelevant sind, dürfen null sein — der Parser akzeptiert das
 /// nur dort, wo die Aktion das zulässt.
@@ -30,7 +32,8 @@ public record PlannerSuggestion(
     string? RecurringActivityId = null,
     DateOnly? From = null,
     DateOnly? To = null,
-    string? Reason = null);
+    string? Reason = null,
+    string? SkipId = null);
 
 public static class PlannerSuggestionParser
 {
@@ -78,13 +81,23 @@ public static class PlannerSuggestionParser
             DateOnly? to = TryGetDate(root, "to");
             string? reason = root.TryGetProperty("reason", out var rEl) && rEl.ValueKind == System.Text.Json.JsonValueKind.String
                 ? rEl.GetString() : null;
+            string? skipId = root.TryGetProperty("skipId", out var sidEl) ? sidEl.GetString() : null;
 
-            // Pause hat from/to als Datums-Quelle — andere Aktionen brauchen das primäre "date".
+            // Pause + Resume haben from als Datums-Quelle; sonst kommt date aus dem JSON.
             DateOnly date;
             if (action == SuggestionAction.Pause)
             {
                 if (from is null) return false;
                 date = from.Value;
+            }
+            else if (action == SuggestionAction.Resume)
+            {
+                // Resume kann „date" optional liefern. Wenn nicht, springen wir nur ungefähr — der
+                // CalendarVM resolvet beim Apply die echte From-Datums aus dem Skip im _recurringActivities.
+                date = from ?? (root.TryGetProperty("date", out var dEl)
+                    && DateOnly.TryParseExact(dEl.GetString(), "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out var dParsed)
+                    ? dParsed : DateOnly.FromDateTime(DateTime.Today));
             }
             else
             {
@@ -111,10 +124,13 @@ public static class PlannerSuggestionParser
                     if (string.IsNullOrWhiteSpace(recurringId) || from is null || to is null) return false;
                     if (to < from) return false;   // To >= From; sonst sinnlos
                     break;
+                case SuggestionAction.Resume:
+                    if (string.IsNullOrWhiteSpace(recurringId) || string.IsNullOrWhiteSpace(skipId)) return false;
+                    break;
             }
 
             suggestion = new PlannerSuggestion(action, date, entryId, userId, type, start, end, title,
-                recurringId, from, to, reason);
+                recurringId, from, to, reason, skipId);
             return true;
         }
         catch
