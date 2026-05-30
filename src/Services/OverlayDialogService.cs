@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.ViewModels;
 using FlexFamilyCalendar.Views;
 
@@ -91,6 +92,11 @@ public class OverlayDialogService : IDialogService
         _overlay.IsVisible = true;
         return tcs.Task;
     }
+
+    public Task<IReadOnlyList<RecurrenceSkip>?> ShowRecurrencePauseAsync(RecurrencePauseViewModel vm)
+        => ShowAsync<IReadOnlyList<RecurrenceSkip>>(new RecurrencePauseView { DataContext = vm },
+            h => vm.Closed += h, h => vm.Closed -= h,
+            () => vm.CancelCommand.Execute(null));
 
     public void CancelActive() => _cancelCurrent?.Invoke();
 

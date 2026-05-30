@@ -1,3 +1,4 @@
+using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Services;
@@ -21,6 +22,7 @@ public interface IDialogService
     Task<MoveCopyResult?> ShowMoveCopyAsync(MoveCopyViewModel vm);
     Task<IReadOnlyList<string>?> ShowMailAsync(MailViewModel vm);
     Task<UpdateDialogAction?> ShowUpdateAsync(UpdateViewModel vm);
+    Task<IReadOnlyList<RecurrenceSkip>?> ShowRecurrencePauseAsync(RecurrencePauseViewModel vm);
 
     /// <summary>
     /// Abbruch des aktuell offenen Dialogs (ESC/Backdrop-Klick im Overlay-Backend).

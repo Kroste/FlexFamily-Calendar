@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.RecurrencePauseView"
+             x:CompileBindings="False">
+
+  <Grid Margin="24,20,24,20" RowDefinitions="Auto,Auto,Auto,Auto,Auto" MinWidth="460" MaxWidth="520">
+
+    <StackPanel Grid.Row="0" Margin="0,0,0,14">
+      <TextBlock Text="{Binding RuleTitle}" FontSize="18" FontWeight="Bold" />
+      <TextBlock Text="{Binding SubHeader}" Opacity="0.65" FontSize="13" Margin="0,2,0,0" />
+    </StackPanel>
+
+    <!-- Liste bestehender Pausen -->
+    <Border Grid.Row="1" Background="#F8F8F8" CornerRadius="6" Padding="2"
+            IsVisible="{Binding ExistingSkips.Count}">
+      <ScrollViewer MaxHeight="160" VerticalScrollBarVisibility="Auto">
+        <ItemsControl ItemsSource="{Binding ExistingSkips}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="*,Auto" Margin="6,4">
+                <StackPanel Grid.Column="0">
+                  <TextBlock Text="{Binding RangeLabel}" FontWeight="SemiBold" FontSize="13" />
+                  <TextBlock Text="{Binding ReasonLabel}" Opacity="0.65" FontSize="12"
+                             IsVisible="{Binding ReasonLabel.Length}" />
+                </StackPanel>
+                <Button Grid.Column="1" Content="×" Command="{Binding RemoveCommand}"
+                        Width="28" Height="28" CornerRadius="14" Padding="0"
+                        FontSize="16" VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+
+    <!-- Neue Pause -->
+    <StackPanel Grid.Row="2" Spacing="8" Margin="0,16,0,0">
+      <TextBlock Text="{loc:Tr RecurrencePause_NewHeader}" FontSize="13" FontWeight="SemiBold" />
+      <Grid ColumnDefinitions="*,12,*">
+        <StackPanel Grid.Column="0" Spacing="4">
+          <TextBlock Text="{loc:Tr Entry_DateFrom}" FontSize="12" Opacity="0.7" />
+          <DatePicker SelectedDate="{Binding NewFrom}" HorizontalAlignment="Stretch" />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Spacing="4">
+          <TextBlock Text="{loc:Tr Entry_DateTo}" FontSize="12" Opacity="0.7" />
+          <DatePicker SelectedDate="{Binding NewTo}" HorizontalAlignment="Stretch" />
+        </StackPanel>
+      </Grid>
+      <StackPanel Spacing="4">
+        <TextBlock Text="{loc:Tr RecurrencePause_Reason}" FontSize="12" Opacity="0.7" />
+        <TextBox Text="{Binding NewReason}" CornerRadius="6"
+                 PlaceholderText="{loc:Tr RecurrencePause_ReasonPlaceholder}" />
+      </StackPanel>
+      <Button Content="{loc:Tr RecurrencePause_AddButton}" Command="{Binding AddNewSkipCommand}"
+              Padding="14,7" CornerRadius="6" HorizontalAlignment="Left" />
+    </StackPanel>
+
+    <TextBlock Grid.Row="3" Text="{Binding ErrorMessage}" Foreground="#E74C3C"
+               Margin="0,10,0,0" FontSize="12"
+               IsVisible="{Binding ErrorMessage.Length}" />
+
+    <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="12"
+                HorizontalAlignment="Right" Margin="0,18,0,0">
+      <Button Content="{loc:Tr Common_Cancel}" Command="{Binding CancelCommand}"
+              Padding="16,8" CornerRadius="6" />
+      <Button Content="{loc:Tr Common_Save}" Command="{Binding SaveCommand}"
+              Padding="16,8" CornerRadius="6"
+              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+    </StackPanel>
+
+  </Grid>
+</UserControl>

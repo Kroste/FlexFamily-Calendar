@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.ViewModels;
 using FlexFamilyCalendar.Views;
 
@@ -46,6 +47,9 @@ public class WindowDialogService : IDialogService
 
     public Task<UpdateDialogAction?> ShowUpdateAsync(UpdateViewModel vm)
         => new UpdateDialog { DataContext = vm }.ShowDialog<UpdateDialogAction?>(_owner);
+
+    public Task<IReadOnlyList<RecurrenceSkip>?> ShowRecurrencePauseAsync(RecurrencePauseViewModel vm)
+        => new RecurrencePauseDialog { DataContext = vm }.ShowDialog<IReadOnlyList<RecurrenceSkip>?>(_owner);
 
     public void CancelActive() { }   // Window fängt ESC/Außenklick selbst ab
 }

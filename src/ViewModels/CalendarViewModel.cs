@@ -512,8 +512,12 @@ public partial class CalendarViewModel : ViewModelBase
     /// <summary>Antippen einer Schicht: offene Anfrage beantworten/zurückziehen, eigenen Tausch anbieten oder bearbeiten.</summary>
     public void ActivateEntry(DateOnly date, CalendarEntry entry)
     {
-        // Projektionen sind keine echten Tageseinträge → nicht editier-/tauschbar.
-        if (entry.IsRecurring) return;
+        // Projektionen sind keine echten Tageseinträge — Admin kann sie aber pausieren (Urlaub/Krank).
+        if (entry.IsRecurring)
+        {
+            if (IsAdmin) _ = ManageRecurringPauseAsync(date, entry);
+            return;
+        }
 
         var dayStr = date.ToString("yyyy-MM-dd");
         bool Involves(ShiftSwapRequest r) =>
@@ -543,6 +547,31 @@ public partial class CalendarViewModel : ViewModelBase
         }
 
         RequestEditEntry(date, entry);
+    }
+
+    /// <summary>
+    /// Admin pausiert/reaktiviert eine wiederkehrende Aktivität tagesgenau. Die Pausen-Liste
+    /// wird im Dialog bearbeitet und anschließend mit der ganzen Regel-Liste persistiert.
+    /// </summary>
+    private async Task ManageRecurringPauseAsync(DateOnly date, CalendarEntry projected)
+    {
+        if (App.DialogService is null) return;
+
+        // Id-Format: "recurring:{ruleId}:{yyyy-MM-dd}" — Mittelteil ist die Rule-Id.
+        var parts = projected.Id.Split(':');
+        if (parts.Length < 3) return;
+        var ruleId = parts[1];
+        var rule = _recurringActivities.FirstOrDefault(r => r.Id == ruleId);
+        if (rule is null) return;
+
+        var vm = new RecurrencePauseViewModel(rule, date);
+        var result = await App.DialogService.ShowRecurrencePauseAsync(vm);
+        if (result is null) return;
+
+        rule.Skips = result.ToList();
+        await _storage.SaveRecurringActivitiesAsync(_recurringActivities);
+        LogService.UserAction("Admin", $"Aussetzungen für {rule.Title} aktualisiert ({result.Count})");
+        await RefreshAllAsync(silent: true);
     }
 
     /// <summary>Aus der Benachrichtigung: zur betroffenen Woche springen und den Umplanungs-Dialog öffnen.</summary>
