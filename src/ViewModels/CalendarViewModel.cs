@@ -741,15 +741,17 @@ public partial class CalendarViewModel : ViewModelBase
         await LoadWeekAsync();
     }
 
-    /// <summary>Nach dem Admin-Bereich: Benutzer, Einstellungen (Region/Übernachtung), Kategorien/Regeln neu laden.</summary>
-    public async Task RefreshAllAsync()
+    /// <summary>Nach dem Admin-Bereich oder dem 30s-Hintergrund-Sync: Benutzer, Einstellungen,
+    /// Kategorien/Regeln neu laden. <paramref name="silent"/>=true unterdrückt das „Lade
+    /// Kalenderwoche"-Statuslog, damit Background-Polls die Statusleiste nicht zuflattern.</summary>
+    public async Task RefreshAllAsync(bool silent = false)
     {
         _allUsers = await _storage.LoadUsersAsync();
         RebuildUserColors();
         var settings = await _storage.LoadSettingsAsync();
         _holidayState = GermanStates.Parse(settings.HolidayState);
         _overnightHoursPerDay = settings.OvernightHoursPerDay;
-        await LoadWeekAsync();  // lädt Kategorien + wiederkehrende Regeln jeweils neu
+        await LoadWeekAsync(silent);
     }
 
     /// <summary>Header-Toggle: Feiertags-Anzeige sofort umschalten und die Präferenz pro Benutzer merken.</summary>
@@ -877,9 +879,9 @@ public partial class CalendarViewModel : ViewModelBase
         return mark;
     }
 
-    private async Task LoadWeekAsync()
+    private async Task LoadWeekAsync(bool silent = false)
     {
-        LogService.Info("Lade Kalenderwoche {0}", WeekLabel);
+        if (!silent) LogService.Info("Lade Kalenderwoche {0}", WeekLabel);
         _swapRequests = await _storage.LoadSwapRequestsAsync();
         _activityTypes = await _storage.LoadActivityTypesAsync();
         _recurringActivities = await _storage.LoadRecurringActivitiesAsync();

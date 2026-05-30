@@ -17,6 +17,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IMailSender _mailSender;
     private User? _currentUser;
 
+    // Cross-Client-Sync: alle SyncIntervalSeconds Sekunden frische Daten ziehen,
+    // damit Änderungen aus anderen Sessions (App ↔ Web, andere Familienmitglieder)
+    // ohne manuelles Reload sichtbar werden. Klein genug für 5–10 Nutzer.
+    private const double SyncIntervalSeconds = 30;
+    private Avalonia.Threading.DispatcherTimer? _syncTimer;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotLoggedIn))]
     private bool _isLoggedIn;
@@ -76,6 +82,40 @@ public partial class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsAdmin));
         LogService.UserAction(user.Username, logVerb);
         _ = RefreshUnreadCountAsync();
+        StartBackgroundSync();
+    }
+
+    private void StartBackgroundSync()
+    {
+        StopBackgroundSync();
+        _syncTimer = new Avalonia.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(SyncIntervalSeconds)
+        };
+        _syncTimer.Tick += async (_, _) => await BackgroundSyncAsync();
+        _syncTimer.Start();
+    }
+
+    private void StopBackgroundSync()
+    {
+        if (_syncTimer is null) return;
+        _syncTimer.Stop();
+        _syncTimer = null;
+    }
+
+    private async Task BackgroundSyncAsync()
+    {
+        if (!IsLoggedIn || CalendarVm is null) return;
+        try
+        {
+            await CalendarVm.RefreshAllAsync(silent: true);
+            await RefreshUnreadCountAsync();
+        }
+        catch (Exception ex)
+        {
+            // Sync-Fehler nicht in die Statusleiste — sonst flutet ein offline-Moment die UI.
+            LogService.Debug("Hintergrund-Sync fehlgeschlagen: {0}", ex.Message);
+        }
     }
 
     public async Task RefreshUnreadCountAsync()
@@ -88,6 +128,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         LogService.UserAction(CurrentUserDisplay, "Abgemeldet");
         _ = _auth.SetRememberedUsernameAsync(null);  // Auto-Login deaktivieren
+        StopBackgroundSync();
         CalendarVm?.Cleanup();
         IsLoggedIn = false;
         CalendarVm = null;
