@@ -555,18 +555,20 @@ public partial class CalendarViewModel : ViewModelBase
     /// </summary>
     private async Task ManageRecurringPauseAsync(DateOnly date, CalendarEntry projected)
     {
+        LogService.Debug("Pause-Dialog angefragt: date={0}, entryId={1}, DialogService={2}",
+            date, projected.Id, App.DialogService is null ? "null" : App.DialogService.GetType().Name);
         if (App.DialogService is null) return;
 
         // Id-Format: "recurring:{ruleId}:{yyyy-MM-dd}" — Mittelteil ist die Rule-Id.
         var parts = projected.Id.Split(':');
-        if (parts.Length < 3) return;
+        if (parts.Length < 3) { LogService.Warn("Recurring-Id-Format unerwartet: {0}", projected.Id); return; }
         var ruleId = parts[1];
         var rule = _recurringActivities.FirstOrDefault(r => r.Id == ruleId);
-        if (rule is null) return;
+        if (rule is null) { LogService.Warn("Regel {0} nicht gefunden", ruleId); return; }
 
         var vm = new RecurrencePauseViewModel(rule, date);
         var result = await App.DialogService.ShowRecurrencePauseAsync(vm);
-        if (result is null) return;
+        if (result is null) { LogService.Debug("Pause-Dialog abgebrochen"); return; }
 
         rule.Skips = result.ToList();
         await _storage.SaveRecurringActivitiesAsync(_recurringActivities);

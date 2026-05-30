@@ -68,6 +68,25 @@ public partial class RecurrencePauseViewModel : ViewModelBase
     [RelayCommand]
     private void Save()
     {
+        // Bequemer Pfad: User wählt Datum + klickt direkt „Speichern", ohne vorher den
+        // „Pause hinzufügen"-Button zu drücken. Ohne diesen impliziten Add ginge die
+        // Eingabe lautlos verloren — die häufigste Frustquelle des Dialogs.
+        if (NewFrom is not null && NewTo is not null)
+        {
+            var from = DateOnly.FromDateTime(NewFrom.Value.Date);
+            var to = DateOnly.FromDateTime(NewTo.Value.Date);
+            if (to < from) (from, to) = (to, from);
+            if (!ExistingSkips.Any(r => r.From == from && r.To == to))
+            {
+                var pending = new RecurrenceSkip
+                {
+                    From = from, To = to,
+                    Reason = string.IsNullOrWhiteSpace(NewReason) ? null : NewReason.Trim()
+                };
+                ExistingSkips.Add(SkipRow.Create(pending, this));
+            }
+        }
+
         var result = ExistingSkips
             .OrderBy(r => r.From)
             .Select(r => new RecurrenceSkip { Id = r.Id, From = r.From, To = r.To, Reason = r.Reason })

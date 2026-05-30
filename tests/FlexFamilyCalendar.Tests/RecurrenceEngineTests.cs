@@ -191,6 +191,41 @@ public class RecurrenceEngineTests
     }
 
     [Fact]
+    public void PauseDialog_Save_AutoAdds_PendingDateRange()
+    {
+        // UX: User wählt Datum, klickt direkt „Speichern" → die ungeschickte Pause muss
+        // trotzdem in die Liste übernommen werden, statt lautlos verloren zu gehen.
+        var rule = Football(DayOfWeek.Thursday);
+        var clicked = new DateOnly(2026, 5, 28);
+        var vm = new ViewModels.RecurrencePauseViewModel(rule, clicked);
+
+        IReadOnlyList<RecurrenceSkip>? saved = null;
+        vm.Closed += s => saved = s;
+        vm.SaveCommand.Execute(null);
+
+        Assert.NotNull(saved);
+        var skip = Assert.Single(saved!);
+        Assert.Equal(clicked, skip.From);
+        Assert.Equal(clicked, skip.To);
+    }
+
+    [Fact]
+    public void PauseDialog_Save_DoesNotDuplicate_AlreadyAddedRange()
+    {
+        var rule = Football(DayOfWeek.Thursday);
+        var clicked = new DateOnly(2026, 5, 28);
+        rule.Skips.Add(new RecurrenceSkip { From = clicked, To = clicked, Reason = "alt" });
+        var vm = new ViewModels.RecurrencePauseViewModel(rule, clicked);
+
+        IReadOnlyList<RecurrenceSkip>? saved = null;
+        vm.Closed += s => saved = s;
+        vm.SaveCommand.Execute(null);
+
+        Assert.NotNull(saved);
+        Assert.Single(saved!);   // kein Duplikat trotz gleicher Vorbelegung
+    }
+
+    [Fact]
     public void Json_Roundtrip_PreservesSkips()
     {
         var rule = Football(DayOfWeek.Monday);
