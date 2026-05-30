@@ -60,7 +60,7 @@ public static class PlannerContextBuilder
         sb.AppendLine("}");
         sb.AppendLine("```");
         sb.AppendLine();
-        sb.AppendLine("Bestehenden Eintrag ändern (Zeit/Titel):");
+        sb.AppendLine("Bestehenden Eintrag ändern (Zeit, Person, Typ und/oder Titel):");
         sb.AppendLine("```json");
         sb.AppendLine("{");
         sb.AppendLine("  \"action\": \"update\",");
@@ -68,6 +68,8 @@ public static class PlannerContextBuilder
         sb.AppendLine("  \"entryId\": \"<entryId aus der Wochenliste unten>\",");
         sb.AppendLine("  \"start\": \"HH:mm\",      // optional");
         sb.AppendLine("  \"end\": \"HH:mm\",        // optional");
+        sb.AppendLine("  \"userId\": \"<UserId>\",   // optional, um Schicht umzumelden");
+        sb.AppendLine("  \"type\": \"Work | Activity | …\",  // optional");
         sb.AppendLine("  \"title\": \"neu, optional\"");
         sb.AppendLine("}");
         sb.AppendLine("```");
@@ -82,7 +84,9 @@ public static class PlannerContextBuilder
         sb.AppendLine("```");
         sb.AppendLine();
         sb.AppendLine("Hinweis: Mehrere Personen dürfen sich zeitlich überlappen — Überlappung ist nur bei");
-        sb.AppendLine("derselben Person ein Problem. Achte auf die persönliche Mindest-Ruhezeit.");
+        sb.AppendLine("derselben Person ein Problem. Achte auf die persönliche Mindest-Ruhezeit. Vermeide");
+        sb.AppendLine("Vorschläge, die das Wochensoll bzw. die gesetzliche Höchstarbeitszeit der Person");
+        sb.AppendLine("überschreiten — die UI warnt davor, aber bitte gleich gar nicht erst dort hin planen.");
         sb.AppendLine();
         sb.AppendLine($"Heute: {ctx.Today:dd.MM.yyyy} ({ctx.Today.ToString("dddd", CultureInfo.GetCultureInfo("de-DE"))})");
         sb.AppendLine($"Aktuelle Woche beginnt am: {ctx.WeekStart:dd.MM.yyyy}");

@@ -2,7 +2,7 @@ using FlexFamilyCalendar.Models;
 
 namespace FlexFamilyCalendar.Services.AI;
 
-public enum SuggestionWarningKind { SelfOverlap, RestHoursViolation, PersonAbsent }
+public enum SuggestionWarningKind { SelfOverlap, RestHoursViolation, PersonAbsent, WeeklyHoursExceeded }
 
 public record SuggestionWarning(SuggestionWarningKind Kind, string Message);
 
@@ -25,23 +25,29 @@ public static class PlannerSuggestionValidator
         IReadOnlyList<(DateOnly Date, IReadOnlyList<CalendarEntry> Entries)> week)
     {
         var warnings = new List<SuggestionWarning>();
-        if (s.Action == SuggestionAction.Delete) return warnings;   // löschen ist immer ok
 
-        // Welche Person? Bei Add aus dem Vorschlag, bei Update aus dem referenzierten Eintrag.
+        // Welche Person? Bei Add aus dem Vorschlag, bei Update aus dem referenzierten Eintrag
+        // (oder umgemeldete neue UserId), bei Delete aus dem Bestand.
         string? userId = s.UserId;
         TimeSpan? start = s.Start;
         TimeSpan? end = s.End;
+        EntryType? type = s.Type;
         CalendarEntry? existing = null;
 
-        if (s.Action == SuggestionAction.Update)
+        if (s.Action == SuggestionAction.Update || s.Action == SuggestionAction.Delete)
         {
             existing = FindEntry(week, s.EntryId);
             if (existing is null) return warnings;   // kann nicht prüfen, was nicht da ist
-            userId = existing.UserId;
+            userId ??= existing.UserId;
             start ??= existing.StartTime;
             end ??= existing.EndTime;
+            type ??= existing.Type;
         }
 
+        // Wochensoll-/Max-Hinweis: immer prüfen (auch Delete reduziert nur, was kein Konflikt ist).
+        CheckWeeklyHours(warnings, s, existing, userId, start, end, type, users, week);
+
+        if (s.Action == SuggestionAction.Delete) return warnings;
         if (userId is null || start is null || end is null) return warnings;
 
         var dayEntries = week.FirstOrDefault(d => d.Date == s.Date).Entries ?? Array.Empty<CalendarEntry>();
@@ -91,6 +97,55 @@ public static class PlannerSuggestionValidator
         }
 
         return warnings;
+    }
+
+    private static void CheckWeeklyHours(
+        List<SuggestionWarning> warnings, PlannerSuggestion s, CalendarEntry? existing,
+        string? userId, TimeSpan? start, TimeSpan? end, EntryType? type,
+        IReadOnlyList<User> users,
+        IReadOnlyList<(DateOnly Date, IReadOnlyList<CalendarEntry> Entries)> week)
+    {
+        if (string.IsNullOrEmpty(userId)) return;
+        var user = users.FirstOrDefault(u => u.Id == userId);
+        if (user is null) return;
+        if (user.WeeklyHoursQuota <= 0 && user.MaxWeeklyHours <= 0) return;
+
+        // Aktuell geleistete Arbeitsstunden der Person in der Woche (ohne den evtl. zu ändernden/löschenden Eintrag).
+        var allWeekEntries = week.SelectMany(d => d.Entries);
+        var currentWeekly = allWeekEntries
+            .Where(e => e.UserId == userId
+                        && EntryTypeInfo.CountsAsWork(e.Type)
+                        && (existing is null || e.Id != existing.Id))
+            .Sum(e => e.DurationHours);
+
+        double delta = 0;
+        if (s.Action == SuggestionAction.Add || s.Action == SuggestionAction.Update)
+        {
+            if (type is null || !EntryTypeInfo.CountsAsWork(type.Value)) return;
+            if (start is null || end is null) return;
+            var duration = DurationOf(start.Value, end.Value);
+            delta = duration;
+        }
+        // Delete: delta = 0 zu currentWeekly (existing ist bereits ausgeschlossen). Hier prüfen wir
+        // nur, ob die Person unter Soll fällt — i.d.R. relevant, aber wir warnen nur bei Über-Soll.
+
+        var projected = currentWeekly + delta;
+        if (user.MaxWeeklyHours > 0 && projected > user.MaxWeeklyHours)
+        {
+            warnings.Add(new SuggestionWarning(SuggestionWarningKind.WeeklyHoursExceeded,
+                $"{NameFor(userId, users)}: gesetzliches Wochen-Höchstmaß ({user.MaxWeeklyHours:0.#} h) wird überschritten ({projected:0.#} h)."));
+        }
+        else if (user.WeeklyHoursQuota > 0 && projected > user.WeeklyHoursQuota)
+        {
+            warnings.Add(new SuggestionWarning(SuggestionWarningKind.WeeklyHoursExceeded,
+                $"{NameFor(userId, users)}: Wochensoll ({user.WeeklyHoursQuota:0.#} h) wird überschritten ({projected:0.#} h)."));
+        }
+    }
+
+    private static double DurationOf(TimeSpan start, TimeSpan end)
+    {
+        var d = (end - start).TotalHours;
+        return d > 0 ? d : d + 24;   // über Mitternacht
     }
 
     private static bool Overlaps(TimeSpan aStart, TimeSpan aEnd, TimeSpan bStart, TimeSpan bEnd)

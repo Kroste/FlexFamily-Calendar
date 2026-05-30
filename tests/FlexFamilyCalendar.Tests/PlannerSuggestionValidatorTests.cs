@@ -6,8 +6,9 @@ namespace FlexFamilyCalendar.Tests;
 
 public class PlannerSuggestionValidatorTests
 {
-    private static User Person(string id, double rest = 11) =>
-        new() { Id = id, DisplayName = id.ToUpperInvariant(), Username = id, MinRestHours = rest };
+    private static User Person(string id, double rest = 11, double soll = 0, double max = 0) =>
+        new() { Id = id, DisplayName = id.ToUpperInvariant(), Username = id,
+                MinRestHours = rest, WeeklyHoursQuota = soll, MaxWeeklyHours = max };
 
     private static CalendarEntry Entry(string userId, EntryType type, string start, string end, string? id = null)
         => new()
@@ -134,5 +135,74 @@ public class PlannerSuggestionValidatorTests
 
         var w = PlannerSuggestionValidator.Validate(s, users, week);
         Assert.DoesNotContain(w, x => x.Kind == SuggestionWarningKind.SelfOverlap);
+    }
+
+    [Fact]
+    public void WeeklyHoursExceeded_AgainstQuota_ProducesWarning()
+    {
+        var users = new[] { Person("u1", soll: 30) };
+        var mon = new DateOnly(2026, 6, 1);
+        // 4 × 8h = 32h vorhanden, neue 6h würden auf 38h gehen
+        var week = Week(
+            (mon, new[] { Entry("u1", EntryType.Work, "06:00", "14:00") }),
+            (mon.AddDays(1), new[] { Entry("u1", EntryType.Work, "06:00", "14:00") }),
+            (mon.AddDays(2), new[] { Entry("u1", EntryType.Work, "06:00", "14:00") }),
+            (mon.AddDays(3), new[] { Entry("u1", EntryType.Work, "06:00", "14:00") }),
+            (mon.AddDays(4), Array.Empty<CalendarEntry>()));
+        var s = new PlannerSuggestion(SuggestionAction.Add, mon.AddDays(4), null, "u1", EntryType.Work,
+            TimeSpan.FromHours(8), TimeSpan.FromHours(14), null);
+
+        var w = PlannerSuggestionValidator.Validate(s, users, week);
+        Assert.Contains(w, x => x.Kind == SuggestionWarningKind.WeeklyHoursExceeded);
+    }
+
+    [Fact]
+    public void WeeklyHoursExceeded_MaxBeatsQuota_BothCheckedFavorMax()
+    {
+        var users = new[] { Person("u1", soll: 30, max: 40) };
+        var mon = new DateOnly(2026, 6, 1);
+        // 5 × 8h = 40h vorhanden, neue 6h würden auf 46h gehen → Max überschritten
+        var week = Week(
+            (mon, new[] { Entry("u1", EntryType.Work, "06:00", "14:00") }),
+            (mon.AddDays(1), new[] { Entry("u1", EntryType.Work, "06:00", "14:00") }),
+            (mon.AddDays(2), new[] { Entry("u1", EntryType.Work, "06:00", "14:00") }),
+            (mon.AddDays(3), new[] { Entry("u1", EntryType.Work, "06:00", "14:00") }),
+            (mon.AddDays(4), new[] { Entry("u1", EntryType.Work, "06:00", "14:00") }),
+            (mon.AddDays(5), Array.Empty<CalendarEntry>()));
+        var s = new PlannerSuggestion(SuggestionAction.Add, mon.AddDays(5), null, "u1", EntryType.Work,
+            TimeSpan.FromHours(8), TimeSpan.FromHours(14), null);
+
+        var w = PlannerSuggestionValidator.Validate(s, users, week);
+        var hit = w.Single(x => x.Kind == SuggestionWarningKind.WeeklyHoursExceeded);
+        Assert.Contains("Höchstmaß", hit.Message);
+    }
+
+    [Fact]
+    public void WeeklyHoursExceeded_NotTriggered_WhenWellBelowQuota()
+    {
+        var users = new[] { Person("u1", soll: 40) };
+        var mon = new DateOnly(2026, 6, 1);
+        var week = Week(
+            (mon, new[] { Entry("u1", EntryType.Work, "06:00", "14:00") }),
+            (mon.AddDays(1), Array.Empty<CalendarEntry>()));
+        var s = new PlannerSuggestion(SuggestionAction.Add, mon.AddDays(1), null, "u1", EntryType.Work,
+            TimeSpan.FromHours(8), TimeSpan.FromHours(14), null);
+
+        var w = PlannerSuggestionValidator.Validate(s, users, week);
+        Assert.DoesNotContain(w, x => x.Kind == SuggestionWarningKind.WeeklyHoursExceeded);
+    }
+
+    [Fact]
+    public void Update_RewriteUser_ReevaluatesForNewPerson()
+    {
+        // Schicht von u1 zu u2 umladen. u2 hat dadurch eine zusätzliche Schicht → Quota-Check.
+        var users = new[] { Person("u1", soll: 40), Person("u2", soll: 8) };
+        var day = new DateOnly(2026, 6, 1);
+        var existing = Entry("u1", EntryType.Work, "06:00", "14:00", id: "e1");
+        var week = Week((day, new[] { existing }));
+        // u2 hatte noch keine Stunden — 8h sind genau auf Soll, also kein Warn.
+        var sOk = new PlannerSuggestion(SuggestionAction.Update, day, "e1", "u2", null, null, null, null);
+        var w1 = PlannerSuggestionValidator.Validate(sOk, users, week);
+        Assert.DoesNotContain(w1, x => x.Kind == SuggestionWarningKind.WeeklyHoursExceeded);
     }
 }

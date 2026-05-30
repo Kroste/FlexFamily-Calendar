@@ -344,7 +344,15 @@ public partial class CalendarViewModel : ViewModelBase
         if (s.Start is { } st) entry.StartTime = st;
         if (s.End is { } en) entry.EndTime = en;
         if (s.Title is not null) entry.Title = s.Title;
-        LogService.UserAction("Admin", $"KI-Vorschlag übernommen: Update {entry.Id} → {entry.TimeRange} {entry.Title}");
+        if (s.Type is { } et) entry.Type = et;
+        if (s.UserId is { Length: > 0 } uid && uid != entry.UserId)
+        {
+            var newUser = _allUsers.FirstOrDefault(u => u.Id == uid);
+            if (newUser is null) { LogService.Warn("KI-Vorschlag: Update auf unbekannte UserId {0}", uid); return false; }
+            entry.UserId = newUser.Id;
+            entry.UserDisplayName = string.IsNullOrEmpty(newUser.DisplayName) ? newUser.Username : newUser.DisplayName;
+        }
+        LogService.UserAction("Admin", $"KI-Vorschlag übernommen: Update {entry.Id} → {entry.UserDisplayName} {entry.TimeRange} {entry.Type} {entry.Title}");
         return true;
     }
 
