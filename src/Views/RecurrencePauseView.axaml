@@ -40,11 +40,11 @@
       <Grid ColumnDefinitions="*,12,*">
         <StackPanel Grid.Column="0" Spacing="4">
           <TextBlock Text="{loc:Tr Entry_DateFrom}" FontSize="12" Opacity="0.7" />
-          <DatePicker SelectedDate="{Binding NewFrom}" HorizontalAlignment="Stretch" />
+          <DatePicker SelectedDate="{Binding NewFrom, Mode=TwoWay}" HorizontalAlignment="Stretch" />
         </StackPanel>
         <StackPanel Grid.Column="2" Spacing="4">
           <TextBlock Text="{loc:Tr Entry_DateTo}" FontSize="12" Opacity="0.7" />
-          <DatePicker SelectedDate="{Binding NewTo}" HorizontalAlignment="Stretch" />
+          <DatePicker SelectedDate="{Binding NewTo, Mode=TwoWay}" HorizontalAlignment="Stretch" />
         </StackPanel>
       </Grid>
       <StackPanel Spacing="4">
