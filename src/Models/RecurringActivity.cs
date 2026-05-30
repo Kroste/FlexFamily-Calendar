@@ -23,8 +23,14 @@ public class RecurringActivity
     /// <summary>true → an Feiertagen ausgeblendet („außer Feiertag"); false → angezeigt mit Hinweis „könnte ausfallen".</summary>
     public bool SkipOnHolidays { get; set; }
 
+    /// <summary>Tagesgenaue Aussetzungen (Urlaub/Krank/…). Mehrere disjunkte Bereiche möglich.</summary>
+    public List<RecurrenceSkip> Skips { get; set; } = new();
+
     /// <summary>Findet die Regel an diesem Datum statt? (Reine Wochentags-Prüfung.)</summary>
     public bool OccursOn(DateOnly date) => Weekdays.Contains(date.DayOfWeek);
+
+    /// <summary>Liegt das Datum in einem aktiven Aussetzungs-Zeitraum?</summary>
+    public bool IsPausedOn(DateOnly date) => Skips.Any(s => s.Contains(date));
 
     /// <summary>Aufgelöster Kategoriename (Laufzeit; für die Verwaltungsliste). Die Kategorie ist der Name im Kalender.</summary>
     [Newtonsoft.Json.JsonIgnore]

@@ -32,7 +32,8 @@ public static class RecurrenceEngine
                 Title = r.Title,
                 ActivityTypeId = r.ActivityTypeId,
                 IsRecurring = true,
-                HolidayConflict = isHoliday   // nur erreichbar, wenn die Regel an Feiertagen nicht ausgeblendet ist
+                HolidayConflict = isHoliday,  // nur erreichbar, wenn die Regel an Feiertagen nicht ausgeblendet ist
+                IsPaused = r.IsPausedOn(date) // Urlaub/Krank: Eintrag bleibt sichtbar, wird im UI grau dargestellt
             });
         }
         result.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));

@@ -118,6 +118,61 @@ public class RecurrenceEngineTests
     }
 
     [Fact]
+    public void Project_PauseRange_MarksAsPaused_ButKeepsEntry()
+    {
+        var date = new DateOnly(2026, 5, 28);
+        var rule = Football(date.DayOfWeek);
+        rule.Skips.Add(new RecurrenceSkip { From = new(2026, 5, 25), To = new(2026, 5, 31), Reason = "Urlaub" });
+
+        var entry = Assert.Single(RecurrenceEngine.Project(new[] { rule }, date, isHoliday: false));
+        Assert.True(entry.IsPaused);
+    }
+
+    [Fact]
+    public void Project_OutsidePauseRange_NotPaused()
+    {
+        var date = new DateOnly(2026, 6, 4);     // nach dem Pausen-Ende
+        var rule = Football(date.DayOfWeek);
+        rule.Skips.Add(new RecurrenceSkip { From = new(2026, 5, 25), To = new(2026, 5, 31) });
+
+        var entry = Assert.Single(RecurrenceEngine.Project(new[] { rule }, date, isHoliday: false));
+        Assert.False(entry.IsPaused);
+    }
+
+    [Fact]
+    public void Project_PauseRange_InclusiveOnBothEnds()
+    {
+        var rule = Football(DayOfWeek.Monday);
+        rule.Skips.Add(new RecurrenceSkip { From = new(2026, 5, 25), To = new(2026, 5, 25) });
+
+        var entry = Assert.Single(RecurrenceEngine.Project(new[] { rule }, new DateOnly(2026, 5, 25), isHoliday: false));
+        Assert.True(entry.IsPaused);
+    }
+
+    [Fact]
+    public void Project_MultipleSkips_EachRangeChecked()
+    {
+        var rule = Football(DayOfWeek.Monday);
+        rule.Skips.Add(new RecurrenceSkip { From = new(2026, 5, 4), To = new(2026, 5, 4) });
+        rule.Skips.Add(new RecurrenceSkip { From = new(2026, 6, 1), To = new(2026, 6, 1) });
+
+        Assert.True (RecurrenceEngine.Project(new[] { rule }, new DateOnly(2026, 5, 4), false)[0].IsPaused);
+        Assert.False(RecurrenceEngine.Project(new[] { rule }, new DateOnly(2026, 5, 11), false)[0].IsPaused);
+        Assert.True (RecurrenceEngine.Project(new[] { rule }, new DateOnly(2026, 6, 1), false)[0].IsPaused);
+    }
+
+    [Fact]
+    public void RecurrenceSkip_Contains_BothEndsInclusive()
+    {
+        var s = new RecurrenceSkip { From = new(2026, 1, 10), To = new(2026, 1, 15) };
+        Assert.False(s.Contains(new(2026, 1, 9)));
+        Assert.True (s.Contains(new(2026, 1, 10)));
+        Assert.True (s.Contains(new(2026, 1, 13)));
+        Assert.True (s.Contains(new(2026, 1, 15)));
+        Assert.False(s.Contains(new(2026, 1, 16)));
+    }
+
+    [Fact]
     public async Task Storage_Roundtrip_PreservesRule()
     {
         var storage = new InMemoryStorageService();

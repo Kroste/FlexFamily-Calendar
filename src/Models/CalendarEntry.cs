@@ -107,4 +107,8 @@ public class CalendarEntry
     /// <summary>Laufzeit: fällt auf einen Feiertag → Hinweis „könnte ausfallen".</summary>
     [Newtonsoft.Json.JsonIgnore]
     public bool HolidayConflict { get; set; }
+
+    /// <summary>Laufzeit: projizierter Eintrag liegt in einer aktiven Aussetzung (Urlaub/Krank/…). UI: grau + „(pausiert)".</summary>
+    [Newtonsoft.Json.JsonIgnore]
+    public bool IsPaused { get; set; }
 }
