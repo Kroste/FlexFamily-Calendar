@@ -70,25 +70,43 @@
                     <DataTemplate>
                       <Border Background="#FFFFFF" BorderBrush="#B8D2F8" BorderThickness="1"
                               CornerRadius="8" Padding="10,8" Margin="0,2,0,0">
-                        <Grid ColumnDefinitions="*,Auto">
-                          <StackPanel Grid.Column="0" Spacing="2">
-                            <TextBlock Text="{Binding Person}" FontWeight="SemiBold" FontSize="13" />
-                            <TextBlock Text="{Binding Date}" FontSize="12" Opacity="0.75" />
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                              <TextBlock Text="{Binding TimeRange}" FontSize="12" />
-                              <TextBlock Text="·" FontSize="12" Opacity="0.5" />
-                              <TextBlock Text="{Binding TypeLabel}" FontSize="12" />
+                        <StackPanel Spacing="6">
+                          <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                              <TextBlock Text="{Binding ActionLabel}" FontSize="10" FontWeight="Bold"
+                                         Foreground="#3498DB" />
+                              <TextBlock Text="{Binding Person}" FontWeight="SemiBold" FontSize="13" />
+                              <TextBlock Text="{Binding Date}" FontSize="12" Opacity="0.75" />
+                              <StackPanel Orientation="Horizontal" Spacing="6"
+                                          IsVisible="{Binding HasTimeRange}">
+                                <TextBlock Text="{Binding TimeRange}" FontSize="12" />
+                                <TextBlock Text="·" FontSize="12" Opacity="0.5"
+                                           IsVisible="{Binding HasType}" />
+                                <TextBlock Text="{Binding TypeLabel}" FontSize="12"
+                                           IsVisible="{Binding HasType}" />
+                              </StackPanel>
+                              <TextBlock Text="{Binding Title}" FontSize="12" Opacity="0.75"
+                                         IsVisible="{Binding HasTitle}" TextWrapping="Wrap" />
+                              <TextBlock Text="{Binding StateLabel}" FontSize="11" FontStyle="Italic"
+                                         Foreground="#27AE60" IsVisible="{Binding IsApplied}" />
                             </StackPanel>
-                            <TextBlock Text="{Binding Title}" FontSize="12" Opacity="0.75"
-                                       IsVisible="{Binding HasTitle}" TextWrapping="Wrap" />
-                            <TextBlock Text="{Binding StateLabel}" FontSize="11" FontStyle="Italic"
-                                       Foreground="#27AE60" IsVisible="{Binding IsApplied}" />
-                          </StackPanel>
-                          <Button Grid.Column="1" Content="{loc:Tr AiPlanner_ApplySuggestion}"
-                                  Command="{Binding ApplyCommand}" IsEnabled="{Binding CanApply}"
-                                  Padding="12,6" CornerRadius="6" VerticalAlignment="Center"
-                                  Background="{DynamicResource SystemAccentColor}" Foreground="White" />
-                        </Grid>
+                            <Button Grid.Column="1" Content="{loc:Tr AiPlanner_ApplySuggestion}"
+                                    Command="{Binding ApplyCommand}" IsEnabled="{Binding CanApply}"
+                                    Padding="12,6" CornerRadius="6" VerticalAlignment="Center"
+                                    Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+                          </Grid>
+                          <!-- Konflikt-Warnungen -->
+                          <Border Background="#FFF6E0" BorderBrush="#E67E22" BorderThickness="1"
+                                  CornerRadius="6" Padding="8,5" IsVisible="{Binding HasWarnings}">
+                            <ItemsControl ItemsSource="{Binding WarningMessages}">
+                              <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                  <TextBlock Text="{Binding}" FontSize="12" TextWrapping="Wrap" />
+                                </DataTemplate>
+                              </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                          </Border>
+                        </StackPanel>
                       </Border>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>

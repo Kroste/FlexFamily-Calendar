@@ -21,6 +21,7 @@ public partial class AiPlannerViewModel : ViewModelBase
     private readonly AiChatService _chat;
     private readonly Func<PlannerContext> _buildContext;
     private readonly Func<PlannerSuggestion, Task<bool>> _applySuggestion;
+    private readonly Func<PlannerSuggestion, IReadOnlyList<SuggestionWarning>>? _validateSuggestion;
     private string _contextBlock = "";
 
     public ObservableCollection<PlannerNoteRow> Notes { get; } = new();
@@ -36,15 +37,20 @@ public partial class AiPlannerViewModel : ViewModelBase
 
     public AiPlannerViewModel(IStorageService storage, AiService ai, AiChatService chat,
         Func<PlannerContext> buildContext,
-        Func<PlannerSuggestion, Task<bool>> applySuggestion)
+        Func<PlannerSuggestion, Task<bool>> applySuggestion,
+        Func<PlannerSuggestion, IReadOnlyList<SuggestionWarning>>? validateSuggestion = null)
     {
         _storage = storage;
         _chat = chat;
         _buildContext = buildContext;
         _applySuggestion = applySuggestion;
+        _validateSuggestion = validateSuggestion;
         HasNoProvider = ai.ActiveProvider is null || !ai.ActiveProvider.IsConfigured;
         _ = LoadAsync();
     }
+
+    internal IReadOnlyList<SuggestionWarning> ValidateSuggestion(PlannerSuggestion s)
+        => _validateSuggestion?.Invoke(s) ?? Array.Empty<SuggestionWarning>();
 
     private IReadOnlyList<User> _users = Array.Empty<User>();
 
@@ -64,6 +70,20 @@ public partial class AiPlannerViewModel : ViewModelBase
         var u = _users.FirstOrDefault(x => x.Id == userId);
         if (u is null) return userId;
         return string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
+    }
+
+    /// <summary>Resolved Entry-Id → Personenname über den aktuellen Wochen-Snapshot. null = nicht gefunden.</summary>
+    internal string? ResolvePersonByEntry(string? entryId)
+    {
+        if (string.IsNullOrEmpty(entryId)) return null;
+        var ctx = _buildContext();
+        foreach (var (_, entries) in ctx.Week)
+        {
+            var e = entries.FirstOrDefault(x => x.Id == entryId);
+            if (e is null) continue;
+            return ResolvePersonName(e.UserId);
+        }
+        return null;
     }
 
     [RelayCommand]
@@ -166,10 +186,20 @@ public partial class SuggestionCard : ObservableObject
 {
     private readonly AiPlannerViewModel _parent;
     public PlannerSuggestion Source { get; }
+    public string ActionLabel => Source.Action switch
+    {
+        SuggestionAction.Add => Localizer.Instance["AiPlanner_ActionAdd"],
+        SuggestionAction.Update => Localizer.Instance["AiPlanner_ActionUpdate"],
+        SuggestionAction.Delete => Localizer.Instance["AiPlanner_ActionDelete"],
+        _ => Source.Action.ToString()
+    };
     public string Date => Source.Date.ToString("dddd, dd.MM.yyyy", CultureInfo.GetCultureInfo("de-DE"));
     public string Person { get; }
-    public string TimeRange => $"{Source.Start:hh\\:mm}–{Source.End:hh\\:mm}";
-    public string TypeLabel => Source.Type.ToString();
+    public string TimeRange => Source.Start is { } s && Source.End is { } e
+        ? $"{s:hh\\:mm}–{e:hh\\:mm}" : "";
+    public bool HasTimeRange => !string.IsNullOrEmpty(TimeRange);
+    public string TypeLabel => Source.Type?.ToString() ?? "";
+    public bool HasType => Source.Type is not null;
     public string? Title => Source.Title;
     public bool HasTitle => !string.IsNullOrWhiteSpace(Source.Title);
 
@@ -201,10 +231,19 @@ public partial class SuggestionCard : ObservableObject
         OnPropertyChanged(nameof(StateLabel));
     }
 
+    public ObservableCollection<string> WarningMessages { get; } = new();
+    public bool HasWarnings => WarningMessages.Count > 0;
+
     public static SuggestionCard Create(PlannerSuggestion s, AiPlannerViewModel parent)
     {
-        // Person-Name wird im VM aufgelöst über den aktuellen Kontext-Snapshot.
-        var person = parent.ResolvePersonName(s.UserId);
-        return new SuggestionCard(parent, s, person);
+        // Bei Add: UserId aus dem Vorschlag. Bei Update/Delete: aus dem referenzierten Entry,
+        // den die Calendar-VM kennt — Fallback auf EntryId-String, wenn nicht auflösbar.
+        var person = s.Action == SuggestionAction.Add && !string.IsNullOrEmpty(s.UserId)
+            ? parent.ResolvePersonName(s.UserId)
+            : parent.ResolvePersonByEntry(s.EntryId) ?? (s.EntryId ?? "");
+        var card = new SuggestionCard(parent, s, person);
+        foreach (var w in parent.ValidateSuggestion(s))
+            card.WarningMessages.Add(w.Message);
+        return card;
     }
 }

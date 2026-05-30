@@ -236,36 +236,79 @@ public partial class CalendarViewModel : ViewModelBase
     {
         if (!IsAdmin || App.DialogService is null) return;
         var chat = new Services.AI.AiChatService(_ai);
-        var vm = new AiPlannerViewModel(_storage, _ai, chat, BuildPlannerContext, ApplyAiSuggestionAsync);
+        var vm = new AiPlannerViewModel(_storage, _ai, chat, BuildPlannerContext, ApplyAiSuggestionAsync, ValidateAiSuggestion);
         LogService.Click(CurrentUser.Username, "KI-Planner geöffnet");
         await App.DialogService.ShowAiPlannerAsync(vm);
     }
 
     /// <summary>
-    /// Übernimmt einen KI-Vorschlag als echten Eintrag. Validiert UserId + Typ und schreibt
-    /// in den Tages-Storage. Refresh läuft silent, damit der Kalender ohne Modal-Switch sichtbar wird.
+    /// Übernimmt einen KI-Vorschlag als echte Kalender-Mutation. Drei Aktionen: Add legt einen
+    /// neuen Eintrag an, Update ändert Zeit/Titel an einem bestehenden, Delete entfernt ihn.
+    /// Anschließend silent Refresh, damit die Karte direkt sichtbar wird.
     /// </summary>
     private async Task<bool> ApplyAiSuggestionAsync(Services.AI.PlannerSuggestion s)
     {
+        var day = await _storage.LoadDayAsync(s.Date);
+        bool changed;
+
+        switch (s.Action)
+        {
+            case Services.AI.SuggestionAction.Add:
+                changed = ApplyAdd(day, s);
+                break;
+            case Services.AI.SuggestionAction.Update:
+                changed = ApplyUpdate(day, s);
+                break;
+            case Services.AI.SuggestionAction.Delete:
+                changed = day.Entries.RemoveAll(e => e.Id == s.EntryId) > 0;
+                if (changed) LogService.UserAction("Admin", $"KI-Vorschlag übernommen: Löschen {s.EntryId} am {s.Date}");
+                break;
+            default:
+                return false;
+        }
+
+        if (!changed) return false;
+        day.Entries.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
+        await _storage.SaveDayAsync(day);
+        await RefreshAllAsync(silent: true);
+        return true;
+    }
+
+    private bool ApplyAdd(CalendarDay day, Services.AI.PlannerSuggestion s)
+    {
+        if (s.UserId is null || s.Type is null || s.Start is null || s.End is null) return false;
         var user = _allUsers.FirstOrDefault(u => u.Id == s.UserId);
         if (user is null) { LogService.Warn("KI-Vorschlag: unbekannte UserId {0}", s.UserId); return false; }
-
-        var day = await _storage.LoadDayAsync(s.Date);
         var entry = new CalendarEntry
         {
             UserId = user.Id,
             UserDisplayName = string.IsNullOrEmpty(user.DisplayName) ? user.Username : user.DisplayName,
-            Type = s.Type,
-            StartTime = s.Start,
-            EndTime = s.End,
+            Type = s.Type.Value,
+            StartTime = s.Start.Value,
+            EndTime = s.End.Value,
             Title = s.Title ?? ""
         };
         day.Entries.Add(entry);
-        day.Entries.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
-        await _storage.SaveDayAsync(day);
         LogService.UserAction("Admin", $"KI-Vorschlag übernommen: {entry.UserDisplayName} {s.Date} {entry.TimeRange} {entry.Type}");
-        await RefreshAllAsync(silent: true);
         return true;
+    }
+
+    private bool ApplyUpdate(CalendarDay day, Services.AI.PlannerSuggestion s)
+    {
+        var entry = day.Entries.FirstOrDefault(e => e.Id == s.EntryId);
+        if (entry is null) { LogService.Warn("KI-Vorschlag: Eintrag {0} nicht gefunden", s.EntryId); return false; }
+        if (s.Start is { } st) entry.StartTime = st;
+        if (s.End is { } en) entry.EndTime = en;
+        if (s.Title is not null) entry.Title = s.Title;
+        LogService.UserAction("Admin", $"KI-Vorschlag übernommen: Update {entry.Id} → {entry.TimeRange} {entry.Title}");
+        return true;
+    }
+
+    /// <summary>Prüft einen KI-Vorschlag gegen die aktuelle Wochenlage. Reine Reichweite zum Validator-Helper.</summary>
+    private IReadOnlyList<Services.AI.SuggestionWarning> ValidateAiSuggestion(Services.AI.PlannerSuggestion s)
+    {
+        var ctx = BuildPlannerContext();
+        return Services.AI.PlannerSuggestionValidator.Validate(s, ctx.Users, ctx.Week);
     }
 
     /// <summary>Schnappschuss der aktuell sichtbaren Woche für den KI-Kontext-Block. Notes werden im VM nachgeladen.</summary>
