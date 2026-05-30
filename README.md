@@ -1,10 +1,118 @@
+<div align="center">
+
+<!-- Logo: Bitte ein PNG (256×256 oder größer) als docs/logo.png ablegen. -->
+<img src="docs/logo.png" alt="FlexFamily Calendar" width="160" />
+
 # FlexFamily Calendar
 
-Familienplaner für Arbeitszeiten (Eltern, Angestellte, Au-Pairs) und Aktivitäten (Kinder,
-Au-Pairs, Eltern). Avalonia 12 / .NET 10, single codebase für Desktop (Linux/Win/macOS)
-und Web (Avalonia.Browser / WASM).
+Familienplaner für Arbeitszeiten, Schichten, Schule, Kita, Sport, Krankmeldungen,
+Urlaubswünsche, Schichttausch — für Eltern, Kinder, Angestellte und Au-Pairs.
 
-## Modi
+Ein Codebase (Avalonia 12 / .NET 10) → Desktop (Linux, Windows) und Web (WASM).
+
+</div>
+
+---
+
+## Inhalt
+
+- [Was die App kann](#was-die-app-kann)
+- [Screenshots](#screenshots)
+- [Download & Installation](#download--installation)
+- [Auto-Update](#auto-update)
+- [Modi: lokal vs. Server](#modi-lokal-vs-server)
+- [Server-Deployment](#server-deployment-docker-compose)
+- [Build & Tests](#build--tests)
+- [Releases & CI](#releases--ci)
+
+---
+
+## Was die App kann
+
+- **Tabellarische Plansicht** Person × Wochentag — Eltern, Kinder, Angestellte, Au-Pairs in einer Sicht.
+- **Schichten, Aktivitäten, Übernachtungen, Abwesenheiten** (Urlaub/Krank/Abwesend als Datumsbereich).
+- **Drag & Drop** einer Schicht auf einen anderen Tag oder eine andere Person → Verschieben/Kopieren.
+- **Konfigurierbare Aktivitäts-Kategorien** je Rolle (z.B. Sprachkurs nur für Au-Pair, Sport nur für Kinder).
+- **Wiederkehrende Aktivitäten** als Wochen-Regel (Wochentag + Zeit + Kategorie), pro Regel „an Feiertagen ausfallen" wählbar.
+- **Feiertage** je Bundesland im Plan, im PDF, in der Logik.
+- **Stundenkonto, Tages-/Wochenlimit, Ruhezeit, Doppelbelegung** als Regeln; Übernachtungen mit pauschaler Gutschrift.
+- **Krankmeldung-Selbst** + Admin-Umplanung mit KI-Vorschlag.
+- **Schichttausch-Workflow** (Vorschlag → Bestätigung, eingehende/ausgehende Anfragen).
+- **PDF-Wochenexport** und **Mail-Versand** (jeder Empfänger bekommt sein aus seiner Sicht maskiertes PDF — Privatsphäre bleibt).
+- **KI-Unterstützung** mit Anthropic, OpenAI, Gemini, Perplexity (Cloud) oder lokalem Llama.
+- **Privatsphäre-Maskierung**: Fremde sehen Krank/Urlaub nur als „Abwesend" ohne Grund.
+- **Mehrsprachig** (DE/EN), Sprache und Theme pro Benutzer.
+- **Multi-User / Multi-Device**: Browser & Desktop syncen alle 30 s gegen denselben Server.
+
+## Screenshots
+
+<!--
+  Screenshots werden vom Repo-Owner bereitgestellt. Erwartete Dateien:
+  - docs/screenshots/calendar.png       (Hauptplan)
+  - docs/screenshots/entry-editor.png   (Eintrag-Editor)
+  - docs/screenshots/admin-tabs.png     (Admin → Tabs)
+  - docs/screenshots/hours-account.png  (Stundenkonto)
+  - docs/screenshots/month-overview.png (Monatsübersicht)
+-->
+
+| Plansicht | Eintrag-Editor |
+|---|---|
+| ![Plansicht](docs/screenshots/calendar.png) | ![Eintrag-Editor](docs/screenshots/entry-editor.png) |
+
+| Admin-Bereich | Stundenkonto |
+|---|---|
+| ![Admin-Bereich](docs/screenshots/admin-tabs.png) | ![Stundenkonto](docs/screenshots/hours-account.png) |
+
+## Download & Installation
+
+Auf jeder [Release-Seite](https://github.com/Kroste/FlexFamily-Calendar/releases/latest)
+liegen drei Desktop-Pakete. Die Binaries sind **self-contained**, .NET muss nicht
+installiert sein.
+
+### Linux
+
+**AppImage** (eine Datei, doppelklickbar, kein Install):
+
+```bash
+curl -L -o FlexFamilyCalendar.AppImage \
+  https://github.com/Kroste/FlexFamily-Calendar/releases/latest/download/FlexFamilyCalendar-vX.Y.Z-x86_64.AppImage
+chmod +x FlexFamilyCalendar.AppImage
+./FlexFamilyCalendar.AppImage
+```
+
+**Tar.gz** (extrahiert ins Wunsch-Verzeichnis):
+
+```bash
+curl -L -o ffc.tar.gz \
+  https://github.com/Kroste/FlexFamily-Calendar/releases/latest/download/FlexFamilyCalendar-vX.Y.Z-linux-x64.tar.gz
+mkdir -p ~/apps/FlexFamilyCalendar && tar -xzf ffc.tar.gz -C ~/apps/FlexFamilyCalendar
+~/apps/FlexFamilyCalendar/FlexFamilyCalendar.Desktop
+```
+
+### Windows
+
+ZIP-Datei aus der Release-Seite herunterladen, irgendwohin entpacken,
+`FlexFamilyCalendar.Desktop.exe` per Doppelklick starten.
+
+## Auto-Update
+
+Die Desktop-App prüft beim Start (und in einem konfigurierbaren Intervall, Default
+24 h) gegen die GitHub-Releases-API, ob eine neuere Version vorliegt.
+
+- Verfügbares Update → Dialog mit Changelog. Buttons:
+  - **Jetzt installieren** — App lädt das passende Asset (AppImage / tar.gz / zip),
+    startet einen Helper-Prozess, der die laufende Installation ersetzt, und startet
+    die neue Version automatisch.
+  - **Release-Seite** — öffnet die GitHub-Release-Seite im Browser für manuellen Download.
+  - **Später** — Frage in 24 h erneut.
+  - **Überspringen** — diese Version nicht mehr anbieten.
+- Steuerung in **Admin → Einstellungen → Updates**: ein/aus, Intervall, manueller
+  „Jetzt prüfen"-Button.
+
+Der **Browser-Head** hat kein Auto-Update — er wird vom Server frisch ausgeliefert
+(siehe Watchtower unten).
+
+## Modi: lokal vs. Server
 
 Die App läuft entweder **lokal** (Desktop, JSON-Dateien) oder **gegen einen Server**
 (Desktop oder Browser, alles über `/api/*`). Kein Parallelbetrieb, kein Sync — bewusst
@@ -15,9 +123,11 @@ genau ein Backend zur Laufzeit.
   `settings.json`, Passwörter mit lokalem AES-Key verschlüsselt.
 - **Server:** Postgres + ASP.NET-Core-API hinter Caddy (HTTPS via Let's Encrypt).
   Browser-Head wird von Caddy direkt mit der API zusammen ausgeliefert (gleicher Origin,
-  kein CORS). SMTP und KI-API-Schlüssel liegen serverseitig in **ENV-Variablen**.
+  kein CORS). SMTP- und KI-API-Schlüssel liegen serverseitig in **ENV-Variablen**.
+  Watchtower aktualisiert API + Caddy automatisch alle 24 h.
 
-Live: <https://flexfamily.cloud>
+> Eine Live-Instanz läuft (privat, nicht öffentlich freigegeben) unter
+> `flexfamily.cloud` — kein Demo-Zugang.
 
 ## Server-Deployment (Docker Compose)
 
@@ -78,11 +188,11 @@ Im Browser-Modus zeigt der Admin → KI-Tab daher **nur** Provider-Auswahl + opt
 Modell — kein API-Schlüssel-Feld. Die Settings-UI für SMTP ist im Browser-Modus
 ausgeblendet, weil die Werte nicht benutzt werden (Server entscheidet).
 
-## Build (lokal)
+## Build & Tests
 
 ```bash
-# Desktop
-dotnet run --project src/FlexFamilyCalendar.csproj
+# Desktop (lokal starten)
+dotnet run --project desktop/FlexFamilyCalendar.Desktop.csproj
 
 # Browser/WASM (publish ins AppBundle, dann mit beliebigem HTTP-Server ausliefern)
 dotnet publish browser/FlexFamilyCalendar.Browser.csproj -c Release -o /tmp/spa
@@ -95,7 +205,7 @@ dotnet test tests/FlexFamilyCalendar.Api.Tests
 Anforderungen: .NET 10 SDK, für den WASM-Build zusätzlich `dotnet workload install
 wasm-tools` und auf manchen Distros `python3` (Emscripten ruft `python` auf).
 
-## Releases
+## Releases & CI
 
 Auf jedes Tag `vX.Y.Z` (z.B. via `gh release create v1.0.0 --generate-notes`)
 läuft `.github/workflows/release.yml` und baut fünf Artefakte parallel:
