@@ -68,36 +68,17 @@ public partial class RecurrencePauseViewModel : ViewModelBase
     [RelayCommand]
     private void Save()
     {
-        Services.LogService.Debug("Pause-Save: NewFrom={0}, NewTo={1}, ExistingSkips={2}",
-            NewFrom?.ToString("yyyy-MM-dd") ?? "null",
-            NewTo?.ToString("yyyy-MM-dd") ?? "null",
-            ExistingSkips.Count);
-
-        // Bequemer Pfad: User wählt Datum + klickt direkt „Speichern", ohne vorher den
-        // „Pause hinzufügen"-Button zu drücken. Ohne diesen impliziten Add ginge die
-        // Eingabe lautlos verloren — die häufigste Frustquelle des Dialogs.
-        if (NewFrom is not null && NewTo is not null)
-        {
-            var from = DateOnly.FromDateTime(NewFrom.Value.Date);
-            var to = DateOnly.FromDateTime(NewTo.Value.Date);
-            if (to < from) (from, to) = (to, from);
-            Services.LogService.Debug("Pause-Save: pending from={0} to={1}", from, to);
-            if (!ExistingSkips.Any(r => r.From == from && r.To == to))
-            {
-                var pending = new RecurrenceSkip
-                {
-                    From = from, To = to,
-                    Reason = string.IsNullOrWhiteSpace(NewReason) ? null : NewReason.Trim()
-                };
-                ExistingSkips.Add(SkipRow.Create(pending, this));
-            }
-        }
-
+        // Achtung: KEIN impliziter Add aus NewFrom/NewTo. Die vorherige Logik kollidierte
+        // mit dem Lösch-Workflow — wer einen bestehenden Skip per X entfernt und Speichert,
+        // bekam wegen der Datumsvorbelegung sofort einen Ersatz für den angeklickten Tag
+        // („löschen geht nicht / wird dem Klick-Tag zugeordnet").
+        // Persistiert wird ausschließlich die Liste, wie sie der User über „Pause hinzufügen"
+        // bzw. die X-Buttons gepflegt hat.
         var result = ExistingSkips
             .OrderBy(r => r.From)
             .Select(r => new RecurrenceSkip { Id = r.Id, From = r.From, To = r.To, Reason = r.Reason })
             .ToList();
-        Services.LogService.Debug("Pause-Save: result skips={0} → {1}",
+        Services.LogService.Debug("Pause-Save: skips={0} → {1}",
             result.Count,
             string.Join(", ", result.Select(r => $"{r.From}..{r.To}")));
         Closed?.Invoke(result);

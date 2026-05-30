@@ -205,38 +205,44 @@ public class RecurrenceEngineTests
     }
 
     [Fact]
-    public void PauseDialog_Save_AutoAdds_PendingDateRange()
+    public void PauseDialog_Save_Empty_RemovesAllSkips()
     {
-        // UX: User wählt Datum, klickt direkt „Speichern" → die ungeschickte Pause muss
-        // trotzdem in die Liste übernommen werden, statt lautlos verloren zu gehen.
-        var rule = Football(DayOfWeek.Thursday);
-        var clicked = new DateOnly(2026, 5, 28);
-        var vm = new ViewModels.RecurrencePauseViewModel(rule, clicked);
-
-        IReadOnlyList<RecurrenceSkip>? saved = null;
-        vm.Closed += s => saved = s;
-        vm.SaveCommand.Execute(null);
-
-        Assert.NotNull(saved);
-        var skip = Assert.Single(saved!);
-        Assert.Equal(clicked, skip.From);
-        Assert.Equal(clicked, skip.To);
-    }
-
-    [Fact]
-    public void PauseDialog_Save_DoesNotDuplicate_AlreadyAddedRange()
-    {
+        // Regression: Wenn der User alle Skips per X entfernt und Speichert, darf NICHT
+        // implicit eine neue Pause aus der Datumsvorbelegung hinzugefügt werden — das war
+        // die Ursache für „löschen geht nicht, Pause wird dem Klick-Tag zugeordnet".
         var rule = Football(DayOfWeek.Thursday);
         var clicked = new DateOnly(2026, 5, 28);
         rule.Skips.Add(new RecurrenceSkip { From = clicked, To = clicked, Reason = "alt" });
         var vm = new ViewModels.RecurrencePauseViewModel(rule, clicked);
 
+        // User entfernt die existierende Pause via X-Button
+        var row = vm.ExistingSkips.Single();
+        row.RemoveCommand.Execute(null);
+
         IReadOnlyList<RecurrenceSkip>? saved = null;
         vm.Closed += s => saved = s;
         vm.SaveCommand.Execute(null);
 
         Assert.NotNull(saved);
-        Assert.Single(saved!);   // kein Duplikat trotz gleicher Vorbelegung
+        Assert.Empty(saved!);   // keine implizite Auto-Add aus Vorbelegung mehr
+    }
+
+    [Fact]
+    public void PauseDialog_AddButton_AddsPendingRange()
+    {
+        var rule = Football(DayOfWeek.Monday);
+        var vm = new ViewModels.RecurrencePauseViewModel(rule, new DateOnly(2026, 6, 1));
+        // Bis-Datum auf einen späteren Tag schieben
+        vm.NewTo = new DateTimeOffset(new DateTime(2026, 6, 5), TimeSpan.Zero);
+        vm.AddNewSkipCommand.Execute(null);
+
+        IReadOnlyList<RecurrenceSkip>? saved = null;
+        vm.Closed += s => saved = s;
+        vm.SaveCommand.Execute(null);
+
+        var skip = Assert.Single(saved!);
+        Assert.Equal(new DateOnly(2026, 6, 1), skip.From);
+        Assert.Equal(new DateOnly(2026, 6, 5), skip.To);
     }
 
     [Fact]

@@ -165,7 +165,7 @@
   "DayNote_Title": "Day note",
   "DayNote_Placeholder": "General note for this day (visible to everyone)…",
   "RecurrencePause_SubHeader": "{0} · {1} — manage pauses",
-  "RecurrencePause_NewHeader": "Add a new pause",
+  "RecurrencePause_NewHeader": "New pause — choose dates, then click 'Add pause'",
   "RecurrencePause_Reason": "Reason (optional)",
   "RecurrencePause_ReasonPlaceholder": "e.g. vacation, sick",
   "RecurrencePause_AddButton": "Add pause",
