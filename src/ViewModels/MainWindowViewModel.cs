@@ -4,17 +4,23 @@ using FlexFamilyCalendar.Localization;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
 using FlexFamilyCalendar.Services.AI;
+using FlexFamilyCalendar.Services.Update;
 using FlexFamilyCalendar.Theming;
 
 namespace FlexFamilyCalendar.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    private const string UpdateRepoOwner = "Kroste";
+    private const string UpdateRepoName = "FlexFamily-Calendar";
+
     private readonly AuthService _auth;
     private readonly IStorageService _storage;
     private readonly NotificationService _notifications;
     private readonly AiService _ai;
     private readonly IMailSender _mailSender;
+    private readonly UpdateService _updateService = new(UpdateRepoOwner, UpdateRepoName);
+    private bool _updateCheckRunning;
     private User? _currentUser;
 
     // Cross-Client-Sync: alle SyncIntervalSeconds Sekunden frische Daten ziehen,
@@ -83,6 +89,8 @@ public partial class MainWindowViewModel : ViewModelBase
         LogService.UserAction(user.Username, logVerb);
         _ = RefreshUnreadCountAsync();
         StartBackgroundSync();
+        // Auto-Update beim Login (im Browser: no-op über DetectPlatform=Unsupported).
+        _ = CheckForUpdatesIfDueAsync(force: false);
     }
 
     private void StartBackgroundSync()
@@ -148,7 +156,105 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void OpenAdmin() => AdminRequested?.Invoke();
 
-    public AdminViewModel CreateAdmin() => new(_auth, _storage, _ai, _mailSender);
+    public AdminViewModel CreateAdmin()
+        => new(_auth, _storage, _ai, _mailSender, force => CheckForUpdatesIfDueAsync(force));
+
+    /// <summary>
+    /// Auto-Update-Kern: prüft Intervall + Enabled-Flag, holt das aktuellste Release vom GitHub-
+    /// Repo, vergleicht Version, und öffnet den Dialog falls neuer. <paramref name="force"/>=true
+    /// ignoriert das Intervall (Aufruf aus dem Settings-„Jetzt prüfen"-Button).
+    /// </summary>
+    private async Task CheckForUpdatesIfDueAsync(bool force)
+    {
+        if (_updateCheckRunning) return;
+        if (OperatingSystem.IsBrowser()) return;     // Browser-Head: Update kommt über Watchtower
+        if (UpdateService.DetectPlatform() == UpdatePlatform.Unsupported) return;
+
+        try
+        {
+            _updateCheckRunning = true;
+            var settings = await _storage.LoadSettingsAsync();
+            if (!force)
+            {
+                if (!settings.UpdateCheckEnabled) return;
+                if (settings.UpdateLastCheckedAtUtc is { } last)
+                {
+                    var dueAt = last.AddHours(Math.Max(1, settings.UpdateCheckIntervalHours));
+                    if (DateTime.UtcNow < dueAt) return;
+                }
+            }
+
+            LogService.Debug("Auto-Update: prüfe GitHub-Release (force={0})", force);
+            var info = await _updateService.CheckAsync();
+
+            // LastCheckedAt unabhängig vom Ergebnis aktualisieren (Intervall-Logik).
+            settings.UpdateLastCheckedAtUtc = DateTime.UtcNow;
+            await _storage.SaveSettingsAsync(settings);
+
+            if (info is null)
+            {
+                LogService.Debug("Auto-Update: keine neuere Version gefunden.");
+                return;
+            }
+            if (settings.UpdateSkippedVersions.Contains(info.LatestVersion))
+            {
+                LogService.Debug("Auto-Update: Version {0} wurde übersprungen, kein Dialog.", info.LatestVersion);
+                return;
+            }
+            if (App.DialogService is null) { LogService.Warn("Auto-Update: kein Dialog-Backend, übersprungen."); return; }
+
+            var vm = new UpdateViewModel(info);
+            var action = await App.DialogService.ShowUpdateAsync(vm);
+            switch (action)
+            {
+                case UpdateDialogAction.Install:
+                    await RunUpdateAsync(info);
+                    break;
+                case UpdateDialogAction.OpenReleasePage:
+                    OpenBrowser(info.ReleaseUrl);
+                    break;
+                case UpdateDialogAction.Skip:
+                    settings.UpdateSkippedVersions.Add(info.LatestVersion);
+                    await _storage.SaveSettingsAsync(settings);
+                    LogService.UserAction(_currentUser?.Username ?? "?", $"Update {info.LatestVersion} übersprungen");
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Debug("Auto-Update fehlgeschlagen: {0}", ex.Message);
+        }
+        finally
+        {
+            _updateCheckRunning = false;
+        }
+    }
+
+    private async Task RunUpdateAsync(UpdateInfo info)
+    {
+        if (info.Asset is null) { LogService.Warn("Auto-Update: kein passendes Asset im Release."); return; }
+        var installer = UpdateInstallerFactory.ForPlatform(info.Asset.Platform);
+        if (installer is null) { LogService.Warn("Auto-Update: keine Installer-Strategie für {0}.", info.Asset.Platform); return; }
+
+        var dl = Path.Combine(Path.GetTempPath(), info.Asset.FileName);
+        LogService.Info("Auto-Update: lade {0} → {1}", info.Asset.FileName, dl);
+        await _updateService.DownloadAsync(info.Asset, dl);
+
+        LogService.UserAction(_currentUser?.Username ?? "?", $"Update auf {info.LatestVersion} startet");
+        await installer.InstallAndRestartAsync(dl, CancellationToken.None);
+        // installer.* startet den Update-Helper im Hintergrund. Damit der gerade laufende
+        // Prozess nicht die zu ersetzenden Dateien sperrt, beenden wir uns hier sofort.
+        Environment.Exit(0);
+    }
+
+    private static void OpenBrowser(string url)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception ex) { LogService.Warn("Browser-Öffnen schlug fehl: {0}", ex.Message); }
+    }
 
     [RelayCommand]
     private void OpenProfile() => ProfileRequested?.Invoke();
