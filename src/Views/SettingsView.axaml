@@ -57,6 +57,22 @@
       <CheckBox Content="{loc:Tr Settings_SmtpSsl}" IsChecked="{Binding SmtpUseSsl}" />
     </StackPanel>
 
+    <!-- Auto-Update gegen das GitHub-Repo — nur Desktop (Browser-Head wird vom Server ausgerollt). -->
+    <StackPanel Spacing="10" IsVisible="{Binding ShowUpdateSection}">
+      <TextBlock Text="{loc:Tr Settings_Updates}" FontSize="14" FontWeight="SemiBold" Margin="0,8,0,0" />
+      <CheckBox Content="{loc:Tr Settings_UpdateEnabled}" IsChecked="{Binding UpdateCheckEnabled}" />
+      <StackPanel Spacing="4">
+        <TextBlock Text="{loc:Tr Settings_UpdateInterval}" FontSize="12" Opacity="0.7" />
+        <TextBox Text="{Binding UpdateIntervalHours}" CornerRadius="6" Width="100" HorizontalAlignment="Left" />
+      </StackPanel>
+      <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+        <Button Content="{loc:Tr Settings_UpdateCheckNow}" Command="{Binding CheckForUpdatesCommand}"
+                Padding="14,7" CornerRadius="6" />
+        <TextBlock Text="{Binding UpdateLastCheckedLabel}" VerticalAlignment="Center"
+                   FontSize="12" Opacity="0.7" />
+      </StackPanel>
+    </StackPanel>
+
     <StackPanel Orientation="Horizontal" Spacing="12">
       <Button Content="{loc:Tr Common_Save}" Command="{Binding SaveCommand}"
               Padding="16,8" CornerRadius="6"

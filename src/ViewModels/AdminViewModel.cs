@@ -12,12 +12,12 @@ public class AdminViewModel : ViewModelBase
     public SettingsViewModel Settings { get; }
     public AiSettingsViewModel Ai { get; }
 
-    public AdminViewModel(AuthService auth, IStorageService storage, AiService ai, IMailSender mailSender)
+    public AdminViewModel(AuthService auth, IStorageService storage, AiService ai, IMailSender mailSender, UpdateCheckRunner? runUpdateCheck = null)
     {
         Users = new UserManagementViewModel(auth);
         Categories = new ActivityTypeManagementViewModel(storage);
         Recurring = new RecurringActivityManagementViewModel(storage);
-        Settings = new SettingsViewModel(storage, mailSender);
+        Settings = new SettingsViewModel(storage, mailSender, runUpdateCheck);
         Ai = new AiSettingsViewModel(ai, storage);
 
         // Wenn der Admin im jeweiligen Tab speichert, müssen die ComboBoxen im Wiederkehrend-Tab

@@ -70,6 +70,28 @@ public class OverlayDialogService : IDialogService
             h => vm.Closed += h, h => vm.Closed -= h,
             () => vm.CancelCommand.Execute(null));
 
+    public Task<UpdateDialogAction?> ShowUpdateAsync(UpdateViewModel vm)
+    {
+        // UpdateDialogAction ist ein Enum → ValueType. ShowAsync<T> erwartet class.
+        // Wir kapseln das Result in einem record-Wrapper.
+        var tcs = new TaskCompletionSource<UpdateDialogAction?>();
+        Action<UpdateDialogAction?> handler = null!;
+        handler = result =>
+        {
+            vm.Closed -= handler;
+            _cancelCurrent = null;
+            _content.Content = null;
+            _overlay.IsVisible = false;
+            tcs.TrySetResult(result);
+        };
+        vm.Closed += handler;
+        _cancelCurrent = () => vm.CancelCommand.Execute(null);
+
+        _content.Content = new UpdateView { DataContext = vm };
+        _overlay.IsVisible = true;
+        return tcs.Task;
+    }
+
     public void CancelActive() => _cancelCurrent?.Invoke();
 
     /// <summary>

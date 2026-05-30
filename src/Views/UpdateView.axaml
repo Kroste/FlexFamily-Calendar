@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.UpdateView"
+             x:CompileBindings="False">
+
+  <Grid Margin="24,20" RowDefinitions="Auto,Auto,*,Auto" MinWidth="480" MaxWidth="580" MaxHeight="640">
+
+    <StackPanel Grid.Row="0" Spacing="2">
+      <TextBlock Text="{Binding HeaderText}" FontSize="18" FontWeight="Bold" />
+      <TextBlock Text="{Binding SubHeader}" Opacity="0.7" FontSize="13" />
+    </StackPanel>
+
+    <TextBlock Grid.Row="1" Text="{loc:Tr Update_NoAsset}" IsVisible="{Binding NoAsset}"
+               Margin="0,12,0,0" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
+
+    <Border Grid.Row="2" Margin="0,16,0,0" BorderThickness="1" CornerRadius="6"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <ScrollViewer>
+        <TextBlock Text="{Binding ChangelogMarkdown}" TextWrapping="Wrap" Margin="12,10"
+                   FontFamily="Consolas, Menlo, monospace" FontSize="12" />
+      </ScrollViewer>
+    </Border>
+
+    <Grid Grid.Row="3" Margin="0,16,0,0" ColumnDefinitions="Auto,12,Auto,*,Auto,12,Auto">
+      <Button Grid.Column="0" Content="{loc:Tr Update_Skip}" Command="{Binding SkipCommand}"
+              Padding="14,8" CornerRadius="6" />
+      <Button Grid.Column="2" Content="{loc:Tr Update_Later}" Command="{Binding LaterCommand}"
+              Padding="14,8" CornerRadius="6" />
+      <Button Grid.Column="4" Content="{loc:Tr Update_OpenReleasePage}"
+              Command="{Binding OpenReleasePageCommand}"
+              Padding="14,8" CornerRadius="6" />
+      <Button Grid.Column="6" Content="{loc:Tr Update_Install}"
+              Command="{Binding InstallCommand}" IsVisible="{Binding HasAsset}"
+              Padding="14,8" CornerRadius="6"
+              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+    </Grid>
+
+  </Grid>
+</UserControl>

@@ -44,5 +44,8 @@ public class WindowDialogService : IDialogService
     public Task<IReadOnlyList<string>?> ShowMailAsync(MailViewModel vm)
         => new MailDialog { DataContext = vm }.ShowDialog<IReadOnlyList<string>?>(_owner);
 
+    public Task<UpdateDialogAction?> ShowUpdateAsync(UpdateViewModel vm)
+        => new UpdateDialog { DataContext = vm }.ShowDialog<UpdateDialogAction?>(_owner);
+
     public void CancelActive() { }   // Window fängt ESC/Außenklick selbst ab
 }

@@ -255,5 +255,23 @@
   "MoveCopy_Copy": "Copy",
   "MoveCopy_Description": "{0} to {1}",
 
-  "Ai_ServerConfigured": "The API key is configured on the server (Ai__<Provider>__Key). Only pick the provider and an optional model here."
+  "Ai_ServerConfigured": "The API key is configured on the server (Ai__<Provider>__Key). Only pick the provider and an optional model here.",
+
+  "Update_Title": "Update available",
+  "Update_Description": "New version available: {0} → {1}.",
+  "Update_NoAsset": "No direct update package for your platform — open the release page to download manually.",
+  "Update_Install": "Install now",
+  "Update_OpenReleasePage": "Release page",
+  "Update_Later": "Later",
+  "Update_Skip": "Skip",
+  "Update_Downloading": "Downloading update …",
+  "Update_Installing": "Installing update …",
+
+  "Settings_Updates": "Updates",
+  "Settings_UpdateEnabled": "Check for new versions automatically",
+  "Settings_UpdateInterval": "Check interval (hours, 0 = manual only)",
+  "Settings_UpdateCheckNow": "Check now",
+  "Settings_UpdateLastChecked": "Last checked: {0}",
+  "Settings_UpdateNever": "never",
+  "Settings_UpdateNothingFound": "You have the latest version."
 }

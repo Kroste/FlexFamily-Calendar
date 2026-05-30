@@ -255,5 +255,23 @@
   "MoveCopy_Copy": "Kopieren",
   "MoveCopy_Description": "{0} nach {1}",
 
-  "Ai_ServerConfigured": "Der API-Schlüssel ist serverseitig konfiguriert (Ai__<Provider>__Key). Hier nur Anbieter und optional Modell wählen."
+  "Ai_ServerConfigured": "Der API-Schlüssel ist serverseitig konfiguriert (Ai__<Provider>__Key). Hier nur Anbieter und optional Modell wählen.",
+
+  "Update_Title": "Update verfügbar",
+  "Update_Description": "Neue Version verfügbar: {0} → {1}.",
+  "Update_NoAsset": "Für deine Plattform gibt es kein direktes Update-Paket — du kannst die Release-Seite öffnen und manuell herunterladen.",
+  "Update_Install": "Jetzt installieren",
+  "Update_OpenReleasePage": "Release-Seite",
+  "Update_Later": "Später",
+  "Update_Skip": "Überspringen",
+  "Update_Downloading": "Lade Update herunter …",
+  "Update_Installing": "Update wird installiert …",
+
+  "Settings_Updates": "Updates",
+  "Settings_UpdateEnabled": "Automatisch auf neue Versionen prüfen",
+  "Settings_UpdateInterval": "Prüfintervall (Stunden, 0 = nur manuell)",
+  "Settings_UpdateCheckNow": "Jetzt prüfen",
+  "Settings_UpdateLastChecked": "Zuletzt geprüft: {0}",
+  "Settings_UpdateNever": "noch nie",
+  "Settings_UpdateNothingFound": "Du hast die aktuelle Version."
 }

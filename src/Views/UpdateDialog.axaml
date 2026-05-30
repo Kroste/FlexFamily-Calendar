@@ -1,0 +1,11 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:FlexFamilyCalendar.Views"
+        xmlns:loc="using:FlexFamilyCalendar.Localization"
+        x:Class="FlexFamilyCalendar.Views.UpdateDialog"
+        x:CompileBindings="False"
+        Title="{loc:Tr Update_Title}"
+        Width="580" Height="560"
+        WindowStartupLocation="CenterOwner">
+  <views:UpdateView />
+</Window>
