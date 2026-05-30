@@ -84,3 +84,29 @@ dotnet test tests/FlexFamilyCalendar.Api.Tests
 
 Anforderungen: .NET 10 SDK, für den WASM-Build zusätzlich `dotnet workload install
 wasm-tools` und auf manchen Distros `python3` (Emscripten ruft `python` auf).
+
+## Releases
+
+Auf jedes Tag `vX.Y.Z` (z.B. via `gh release create v1.0.0 --generate-notes`)
+läuft `.github/workflows/release.yml` und baut fünf Artefakte parallel:
+
+| Artefakt | Wo |
+|---|---|
+| `FlexFamilyCalendar-vX.Y.Z-linux-x64.tar.gz` | GitHub-Release-Asset |
+| `FlexFamilyCalendar-vX.Y.Z-win-x64.zip` | GitHub-Release-Asset |
+| `FlexFamilyCalendar-vX.Y.Z-x86_64.AppImage` | GitHub-Release-Asset |
+| `<docker-user>/flexfamily-calendar-api:vX.Y.Z` + `:latest` | Docker Hub |
+| `<docker-user>/flexfamily-calendar-caddy:vX.Y.Z` + `:latest` | Docker Hub |
+
+Die Desktop-Pakete sind self-contained Single-File-Binaries — kein installiertes
+.NET nötig.
+
+Damit der Workflow zu Docker Hub pushen kann, müssen in GitHub unter
+**Settings → Secrets and variables → Actions** zwei Secrets stehen:
+
+- `DOCKERHUB_USERNAME` — dein Docker-Hub-Username
+- `DOCKERHUB_TOKEN` — ein Personal Access Token (Docker Hub → Account Settings
+  → Security → New Access Token), kein Passwort
+
+Manuell auslösen lässt sich der Workflow über GitHub → Actions → Release →
+„Run workflow" mit einem Test-Tag-Namen.
