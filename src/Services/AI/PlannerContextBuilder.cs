@@ -15,7 +15,9 @@ public record PlannerContext(
     IReadOnlyList<ActivityType> ActivityTypes,
     IReadOnlyList<RecurringActivity> RecurringActivities,
     IReadOnlyList<(DateOnly Date, IReadOnlyList<CalendarEntry> Entries)> Week,
-    IReadOnlyList<PlannerNote> Notes);
+    IReadOnlyList<PlannerNote> Notes,
+    string? ViewerName = null,
+    string? ViewerStyleHint = null);
 
 /// <summary>
 /// Rendert den <see cref="PlannerContext"/> als deutschen Klartext-Block. Das ist der
@@ -114,6 +116,18 @@ public static class PlannerContextBuilder
         sb.AppendLine($"Heute: {ctx.Today:dd.MM.yyyy} ({ctx.Today.ToString("dddd", CultureInfo.GetCultureInfo("de-DE"))})");
         sb.AppendLine($"Aktuelle Woche beginnt am: {ctx.WeekStart:dd.MM.yyyy}");
         sb.AppendLine();
+
+        // Persönliche Stil-Anweisung des aktuellen Admins: bestimmt Anrede und Tonfall.
+        if (!string.IsNullOrWhiteSpace(ctx.ViewerName) || !string.IsNullOrWhiteSpace(ctx.ViewerStyleHint))
+        {
+            sb.AppendLine("## Persönlicher Stil-Wunsch");
+            if (!string.IsNullOrWhiteSpace(ctx.ViewerName))
+                sb.AppendLine($"Du sprichst gerade mit: {ctx.ViewerName}.");
+            if (!string.IsNullOrWhiteSpace(ctx.ViewerStyleHint))
+                sb.AppendLine($"Stil-Wunsch: {ctx.ViewerStyleHint.Trim()}");
+            sb.AppendLine("Bitte halte dich an diesen Stil — er hat Vorrang vor dem Default-Ton.");
+            sb.AppendLine();
+        }
 
         AppendPeople(sb, ctx.Users);
         AppendActivityTypes(sb, ctx.ActivityTypes);

@@ -18,20 +18,23 @@ public static class UserMapping
         MaxDailyHours = d.MaxDailyHours,
         MinRestHours = d.MinRestHours,
         Color = d.Color ?? "",
-        Language = string.IsNullOrWhiteSpace(d.Language) ? "de" : d.Language!
+        Language = string.IsNullOrWhiteSpace(d.Language) ? "de" : d.Language!,
+        AiStyleHint = d.AiStyleHint ?? ""
     };
 
     public static CreateUserBody ToCreateBody(User u, string password) => new(
         u.Username, password, u.DisplayName, u.Email,
         RoleToServer(u.Role), u.Category.ToString(),
         u.WeeklyHoursQuota, u.MaxWeeklyHours, u.MaxDailyHours, u.MinRestHours,
-        u.Color, string.IsNullOrWhiteSpace(u.Language) ? "de" : u.Language);
+        u.Color, string.IsNullOrWhiteSpace(u.Language) ? "de" : u.Language,
+        string.IsNullOrWhiteSpace(u.AiStyleHint) ? null : u.AiStyleHint);
 
     public static UpdateUserBody ToUpdateBody(User u) => new(
         u.Username, u.DisplayName, u.Email,
         RoleToServer(u.Role), u.Category.ToString(),
         u.WeeklyHoursQuota, u.MaxWeeklyHours, u.MaxDailyHours, u.MinRestHours,
-        u.Color, string.IsNullOrWhiteSpace(u.Language) ? "de" : u.Language);
+        u.Color, string.IsNullOrWhiteSpace(u.Language) ? "de" : u.Language,
+        string.IsNullOrWhiteSpace(u.AiStyleHint) ? null : u.AiStyleHint);
 
     public static string RoleToServer(UserRole role) => role == UserRole.Admin ? "Admin" : "User";
 }

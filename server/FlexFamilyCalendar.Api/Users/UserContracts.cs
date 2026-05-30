@@ -15,12 +15,13 @@ public record UserDto(
     double MaxDailyHours,
     double MinRestHours,
     string Color,
-    string Language)
+    string Language,
+    string AiStyleHint)
 {
     public static UserDto From(UserEntity u) => new(
         u.Id, u.Username, u.DisplayName, u.Email, u.Role, u.Category,
         u.WeeklyHoursQuota, u.MaxWeeklyHours, u.MaxDailyHours, u.MinRestHours,
-        u.Color, u.Language);
+        u.Color, u.Language, u.AiStyleHint);
 }
 
 /// <summary>Reine Invarianten der Benutzerverwaltung (serverseitig erzwungen, testbar).</summary>

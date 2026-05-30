@@ -16,4 +16,5 @@ public class UserEntity
     public double MinRestHours { get; set; }
     public string Color { get; set; } = "";
     public string Language { get; set; } = "de";
+    public string AiStyleHint { get; set; } = "";       // Freitext-Stil-Wunsch für die KI
 }

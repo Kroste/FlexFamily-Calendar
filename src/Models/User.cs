@@ -19,4 +19,6 @@ public class User
     public double OpeningBalanceHours { get; set; }       // Stundenkonto: Anfangssaldo (Übertrag von vorher)
     public DateOnly AccountStart { get; set; }            // Stundenkonto: Start (leer = bei Anlage gesetzt)
     public bool ShowHolidays { get; set; } = true;        // Anzeige-Präferenz: Feiertage im Kalender einblenden
+    /// <summary>Freitext-Stil-Wunsch für die KI (Anrede, Tonfall). Leer = neutrales Default.</summary>
+    public string AiStyleHint { get; set; } = "";
 }

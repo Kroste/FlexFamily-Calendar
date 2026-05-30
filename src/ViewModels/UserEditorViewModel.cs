@@ -44,6 +44,7 @@ public partial class UserEditorViewModel : ViewModelBase
     [ObservableProperty] private string _errorMessage = "";
     [ObservableProperty] private ThemeVariantOption? _selectedThemeVariant;
     [ObservableProperty] private string? _selectedColor;
+    [ObservableProperty] private string _aiStyleHint = "";
 
     public bool IsSelfMode { get; }
     public bool CanEditAdminFields => !IsSelfMode;
@@ -94,6 +95,7 @@ public partial class UserEditorViewModel : ViewModelBase
         _selectedThemeVariant = ThemeVariants.FirstOrDefault(v => v.Id == _originalVariant) ?? ThemeVariants[0];
         _selectedColor = PersonColors.FirstOrDefault(c => c.Equals(_user.Color, StringComparison.OrdinalIgnoreCase))
                          ?? (string.IsNullOrEmpty(_user.Color) ? PersonColors[0] : _user.Color);
+        _aiStyleHint = _user.AiStyleHint ?? "";
         _initialized = true;
     }
 
@@ -157,6 +159,8 @@ public partial class UserEditorViewModel : ViewModelBase
             AccountStart = CanEditAdminFields ? accountStart : _user.AccountStart,
             ThemeVariant = SelectedThemeVariant?.Id ?? _user.ThemeVariant,
             Color = CanEditAdminFields ? (SelectedColor ?? _user.Color) : _user.Color,
+            // KI-Stil-Wunsch darf jeder für sich selbst pflegen (auch im selfMode).
+            AiStyleHint = (AiStyleHint ?? "").Trim(),
             PasswordHash = _user.PasswordHash
         };
 

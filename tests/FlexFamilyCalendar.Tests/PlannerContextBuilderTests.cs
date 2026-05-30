@@ -85,4 +85,21 @@ public class PlannerContextBuilderTests
         Assert.Contains("Planungs-Assistenz", text);
         Assert.Contains("01.06.2026", text);
     }
+
+    [Fact]
+    public void Render_StyleHint_Appears_WhenSet()
+    {
+        var ctx = Make() with { ViewerName = "Lars", ViewerStyleHint = "Sprich mich locker an, mach Witze" };
+        var text = PlannerContextBuilder.Render(ctx);
+        Assert.Contains("Persönlicher Stil-Wunsch", text);
+        Assert.Contains("Lars", text);
+        Assert.Contains("Sprich mich locker an", text);
+    }
+
+    [Fact]
+    public void Render_StyleSection_Omitted_WhenNoHintAndNoViewer()
+    {
+        var text = PlannerContextBuilder.Render(Make());
+        Assert.DoesNotContain("Persönlicher Stil-Wunsch", text);
+    }
 }

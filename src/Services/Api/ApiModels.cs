@@ -30,7 +30,8 @@ public record ServerUserDto(
     double MaxDailyHours = 0,
     double MinRestHours = 0,
     string? Color = null,
-    string? Language = null);
+    string? Language = null,
+    string? AiStyleHint = null);
 
 public record LoginResponse(string Token, ServerUserDto User);
 
@@ -46,7 +47,8 @@ public record CreateUserBody(
     double MaxDailyHours,
     double MinRestHours,
     string Color,
-    string Language);
+    string Language,
+    string? AiStyleHint = null);
 
 public record UpdateUserBody(
     string Username,
@@ -59,7 +61,8 @@ public record UpdateUserBody(
     double MaxDailyHours,
     double MinRestHours,
     string Color,
-    string Language);
+    string Language,
+    string? AiStyleHint = null);
 
 public record ApiErrorBody(string? Error);
 

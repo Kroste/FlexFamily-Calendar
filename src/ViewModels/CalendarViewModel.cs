@@ -428,7 +428,9 @@ public partial class CalendarViewModel : ViewModelBase
             ActivityTypes: _activityTypes,
             RecurringActivities: _recurringActivities,
             Week: weekTuples,
-            Notes: Array.Empty<Models.PlannerNote>());
+            Notes: Array.Empty<Models.PlannerNote>(),
+            ViewerName: string.IsNullOrEmpty(CurrentUser.DisplayName) ? CurrentUser.Username : CurrentUser.DisplayName,
+            ViewerStyleHint: CurrentUser.AiStyleHint);
     }
 
     /// <summary>Plan per E-Mail senden: prüft die SMTP-Konfiguration und öffnet die Empfänger-Auswahl (nur Admin).</summary>
