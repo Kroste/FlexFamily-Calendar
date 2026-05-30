@@ -6,10 +6,17 @@
 
   <Grid Margin="20,16,20,16" RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" MinWidth="640" MinHeight="540">
 
-    <StackPanel Grid.Row="0" Margin="0,0,0,12">
-      <TextBlock Text="{loc:Tr AiPlanner_Title}" FontSize="18" FontWeight="Bold" />
-      <TextBlock Text="{loc:Tr AiPlanner_Subtitle}" Opacity="0.65" FontSize="13" Margin="0,2,0,0" />
-    </StackPanel>
+    <Grid Grid.Row="0" Margin="0,0,0,12" ColumnDefinitions="*,Auto">
+      <StackPanel Grid.Column="0">
+        <TextBlock Text="{loc:Tr AiPlanner_Title}" FontSize="18" FontWeight="Bold" />
+        <TextBlock Text="{loc:Tr AiPlanner_Subtitle}" Opacity="0.65" FontSize="13" Margin="0,2,0,0" />
+      </StackPanel>
+      <Button Grid.Column="1" Content="{loc:Tr AiPlanner_ClearHistory}"
+              Command="{Binding ClearHistoryCommand}" IsVisible="{Binding HasHistory}"
+              Padding="10,5" CornerRadius="6" FontSize="12"
+              VerticalAlignment="Top"
+              ToolTip.Tip="{loc:Tr AiPlanner_ClearHistoryTooltip}" />
+    </Grid>
 
     <!-- Persistente Hinweise oben -->
     <StackPanel Grid.Row="1" Spacing="6">

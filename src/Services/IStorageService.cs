@@ -21,4 +21,6 @@ public interface IStorageService
     Task SaveRecurringActivitiesAsync(List<RecurringActivity> activities);
     Task<List<PlannerNote>> LoadPlannerNotesAsync();
     Task SavePlannerNotesAsync(List<PlannerNote> notes);
+    Task<List<ChatHistoryEntry>> LoadChatHistoryAsync();
+    Task SaveChatHistoryAsync(List<ChatHistoryEntry> history);
 }

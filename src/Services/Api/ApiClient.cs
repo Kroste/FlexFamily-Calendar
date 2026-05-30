@@ -155,6 +155,20 @@ public class ApiClient
         LogService.Info("API KI-Planungshinweise ersetzt: {0}", items.Count);
     }
 
+    public async Task<List<ServerChatHistoryDto>> GetChatHistoryAsync()
+    {
+        var list = await _http.GetFromJsonAsync<List<ServerChatHistoryDto>>("api/chat-history") ?? new();
+        LogService.Debug("API KI-Chat-Verlauf geladen: {0}", list.Count);
+        return list;
+    }
+
+    public async Task ReplaceChatHistoryAsync(List<ServerChatHistoryDto> items)
+    {
+        var resp = await _http.PutAsJsonAsync("api/chat-history", items);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "KI-Chat-Verlauf speichern");
+        LogService.Info("API KI-Chat-Verlauf ersetzt: {0}", items.Count);
+    }
+
     public async Task<List<ServerSwapRequestDto>> GetSwapRequestsAsync()
     {
         var list = await _http.GetFromJsonAsync<List<ServerSwapRequestDto>>("api/swap-requests") ?? new();

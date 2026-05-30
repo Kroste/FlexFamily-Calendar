@@ -78,6 +78,17 @@ public class InMemoryStorageService : IStorageService
         return Task.CompletedTask;
     }
 
+    private List<ChatHistoryEntry> _chatHistory = new();
+    public Task<List<ChatHistoryEntry>> LoadChatHistoryAsync()
+        => Task.FromResult(_chatHistory.Select(c => new ChatHistoryEntry
+        { Id = c.Id, Role = c.Role, Text = c.Text, CreatedAtUtc = c.CreatedAtUtc }).ToList());
+    public Task SaveChatHistoryAsync(List<ChatHistoryEntry> history)
+    {
+        _chatHistory = history.Select(c => new ChatHistoryEntry
+        { Id = c.Id, Role = c.Role, Text = c.Text, CreatedAtUtc = c.CreatedAtUtc }).ToList();
+        return Task.CompletedTask;
+    }
+
     private static ActivityType Clone(ActivityType t) => new()
     {
         Id = t.Id, Name = t.Name, Color = t.Color, Categories = new List<PersonCategory>(t.Categories)

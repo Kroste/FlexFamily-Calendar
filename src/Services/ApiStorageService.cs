@@ -143,6 +143,23 @@ public class ApiStorageService : IStorageService
     public Task SavePlannerNotesAsync(List<PlannerNote> notes)
         => _api.ReplacePlannerNotesAsync(notes.Select(n => new ServerPlannerNoteDto(n.Id, n.Text, n.CreatedAtUtc)).ToList());
 
+    public async Task<List<ChatHistoryEntry>> LoadChatHistoryAsync()
+    {
+        var dtos = await _api.GetChatHistoryAsync();
+        return dtos.Select(d => new ChatHistoryEntry
+        {
+            Id = d.Id,
+            Role = d.Role.Equals("Assistant", StringComparison.OrdinalIgnoreCase)
+                ? ChatHistoryRole.Assistant : ChatHistoryRole.User,
+            Text = d.Text,
+            CreatedAtUtc = d.CreatedAtUtc
+        }).ToList();
+    }
+
+    public Task SaveChatHistoryAsync(List<ChatHistoryEntry> history)
+        => _api.ReplaceChatHistoryAsync(history.Select(h => new ServerChatHistoryDto(
+            h.Id, h.Role.ToString(), h.Text, h.CreatedAtUtc)).ToList());
+
     public async Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync()
     {
         var dtos = await _api.GetSwapRequestsAsync();

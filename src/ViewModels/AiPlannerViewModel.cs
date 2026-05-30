@@ -33,6 +33,7 @@ public partial class AiPlannerViewModel : ViewModelBase
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _statusMessage = "";
     [ObservableProperty] private bool _hasNoProvider;
+    [ObservableProperty] private bool _hasHistory;
 
     public event Action? CloseRequested;
 
@@ -73,7 +74,26 @@ public partial class AiPlannerViewModel : ViewModelBase
         var ctx = _buildContext() with { Notes = notes };
         _users = ctx.Users;
         _contextBlock = PlannerContextBuilder.Render(ctx);
+
+        // Chat-Verlauf aus dem Storage (pro Benutzer auf dem Server, lokal pro Installation).
+        // Wir laden die letzten 60 Einträge — älteres bleibt in der Datei/DB liegen, fliegt aber
+        // nicht mit jedem Send-Click in den Prompt.
+        try
+        {
+            var history = await _storage.LoadChatHistoryAsync();
+            foreach (var h in history.OrderBy(x => x.CreatedAtUtc).TakeLast(MaxHistoryEntries))
+            {
+                Messages.Add(new ChatBubble(
+                    h.Role == ChatHistoryRole.Assistant ? ChatRole.Assistant : ChatRole.User,
+                    h.Text));
+            }
+            HasHistory = Messages.Count > 0;
+        }
+        catch (NotSupportedException) { /* Browser-Storage-Stub — Web hat keinen Disk-Speicher */ }
+        catch (Exception ex) { LogService.Debug("Chat-Verlauf laden fehlgeschlagen: {0}", ex.Message); }
     }
+
+    private const int MaxHistoryEntries = 60;
 
     /// <summary>Resolved User-Id → Anzeigename für die Vorschlag-Karte. Fallback = Id, wenn unbekannt.</summary>
     internal string ResolvePersonName(string userId)
@@ -150,6 +170,7 @@ public partial class AiPlannerViewModel : ViewModelBase
         if (string.IsNullOrEmpty(msg) || IsBusy) return;
         NewMessageText = "";
         Messages.Add(new ChatBubble(ChatRole.User, msg));
+        HasHistory = true;
         IsBusy = true;
         StatusMessage = Localizer.Instance["AiPlanner_Thinking"];
 
@@ -161,12 +182,40 @@ public partial class AiPlannerViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(answer))
         {
             Messages.Add(new ChatBubble(ChatRole.Assistant, Localizer.Instance["AiPlanner_NoAnswer"]));
+            await PersistHistoryAsync();
             return;
         }
         var bubble = new ChatBubble(ChatRole.Assistant, answer.Trim());
         foreach (var s in PlannerSuggestionParser.Extract(answer))
             bubble.Suggestions.Add(SuggestionCard.Create(s, this));
         Messages.Add(bubble);
+        await PersistHistoryAsync();
+    }
+
+    [RelayCommand]
+    private async Task ClearHistoryAsync()
+    {
+        Messages.Clear();
+        HasHistory = false;
+        try { await _storage.SaveChatHistoryAsync(new List<ChatHistoryEntry>()); }
+        catch (NotSupportedException) { /* Browser-Stub */ }
+        catch (Exception ex) { LogService.Debug("Chat-Verlauf löschen fehlgeschlagen: {0}", ex.Message); }
+        LogService.UserAction("?", "KI-Chat-Verlauf gelöscht");
+    }
+
+    private async Task PersistHistoryAsync()
+    {
+        try
+        {
+            var toSave = Messages.TakeLast(MaxHistoryEntries).Select(b => new ChatHistoryEntry
+            {
+                Role = b.Role == ChatRole.Assistant ? ChatHistoryRole.Assistant : ChatHistoryRole.User,
+                Text = b.Text
+            }).ToList();
+            await _storage.SaveChatHistoryAsync(toSave);
+        }
+        catch (NotSupportedException) { /* Browser-Stub */ }
+        catch (Exception ex) { LogService.Debug("Chat-Verlauf speichern fehlgeschlagen: {0}", ex.Message); }
     }
 
     internal async Task ApplySuggestionAsync(SuggestionCard card)

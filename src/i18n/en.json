@@ -128,6 +128,8 @@
   "AiPlanner_ActionDelete": "Delete entry",
   "AiPlanner_ActionPause": "Pause recurring activity",
   "AiPlanner_ActionResume": "Resume (remove a pause)",
+  "AiPlanner_ClearHistory": "Clear history",
+  "AiPlanner_ClearHistoryTooltip": "Remove all prior messages — the AI will start with no memory of past chats.",
   "AiPlanner_JumpToDate": "Jump to this day in the calendar",
   "Common_Close": "Close",
   "Cal_Hints": "Notes",

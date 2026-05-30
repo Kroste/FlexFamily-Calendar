@@ -128,6 +128,8 @@
   "AiPlanner_ActionDelete": "Eintrag löschen",
   "AiPlanner_ActionPause": "Wiederkehrende Aktivität pausieren",
   "AiPlanner_ActionResume": "Pause aufheben (Aktivität wiederbeleben)",
+  "AiPlanner_ClearHistory": "Verlauf löschen",
+  "AiPlanner_ClearHistoryTooltip": "Alle bisherigen Nachrichten dieses Verlaufs entfernen — die KI startet ohne Erinnerung.",
   "AiPlanner_JumpToDate": "Im Kalender zu diesem Tag springen",
   "Common_Close": "Schließen",
   "Cal_Hints": "Hinweise",

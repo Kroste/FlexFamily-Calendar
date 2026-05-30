@@ -17,6 +17,7 @@ public class StorageService : IStorageService
     private string ActivityTypesFile => Path.Combine(DataDirectory, "activity-types.json");
     private string RecurringActivitiesFile => Path.Combine(DataDirectory, "recurring-activities.json");
     private string PlannerNotesFile => Path.Combine(DataDirectory, "planner-notes.json");
+    private string ChatHistoryFile => Path.Combine(DataDirectory, "chat-history.json");
 
     public StorageService() => Directory.CreateDirectory(DataDirectory);
 
@@ -96,6 +97,19 @@ public class StorageService : IStorageService
     {
         await File.WriteAllTextAsync(PlannerNotesFile, JsonConvert.SerializeObject(notes, Formatting.Indented));
         LogService.Debug("KI-Planungshinweise gespeichert ({0})", notes.Count);
+    }
+
+    public async Task<List<ChatHistoryEntry>> LoadChatHistoryAsync()
+    {
+        if (!File.Exists(ChatHistoryFile)) return new();
+        var json = await File.ReadAllTextAsync(ChatHistoryFile);
+        return JsonConvert.DeserializeObject<List<ChatHistoryEntry>>(json) ?? new();
+    }
+
+    public async Task SaveChatHistoryAsync(List<ChatHistoryEntry> history)
+    {
+        await File.WriteAllTextAsync(ChatHistoryFile, JsonConvert.SerializeObject(history, Formatting.Indented));
+        LogService.Debug("KI-Chat-Verlauf gespeichert ({0})", history.Count);
     }
 
     public async Task<AppSettings> LoadSettingsAsync()

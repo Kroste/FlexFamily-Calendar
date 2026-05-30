@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using FlexFamilyCalendar.Api.Auth;
+using FlexFamilyCalendar.Api.ChatHistory;
 using FlexFamilyCalendar.Api.Data;
 using FlexFamilyCalendar.Api.ActivityTypes;
 using FlexFamilyCalendar.Api.DayNotes;
@@ -516,6 +517,43 @@ app.MapPut("/api/planner-notes", async (List<PlannerNoteDto> items, AppDbContext
         .Select(n => new PlannerNoteDto(n.Id, n.Text, n.CreatedAtUtc)));
 })
     .RequireAuthorization("Admin");
+
+// --- KI-Chat-Verlauf (pro angemeldetem Benutzer) -------------------------
+// Persistenter Chat-Verlauf, damit die KI über Sessions hinweg den Kontext kennt.
+// Nicht-Admin darf seinen eigenen Verlauf pflegen — sonst säße eine Eltern-Person ohne
+// Admin-Rechte (v0.8.0+) ohne Memory da. Trennt aber strikt nach UserId.
+
+app.MapGet("/api/chat-history", async (AppDbContext db, ClaimsPrincipal principal) =>
+{
+    var userId = CurrentUserId(principal);
+    if (userId is null) return Results.Unauthorized();
+    var list = await db.ChatHistory.Where(c => c.UserId == userId.Value)
+        .OrderBy(c => c.CreatedAtUtc).ToListAsync();
+    return Results.Ok(list.Select(c => new ChatHistoryDto(c.Id, c.Role, c.Text, c.CreatedAtUtc)));
+})
+    .RequireAuthorization();
+
+app.MapPut("/api/chat-history", async (List<ChatHistoryDto> items, AppDbContext db, ClaimsPrincipal principal) =>
+{
+    var userId = CurrentUserId(principal);
+    if (userId is null) return Results.Unauthorized();
+    // Nur den eigenen Verlauf ersetzen, nie fremde Konten.
+    await db.ChatHistory.Where(c => c.UserId == userId.Value).ExecuteDeleteAsync();
+    foreach (var i in items)
+        db.ChatHistory.Add(new ChatHistoryEntity
+        {
+            Id = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id,
+            UserId = userId.Value,
+            Role = string.Equals(i.Role, "Assistant", StringComparison.OrdinalIgnoreCase) ? "Assistant" : "User",
+            Text = i.Text ?? "",
+            CreatedAtUtc = i.CreatedAtUtc == default ? DateTime.UtcNow : i.CreatedAtUtc
+        });
+    await db.SaveChangesAsync();
+    var saved = await db.ChatHistory.Where(c => c.UserId == userId.Value)
+        .OrderBy(c => c.CreatedAtUtc).ToListAsync();
+    return Results.Ok(saved.Select(c => new ChatHistoryDto(c.Id, c.Role, c.Text, c.CreatedAtUtc)));
+})
+    .RequireAuthorization();
 
 // --- Schichttausch -------------------------------------------------------
 // Hinweis: Speichern ersetzt die ganze Liste (passt zum Client). Da jeder Mitarbeiter Tausch

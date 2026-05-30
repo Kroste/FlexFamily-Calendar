@@ -72,6 +72,8 @@ public record ServerRecurrenceSkipDto(string Id, DateOnly From, DateOnly To, str
 
 public record ServerPlannerNoteDto(string Id, string Text, DateTime CreatedAtUtc);
 
+public record ServerChatHistoryDto(string Id, string Role, string Text, DateTime CreatedAtUtc);
+
 public record ServerRecurringActivityDto(
     string Id,
     string UserId,
