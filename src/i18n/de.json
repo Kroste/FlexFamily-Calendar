@@ -94,6 +94,8 @@
   "Cal_ExportPdf": "PDF",
   "Cal_Mail": "Mail",
   "Cal_AiPlanner": "KI-Plan",
+  "Cal_ViewAsBanner": "Du siehst gerade aus der Sicht von {0}.",
+  "Cal_ExitViewAs": "Zurück zur Admin-Sicht",
   "AiPlanner_Title": "KI-Planungs-Assistent",
   "AiPlanner_Subtitle": "Hinweise dauerhaft hinterlegen oder Fragen zur Planung stellen.",
   "AiPlanner_NotesHeader": "Hinweise für die KI (werden bei jeder Anfrage mitgeschickt)",

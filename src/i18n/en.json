@@ -94,6 +94,8 @@
   "Cal_ExportPdf": "PDF",
   "Cal_Mail": "Mail",
   "Cal_AiPlanner": "AI plan",
+  "Cal_ViewAsBanner": "You are currently viewing as {0}.",
+  "Cal_ExitViewAs": "Back to admin view",
   "AiPlanner_Title": "AI planning assistant",
   "AiPlanner_Subtitle": "Persist hints or ask questions about the schedule.",
   "AiPlanner_NotesHeader": "Hints for the AI (sent on every request)",

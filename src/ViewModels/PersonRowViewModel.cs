@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Input;
 using FlexFamilyCalendar.Models;
 
 namespace FlexFamilyCalendar.ViewModels;
@@ -5,20 +6,26 @@ namespace FlexFamilyCalendar.ViewModels;
 /// <summary>Eine Personenzeile in der tabellarischen Plansicht (Name links, 7 Tageszellen rechts).</summary>
 public class PersonRowViewModel
 {
+    public string UserId { get; }
     public string Name { get; }
     public string Color { get; }
     public string CategoryLabel { get; }
     public bool IsCurrentUser { get; }
     public IReadOnlyList<PersonDayCellViewModel> Cells { get; }
+    /// <summary>Klick auf den Personennamen schaltet die Sicht in deren Perspektive (Admin-only).</summary>
+    public IRelayCommand? ImpersonateCommand { get; }
+    public bool CanImpersonate => ImpersonateCommand is not null;
 
-    public PersonRowViewModel(string name, string color, string categoryLabel,
-        bool isCurrentUser, IReadOnlyList<PersonDayCellViewModel> cells)
+    public PersonRowViewModel(string userId, string name, string color, string categoryLabel,
+        bool isCurrentUser, IReadOnlyList<PersonDayCellViewModel> cells, IRelayCommand? impersonateCommand = null)
     {
+        UserId = userId;
         Name = name;
         Color = color;
         CategoryLabel = categoryLabel;
         IsCurrentUser = isCurrentUser;
         Cells = cells;
+        ImpersonateCommand = impersonateCommand;
     }
 }
 

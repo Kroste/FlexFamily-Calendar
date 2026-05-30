@@ -46,7 +46,51 @@ public partial class CalendarViewModel : ViewModelBase
     public ObservableCollection<PersonRowViewModel> Rows { get; } = new();
 
     public bool IsAdmin => CurrentUser.Role == UserRole.Admin;
-    public bool CanSwitchView => IsAdmin;
+    public bool CanSwitchView => EffectiveIsAdmin;
+
+    /// <summary>
+    /// Admin-only „View-as": Wenn gesetzt, rendert der Kalender alles aus der Perspektive dieses
+    /// Users (Privatsphäre-Maskierung wie bei nicht-Admin). Admin-Aktionen (Bearbeiten, Hinzufügen)
+    /// sind im View-as-Modus deaktiviert — der Admin schaut nur, was die Person sehen würde.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsImpersonating), nameof(ViewAsBanner),
+        nameof(EffectiveUserId), nameof(EffectiveIsAdmin), nameof(CanSwitchView))]
+    private string? _viewAsUserId;
+
+    public bool IsImpersonating => ViewAsUserId is not null;
+    public string EffectiveUserId => ViewAsUserId ?? CurrentUser.Id;
+    public bool EffectiveIsAdmin => IsAdmin && ViewAsUserId is null;
+
+    public string ViewAsBanner
+    {
+        get
+        {
+            if (ViewAsUserId is null) return "";
+            var u = _allUsers.FirstOrDefault(x => x.Id == ViewAsUserId);
+            var name = u is null ? ViewAsUserId
+                : string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
+            return string.Format(Localizer.Instance["Cal_ViewAsBanner"], name);
+        }
+    }
+
+    partial void OnViewAsUserIdChanged(string? value)
+    {
+        LogService.UserAction(CurrentUser.Username,
+            value is null ? "View-as beendet" : $"View-as gestartet ({value})");
+        _ = LoadWeekAsync();
+    }
+
+    [RelayCommand]
+    private void ToggleImpersonation(string? userId)
+    {
+        if (!IsAdmin || string.IsNullOrEmpty(userId)) return;
+        // Erneuter Klick auf dieselbe Person beendet View-as.
+        ViewAsUserId = ViewAsUserId == userId ? null : userId;
+    }
+
+    [RelayCommand]
+    private void ExitImpersonation() => ViewAsUserId = null;
 
     [ObservableProperty] private bool _isHoursPanelVisible;
 
@@ -925,10 +969,10 @@ public partial class CalendarViewModel : ViewModelBase
         foreach (var e in day.Entries)
         {
             e.OwnerColor = _userColors.GetValueOrDefault(e.UserId, "#7F8C8D");
-            var isOwn = e.UserId == CurrentUser.Id;
+            var isOwn = e.UserId == EffectiveUserId;
 
             // Datenschutz: Krank/Urlaub für Fremde als „Abwesend" ohne Grund
-            var canSeeReason = IsAdmin || isOwn;
+            var canSeeReason = EffectiveIsAdmin || isOwn;
             e.DisplayType = EntryPrivacy.DisplayType(e.Type, canSeeReason);
             e.DisplayTitle = EntryPrivacy.ShowReason(e.Type, canSeeReason) ? e.Title : "";
 
@@ -1038,17 +1082,22 @@ public partial class CalendarViewModel : ViewModelBase
         Rows.Clear();
         foreach (var u in PlanLayout.OrderPeople(_allUsers))
         {
-            var isSelf = u.Id == CurrentUser.Id;
+            var isSelf = u.Id == EffectiveUserId;
             var cells = new List<PersonDayCellViewModel>();
             foreach (var d in Days)
             {
                 var entries = PlanLayout.CellEntries(d.TimelineEntries, d.AbsenceHints, u.Id);
-                var canAdd = (IsAdmin && !IsPersonalView && !d.IsFinalized) || (isSelf && !IsAdmin);
+                var canAdd = (EffectiveIsAdmin && !IsPersonalView && !d.IsFinalized) || (isSelf && !EffectiveIsAdmin);
                 cells.Add(new PersonDayCellViewModel(d.Date, u, entries, canAdd, d.IsToday));
             }
             var name = string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
             var color = string.IsNullOrEmpty(u.Color) ? "#7F8C8D" : u.Color;
-            Rows.Add(new PersonRowViewModel(name, color, Localizer.Instance[$"PersonCategory_{u.Category}"], isSelf, cells));
+            // Admin-only Klick auf den Personennamen → View-as auf diese Person.
+            var impersonateCmd = IsAdmin ? ToggleImpersonationCommand : null;
+            var rowCmd = impersonateCmd is null
+                ? (IRelayCommand?)null
+                : new CommunityToolkit.Mvvm.Input.RelayCommand(() => impersonateCmd.Execute(u.Id));
+            Rows.Add(new PersonRowViewModel(u.Id, name, color, Localizer.Instance[$"PersonCategory_{u.Category}"], isSelf, cells, rowCmd));
         }
     }
 
