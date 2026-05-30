@@ -1,0 +1,140 @@
+using FlexFamilyCalendar.Models;
+using System.Globalization;
+using System.Text;
+
+namespace FlexFamilyCalendar.Services.AI;
+
+/// <summary>
+/// Eine schlanke Momentaufnahme der für Planungs-Chats relevanten Daten. Hält nur,
+/// was die KI fürs Verständnis braucht — keine ViewModels, keine UI-Referenzen.
+/// </summary>
+public record PlannerContext(
+    DateOnly Today,
+    DateOnly WeekStart,
+    IReadOnlyList<User> Users,
+    IReadOnlyList<ActivityType> ActivityTypes,
+    IReadOnlyList<RecurringActivity> RecurringActivities,
+    IReadOnlyList<(DateOnly Date, IReadOnlyList<CalendarEntry> Entries)> Week,
+    IReadOnlyList<PlannerNote> Notes);
+
+/// <summary>
+/// Rendert den <see cref="PlannerContext"/> als deutschen Klartext-Block. Das ist der
+/// „Hintergrund-Prompt", den der Chat bei jeder Anfrage als System-Teil mitgibt — damit
+/// das LLM Personen, Regeln und aktuellen Plan kennt.
+/// </summary>
+public static class PlannerContextBuilder
+{
+    /// <summary>Maximalanzahl an Wochen-Detail-Tagen, die der Snapshot enthält (Standard 7).</summary>
+    public const int DefaultWeekDays = 7;
+
+    public static string Render(PlannerContext ctx)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("# FlexFamily Calendar — Planungs-Kontext");
+        sb.AppendLine();
+        sb.AppendLine("Du bist eine Planungs-Assistenz für eine Familie/Wohngruppe. Du kennst die Personen,");
+        sb.AppendLine("Aktivitätskategorien, wiederkehrenden Termine und die aktuelle Wochenplanung. Vorschläge");
+        sb.AppendLine("müssen Personen-Wochensoll, Mindest-Ruhezeit und Aktivitäts-Pausen respektieren.");
+        sb.AppendLine();
+        sb.AppendLine($"Heute: {ctx.Today:dd.MM.yyyy} ({ctx.Today.ToString("dddd", CultureInfo.GetCultureInfo("de-DE"))})");
+        sb.AppendLine($"Aktuelle Woche beginnt am: {ctx.WeekStart:dd.MM.yyyy}");
+        sb.AppendLine();
+
+        AppendPeople(sb, ctx.Users);
+        AppendActivityTypes(sb, ctx.ActivityTypes);
+        AppendRecurring(sb, ctx.RecurringActivities, ctx.Users);
+        AppendWeek(sb, ctx.Week, ctx.Users);
+        AppendNotes(sb, ctx.Notes);
+
+        return sb.ToString().TrimEnd();
+    }
+
+    private static void AppendPeople(StringBuilder sb, IReadOnlyList<User> users)
+    {
+        sb.AppendLine("## Personen");
+        foreach (var u in users)
+        {
+            var name = string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
+            var soll = u.WeeklyHoursQuota > 0 ? $"{u.WeeklyHoursQuota:0.#} Std./Woche" : "kein Soll";
+            var ruhe = u.MinRestHours > 0 ? $"{u.MinRestHours:0.#} Std. Mindest-Ruhezeit" : "keine Ruhezeit-Prüfung";
+            var max = u.MaxWeeklyHours > 0 ? $", max. {u.MaxWeeklyHours:0.#} Std./Woche" : "";
+            sb.AppendLine($"- {name} ({u.Category}, Rolle: {u.Role}) — Soll: {soll}{max}, {ruhe}");
+        }
+        sb.AppendLine();
+    }
+
+    private static void AppendActivityTypes(StringBuilder sb, IReadOnlyList<ActivityType> types)
+    {
+        if (types.Count == 0) return;
+        sb.AppendLine("## Aktivitäts-Kategorien");
+        foreach (var t in types)
+            sb.AppendLine($"- {t.Name}");
+        sb.AppendLine();
+    }
+
+    private static void AppendRecurring(StringBuilder sb, IReadOnlyList<RecurringActivity> rules, IReadOnlyList<User> users)
+    {
+        if (rules.Count == 0) return;
+        sb.AppendLine("## Wiederkehrende Aktivitäten");
+        foreach (var r in rules)
+        {
+            var name = NameFor(r.UserId, users) ?? r.UserDisplayName;
+            var days = r.Weekdays.OrderBy(WeekOrder)
+                .Select(d => CultureInfo.GetCultureInfo("de-DE").DateTimeFormat.GetAbbreviatedDayName(d));
+            var title = string.IsNullOrEmpty(r.Title) ? "(ohne Titel)" : r.Title;
+            sb.AppendLine($"- {name} · {string.Join(", ", days)} {r.StartTime:hh\\:mm}–{r.EndTime:hh\\:mm} · {title}");
+            if (r.SkipOnHolidays) sb.AppendLine("    (an Feiertagen entfällt)");
+            foreach (var s in r.Skips.OrderBy(x => x.From))
+            {
+                var span = s.From == s.To ? $"{s.From:dd.MM.yyyy}" : $"{s.From:dd.MM.yyyy}–{s.To:dd.MM.yyyy}";
+                var reason = string.IsNullOrWhiteSpace(s.Reason) ? "" : $" ({s.Reason})";
+                sb.AppendLine($"    Pause: {span}{reason}");
+            }
+        }
+        sb.AppendLine();
+    }
+
+    private static void AppendWeek(StringBuilder sb,
+        IReadOnlyList<(DateOnly Date, IReadOnlyList<CalendarEntry> Entries)> week,
+        IReadOnlyList<User> users)
+    {
+        if (week.Count == 0) return;
+        sb.AppendLine("## Aktuelle Woche");
+        foreach (var (date, entries) in week)
+        {
+            var day = date.ToString("dddd, dd.MM.", CultureInfo.GetCultureInfo("de-DE"));
+            sb.AppendLine($"### {day}");
+            if (entries.Count == 0)
+            {
+                sb.AppendLine("- (keine Einträge)");
+                continue;
+            }
+            foreach (var e in entries.OrderBy(x => x.StartTime))
+            {
+                var name = NameFor(e.UserId, users) ?? e.UserDisplayName;
+                var time = $"{e.StartTime:hh\\:mm}–{e.EndTime:hh\\:mm}";
+                var label = e.Type.ToString();
+                var extra = string.IsNullOrEmpty(e.Title) ? "" : $" · {e.Title}";
+                sb.AppendLine($"- {name} · {time} · {label}{extra}");
+            }
+        }
+        sb.AppendLine();
+    }
+
+    private static void AppendNotes(StringBuilder sb, IReadOnlyList<PlannerNote> notes)
+    {
+        if (notes.Count == 0) return;
+        sb.AppendLine("## Vom Admin hinterlegte Hinweise");
+        foreach (var n in notes)
+            sb.AppendLine($"- {n.Text}");
+        sb.AppendLine();
+    }
+
+    private static string? NameFor(string userId, IReadOnlyList<User> users)
+    {
+        var u = users.FirstOrDefault(x => x.Id == userId);
+        return u is null ? null : string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
+    }
+
+    private static int WeekOrder(DayOfWeek d) => ((int)d + 6) % 7;
+}
