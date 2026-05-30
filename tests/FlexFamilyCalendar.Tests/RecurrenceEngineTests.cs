@@ -189,4 +189,21 @@ public class RecurrenceEngineTests
         Assert.True(loaded.SkipOnHolidays);
         Assert.Equal(new[] { DayOfWeek.Thursday, DayOfWeek.Tuesday }, loaded.Weekdays);
     }
+
+    [Fact]
+    public void Json_Roundtrip_PreservesSkips()
+    {
+        var rule = Football(DayOfWeek.Monday);
+        rule.Skips.Add(new RecurrenceSkip { From = new(2026, 7, 1), To = new(2026, 7, 14), Reason = "Urlaub" });
+        rule.Skips.Add(new RecurrenceSkip { From = new(2026, 12, 22), To = new(2027, 1, 5), Reason = "Weihnachten" });
+
+        var json = Newtonsoft.Json.JsonConvert.SerializeObject(rule);
+        var loaded = Newtonsoft.Json.JsonConvert.DeserializeObject<RecurringActivity>(json)!;
+
+        Assert.Equal(2, loaded.Skips.Count);
+        Assert.Equal(new DateOnly(2026, 7, 1), loaded.Skips[0].From);
+        Assert.Equal(new DateOnly(2026, 7, 14), loaded.Skips[0].To);
+        Assert.Equal("Urlaub", loaded.Skips[0].Reason);
+        Assert.Equal(new DateOnly(2027, 1, 5), loaded.Skips[1].To);
+    }
 }
