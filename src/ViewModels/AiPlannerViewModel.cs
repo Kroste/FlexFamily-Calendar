@@ -22,6 +22,7 @@ public partial class AiPlannerViewModel : ViewModelBase
     private readonly Func<PlannerContext> _buildContext;
     private readonly Func<PlannerSuggestion, Task<bool>> _applySuggestion;
     private readonly Func<PlannerSuggestion, IReadOnlyList<SuggestionWarning>>? _validateSuggestion;
+    private readonly Func<DateOnly, Task>? _jumpToDate;
     private string _contextBlock = "";
 
     public ObservableCollection<PlannerNoteRow> Notes { get; } = new();
@@ -38,19 +39,29 @@ public partial class AiPlannerViewModel : ViewModelBase
     public AiPlannerViewModel(IStorageService storage, AiService ai, AiChatService chat,
         Func<PlannerContext> buildContext,
         Func<PlannerSuggestion, Task<bool>> applySuggestion,
-        Func<PlannerSuggestion, IReadOnlyList<SuggestionWarning>>? validateSuggestion = null)
+        Func<PlannerSuggestion, IReadOnlyList<SuggestionWarning>>? validateSuggestion = null,
+        Func<DateOnly, Task>? jumpToDate = null)
     {
         _storage = storage;
         _chat = chat;
         _buildContext = buildContext;
         _applySuggestion = applySuggestion;
         _validateSuggestion = validateSuggestion;
+        _jumpToDate = jumpToDate;
         HasNoProvider = ai.ActiveProvider is null || !ai.ActiveProvider.IsConfigured;
         _ = LoadAsync();
     }
 
     internal IReadOnlyList<SuggestionWarning> ValidateSuggestion(PlannerSuggestion s)
         => _validateSuggestion?.Invoke(s) ?? Array.Empty<SuggestionWarning>();
+
+    /// <summary>Sprung zur betroffenen Woche + Dialog schließen, ausgelöst per Klick auf eine Warn-Zeile.</summary>
+    internal async Task JumpToDateAndCloseAsync(DateOnly date)
+    {
+        if (_jumpToDate is null) return;
+        await _jumpToDate(date);
+        CloseRequested?.Invoke();
+    }
 
     private IReadOnlyList<User> _users = Array.Empty<User>();
 
@@ -231,8 +242,8 @@ public partial class SuggestionCard : ObservableObject
         OnPropertyChanged(nameof(StateLabel));
     }
 
-    public ObservableCollection<string> WarningMessages { get; } = new();
-    public bool HasWarnings => WarningMessages.Count > 0;
+    public ObservableCollection<WarningRow> WarningRows { get; } = new();
+    public bool HasWarnings => WarningRows.Count > 0;
 
     public static SuggestionCard Create(PlannerSuggestion s, AiPlannerViewModel parent)
     {
@@ -243,7 +254,22 @@ public partial class SuggestionCard : ObservableObject
             : parent.ResolvePersonByEntry(s.EntryId) ?? (s.EntryId ?? "");
         var card = new SuggestionCard(parent, s, person);
         foreach (var w in parent.ValidateSuggestion(s))
-            card.WarningMessages.Add(w.Message);
+            card.WarningRows.Add(new WarningRow(parent, w));
         return card;
+    }
+}
+
+/// <summary>Eine einzelne Warnung als Listenitem. Klick führt zum betroffenen Tag.</summary>
+public class WarningRow
+{
+    public string Message { get; }
+    public DateOnly JumpToDate { get; }
+    public IRelayCommand GoToDateCommand { get; }
+
+    public WarningRow(AiPlannerViewModel parent, SuggestionWarning w)
+    {
+        Message = w.Message;
+        JumpToDate = w.JumpToDate;
+        GoToDateCommand = new AsyncRelayCommand(() => parent.JumpToDateAndCloseAsync(JumpToDate));
     }
 }

@@ -50,6 +50,36 @@ public class PlannerSuggestionValidatorTests
     }
 
     [Fact]
+    public void Warning_RestHoursPrevDay_JumpsToPreviousDay()
+    {
+        var prev = new DateOnly(2026, 5, 31);
+        var day = new DateOnly(2026, 6, 1);
+        var users = new[] { Person("u1", rest: 11) };
+        var week = Week((prev, new[] { Entry("u1", EntryType.Work, "14:00", "22:00") }),
+                        (day, Array.Empty<CalendarEntry>()));
+        var s = new PlannerSuggestion(SuggestionAction.Add, day, null, "u1", EntryType.Work,
+            TimeSpan.FromHours(6), TimeSpan.FromHours(14), null);
+
+        var w = PlannerSuggestionValidator.Validate(s, users, week)
+            .Single(x => x.Kind == SuggestionWarningKind.RestHoursViolation);
+        Assert.Equal(prev, w.JumpToDate);
+    }
+
+    [Fact]
+    public void Warning_SelfOverlap_JumpsToSuggestionDate()
+    {
+        var day = new DateOnly(2026, 6, 1);
+        var users = new[] { Person("u1") };
+        var week = Week((day, new[] { Entry("u1", EntryType.Work, "08:00", "16:00") }));
+        var s = new PlannerSuggestion(SuggestionAction.Add, day, null, "u1", EntryType.Work,
+            TimeSpan.FromHours(14), TimeSpan.FromHours(22), null);
+
+        var w = PlannerSuggestionValidator.Validate(s, users, week)
+            .Single(x => x.Kind == SuggestionWarningKind.SelfOverlap);
+        Assert.Equal(day, w.JumpToDate);
+    }
+
+    [Fact]
     public void RestHoursViolation_AgainstPreviousDay()
     {
         var prev = new DateOnly(2026, 5, 31);

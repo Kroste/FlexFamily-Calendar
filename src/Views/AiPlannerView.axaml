@@ -95,13 +95,21 @@
                                     Padding="12,6" CornerRadius="6" VerticalAlignment="Center"
                                     Background="{DynamicResource SystemAccentColor}" Foreground="White" />
                           </Grid>
-                          <!-- Konflikt-Warnungen -->
+                          <!-- Konflikt-Warnungen — Klick auf eine Zeile springt im Kalender
+                               zum betroffenen Tag (und schließt den Dialog). -->
                           <Border Background="#FFF6E0" BorderBrush="#E67E22" BorderThickness="1"
-                                  CornerRadius="6" Padding="8,5" IsVisible="{Binding HasWarnings}">
-                            <ItemsControl ItemsSource="{Binding WarningMessages}">
+                                  CornerRadius="6" Padding="6,3" IsVisible="{Binding HasWarnings}">
+                            <ItemsControl ItemsSource="{Binding WarningRows}">
                               <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                  <TextBlock Text="{Binding}" FontSize="12" TextWrapping="Wrap" />
+                                  <Button Command="{Binding GoToDateCommand}"
+                                          HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                          Background="Transparent" BorderThickness="0" Padding="6,4"
+                                          CornerRadius="4" Cursor="Hand"
+                                          ToolTip.Tip="{loc:Tr AiPlanner_JumpToDate}">
+                                    <TextBlock Text="{Binding Message}" FontSize="12"
+                                               TextWrapping="Wrap" Foreground="#7A4500" />
+                                  </Button>
                                 </DataTemplate>
                               </ItemsControl.ItemTemplate>
                             </ItemsControl>

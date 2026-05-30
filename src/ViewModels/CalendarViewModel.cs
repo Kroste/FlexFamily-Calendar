@@ -280,7 +280,8 @@ public partial class CalendarViewModel : ViewModelBase
     {
         if (!IsAdmin || App.DialogService is null) return;
         var chat = new Services.AI.AiChatService(_ai);
-        var vm = new AiPlannerViewModel(_storage, _ai, chat, BuildPlannerContext, ApplyAiSuggestionAsync, ValidateAiSuggestion);
+        var vm = new AiPlannerViewModel(_storage, _ai, chat, BuildPlannerContext,
+            ApplyAiSuggestionAsync, ValidateAiSuggestion, GoToWeekContaining);
         LogService.Click(CurrentUser.Username, "KI-Planner geöffnet");
         await App.DialogService.ShowAiPlannerAsync(vm);
     }

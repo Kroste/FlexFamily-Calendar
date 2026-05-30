@@ -4,7 +4,12 @@ namespace FlexFamilyCalendar.Services.AI;
 
 public enum SuggestionWarningKind { SelfOverlap, RestHoursViolation, PersonAbsent, WeeklyHoursExceeded }
 
-public record SuggestionWarning(SuggestionWarningKind Kind, string Message);
+/// <summary>
+/// Konfliktwarnung zu einem KI-Vorschlag. <see cref="JumpToDate"/> verweist auf den Tag, den
+/// der UI-Klick auf die Warnung im Kalender anspringt — beim Vortag-/Folgetag-Konflikt also
+/// nicht auf das Vorschlag-Datum, sondern auf den problematischen Nachbar­tag.
+/// </summary>
+public record SuggestionWarning(SuggestionWarningKind Kind, string Message, DateOnly JumpToDate);
 
 /// <summary>
 /// Prüft KI-Vorschläge gegen die aktuelle Wochenlage. Mehrere Personen dürfen gleichzeitig
@@ -57,7 +62,8 @@ public static class PlannerSuggestionValidator
         var absence = personEntries.FirstOrDefault(e => EntryTypeInfo.IsAbsence(e.Type));
         if (absence is not null)
             warnings.Add(new SuggestionWarning(SuggestionWarningKind.PersonAbsent,
-                $"{NameFor(userId, users)} ist am {s.Date:dd.MM.} laut Kalender abwesend ({absence.Type})."));
+                $"{NameFor(userId, users)} ist am {s.Date:dd.MM.} laut Kalender abwesend ({absence.Type}).",
+                s.Date));
 
         // Selbst-Überlappung am gleichen Tag
         foreach (var e in personEntries)
@@ -66,15 +72,17 @@ public static class PlannerSuggestionValidator
             if (Overlaps(e.StartTime, e.EndTime, start.Value, end.Value))
             {
                 warnings.Add(new SuggestionWarning(SuggestionWarningKind.SelfOverlap,
-                    $"{NameFor(userId, users)} hat am {s.Date:dd.MM.} bereits {e.StartTime:hh\\:mm}–{e.EndTime:hh\\:mm} ({e.Type})."));
+                    $"{NameFor(userId, users)} hat am {s.Date:dd.MM.} bereits {e.StartTime:hh\\:mm}–{e.EndTime:hh\\:mm} ({e.Type}).",
+                    s.Date));
             }
         }
 
-        // Mindest-Ruhezeit gegen Vortag/Folgetag
+        // Mindest-Ruhezeit gegen Vortag/Folgetag — Sprung führt zum Nachbartag.
         var user = users.FirstOrDefault(u => u.Id == userId);
         if (user?.MinRestHours > 0)
         {
-            var prev = week.FirstOrDefault(d => d.Date == s.Date.AddDays(-1)).Entries ?? Array.Empty<CalendarEntry>();
+            var prevDate = s.Date.AddDays(-1);
+            var prev = week.FirstOrDefault(d => d.Date == prevDate).Entries ?? Array.Empty<CalendarEntry>();
             foreach (var e in prev.Where(x => x.UserId == userId && !EntryTypeInfo.IsAbsence(x.Type)))
             {
                 var endLocal = e.EndTime <= e.StartTime ? e.EndTime + TimeSpan.FromHours(24) : e.EndTime;
@@ -82,17 +90,20 @@ public static class PlannerSuggestionValidator
                 var newStartTotal = 24 + start.Value.TotalHours;
                 if (newStartTotal - prevEndTotal < user.MinRestHours)
                     warnings.Add(new SuggestionWarning(SuggestionWarningKind.RestHoursViolation,
-                        $"Mindest-Ruhezeit ({user.MinRestHours:0.#} h) seit der Schicht vom Vortag unterschritten."));
+                        $"Mindest-Ruhezeit ({user.MinRestHours:0.#} h) seit der Schicht vom Vortag unterschritten.",
+                        prevDate));
             }
 
-            var next = week.FirstOrDefault(d => d.Date == s.Date.AddDays(1)).Entries ?? Array.Empty<CalendarEntry>();
+            var nextDate = s.Date.AddDays(1);
+            var next = week.FirstOrDefault(d => d.Date == nextDate).Entries ?? Array.Empty<CalendarEntry>();
             foreach (var e in next.Where(x => x.UserId == userId && !EntryTypeInfo.IsAbsence(x.Type)))
             {
                 var thisEndLocal = end.Value <= start.Value ? end.Value + TimeSpan.FromHours(24) : end.Value;
                 var nextStartTotal = 24 + e.StartTime.TotalHours;
                 if (nextStartTotal - thisEndLocal.TotalHours < user.MinRestHours)
                     warnings.Add(new SuggestionWarning(SuggestionWarningKind.RestHoursViolation,
-                        $"Mindest-Ruhezeit ({user.MinRestHours:0.#} h) bis zur Schicht am Folgetag unterschritten."));
+                        $"Mindest-Ruhezeit ({user.MinRestHours:0.#} h) bis zur Schicht am Folgetag unterschritten.",
+                        nextDate));
             }
         }
 
@@ -133,12 +144,14 @@ public static class PlannerSuggestionValidator
         if (user.MaxWeeklyHours > 0 && projected > user.MaxWeeklyHours)
         {
             warnings.Add(new SuggestionWarning(SuggestionWarningKind.WeeklyHoursExceeded,
-                $"{NameFor(userId, users)}: gesetzliches Wochen-Höchstmaß ({user.MaxWeeklyHours:0.#} h) wird überschritten ({projected:0.#} h)."));
+                $"{NameFor(userId, users)}: gesetzliches Wochen-Höchstmaß ({user.MaxWeeklyHours:0.#} h) wird überschritten ({projected:0.#} h).",
+                s.Date));
         }
         else if (user.WeeklyHoursQuota > 0 && projected > user.WeeklyHoursQuota)
         {
             warnings.Add(new SuggestionWarning(SuggestionWarningKind.WeeklyHoursExceeded,
-                $"{NameFor(userId, users)}: Wochensoll ({user.WeeklyHoursQuota:0.#} h) wird überschritten ({projected:0.#} h)."));
+                $"{NameFor(userId, users)}: Wochensoll ({user.WeeklyHoursQuota:0.#} h) wird überschritten ({projected:0.#} h).",
+                s.Date));
         }
     }
 
