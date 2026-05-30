@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<ActivityTypeEntity> ActivityTypes => Set<ActivityTypeEntity>();
     public DbSet<RecurringActivityEntity> RecurringActivities => Set<RecurringActivityEntity>();
     public DbSet<RecurrenceSkipEntity> RecurrenceSkips => Set<RecurrenceSkipEntity>();
+    public DbSet<PlannerNoteEntity> PlannerNotes => Set<PlannerNoteEntity>();
     public DbSet<ShiftSwapRequestEntity> SwapRequests => Set<ShiftSwapRequestEntity>();
     public DbSet<NotificationEntity> Notifications => Set<NotificationEntity>();
     public DbSet<CalendarDayMeta> DayMeta => Set<CalendarDayMeta>();

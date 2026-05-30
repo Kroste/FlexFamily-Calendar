@@ -67,6 +67,8 @@ public record ServerActivityTypeDto(string Id, string Name, string Color, List<s
 
 public record ServerRecurrenceSkipDto(string Id, DateOnly From, DateOnly To, string? Reason);
 
+public record ServerPlannerNoteDto(string Id, string Text, DateTime CreatedAtUtc);
+
 public record ServerRecurringActivityDto(
     string Id,
     string UserId,

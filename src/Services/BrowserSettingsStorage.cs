@@ -46,4 +46,6 @@ public class BrowserSettingsStorage : IStorageService
     public Task SaveActivityTypesAsync(List<ActivityType> types) => throw new NotSupportedException();
     public Task<List<RecurringActivity>> LoadRecurringActivitiesAsync() => throw new NotSupportedException();
     public Task SaveRecurringActivitiesAsync(List<RecurringActivity> activities) => throw new NotSupportedException();
+    public Task<List<PlannerNote>> LoadPlannerNotesAsync() => throw new NotSupportedException();
+    public Task SavePlannerNotesAsync(List<PlannerNote> notes) => throw new NotSupportedException();
 }

@@ -69,6 +69,15 @@ public class InMemoryStorageService : IStorageService
         return Task.CompletedTask;
     }
 
+    private List<PlannerNote> _plannerNotes = new();
+    public Task<List<PlannerNote>> LoadPlannerNotesAsync()
+        => Task.FromResult(_plannerNotes.Select(n => new PlannerNote { Id = n.Id, Text = n.Text, CreatedAtUtc = n.CreatedAtUtc }).ToList());
+    public Task SavePlannerNotesAsync(List<PlannerNote> notes)
+    {
+        _plannerNotes = notes.Select(n => new PlannerNote { Id = n.Id, Text = n.Text, CreatedAtUtc = n.CreatedAtUtc }).ToList();
+        return Task.CompletedTask;
+    }
+
     private static ActivityType Clone(ActivityType t) => new()
     {
         Id = t.Id, Name = t.Name, Color = t.Color, Categories = new List<PersonCategory>(t.Categories)

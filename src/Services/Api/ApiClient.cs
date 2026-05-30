@@ -140,6 +140,20 @@ public class ApiClient
         LogService.Info("API Wiederkehrende Aktivitäten ersetzt: {0}", items.Count);
     }
 
+    public async Task<List<ServerPlannerNoteDto>> GetPlannerNotesAsync()
+    {
+        var list = await _http.GetFromJsonAsync<List<ServerPlannerNoteDto>>("api/planner-notes") ?? new();
+        LogService.Debug("API KI-Planungshinweise geladen: {0}", list.Count);
+        return list;
+    }
+
+    public async Task ReplacePlannerNotesAsync(List<ServerPlannerNoteDto> items)
+    {
+        var resp = await _http.PutAsJsonAsync("api/planner-notes", items);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "KI-Planungshinweise speichern");
+        LogService.Info("API KI-Planungshinweise ersetzt: {0}", items.Count);
+    }
+
     public async Task<List<ServerSwapRequestDto>> GetSwapRequestsAsync()
     {
         var list = await _http.GetFromJsonAsync<List<ServerSwapRequestDto>>("api/swap-requests") ?? new();

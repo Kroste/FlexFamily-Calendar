@@ -9,6 +9,7 @@ using FlexFamilyCalendar.Api.Entries;
 using FlexFamilyCalendar.Api.Mail;
 using FlexFamilyCalendar.Api.Models;
 using FlexFamilyCalendar.Api.Notifications;
+using FlexFamilyCalendar.Api.PlannerNotes;
 using FlexFamilyCalendar.Api.RecurringActivities;
 using FlexFamilyCalendar.Api.Swaps;
 using FlexFamilyCalendar.Api.Users;
@@ -478,6 +479,31 @@ app.MapPut("/api/recurring-activities", async (List<RecurringActivityDto> items,
     }
     await db.SaveChangesAsync();
     return Results.Ok((await db.RecurringActivities.Include(r => r.Skips).ToListAsync()).Select(RecurringActivityDto.From));
+})
+    .RequireAuthorization("Admin");
+
+// --- KI-Planungshinweise -------------------------------------------------
+// Persistente Merker, die der KI-Chat bei jeder Anfrage als Kontext mitschickt.
+// Komplettes Ersetzen passt zum Client (verwaltet die Liste lokal); Admin-only.
+
+app.MapGet("/api/planner-notes", async (AppDbContext db) =>
+    (await db.PlannerNotes.OrderBy(n => n.CreatedAtUtc).ToListAsync())
+        .Select(n => new PlannerNoteDto(n.Id, n.Text, n.CreatedAtUtc)))
+    .RequireAuthorization("Admin");
+
+app.MapPut("/api/planner-notes", async (List<PlannerNoteDto> items, AppDbContext db) =>
+{
+    await db.PlannerNotes.ExecuteDeleteAsync();
+    foreach (var i in items)
+        db.PlannerNotes.Add(new PlannerNoteEntity
+        {
+            Id = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id,
+            Text = i.Text ?? "",
+            CreatedAtUtc = i.CreatedAtUtc == default ? DateTime.UtcNow : i.CreatedAtUtc
+        });
+    await db.SaveChangesAsync();
+    return Results.Ok((await db.PlannerNotes.OrderBy(n => n.CreatedAtUtc).ToListAsync())
+        .Select(n => new PlannerNoteDto(n.Id, n.Text, n.CreatedAtUtc)));
 })
     .RequireAuthorization("Admin");
 

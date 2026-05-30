@@ -132,6 +132,15 @@ public class ApiStorageService : IStorageService
     public Task SaveRecurringActivitiesAsync(List<RecurringActivity> activities)
         => _api.ReplaceRecurringActivitiesAsync(activities.Select(RecurringActivityMapping.ToServer).ToList());
 
+    public async Task<List<PlannerNote>> LoadPlannerNotesAsync()
+    {
+        var dtos = await _api.GetPlannerNotesAsync();
+        return dtos.Select(d => new PlannerNote { Id = d.Id, Text = d.Text, CreatedAtUtc = d.CreatedAtUtc }).ToList();
+    }
+
+    public Task SavePlannerNotesAsync(List<PlannerNote> notes)
+        => _api.ReplacePlannerNotesAsync(notes.Select(n => new ServerPlannerNoteDto(n.Id, n.Text, n.CreatedAtUtc)).ToList());
+
     public async Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync()
     {
         var dtos = await _api.GetSwapRequestsAsync();
