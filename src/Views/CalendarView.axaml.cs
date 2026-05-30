@@ -142,6 +142,10 @@ public partial class CalendarView : UserControl
     {
         if (_vm == null) return;
         if (sender is not Control { DataContext: PersonDayCellViewModel cell }) return;
+        // Wenn der Tap aus einem Button (z.B. dem Add-More-„+") kommt, ist der Click-Handler
+        // dort schon zuständig — sonst würde AddForCell zweimal feuern und der Dialog doppelt
+        // erscheinen. Click-`Handled` stoppt nur das Click-Event, nicht das parallele Tapped.
+        if (e.Source is Visual v && v.GetSelfAndVisualAncestors().OfType<Button>().Any()) return;
         if (cell.CanAdd) _vm.AddForCell(cell.Person, cell.Date);
     }
 
