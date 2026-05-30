@@ -150,6 +150,20 @@ public class RecurrenceEngineTests
     }
 
     [Fact]
+    public void Project_MultiDayRange_PausesAllDaysWithinRange()
+    {
+        var rule = Football(DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday);
+        rule.Skips.Add(new RecurrenceSkip { From = new(2026, 6, 1), To = new(2026, 6, 5) });
+
+        for (int i = 0; i < 5; i++)
+        {
+            var date = new DateOnly(2026, 6, 1).AddDays(i);
+            var entry = Assert.Single(RecurrenceEngine.Project(new[] { rule }, date, false));
+            Assert.True(entry.IsPaused, $"Pause sollte auf {date:yyyy-MM-dd} greifen");
+        }
+    }
+
+    [Fact]
     public void Project_MultipleSkips_EachRangeChecked()
     {
         var rule = Football(DayOfWeek.Monday);
