@@ -230,6 +230,33 @@ public partial class CalendarViewModel : ViewModelBase
         return new WeekExport(Localizer.Instance["Pdf_Title"], WeekLabel, generated, headers, rows, notes);
     }
 
+    /// <summary>Öffnet den KI-Planungs-Chat (Admin). Kontext = aktuelle Personen, Regeln und Wochen-Einträge.</summary>
+    [RelayCommand]
+    private async Task OpenAiPlanner()
+    {
+        if (!IsAdmin || App.DialogService is null) return;
+        var chat = new Services.AI.AiChatService(_ai);
+        var vm = new AiPlannerViewModel(_storage, _ai, chat, BuildPlannerContext);
+        LogService.Click(CurrentUser.Username, "KI-Planner geöffnet");
+        await App.DialogService.ShowAiPlannerAsync(vm);
+    }
+
+    /// <summary>Schnappschuss der aktuell sichtbaren Woche für den KI-Kontext-Block. Notes werden im VM nachgeladen.</summary>
+    private Services.AI.PlannerContext BuildPlannerContext()
+    {
+        var weekTuples = Days
+            .Select(d => (d.Date, (IReadOnlyList<CalendarEntry>)d.Entries.ToList()))
+            .ToList();
+        return new Services.AI.PlannerContext(
+            Today: DateOnly.FromDateTime(DateTime.Today),
+            WeekStart: WeekStart,
+            Users: _allUsers,
+            ActivityTypes: _activityTypes,
+            RecurringActivities: _recurringActivities,
+            Week: weekTuples,
+            Notes: Array.Empty<Models.PlannerNote>());
+    }
+
     /// <summary>Plan per E-Mail senden: prüft die SMTP-Konfiguration und öffnet die Empfänger-Auswahl (nur Admin).</summary>
     [RelayCommand]
     private async Task MailPlan()

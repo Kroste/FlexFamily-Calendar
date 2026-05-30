@@ -23,6 +23,7 @@ public interface IDialogService
     Task<IReadOnlyList<string>?> ShowMailAsync(MailViewModel vm);
     Task<UpdateDialogAction?> ShowUpdateAsync(UpdateViewModel vm);
     Task<IReadOnlyList<RecurrenceSkip>?> ShowRecurrencePauseAsync(RecurrencePauseViewModel vm);
+    Task ShowAiPlannerAsync(AiPlannerViewModel vm);
 
     /// <summary>
     /// Abbruch des aktuell offenen Dialogs (ESC/Backdrop-Klick im Overlay-Backend).

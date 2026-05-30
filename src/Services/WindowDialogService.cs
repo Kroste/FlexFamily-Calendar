@@ -51,5 +51,8 @@ public class WindowDialogService : IDialogService
     public Task<IReadOnlyList<RecurrenceSkip>?> ShowRecurrencePauseAsync(RecurrencePauseViewModel vm)
         => new RecurrencePauseDialog { DataContext = vm }.ShowDialog<IReadOnlyList<RecurrenceSkip>?>(_owner);
 
+    public Task ShowAiPlannerAsync(AiPlannerViewModel vm)
+        => new AiPlannerDialog { DataContext = vm }.ShowDialog(_owner);
+
     public void CancelActive() { }   // Window fängt ESC/Außenklick selbst ab
 }

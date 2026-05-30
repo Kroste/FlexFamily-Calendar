@@ -1,0 +1,12 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:FlexFamilyCalendar.Views"
+        xmlns:loc="using:FlexFamilyCalendar.Localization"
+        x:Class="FlexFamilyCalendar.Views.AiPlannerDialog"
+        x:CompileBindings="False"
+        Title="{loc:Tr AiPlanner_Title}"
+        Width="720" Height="620"
+        CanResize="True"
+        WindowStartupLocation="CenterOwner">
+  <views:AiPlannerView />
+</Window>

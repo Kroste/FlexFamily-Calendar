@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.AiPlannerView"
+             x:CompileBindings="False">
+
+  <Grid Margin="20,16,20,16" RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" MinWidth="640" MinHeight="540">
+
+    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+      <TextBlock Text="{loc:Tr AiPlanner_Title}" FontSize="18" FontWeight="Bold" />
+      <TextBlock Text="{loc:Tr AiPlanner_Subtitle}" Opacity="0.65" FontSize="13" Margin="0,2,0,0" />
+    </StackPanel>
+
+    <!-- Persistente Hinweise oben -->
+    <StackPanel Grid.Row="1" Spacing="6">
+      <TextBlock Text="{loc:Tr AiPlanner_NotesHeader}" FontSize="13" FontWeight="SemiBold" />
+      <Border Background="#F8F8F8" CornerRadius="6" Padding="4"
+              IsVisible="{Binding Notes.Count}">
+        <ItemsControl ItemsSource="{Binding Notes}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="*,Auto" Margin="6,3">
+                <TextBlock Grid.Column="0" Text="{Binding Text}" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="×" Command="{Binding RemoveCommand}"
+                        Width="26" Height="26" CornerRadius="13" Padding="0" FontSize="15"
+                        VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Border>
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBox Grid.Column="0" Text="{Binding NewNoteText}" CornerRadius="6"
+                 PlaceholderText="{loc:Tr AiPlanner_NotePlaceholder}" />
+        <Button Grid.Column="1" Content="{loc:Tr AiPlanner_AddNote}" Command="{Binding AddNoteCommand}"
+                Padding="12,6" CornerRadius="6" Margin="8,0,0,0" />
+      </Grid>
+    </StackPanel>
+
+    <!-- Hinweis ohne KI-Provider -->
+    <Border Grid.Row="2" Background="#FFF6E0" BorderBrush="#E67E22" BorderThickness="1"
+            CornerRadius="6" Padding="10" Margin="0,14,0,0"
+            IsVisible="{Binding HasNoProvider}">
+      <TextBlock Text="{loc:Tr AiPlanner_NoProvider}" FontSize="12" />
+    </Border>
+
+    <!-- Chat-Verlauf -->
+    <Border Grid.Row="3" Background="#FAFAFA" CornerRadius="6" Padding="4" Margin="0,14,0,0">
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ItemsControl ItemsSource="{Binding Messages}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="*,*" Margin="4,3">
+                <Border Grid.Column="0" IsVisible="{Binding IsAssistant}"
+                        Background="#E8F0FE" CornerRadius="10" Padding="10,7"
+                        HorizontalAlignment="Left" MaxWidth="420">
+                  <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="13" />
+                </Border>
+                <Border Grid.Column="1" IsVisible="{Binding IsUser}"
+                        Background="{DynamicResource SystemAccentColor}" CornerRadius="10" Padding="10,7"
+                        HorizontalAlignment="Right" MaxWidth="420">
+                  <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Foreground="White" FontSize="13" />
+                </Border>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+
+    <TextBlock Grid.Row="4" Text="{Binding StatusMessage}" Opacity="0.7"
+               Margin="0,8,0,0" FontSize="12"
+               IsVisible="{Binding StatusMessage.Length}" />
+
+    <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto" Margin="0,10,0,0">
+      <TextBox Grid.Column="0" Text="{Binding NewMessageText}" CornerRadius="6"
+               PlaceholderText="{loc:Tr AiPlanner_AskPlaceholder}"
+               AcceptsReturn="False" />
+      <Button Grid.Column="1" Content="{loc:Tr AiPlanner_Send}" Command="{Binding SendCommand}"
+              Padding="14,7" CornerRadius="6" Margin="8,0,0,0"
+              Background="{DynamicResource SystemAccentColor}" Foreground="White"
+              IsEnabled="{Binding !IsBusy}" />
+      <Button Grid.Column="2" Content="{loc:Tr Common_Close}" Command="{Binding CloseCommand}"
+              Padding="14,7" CornerRadius="6" Margin="8,0,0,0" />
+    </Grid>
+
+  </Grid>
+</UserControl>
