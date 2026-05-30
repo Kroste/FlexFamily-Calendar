@@ -50,18 +50,50 @@
         <ItemsControl ItemsSource="{Binding Messages}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Grid ColumnDefinitions="*,*" Margin="4,3">
-                <Border Grid.Column="0" IsVisible="{Binding IsAssistant}"
-                        Background="#E8F0FE" CornerRadius="10" Padding="10,7"
-                        HorizontalAlignment="Left" MaxWidth="420">
-                  <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="13" />
-                </Border>
-                <Border Grid.Column="1" IsVisible="{Binding IsUser}"
-                        Background="{DynamicResource SystemAccentColor}" CornerRadius="10" Padding="10,7"
-                        HorizontalAlignment="Right" MaxWidth="420">
-                  <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Foreground="White" FontSize="13" />
-                </Border>
-              </Grid>
+              <StackPanel Margin="4,3" Spacing="6">
+                <Grid ColumnDefinitions="*,*">
+                  <Border Grid.Column="0" IsVisible="{Binding IsAssistant}"
+                          Background="#E8F0FE" CornerRadius="10" Padding="10,7"
+                          HorizontalAlignment="Left" MaxWidth="480">
+                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="13" />
+                  </Border>
+                  <Border Grid.Column="1" IsVisible="{Binding IsUser}"
+                          Background="{DynamicResource SystemAccentColor}" CornerRadius="10" Padding="10,7"
+                          HorizontalAlignment="Right" MaxWidth="480">
+                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Foreground="White" FontSize="13" />
+                  </Border>
+                </Grid>
+                <!-- Vorschlag-Karten unter der Assistant-Bubble -->
+                <ItemsControl ItemsSource="{Binding Suggestions}" IsVisible="{Binding HasSuggestions}"
+                              HorizontalAlignment="Left" MaxWidth="480">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Background="#FFFFFF" BorderBrush="#B8D2F8" BorderThickness="1"
+                              CornerRadius="8" Padding="10,8" Margin="0,2,0,0">
+                        <Grid ColumnDefinitions="*,Auto">
+                          <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock Text="{Binding Person}" FontWeight="SemiBold" FontSize="13" />
+                            <TextBlock Text="{Binding Date}" FontSize="12" Opacity="0.75" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                              <TextBlock Text="{Binding TimeRange}" FontSize="12" />
+                              <TextBlock Text="·" FontSize="12" Opacity="0.5" />
+                              <TextBlock Text="{Binding TypeLabel}" FontSize="12" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding Title}" FontSize="12" Opacity="0.75"
+                                       IsVisible="{Binding HasTitle}" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding StateLabel}" FontSize="11" FontStyle="Italic"
+                                       Foreground="#27AE60" IsVisible="{Binding IsApplied}" />
+                          </StackPanel>
+                          <Button Grid.Column="1" Content="{loc:Tr AiPlanner_ApplySuggestion}"
+                                  Command="{Binding ApplyCommand}" IsEnabled="{Binding CanApply}"
+                                  Padding="12,6" CornerRadius="6" VerticalAlignment="Center"
+                                  Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
@@ -75,13 +107,17 @@
     <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto" Margin="0,10,0,0">
       <TextBox Grid.Column="0" Text="{Binding NewMessageText}" CornerRadius="6"
                PlaceholderText="{loc:Tr AiPlanner_AskPlaceholder}"
-               AcceptsReturn="False" />
+               AcceptsReturn="True" TextWrapping="Wrap"
+               MinHeight="80" MaxHeight="220"
+               VerticalContentAlignment="Top" FontSize="13" />
       <Button Grid.Column="1" Content="{loc:Tr AiPlanner_Send}" Command="{Binding SendCommand}"
               Padding="14,7" CornerRadius="6" Margin="8,0,0,0"
               Background="{DynamicResource SystemAccentColor}" Foreground="White"
+              VerticalAlignment="Bottom"
               IsEnabled="{Binding !IsBusy}" />
       <Button Grid.Column="2" Content="{loc:Tr Common_Close}" Command="{Binding CloseCommand}"
-              Padding="14,7" CornerRadius="6" Margin="8,0,0,0" />
+              Padding="14,7" CornerRadius="6" Margin="8,0,0,0"
+              VerticalAlignment="Bottom" />
     </Grid>
 
   </Grid>

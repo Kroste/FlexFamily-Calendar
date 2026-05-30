@@ -5,6 +5,7 @@ using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
 using FlexFamilyCalendar.Services.AI;
 using System.Collections.ObjectModel;
+using System.Globalization;
 
 namespace FlexFamilyCalendar.ViewModels;
 
@@ -19,6 +20,7 @@ public partial class AiPlannerViewModel : ViewModelBase
     private readonly IStorageService _storage;
     private readonly AiChatService _chat;
     private readonly Func<PlannerContext> _buildContext;
+    private readonly Func<PlannerSuggestion, Task<bool>> _applySuggestion;
     private string _contextBlock = "";
 
     public ObservableCollection<PlannerNoteRow> Notes { get; } = new();
@@ -33,21 +35,35 @@ public partial class AiPlannerViewModel : ViewModelBase
     public event Action? CloseRequested;
 
     public AiPlannerViewModel(IStorageService storage, AiService ai, AiChatService chat,
-        Func<PlannerContext> buildContext)
+        Func<PlannerContext> buildContext,
+        Func<PlannerSuggestion, Task<bool>> applySuggestion)
     {
         _storage = storage;
         _chat = chat;
         _buildContext = buildContext;
+        _applySuggestion = applySuggestion;
         HasNoProvider = ai.ActiveProvider is null || !ai.ActiveProvider.IsConfigured;
         _ = LoadAsync();
     }
+
+    private IReadOnlyList<User> _users = Array.Empty<User>();
 
     private async Task LoadAsync()
     {
         var notes = await _storage.LoadPlannerNotesAsync();
         foreach (var n in notes.OrderBy(x => x.CreatedAtUtc))
             Notes.Add(PlannerNoteRow.Create(n, this));
-        _contextBlock = PlannerContextBuilder.Render(_buildContext() with { Notes = notes });
+        var ctx = _buildContext() with { Notes = notes };
+        _users = ctx.Users;
+        _contextBlock = PlannerContextBuilder.Render(ctx);
+    }
+
+    /// <summary>Resolved User-Id → Anzeigename für die Vorschlag-Karte. Fallback = Id, wenn unbekannt.</summary>
+    internal string ResolvePersonName(string userId)
+    {
+        var u = _users.FirstOrDefault(x => x.Id == userId);
+        if (u is null) return userId;
+        return string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
     }
 
     [RelayCommand]
@@ -95,7 +111,17 @@ public partial class AiPlannerViewModel : ViewModelBase
             Messages.Add(new ChatBubble(ChatRole.Assistant, Localizer.Instance["AiPlanner_NoAnswer"]));
             return;
         }
-        Messages.Add(new ChatBubble(ChatRole.Assistant, answer.Trim()));
+        var bubble = new ChatBubble(ChatRole.Assistant, answer.Trim());
+        foreach (var s in PlannerSuggestionParser.Extract(answer))
+            bubble.Suggestions.Add(SuggestionCard.Create(s, this));
+        Messages.Add(bubble);
+    }
+
+    internal async Task ApplySuggestionAsync(SuggestionCard card)
+    {
+        if (card.IsApplied) return;
+        var ok = await _applySuggestion(card.Source);
+        card.SetApplied(ok ? SuggestionState.Applied : SuggestionState.Failed);
     }
 
     [RelayCommand]
@@ -128,6 +154,57 @@ public class ChatBubble
     public string Text { get; }
     public bool IsUser => Role == ChatRole.User;
     public bool IsAssistant => Role == ChatRole.Assistant;
+    public ObservableCollection<SuggestionCard> Suggestions { get; } = new();
+    public bool HasSuggestions => Suggestions.Count > 0;
 
     public ChatBubble(ChatRole role, string text) { Role = role; Text = text; }
+}
+
+public enum SuggestionState { Pending, Applied, Failed }
+
+public partial class SuggestionCard : ObservableObject
+{
+    private readonly AiPlannerViewModel _parent;
+    public PlannerSuggestion Source { get; }
+    public string Date => Source.Date.ToString("dddd, dd.MM.yyyy", CultureInfo.GetCultureInfo("de-DE"));
+    public string Person { get; }
+    public string TimeRange => $"{Source.Start:hh\\:mm}–{Source.End:hh\\:mm}";
+    public string TypeLabel => Source.Type.ToString();
+    public string? Title => Source.Title;
+    public bool HasTitle => !string.IsNullOrWhiteSpace(Source.Title);
+
+    [ObservableProperty] private SuggestionState _state = SuggestionState.Pending;
+    public bool IsApplied => State != SuggestionState.Pending;
+    public bool CanApply => State == SuggestionState.Pending;
+    public string StateLabel => State switch
+    {
+        SuggestionState.Applied => Localizer.Instance["AiPlanner_SuggestionApplied"],
+        SuggestionState.Failed => Localizer.Instance["AiPlanner_SuggestionFailed"],
+        _ => ""
+    };
+
+    public IRelayCommand ApplyCommand { get; }
+
+    private SuggestionCard(AiPlannerViewModel parent, PlannerSuggestion source, string person)
+    {
+        _parent = parent;
+        Source = source;
+        Person = person;
+        ApplyCommand = new AsyncRelayCommand(() => _parent.ApplySuggestionAsync(this));
+    }
+
+    public void SetApplied(SuggestionState newState)
+    {
+        State = newState;
+        OnPropertyChanged(nameof(IsApplied));
+        OnPropertyChanged(nameof(CanApply));
+        OnPropertyChanged(nameof(StateLabel));
+    }
+
+    public static SuggestionCard Create(PlannerSuggestion s, AiPlannerViewModel parent)
+    {
+        // Person-Name wird im VM aufgelöst über den aktuellen Kontext-Snapshot.
+        var person = parent.ResolvePersonName(s.UserId);
+        return new SuggestionCard(parent, s, person);
+    }
 }

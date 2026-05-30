@@ -36,6 +36,27 @@ public static class PlannerContextBuilder
         sb.AppendLine("Aktivitätskategorien, wiederkehrenden Termine und die aktuelle Wochenplanung. Vorschläge");
         sb.AppendLine("müssen Personen-Wochensoll, Mindest-Ruhezeit und Aktivitäts-Pausen respektieren.");
         sb.AppendLine();
+        sb.AppendLine("## Verhalten");
+        sb.AppendLine("- Antworte auf Deutsch, in vollständigen Sätzen.");
+        sb.AppendLine("- Wenn dir Informationen für eine gute Empfehlung fehlen, frag konkret nach statt zu raten");
+        sb.AppendLine("  (z.B. 'Soll Lars die Schicht oder Sneha?', 'Welche Tage genau?').");
+        sb.AppendLine("- Wenn du einen konkreten Eintrag für den Kalender vorschlägst, schreibe ihn — zusätzlich");
+        sb.AppendLine("  zum erklärenden Text — als JSON-Codeblock im exakten Schema unten. Maximal eine Aktion");
+        sb.AppendLine("  pro Codeblock. Der Admin kann sie dann per Klick übernehmen.");
+        sb.AppendLine();
+        sb.AppendLine("## Vorschlags-Schema");
+        sb.AppendLine("```json");
+        sb.AppendLine("{");
+        sb.AppendLine("  \"action\": \"add\",");
+        sb.AppendLine("  \"date\": \"YYYY-MM-DD\",");
+        sb.AppendLine("  \"userId\": \"<eine UserId aus der Personenliste unten>\",");
+        sb.AppendLine("  \"type\": \"Work\" | \"Activity\" | \"Vacation\" | \"SickLeave\" | \"Absence\" | \"Overnight\",");
+        sb.AppendLine("  \"start\": \"HH:mm\",");
+        sb.AppendLine("  \"end\": \"HH:mm\",");
+        sb.AppendLine("  \"title\": \"optional, frei\"");
+        sb.AppendLine("}");
+        sb.AppendLine("```");
+        sb.AppendLine();
         sb.AppendLine($"Heute: {ctx.Today:dd.MM.yyyy} ({ctx.Today.ToString("dddd", CultureInfo.GetCultureInfo("de-DE"))})");
         sb.AppendLine($"Aktuelle Woche beginnt am: {ctx.WeekStart:dd.MM.yyyy}");
         sb.AppendLine();
@@ -58,7 +79,7 @@ public static class PlannerContextBuilder
             var soll = u.WeeklyHoursQuota > 0 ? $"{u.WeeklyHoursQuota:0.#} Std./Woche" : "kein Soll";
             var ruhe = u.MinRestHours > 0 ? $"{u.MinRestHours:0.#} Std. Mindest-Ruhezeit" : "keine Ruhezeit-Prüfung";
             var max = u.MaxWeeklyHours > 0 ? $", max. {u.MaxWeeklyHours:0.#} Std./Woche" : "";
-            sb.AppendLine($"- {name} ({u.Category}, Rolle: {u.Role}) — Soll: {soll}{max}, {ruhe}");
+            sb.AppendLine($"- {name} (userId: {u.Id}, {u.Category}, Rolle: {u.Role}) — Soll: {soll}{max}, {ruhe}");
         }
         sb.AppendLine();
     }
