@@ -12,7 +12,7 @@ services:
   api:
     # Production zieht das Image von Docker Hub (per Release-Workflow gepusht).
     # Lokal entwickeln: `docker compose build api` (oder `build:`-Block einkommentieren).
-    image: ${DOCKERHUB_USER:-kroste}/flexfamily-calendar-api:${IMAGE_TAG:-latest}
+    image: ${DOCKERHUB_USER:-larsoste}/flexfamily-calendar-api:${IMAGE_TAG:-latest}
     # build: ./FlexFamilyCalendar.Api
     labels:
       - com.centurylinklabs.watchtower.enable=true
@@ -47,7 +47,7 @@ services:
   # Reverse-Proxy: terminiert HTTPS, serviert die WASM-SPA und leitet /api/* + /health an die API.
   # Image wird vom Release-Workflow gebaut und nach Docker Hub gepusht.
   caddy:
-    image: ${DOCKERHUB_USER:-kroste}/flexfamily-calendar-caddy:${IMAGE_TAG:-latest}
+    image: ${DOCKERHUB_USER:-larsoste}/flexfamily-calendar-caddy:${IMAGE_TAG:-latest}
     # build:
     #   context: ..
     #   dockerfile: server/Caddy.Dockerfile

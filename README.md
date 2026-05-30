@@ -151,7 +151,7 @@ einkommentieren und die `image:`-Zeilen entsprechend auskommentieren, dann
 
 | Variable | Zweck |
 |---|---|
-| `DOCKERHUB_USER` | Docker-Hub-Account, von dem `flexfamily-calendar-api` / `-caddy` gezogen werden. Default `kroste`. |
+| `DOCKERHUB_USER` | Docker-Hub-Account, von dem `flexfamily-calendar-api` / `-caddy` gezogen werden. Default `larsoste` (offizielle Images). |
 | `IMAGE_TAG` | Image-Tag, z.B. `v1.0.0` oder `latest`. Default `latest` (Watchtower aktualisiert dann automatisch). |
 | `WATCHTOWER_INTERVAL` | Sekunden zwischen Image-Checks. Default `86400` (24 h). |
 | `DB_PASSWORD` | Postgres-Passwort. Default `changeme` — bitte ändern. |
