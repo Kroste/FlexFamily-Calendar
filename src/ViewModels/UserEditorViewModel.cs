@@ -47,7 +47,7 @@ public partial class UserEditorViewModel : ViewModelBase
 
     public bool IsSelfMode { get; }
     public bool CanEditAdminFields => !IsSelfMode;
-    public bool IsRoleEditable => CanEditAdminFields && SelectedCategory?.Category != PersonCategory.Parent;
+    public bool IsRoleEditable => CanEditAdminFields;
     public bool ShowPassword => SelectedCategory?.Category != PersonCategory.Child;
     public bool IsPasswordRequired => _isNew && SelectedCategory?.Category != PersonCategory.Child;
     public bool CanDelete { get; }
@@ -99,8 +99,10 @@ public partial class UserEditorViewModel : ViewModelBase
 
     partial void OnSelectedCategoryChanged(CategoryOption? value)
     {
-        if (value?.Category == PersonCategory.Parent)
-            SelectedRole = Roles.FirstOrDefault(r => r.Role == UserRole.Admin);
+        // Bisher wurden Eltern beim Category-Wechsel zwangsweise zu Admin gemacht. Mit der
+        // CanFinalize-Regel sind Eltern aber explizit „normale Benutzer mit Finalize-Recht"
+        // — Role bleibt beim Category-Wechsel daher unverändert. Der Admin/User-Status wird
+        // unten im Dropdown manuell gewählt.
     }
 
     // Theme-Variante im Self-Modus sofort als Vorschau anwenden

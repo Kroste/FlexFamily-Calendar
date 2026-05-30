@@ -89,8 +89,12 @@ public partial class MainWindowViewModel : ViewModelBase
         LogService.UserAction(user.Username, logVerb);
         _ = RefreshUnreadCountAsync();
         StartBackgroundSync();
-        // Auto-Update beim Login (im Browser: no-op über DetectPlatform=Unsupported).
-        _ = CheckForUpdatesIfDueAsync(force: false);
+        // Update-Check NACH dem aktuellen UI-Tick. Im AutoLogin-Pfad wird App.DialogService
+        // erst gesetzt, nachdem OnFrameworkInitializationCompleted aus dem Login zurückkehrt;
+        // Background-Prio sorgt dafür, dass dieser Block danach läuft.
+        Avalonia.Threading.Dispatcher.UIThread.Post(
+            () => _ = CheckForUpdatesIfDueAsync(force: false),
+            Avalonia.Threading.DispatcherPriority.Background);
     }
 
     private void StartBackgroundSync()
@@ -184,24 +188,40 @@ public partial class MainWindowViewModel : ViewModelBase
                 }
             }
 
-            LogService.Debug("Auto-Update: prüfe GitHub-Release (force={0})", force);
+            LogService.Debug("Auto-Update: prüfe GitHub-Release (current={0}, force={1})",
+                UpdateService.CurrentVersion(), force);
             var info = await _updateService.CheckAsync();
-
-            // LastCheckedAt unabhängig vom Ergebnis aktualisieren (Intervall-Logik).
-            settings.UpdateLastCheckedAtUtc = DateTime.UtcNow;
-            await _storage.SaveSettingsAsync(settings);
 
             if (info is null)
             {
+                // Frage gestellt + Antwort „keine neuere Version" → Intervall starten.
+                settings.UpdateLastCheckedAtUtc = DateTime.UtcNow;
+                await _storage.SaveSettingsAsync(settings);
                 LogService.Debug("Auto-Update: keine neuere Version gefunden.");
                 return;
             }
             if (settings.UpdateSkippedVersions.Contains(info.LatestVersion))
             {
+                settings.UpdateLastCheckedAtUtc = DateTime.UtcNow;
+                await _storage.SaveSettingsAsync(settings);
                 LogService.Debug("Auto-Update: Version {0} wurde übersprungen, kein Dialog.", info.LatestVersion);
                 return;
             }
-            if (App.DialogService is null) { LogService.Warn("Auto-Update: kein Dialog-Backend, übersprungen."); return; }
+
+            // Auf DialogService warten — beim AutoLogin im Startup kommt er erst NACH dem
+            // OnFrameworkInitializationCompleted-Block. Max 3 s, sonst bei nächstem Login retryen.
+            for (int i = 0; i < 30 && App.DialogService is null; i++)
+                await Task.Delay(100);
+
+            if (App.DialogService is null)
+            {
+                LogService.Warn("Auto-Update: Dialog-Backend kam nicht rechtzeitig — LastChecked NICHT gesetzt, nächster Login retryt.");
+                return;
+            }
+
+            // Erst HIER LastChecked setzen, damit ein Race nicht den Check für 24h begräbt.
+            settings.UpdateLastCheckedAtUtc = DateTime.UtcNow;
+            await _storage.SaveSettingsAsync(settings);
 
             var vm = new UpdateViewModel(info);
             var action = await App.DialogService.ShowUpdateAsync(vm);
