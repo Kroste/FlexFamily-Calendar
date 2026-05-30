@@ -145,6 +145,15 @@ public partial class CalendarView : UserControl
         if (cell.CanAdd) _vm.AddForCell(cell.Person, cell.Date);
     }
 
+    /// <summary>„+"-Button in einer voll belegten Zelle → zusätzlichen Eintrag anlegen.</summary>
+    private void OnAddMoreClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (_vm == null) return;
+        if (sender is not Control { DataContext: PersonDayCellViewModel cell }) return;
+        if (cell.CanAdd) _vm.AddForCell(cell.Person, cell.Date);
+        e.Handled = true;
+    }
+
     private async void OnEntryDialogRequested(DateOnly date, CalendarEntry? existing, IReadOnlyList<User> users,
         bool canPickUser, IReadOnlyList<EntryType> allowedTypes, IReadOnlyList<ActivityType> activityTypes)
     {

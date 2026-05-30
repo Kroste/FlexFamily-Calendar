@@ -40,6 +40,8 @@ public class PersonDayCellViewModel
 
     public bool IsEmpty => Entries.Count == 0;
     public bool ShowAddHint => CanAdd && IsEmpty;
+    /// <summary>Kleiner Plus-Button rechts unten in der Zelle, wenn schon Einträge da sind.</summary>
+    public bool ShowAddMoreButton => CanAdd && !IsEmpty;
 
     public PersonDayCellViewModel(DateOnly date, User person,
         IReadOnlyList<CalendarEntry> entries, bool canAdd, bool isToday)

@@ -291,6 +291,16 @@
                               </DataTemplate>
                             </ItemsControl.ItemTemplate>
                           </ItemsControl>
+                          <!-- Add-More: kleiner schwebender + rechts unten, wenn schon Einträge da
+                               sind. Stellt sicher, dass auch dicht belegte Zellen einen sichtbaren
+                               Knopf für einen weiteren Eintrag haben. -->
+                          <Button Content="+" IsVisible="{Binding ShowAddMoreButton}"
+                                  Click="OnAddMoreClick"
+                                  HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                  Margin="0,0,2,2" Width="22" Height="22" Padding="0"
+                                  FontSize="14" FontWeight="Bold" CornerRadius="11"
+                                  Background="#B0000000" Foreground="White"
+                                  ToolTip.Tip="{loc:Tr Cal_AddEntry}" />
                         </Grid>
                       </Border>
                     </DataTemplate>

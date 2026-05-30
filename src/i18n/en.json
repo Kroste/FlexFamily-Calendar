@@ -94,6 +94,7 @@
   "Cal_ExportPdf": "PDF",
   "Cal_Mail": "Mail",
   "Cal_AiPlanner": "AI plan",
+  "Cal_AddEntry": "Add another entry",
   "Cal_ViewAsBanner": "You are currently viewing as {0}.",
   "Cal_ExitViewAs": "Back to admin view",
   "AiPlanner_Title": "AI planning assistant",
