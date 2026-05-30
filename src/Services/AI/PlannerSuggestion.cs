@@ -4,14 +4,16 @@ using System.Text.RegularExpressions;
 
 namespace FlexFamilyCalendar.Services.AI;
 
-public enum SuggestionAction { Add, Update, Delete }
+public enum SuggestionAction { Add, Update, Delete, Pause }
 
 /// <summary>
-/// Strukturierter Vorschlag, den die KI in einem JSON-Codeblock liefert. Drei Aktionen:
+/// Strukturierter Vorschlag, den die KI in einem JSON-Codeblock liefert. Vier Aktionen:
 /// <list type="bullet">
-///   <item><b>Add</b>: neuen Eintrag anlegen (UserId, Type, Start, End, optional Title)</item>
-///   <item><b>Update</b>: bestehenden Eintrag ändern (EntryId, Start, End, optional Title)</item>
-///   <item><b>Delete</b>: bestehenden Eintrag entfernen (EntryId)</item>
+///   <item><b>Add</b>: neuen Eintrag anlegen (UserId, Type, Start, End, optional Title).</item>
+///   <item><b>Update</b>: bestehenden Eintrag ändern (EntryId, optional Start/End/Title/UserId/Type).</item>
+///   <item><b>Delete</b>: bestehenden Eintrag entfernen (EntryId).</item>
+///   <item><b>Pause</b>: tagesgenaue Pause für eine wiederkehrende Aktivität anlegen
+///     (RecurringActivityId, From, To, optional Reason). Date wird auf From gespiegelt.</item>
 /// </list>
 /// Felder, die für eine Aktion irrelevant sind, dürfen null sein — der Parser akzeptiert das
 /// nur dort, wo die Aktion das zulässt.
@@ -19,12 +21,16 @@ public enum SuggestionAction { Add, Update, Delete }
 public record PlannerSuggestion(
     SuggestionAction Action,
     DateOnly Date,
-    string? EntryId,
-    string? UserId,
-    EntryType? Type,
-    TimeSpan? Start,
-    TimeSpan? End,
-    string? Title);
+    string? EntryId = null,
+    string? UserId = null,
+    EntryType? Type = null,
+    TimeSpan? Start = null,
+    TimeSpan? End = null,
+    string? Title = null,
+    string? RecurringActivityId = null,
+    DateOnly? From = null,
+    DateOnly? To = null,
+    string? Reason = null);
 
 public static class PlannerSuggestionParser
 {
@@ -55,10 +61,6 @@ public static class PlannerSuggestionParser
             var actionStr = actionEl.GetString();
             if (!Enum.TryParse<SuggestionAction>(actionStr, ignoreCase: true, out var action)) return false;
 
-            if (!root.TryGetProperty("date", out var dateEl)) return false;
-            if (!DateOnly.TryParseExact(dateEl.GetString(), "yyyy-MM-dd", CultureInfo.InvariantCulture,
-                DateTimeStyles.None, out var date)) return false;
-
             string? entryId = root.TryGetProperty("entryId", out var idEl) ? idEl.GetString() : null;
             string? userId = root.TryGetProperty("userId", out var uidEl) ? uidEl.GetString() : null;
             EntryType? type = null;
@@ -70,6 +72,27 @@ public static class PlannerSuggestionParser
             string? title = root.TryGetProperty("title", out var titEl) && titEl.ValueKind == System.Text.Json.JsonValueKind.String
                 ? titEl.GetString() : null;
 
+            // Pause-spezifische Felder
+            string? recurringId = root.TryGetProperty("recurringActivityId", out var ridEl) ? ridEl.GetString() : null;
+            DateOnly? from = TryGetDate(root, "from");
+            DateOnly? to = TryGetDate(root, "to");
+            string? reason = root.TryGetProperty("reason", out var rEl) && rEl.ValueKind == System.Text.Json.JsonValueKind.String
+                ? rEl.GetString() : null;
+
+            // Pause hat from/to als Datums-Quelle — andere Aktionen brauchen das primäre "date".
+            DateOnly date;
+            if (action == SuggestionAction.Pause)
+            {
+                if (from is null) return false;
+                date = from.Value;
+            }
+            else
+            {
+                if (!root.TryGetProperty("date", out var dateEl)) return false;
+                if (!DateOnly.TryParseExact(dateEl.GetString(), "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out date)) return false;
+            }
+
             // Aktions-spezifische Pflichtfelder
             switch (action)
             {
@@ -78,14 +101,20 @@ public static class PlannerSuggestionParser
                     break;
                 case SuggestionAction.Update:
                     if (string.IsNullOrWhiteSpace(entryId)) return false;
-                    if (start is null && end is null && title is null) return false;   // mind. ein Feld ändern
+                    if (start is null && end is null && title is null
+                        && string.IsNullOrWhiteSpace(userId) && type is null) return false;
                     break;
                 case SuggestionAction.Delete:
                     if (string.IsNullOrWhiteSpace(entryId)) return false;
                     break;
+                case SuggestionAction.Pause:
+                    if (string.IsNullOrWhiteSpace(recurringId) || from is null || to is null) return false;
+                    if (to < from) return false;   // To >= From; sonst sinnlos
+                    break;
             }
 
-            suggestion = new PlannerSuggestion(action, date, entryId, userId, type, start, end, title);
+            suggestion = new PlannerSuggestion(action, date, entryId, userId, type, start, end, title,
+                recurringId, from, to, reason);
             return true;
         }
         catch
@@ -101,5 +130,13 @@ public static class PlannerSuggestionParser
         if (TimeSpan.TryParseExact(s, @"h\:mm", CultureInfo.InvariantCulture, out t)) return true;
         if (TimeSpan.TryParseExact(s, @"hh\:mm", CultureInfo.InvariantCulture, out t)) return true;
         return false;
+    }
+
+    private static DateOnly? TryGetDate(System.Text.Json.JsonElement root, string name)
+    {
+        if (!root.TryGetProperty(name, out var el)) return null;
+        if (el.ValueKind != System.Text.Json.JsonValueKind.String) return null;
+        return DateOnly.TryParseExact(el.GetString(), "yyyy-MM-dd", CultureInfo.InvariantCulture,
+            DateTimeStyles.None, out var d) ? d : null;
     }
 }

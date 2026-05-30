@@ -83,6 +83,18 @@ public partial class AiPlannerViewModel : ViewModelBase
         return string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
     }
 
+    /// <summary>Resolved Recurring-Activity-Id → kompaktes „Person · Titel"-Label. null = nicht gefunden.</summary>
+    internal string? ResolveRuleLabel(string? ruleId)
+    {
+        if (string.IsNullOrEmpty(ruleId)) return null;
+        var ctx = _buildContext();
+        var rule = ctx.RecurringActivities.FirstOrDefault(r => r.Id == ruleId);
+        if (rule is null) return null;
+        var person = ResolvePersonName(rule.UserId);
+        var title = string.IsNullOrEmpty(rule.Title) ? rule.WeekdaysLabel : rule.Title;
+        return $"{person} · {title}";
+    }
+
     /// <summary>Resolved Entry-Id → Personenname über den aktuellen Wochen-Snapshot. null = nicht gefunden.</summary>
     internal string? ResolvePersonByEntry(string? entryId)
     {
@@ -202,17 +214,23 @@ public partial class SuggestionCard : ObservableObject
         SuggestionAction.Add => Localizer.Instance["AiPlanner_ActionAdd"],
         SuggestionAction.Update => Localizer.Instance["AiPlanner_ActionUpdate"],
         SuggestionAction.Delete => Localizer.Instance["AiPlanner_ActionDelete"],
+        SuggestionAction.Pause => Localizer.Instance["AiPlanner_ActionPause"],
         _ => Source.Action.ToString()
     };
-    public string Date => Source.Date.ToString("dddd, dd.MM.yyyy", CultureInfo.GetCultureInfo("de-DE"));
+    public string Date => Source.Action == SuggestionAction.Pause && Source.From is { } f && Source.To is { } t
+        ? (f == t ? f.ToString("dddd, dd.MM.yyyy", CultureInfo.GetCultureInfo("de-DE"))
+                  : $"{f:dd.MM.yyyy} – {t:dd.MM.yyyy}")
+        : Source.Date.ToString("dddd, dd.MM.yyyy", CultureInfo.GetCultureInfo("de-DE"));
     public string Person { get; }
     public string TimeRange => Source.Start is { } s && Source.End is { } e
         ? $"{s:hh\\:mm}–{e:hh\\:mm}" : "";
     public bool HasTimeRange => !string.IsNullOrEmpty(TimeRange);
     public string TypeLabel => Source.Type?.ToString() ?? "";
     public bool HasType => Source.Type is not null;
-    public string? Title => Source.Title;
-    public bool HasTitle => !string.IsNullOrWhiteSpace(Source.Title);
+    public string? Title => Source.Action == SuggestionAction.Pause && !string.IsNullOrWhiteSpace(Source.Reason)
+        ? Source.Reason
+        : Source.Title;
+    public bool HasTitle => !string.IsNullOrWhiteSpace(Title);
 
     [ObservableProperty] private SuggestionState _state = SuggestionState.Pending;
     public bool IsApplied => State != SuggestionState.Pending;
@@ -248,10 +266,13 @@ public partial class SuggestionCard : ObservableObject
     public static SuggestionCard Create(PlannerSuggestion s, AiPlannerViewModel parent)
     {
         // Bei Add: UserId aus dem Vorschlag. Bei Update/Delete: aus dem referenzierten Entry,
-        // den die Calendar-VM kennt — Fallback auf EntryId-String, wenn nicht auflösbar.
-        var person = s.Action == SuggestionAction.Add && !string.IsNullOrEmpty(s.UserId)
-            ? parent.ResolvePersonName(s.UserId)
-            : parent.ResolvePersonByEntry(s.EntryId) ?? (s.EntryId ?? "");
+        // den die Calendar-VM kennt. Bei Pause: aus der referenzierten Regel (Person + Titel).
+        string person = s.Action switch
+        {
+            SuggestionAction.Add when !string.IsNullOrEmpty(s.UserId) => parent.ResolvePersonName(s.UserId),
+            SuggestionAction.Pause => parent.ResolveRuleLabel(s.RecurringActivityId) ?? (s.RecurringActivityId ?? ""),
+            _ => parent.ResolvePersonByEntry(s.EntryId) ?? (s.EntryId ?? "")
+        };
         var card = new SuggestionCard(parent, s, person);
         foreach (var w in parent.ValidateSuggestion(s))
             card.WarningRows.Add(new WarningRow(parent, w));

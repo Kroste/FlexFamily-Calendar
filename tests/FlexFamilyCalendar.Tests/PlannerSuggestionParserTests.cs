@@ -98,4 +98,39 @@ public class PlannerSuggestionParserTests
     [Fact]
     public void Extract_BadDateFormat_IsRejected()
         => Assert.Empty(PlannerSuggestionParser.Extract("```json\n{\"action\":\"add\",\"date\":\"01.06.2026\",\"userId\":\"u1\",\"type\":\"Work\",\"start\":\"06:00\",\"end\":\"14:00\"}\n```"));
+
+    [Fact]
+    public void Extract_Pause_RequiresRuleIdAndDateRange()
+    {
+        var ok = "```json\n{\"action\":\"pause\",\"recurringActivityId\":\"r1\",\"from\":\"2026-07-01\",\"to\":\"2026-07-14\",\"reason\":\"Urlaub\"}\n```";
+        var s = Assert.Single(PlannerSuggestionParser.Extract(ok));
+        Assert.Equal(SuggestionAction.Pause, s.Action);
+        Assert.Equal("r1", s.RecurringActivityId);
+        Assert.Equal(new DateOnly(2026, 7, 1), s.From);
+        Assert.Equal(new DateOnly(2026, 7, 14), s.To);
+        Assert.Equal("Urlaub", s.Reason);
+        Assert.Equal(new DateOnly(2026, 7, 1), s.Date);   // Date wird auf From gespiegelt
+    }
+
+    [Fact]
+    public void Extract_Pause_RejectsToBeforeFrom_AndMissingFields()
+    {
+        var inverse = "```json\n{\"action\":\"pause\",\"recurringActivityId\":\"r1\",\"from\":\"2026-07-14\",\"to\":\"2026-07-01\"}\n```";
+        Assert.Empty(PlannerSuggestionParser.Extract(inverse));
+
+        var noRule = "```json\n{\"action\":\"pause\",\"from\":\"2026-07-01\",\"to\":\"2026-07-14\"}\n```";
+        Assert.Empty(PlannerSuggestionParser.Extract(noRule));
+
+        var noFrom = "```json\n{\"action\":\"pause\",\"recurringActivityId\":\"r1\",\"to\":\"2026-07-14\"}\n```";
+        Assert.Empty(PlannerSuggestionParser.Extract(noFrom));
+    }
+
+    [Fact]
+    public void Extract_Pause_SingleDay_IsValid()
+    {
+        var s = Assert.Single(PlannerSuggestionParser.Extract(
+            "```json\n{\"action\":\"pause\",\"recurringActivityId\":\"r1\",\"from\":\"2026-07-01\",\"to\":\"2026-07-01\"}\n```"));
+        Assert.Equal(s.From, s.To);
+        Assert.Null(s.Reason);
+    }
 }

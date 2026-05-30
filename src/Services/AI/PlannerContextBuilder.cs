@@ -83,6 +83,18 @@ public static class PlannerContextBuilder
         sb.AppendLine("}");
         sb.AppendLine("```");
         sb.AppendLine();
+        sb.AppendLine("Wiederkehrende Aktivität tagesgenau pausieren (z.B. Urlaub eines Kindes,");
+        sb.AppendLine("Klassenfahrt, Krankheit) — From/To inklusiv:");
+        sb.AppendLine("```json");
+        sb.AppendLine("{");
+        sb.AppendLine("  \"action\": \"pause\",");
+        sb.AppendLine("  \"recurringActivityId\": \"<id aus der Liste „Wiederkehrende Aktivitäten\">\",");
+        sb.AppendLine("  \"from\": \"YYYY-MM-DD\",");
+        sb.AppendLine("  \"to\": \"YYYY-MM-DD\",");
+        sb.AppendLine("  \"reason\": \"Urlaub | krank | Klassenfahrt | …\"   // optional");
+        sb.AppendLine("}");
+        sb.AppendLine("```");
+        sb.AppendLine();
         sb.AppendLine("Hinweis: Mehrere Personen dürfen sich zeitlich überlappen — Überlappung ist nur bei");
         sb.AppendLine("derselben Person ein Problem. Achte auf die persönliche Mindest-Ruhezeit. Vermeide");
         sb.AppendLine("Vorschläge, die das Wochensoll bzw. die gesetzliche Höchstarbeitszeit der Person");
@@ -134,7 +146,7 @@ public static class PlannerContextBuilder
             var days = r.Weekdays.OrderBy(WeekOrder)
                 .Select(d => CultureInfo.GetCultureInfo("de-DE").DateTimeFormat.GetAbbreviatedDayName(d));
             var title = string.IsNullOrEmpty(r.Title) ? "(ohne Titel)" : r.Title;
-            sb.AppendLine($"- {name} · {string.Join(", ", days)} {r.StartTime:hh\\:mm}–{r.EndTime:hh\\:mm} · {title}");
+            sb.AppendLine($"- {name} · {string.Join(", ", days)} {r.StartTime:hh\\:mm}–{r.EndTime:hh\\:mm} · {title} · recurringActivityId={r.Id}");
             if (r.SkipOnHolidays) sb.AppendLine("    (an Feiertagen entfällt)");
             foreach (var s in r.Skips.OrderBy(x => x.From))
             {

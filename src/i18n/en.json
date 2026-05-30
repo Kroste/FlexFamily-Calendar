@@ -113,6 +113,7 @@
   "AiPlanner_ActionAdd": "New entry",
   "AiPlanner_ActionUpdate": "Update entry",
   "AiPlanner_ActionDelete": "Delete entry",
+  "AiPlanner_ActionPause": "Pause recurring activity",
   "AiPlanner_JumpToDate": "Jump to this day in the calendar",
   "Common_Close": "Close",
   "Cal_Hints": "Notes",
