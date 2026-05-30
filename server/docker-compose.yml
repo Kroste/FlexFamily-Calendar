@@ -10,7 +10,12 @@ services:
     restart: unless-stopped
 
   api:
-    build: ./FlexFamilyCalendar.Api
+    # Production zieht das Image von Docker Hub (per Release-Workflow gepusht).
+    # Lokal entwickeln: `docker compose build api` (oder `build:`-Block einkommentieren).
+    image: ${DOCKERHUB_USER:-kroste}/flexfamily-calendar-api:${IMAGE_TAG:-latest}
+    # build: ./FlexFamilyCalendar.Api
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
     depends_on:
       - db
     environment:
@@ -40,11 +45,14 @@ services:
     restart: unless-stopped
 
   # Reverse-Proxy: terminiert HTTPS, serviert die WASM-SPA und leitet /api/* + /health an die API.
-  # Image wird selbst gebaut (Stufe 1 baut die SPA mit wasm-tools, Stufe 2 = caddy:2 mit SPA in /srv/spa).
+  # Image wird vom Release-Workflow gebaut und nach Docker Hub gepusht.
   caddy:
-    build:
-      context: ..
-      dockerfile: server/Caddy.Dockerfile
+    image: ${DOCKERHUB_USER:-kroste}/flexfamily-calendar-caddy:${IMAGE_TAG:-latest}
+    # build:
+    #   context: ..
+    #   dockerfile: server/Caddy.Dockerfile
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
     depends_on:
       - api
     ports:
@@ -54,6 +62,19 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    restart: unless-stopped
+
+  # Auto-Updater: pollt regelmäßig Docker Hub, ersetzt api/caddy automatisch wenn ein
+  # neues Image für den verwendeten Tag (z.B. :latest) verfügbar ist. Nur Container
+  # mit dem Label `com.centurylinklabs.watchtower.enable=true` werden beobachtet.
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_POLL_INTERVAL: ${WATCHTOWER_INTERVAL:-86400}   # default 24h
+      WATCHTOWER_CLEANUP: "true"                                  # alte Images aufräumen
+      WATCHTOWER_LABEL_ENABLE: "true"                             # nur markierte Container
     restart: unless-stopped
 
 volumes:

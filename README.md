@@ -21,11 +21,18 @@ Live: <https://flexfamily.cloud>
 
 ## Server-Deployment (Docker Compose)
 
+Production zieht die fertigen Images vom Release-Workflow aus Docker Hub —
+Watchtower aktualisiert sie alle 24 h automatisch.
+
 ```bash
 cd server
 cp .env.example .env   # falls vorhanden, sonst Werte direkt setzen
-docker compose up -d --build
+docker compose pull && docker compose up -d
 ```
+
+Für lokale Entwicklung statt Hub-Pull: die `build:`-Blöcke in `docker-compose.yml`
+einkommentieren und die `image:`-Zeilen entsprechend auskommentieren, dann
+`docker compose up -d --build`.
 
 `server/docker-compose.yml` erwartet folgende ENV-Variablen (alle optional außer
 `JWT_KEY` und dem Erst-Admin):
@@ -34,6 +41,9 @@ docker compose up -d --build
 
 | Variable | Zweck |
 |---|---|
+| `DOCKERHUB_USER` | Docker-Hub-Account, von dem `flexfamily-calendar-api` / `-caddy` gezogen werden. Default `kroste`. |
+| `IMAGE_TAG` | Image-Tag, z.B. `v1.0.0` oder `latest`. Default `latest` (Watchtower aktualisiert dann automatisch). |
+| `WATCHTOWER_INTERVAL` | Sekunden zwischen Image-Checks. Default `86400` (24 h). |
 | `DB_PASSWORD` | Postgres-Passwort. Default `changeme` — bitte ändern. |
 | `JWT_KEY` | JWT-Signaturschlüssel, mind. 32 Bytes. Default ist eine sichtbare Warnung — bitte ändern. |
 | `ADMIN_USER` / `ADMIN_PASSWORD` | Erst-Admin. Wird nur angelegt, wenn die DB leer ist (idempotent). |

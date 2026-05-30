@@ -21,6 +21,9 @@ env:
   DESKTOP_PROJECT: desktop/FlexFamilyCalendar.Desktop.csproj
   # Aus Tag-Push: github.ref_name = vX.Y.Z. Aus workflow_dispatch: aus den Inputs.
   RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+  # GH-Actions: ab Juni 2026 Default Node 24 — explizit jetzt schon erzwingen, damit
+  # die Deprecation-Warnungen für actions/checkout etc. verschwinden.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
 
@@ -68,12 +71,19 @@ jobs:
       - name: Publish
         shell: bash
         run: |
+          # Tag → SemVer (z.B. v1.2.3 → 1.2.3, v1.2.3-test → 1.2.3-test).
+          # AssemblyVersion muss strikt numerisch sein; pre-release-suffix abschneiden.
+          VERSION="${RELEASE_TAG#v}"
+          NUMERIC="${VERSION%%-*}"
           dotnet publish "$DESKTOP_PROJECT" \
             -c Release -r ${{ matrix.rid }} \
             --self-contained true \
             -p:PublishSingleFile=true \
             -p:IncludeNativeLibrariesForSelfExtract=true \
             -p:DebugType=embedded \
+            -p:Version="$VERSION" \
+            -p:AssemblyVersion="${NUMERIC}.0" \
+            -p:FileVersion="${NUMERIC}.0" \
             -o publish
 
       - name: Pack
@@ -110,10 +120,15 @@ jobs:
 
       - name: Publish
         run: |
+          VERSION="${RELEASE_TAG#v}"
+          NUMERIC="${VERSION%%-*}"
           dotnet publish "$DESKTOP_PROJECT" \
             -c Release -r linux-x64 \
             --self-contained true \
             -p:DebugType=embedded \
+            -p:Version="$VERSION" \
+            -p:AssemblyVersion="${NUMERIC}.0" \
+            -p:FileVersion="${NUMERIC}.0" \
             -o publish
 
       - name: AppDir
