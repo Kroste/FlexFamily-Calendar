@@ -38,18 +38,19 @@ public static class PlanExportBuilder
     }
 
     /// <summary>
-    /// Personalisierter Tages-Hinweis aus Sicht des Empfängers:
+    /// Personalisierter Tages-Hinweis aus Sicht eines Mail-/PDF-Empfängers — strikt persönlich:
     /// <list type="bullet">
     ///   <item>Hinweis ohne Adressat → für alle sichtbar.</item>
-    ///   <item>Admin → sieht alles, auch wenn der Hinweis an jemand anderen adressiert ist.</item>
-    ///   <item>Sonst nur sichtbar, wenn der Empfänger selbst der Adressat ist.</item>
+    ///   <item>Mit Adressat → ausschließlich an die zugeordnete Person. Admin-Empfänger werden
+    ///     bewusst NICHT bevorzugt — sonst landete der Hinweis durch das Mail-Broadcast in
+    ///     jedem Admin-Postfach, was den Sinn der Personalisierung zunichte macht (auch wenn
+    ///     der Admin selber im UI alle Hinweise sieht).</item>
     /// </list>
     /// </summary>
     public static string NoteFor(string rawNote, string? noteUserId, bool viewerIsAdmin, string viewerId)
     {
         if (string.IsNullOrWhiteSpace(rawNote)) return "";
         if (string.IsNullOrEmpty(noteUserId)) return rawNote;
-        if (viewerIsAdmin) return rawNote;
         return noteUserId == viewerId ? rawNote : "";
     }
 }

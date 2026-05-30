@@ -22,12 +22,15 @@ public class PlanExportNoteForTests
     }
 
     [Fact]
-    public void NoteWithAudience_OnlyAddresseeAndAdminSee()
+    public void NoteWithAudience_OnlyAddresseeSees_AdminGetsNoBypass()
     {
+        // Strikt persönlich: Admin-Empfänger wird im Mail-Export nicht bevorzugt, weil sonst
+        // der personalisierte Hinweis durch das Broadcast ins Admin-Postfach rutscht.
         var note = "Bitte Schlüssel mitnehmen";
-        Assert.Equal(note, PlanExportBuilder.NoteFor(note, "lars", false, "lars"));   // Adressat
-        Assert.Equal(note, PlanExportBuilder.NoteFor(note, "lars", true, "admin"));   // Admin
-        Assert.Equal("", PlanExportBuilder.NoteFor(note, "lars", false, "sneha"));    // andere Person
+        Assert.Equal(note, PlanExportBuilder.NoteFor(note, "lars", viewerIsAdmin: false, "lars"));  // Adressat
+        Assert.Equal(note, PlanExportBuilder.NoteFor(note, "lars", viewerIsAdmin: true, "lars"));   // Adressat ist gleichzeitig Admin → ok
+        Assert.Equal("", PlanExportBuilder.NoteFor(note, "lars", viewerIsAdmin: true, "admin"));    // Admin ≠ Adressat → leer
+        Assert.Equal("", PlanExportBuilder.NoteFor(note, "lars", viewerIsAdmin: false, "sneha"));   // andere Person
     }
 
     [Fact]
