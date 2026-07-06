@@ -37,6 +37,16 @@ public static partial class LogService
         StatusUpdated?.Invoke($"Fehler: {msg}");
     }
 
+    public static void Fatal(string message, Exception? ex = null)
+    {
+        var msg = Sanitize(message);
+        if (ex != null)
+            _log.Fatal(ex, msg);
+        else
+            _log.Fatal(msg);
+        StatusUpdated?.Invoke($"FATAL: {msg}");
+    }
+
     public static void UserAction(string username, string action)
     {
         var sanitized = Sanitize(action);

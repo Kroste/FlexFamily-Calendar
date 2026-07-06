@@ -68,7 +68,24 @@ builder.Services.AddAuthorization(o =>
         c.User.IsInRole("Admin") || c.User.HasClaim("category", "Parent")));
 });
 
+// Uniforme Fehler-Responses (RFC 7807). UseExceptionHandler unten fängt sonst nicht abgefangene
+// Exceptions ab und mappt sie auf ProblemDetails — statt HTML-Fehlerseite oder stiller 500.
+builder.Services.AddProblemDetails(opts =>
+{
+    opts.CustomizeProblemDetails = ctx =>
+    {
+        // Client bekommt niemals den Stacktrace/Feature-Detail — nur "Server-Fehler".
+        // Details stehen im Server-Log.
+        ctx.ProblemDetails.Extensions["traceId"] = ctx.HttpContext.TraceIdentifier;
+    };
+});
+
 var app = builder.Build();
+
+// Zuerst der Exception-Handler — muss vor allen anderen Middleware/Endpunkten stehen, sonst
+// entkommt eine Exception der Pipeline und ASP.NET liefert die Default-Fehlerseite (HTML) aus.
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 // Ausstehende EF-Migrationen anwenden (legt das Schema an bzw. aktualisiert es). DB-Start abwarten (Retry).
 using (var scope = app.Services.CreateScope())
