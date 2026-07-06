@@ -19,7 +19,11 @@ public static class UserMapping
         MinRestHours = d.MinRestHours,
         Color = d.Color ?? "",
         Language = string.IsNullOrWhiteSpace(d.Language) ? "de" : d.Language!,
-        AiStyleHint = d.AiStyleHint ?? ""
+        AiStyleHint = d.AiStyleHint ?? "",
+        OpeningBalanceHours = d.OpeningBalanceHours,
+        AccountStart = d.AccountStart,
+        ThemeVariant = string.IsNullOrWhiteSpace(d.ThemeVariant) ? "System" : d.ThemeVariant!,
+        ShowHolidays = d.ShowHolidays
     };
 
     public static CreateUserBody ToCreateBody(User u, string password) => new(
@@ -27,14 +31,18 @@ public static class UserMapping
         RoleToServer(u.Role), u.Category.ToString(),
         u.WeeklyHoursQuota, u.MaxWeeklyHours, u.MaxDailyHours, u.MinRestHours,
         u.Color, string.IsNullOrWhiteSpace(u.Language) ? "de" : u.Language,
-        string.IsNullOrWhiteSpace(u.AiStyleHint) ? null : u.AiStyleHint);
+        string.IsNullOrWhiteSpace(u.AiStyleHint) ? null : u.AiStyleHint,
+        u.OpeningBalanceHours, u.AccountStart,
+        string.IsNullOrWhiteSpace(u.ThemeVariant) ? "System" : u.ThemeVariant, u.ShowHolidays);
 
     public static UpdateUserBody ToUpdateBody(User u) => new(
         u.Username, u.DisplayName, u.Email,
         RoleToServer(u.Role), u.Category.ToString(),
         u.WeeklyHoursQuota, u.MaxWeeklyHours, u.MaxDailyHours, u.MinRestHours,
         u.Color, string.IsNullOrWhiteSpace(u.Language) ? "de" : u.Language,
-        string.IsNullOrWhiteSpace(u.AiStyleHint) ? null : u.AiStyleHint);
+        string.IsNullOrWhiteSpace(u.AiStyleHint) ? null : u.AiStyleHint,
+        u.OpeningBalanceHours, u.AccountStart,
+        string.IsNullOrWhiteSpace(u.ThemeVariant) ? "System" : u.ThemeVariant, u.ShowHolidays);
 
     public static string RoleToServer(UserRole role) => role == UserRole.Admin ? "Admin" : "User";
 }

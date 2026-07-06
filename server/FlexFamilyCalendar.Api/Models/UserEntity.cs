@@ -17,4 +17,8 @@ public class UserEntity
     public string Color { get; set; } = "";
     public string Language { get; set; } = "de";
     public string AiStyleHint { get; set; } = "";       // Freitext-Stil-Wunsch für die KI
+    public double OpeningBalanceHours { get; set; }      // Stundenkonto: Anfangssaldo (Übertrag von vorher)
+    public DateOnly AccountStart { get; set; }           // Stundenkonto: Start (leer = bei Anlage gesetzt)
+    public string ThemeVariant { get; set; } = "System"; // System | Light | Dark (UI-Präferenz)
+    public bool ShowHolidays { get; set; } = true;       // Anzeige-Präferenz: Feiertage einblenden
 }

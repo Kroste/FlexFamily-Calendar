@@ -127,23 +127,6 @@ public class AuthService
         return user;
     }
 
-    public async Task SetUserLanguageAsync(string userId, string language)
-    {
-        if (_api is not null)
-        {
-            // Self-Profil-Änderung; eigener Endpunkt fehlt noch (Admin-PUT würde Nicht-Admins 403 geben).
-            LogService.Debug("Sprachänderung im Server-Modus noch nicht persistiert (Self-Profil-Endpunkt folgt): {0}", language);
-            return;
-        }
-
-        var users = await _storage.LoadUsersAsync();
-        var user = users.FirstOrDefault(u => u.Id == userId);
-        if (user == null || user.Language == language) return;
-        user.Language = language;
-        await _storage.SaveUsersAsync(users);
-        LogService.Info("Sprache geändert für {0}: {1}", user.Username, language);
-    }
-
     public Task<List<User>> GetUsersAsync() => _storage.LoadUsersAsync();
 
     /// <summary>Eigenes Profil speichern (selbst-editierbare Felder). Server-Modus nutzt den Self-Endpunkt.</summary>
@@ -152,7 +135,8 @@ public class AuthService
         if (_api is not null)
         {
             await _api.UpdateMyProfileAsync(new Api.UpdateProfileBody(
-                user.DisplayName, user.Email, user.Language, user.Color, user.AiStyleHint));
+                user.DisplayName, user.Email, user.Language, user.Color, user.AiStyleHint,
+                user.ThemeVariant, user.ShowHolidays));
             LogService.Info("Eigenes Profil aktualisiert (Server): {0}", user.Username);
             return;
         }

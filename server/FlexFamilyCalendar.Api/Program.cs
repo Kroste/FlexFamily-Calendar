@@ -156,6 +156,8 @@ app.MapPut("/api/auth/me", async (UpdateProfileRequest req, AppDbContext db, Cla
     if (!string.IsNullOrWhiteSpace(req.Language)) user.Language = req.Language.Trim();
     if (req.Color is not null) user.Color = req.Color.Trim();
     if (req.AiStyleHint is not null) user.AiStyleHint = req.AiStyleHint.Trim();
+    if (!string.IsNullOrWhiteSpace(req.ThemeVariant)) user.ThemeVariant = req.ThemeVariant.Trim();
+    if (req.ShowHolidays is { } showHolidays) user.ShowHolidays = showHolidays;
 
     await db.SaveChangesAsync();
     return Results.Ok(UserDto.From(user));
@@ -203,6 +205,10 @@ app.MapPost("/api/users", async (CreateUserRequest req, AppDbContext db) =>
         Color = req.Color?.Trim() ?? "",
         Language = string.IsNullOrWhiteSpace(req.Language) ? "de" : req.Language!.Trim(),
         AiStyleHint = req.AiStyleHint?.Trim() ?? "",
+        OpeningBalanceHours = req.OpeningBalanceHours,
+        AccountStart = req.AccountStart,
+        ThemeVariant = string.IsNullOrWhiteSpace(req.ThemeVariant) ? "System" : req.ThemeVariant!.Trim(),
+        ShowHolidays = req.ShowHolidays,
         // Leeres Passwort erlaubt = Konto ohne Anmeldung (z.B. Kind).
         PasswordHash = string.IsNullOrWhiteSpace(req.Password) ? "" : BCrypt.Net.BCrypt.HashPassword(req.Password)
     };
@@ -239,6 +245,10 @@ app.MapPut("/api/users/{id:guid}", async (Guid id, UpdateUserRequest req, AppDbC
     if (req.Color is not null) user.Color = req.Color.Trim();
     if (!string.IsNullOrWhiteSpace(req.Language)) user.Language = req.Language!.Trim();
     if (req.AiStyleHint is not null) user.AiStyleHint = req.AiStyleHint.Trim();
+    user.OpeningBalanceHours = req.OpeningBalanceHours;
+    user.AccountStart = req.AccountStart;
+    if (!string.IsNullOrWhiteSpace(req.ThemeVariant)) user.ThemeVariant = req.ThemeVariant!.Trim();
+    user.ShowHolidays = req.ShowHolidays;
 
     await db.SaveChangesAsync();
     return Results.Ok(UserDto.From(user));
@@ -702,13 +712,16 @@ internal record LoginRequest(string Username, string Password);
 internal record CreateUserRequest(
     string Username, string Password, string? DisplayName, string? Email, string? Role, string? Category,
     double WeeklyHoursQuota = 0, double MaxWeeklyHours = 0, double MaxDailyHours = 0, double MinRestHours = 0,
-    string? Color = null, string? Language = null, string? AiStyleHint = null);
+    string? Color = null, string? Language = null, string? AiStyleHint = null,
+    double OpeningBalanceHours = 0, DateOnly AccountStart = default, string? ThemeVariant = null, bool ShowHolidays = true);
 
 internal record UpdateUserRequest(
     string Username, string? DisplayName, string? Email, string? Role, string? Category,
     double WeeklyHoursQuota = 0, double MaxWeeklyHours = 0, double MaxDailyHours = 0, double MinRestHours = 0,
-    string? Color = null, string? Language = null, string? AiStyleHint = null);
+    string? Color = null, string? Language = null, string? AiStyleHint = null,
+    double OpeningBalanceHours = 0, DateOnly AccountStart = default, string? ThemeVariant = null, bool ShowHolidays = true);
 
 internal record SetPasswordRequest(string Password);
 
-internal record UpdateProfileRequest(string? DisplayName, string? Email, string? Language, string? Color, string? AiStyleHint = null);
+internal record UpdateProfileRequest(string? DisplayName, string? Email, string? Language, string? Color,
+    string? AiStyleHint = null, string? ThemeVariant = null, bool? ShowHolidays = null);

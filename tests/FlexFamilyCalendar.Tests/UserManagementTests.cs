@@ -107,16 +107,4 @@ public class UserManagementTests
         admin.Role = UserRole.User;
         await Assert.ThrowsAsync<InvalidOperationException>(() => auth.UpdateUserAsync(admin));
     }
-
-    [Fact]
-    public async Task SetUserLanguage_Persists()
-    {
-        var (auth, _) = NewAuth();
-        await auth.CreateUserAsync(MakeUser("anna"), "pw");
-        var id = (await auth.GetUsersAsync()).Single().Id;
-
-        await auth.SetUserLanguageAsync(id, "de");
-
-        Assert.Equal("de", (await auth.GetUsersAsync()).Single().Language);
-    }
 }

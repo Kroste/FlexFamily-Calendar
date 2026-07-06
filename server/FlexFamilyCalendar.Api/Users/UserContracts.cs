@@ -16,12 +16,17 @@ public record UserDto(
     double MinRestHours,
     string Color,
     string Language,
-    string AiStyleHint)
+    string AiStyleHint,
+    double OpeningBalanceHours,
+    DateOnly AccountStart,
+    string ThemeVariant,
+    bool ShowHolidays)
 {
     public static UserDto From(UserEntity u) => new(
         u.Id, u.Username, u.DisplayName, u.Email, u.Role, u.Category,
         u.WeeklyHoursQuota, u.MaxWeeklyHours, u.MaxDailyHours, u.MinRestHours,
-        u.Color, u.Language, u.AiStyleHint);
+        u.Color, u.Language, u.AiStyleHint,
+        u.OpeningBalanceHours, u.AccountStart, u.ThemeVariant, u.ShowHolidays);
 }
 
 /// <summary>Reine Invarianten der Benutzerverwaltung (serverseitig erzwungen, testbar).</summary>

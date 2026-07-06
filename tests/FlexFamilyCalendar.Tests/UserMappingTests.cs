@@ -74,4 +74,50 @@ public class UserMappingTests
         Assert.Equal("Employee", body.Category);
         Assert.Equal(8, body.MaxDailyHours);
     }
+
+    [Fact]
+    public void ToDesktop_maps_account_and_pref_fields()
+    {
+        var dto = new ServerUserDto("u1", "rike", "Rike", "r@x.de", "Admin", "Parent",
+            OpeningBalanceHours: 12.5, AccountStart: new DateOnly(2026, 3, 1),
+            ThemeVariant: "Dark", ShowHolidays: false);
+
+        var u = UserMapping.ToDesktop(dto);
+
+        Assert.Equal(12.5, u.OpeningBalanceHours);
+        Assert.Equal(new DateOnly(2026, 3, 1), u.AccountStart);
+        Assert.Equal("Dark", u.ThemeVariant);
+        Assert.False(u.ShowHolidays);
+    }
+
+    [Fact]
+    public void ToDesktop_defaults_theme_when_missing()
+    {
+        var dto = new ServerUserDto("u1", "kid", "Kind", null, "User", "Child");
+        Assert.Equal("System", UserMapping.ToDesktop(dto).ThemeVariant);
+        Assert.True(UserMapping.ToDesktop(dto).ShowHolidays);
+    }
+
+    [Fact]
+    public void Create_and_update_bodies_carry_account_and_pref_fields()
+    {
+        var u = new User
+        {
+            Username = "anna", Role = UserRole.User, Category = PersonCategory.AuPair,
+            OpeningBalanceHours = -4.25, AccountStart = new DateOnly(2026, 1, 1),
+            ThemeVariant = "Light", ShowHolidays = false
+        };
+
+        var create = UserMapping.ToCreateBody(u, "p");
+        Assert.Equal(-4.25, create.OpeningBalanceHours);
+        Assert.Equal(new DateOnly(2026, 1, 1), create.AccountStart);
+        Assert.Equal("Light", create.ThemeVariant);
+        Assert.False(create.ShowHolidays);
+
+        var update = UserMapping.ToUpdateBody(u);
+        Assert.Equal(-4.25, update.OpeningBalanceHours);
+        Assert.Equal(new DateOnly(2026, 1, 1), update.AccountStart);
+        Assert.Equal("Light", update.ThemeVariant);
+        Assert.False(update.ShowHolidays);
+    }
 }

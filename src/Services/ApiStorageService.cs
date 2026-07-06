@@ -38,11 +38,18 @@ public class ApiStorageService : IStorageService
         }
     }
 
-    // Voll-Benutzerverwaltung (Update/Löschen/Bulk) hat noch keinen Server-Endpunkt → No-op (TODO Endpunkte).
-    public Task SaveUsersAsync(List<User> users)
+    // Admin-Benutzerverwaltung (Anlegen/Ändern/Löschen/Passwort) läuft granular über AuthService → ApiClient,
+    // nicht über diese Bulk-Methode. Im Server-Modus erreicht SaveUsersAsync nur noch Self-Präferenz-Toggles
+    // (z.B. Feiertags-Anzeige) für den angemeldeten Benutzer → über den Self-Profil-Endpunkt persistieren.
+    public async Task SaveUsersAsync(List<User> users)
     {
-        LogService.Debug("SaveUsersAsync im Server-Modus übersprungen (Benutzerverwaltung folgt mit Endpunkten).");
-        return Task.CompletedTask;
+        if (_api.CurrentUser is not { } me) return;
+        var self = users.FirstOrDefault(u => u.Id == me.Id);
+        if (self is null) return;
+        await _api.UpdateMyProfileAsync(new UpdateProfileBody(
+            self.DisplayName, self.Email, self.Language, self.Color, self.AiStyleHint,
+            self.ThemeVariant, self.ShowHolidays));
+        LogService.Debug("Self-Präferenzen des angemeldeten Benutzers via Profil-Endpunkt gespeichert.");
     }
 
     // --- Einstellungen (lokal, Installations-Config) ----------------------
