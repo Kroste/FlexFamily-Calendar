@@ -52,10 +52,44 @@ public class ApiStorageService : IStorageService
         LogService.Debug("Self-Präferenzen des angemeldeten Benutzers via Profil-Endpunkt gespeichert.");
     }
 
-    // --- Einstellungen (lokal, Installations-Config) ----------------------
+    // --- Einstellungen (Trennung: lokal = Installations-Config, Server = Domänen-Config) --
+    // Kanon: im Server-Modus MUSS die Domänen-Config (HolidayState, OvernightHoursPerDay)
+    // vom Server kommen — kein stiller lokaler Fallback. Installations-Config (ServerUrl, JWT,
+    // gemerkter Benutzer, EncryptedApiKeys, SMTP) bleibt lokal, weil sie pro Installation ist.
+    public async Task<AppSettings> LoadSettingsAsync()
+    {
+        var s = await _settingsStore.LoadSettingsAsync();
+        try
+        {
+            var srv = await _api.GetServerSettingsAsync();
+            if (srv is not null)
+            {
+                s.HolidayState = srv.HolidayState;
+                s.OvernightHoursPerDay = srv.OvernightHoursPerDay;
+            }
+        }
+        catch (Exception ex)
+        {
+            LogService.Warn("Server-Einstellungen konnten nicht geladen werden: {0}", ex.Message);
+        }
+        return s;
+    }
 
-    public Task<AppSettings> LoadSettingsAsync() => _settingsStore.LoadSettingsAsync();
-    public Task SaveSettingsAsync(AppSettings settings) => _settingsStore.SaveSettingsAsync(settings);
+    public async Task SaveSettingsAsync(AppSettings settings)
+    {
+        // Lokale Installations-Config immer schreiben (auch ServerUrl-Änderungen etc.).
+        await _settingsStore.SaveSettingsAsync(settings);
+        // Domänen-Config zurück zum Server (403 für Nicht-Admins wird gefangen, damit die
+        // Nicht-Admin-Sicht nicht abstürzt, wenn sie versucht die Settings zu speichern).
+        try
+        {
+            await _api.UpdateServerSettingsAsync(new ServerSettingsDto(settings.HolidayState, settings.OvernightHoursPerDay));
+        }
+        catch (Exception ex)
+        {
+            LogService.Warn("Server-Einstellungen konnten nicht gespeichert werden: {0}", ex.Message);
+        }
+    }
 
     // --- Kalender ---------------------------------------------------------
 

@@ -166,3 +166,7 @@ public record SendWeekPlanResponseDto(int Sent, int Failed, List<string> Errors)
 public record AiCompleteBody(string Provider, string Prompt, string? Model);
 
 public record AiCompleteResponseDto(string Text);
+
+// Server-Domänen-Einstellungen (Feiertags-Bundesland, Übernachtungs-Pauschale).
+// Installations-Config (ServerUrl, JWT, API-Keys) bleibt lokal am Client.
+public record ServerSettingsDto(string HolidayState, double OvernightHoursPerDay);

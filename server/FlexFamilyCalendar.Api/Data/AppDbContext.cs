@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<ShiftSwapRequestEntity> SwapRequests => Set<ShiftSwapRequestEntity>();
     public DbSet<NotificationEntity> Notifications => Set<NotificationEntity>();
     public DbSet<CalendarDayMeta> DayMeta => Set<CalendarDayMeta>();
+    public DbSet<ServerSettingsEntity> ServerSettings => Set<ServerSettingsEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,5 +31,10 @@ public class AppDbContext : DbContext
             .WithMany(r => r.Skips)
             .HasForeignKey(s => s.RecurringActivityId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // ServerSettings ist eine Singleton-Row (Id fest = 1). PK explizit, damit die Migration
+        // in älteren Postgres-Setups nicht per Convention eine identity column erzeugt.
+        modelBuilder.Entity<ServerSettingsEntity>().HasKey(s => s.Id);
+        modelBuilder.Entity<ServerSettingsEntity>().Property(s => s.Id).ValueGeneratedNever();
     }
 }

@@ -12,6 +12,7 @@ using FlexFamilyCalendar.Api.Models;
 using FlexFamilyCalendar.Api.Notifications;
 using FlexFamilyCalendar.Api.PlannerNotes;
 using FlexFamilyCalendar.Api.RecurringActivities;
+using FlexFamilyCalendar.Api.Settings;
 using FlexFamilyCalendar.Api.Swaps;
 using FlexFamilyCalendar.Api.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -721,6 +722,42 @@ app.MapPost("/api/ai/complete", async (AiCompleteRequest req, AiSender sender, C
     return Results.Ok(new AiCompleteResponse(text));
 })
     .RequireAuthorization();
+
+// --- Server-Einstellungen (Domänen-Config: Feiertags-Bundesland, Übernachtungs-Pauschale) --
+// Single-Row-Konfig (Id = 1). Kein Init in der Migration — LazyLoad legt den Default an, damit
+// eine bestehende DB ohne Row nicht bricht (idempotent). Alle Eingeloggten dürfen lesen,
+// nur Admin darf schreiben (Bundesland-Wechsel hat Konsequenzen für alle Nutzer).
+
+app.MapGet("/api/settings", async (AppDbContext db) =>
+{
+    var s = await db.ServerSettings.FindAsync(ServerSettingsEntity.SingletonId);
+    if (s is null)
+    {
+        s = new ServerSettingsEntity();   // Defaults: BY / 2.0
+        db.ServerSettings.Add(s);
+        await db.SaveChangesAsync();
+    }
+    return Results.Ok(new ServerSettingsDto(s.HolidayState, s.OvernightHoursPerDay));
+})
+    .RequireAuthorization();
+
+app.MapPut("/api/settings", async (ServerSettingsDto body, AppDbContext db) =>
+{
+    var error = ServerSettingsRules.Validate(body);
+    if (error is not null) return Results.BadRequest(new { error });
+
+    var s = await db.ServerSettings.FindAsync(ServerSettingsEntity.SingletonId);
+    if (s is null)
+    {
+        s = new ServerSettingsEntity();
+        db.ServerSettings.Add(s);
+    }
+    s.HolidayState = ServerSettingsRules.NormalizeState(body.HolidayState);
+    s.OvernightHoursPerDay = body.OvernightHoursPerDay;
+    await db.SaveChangesAsync();
+    return Results.Ok(new ServerSettingsDto(s.HolidayState, s.OvernightHoursPerDay));
+})
+    .RequireAuthorization("Admin");
 
 app.Run();
 

@@ -273,4 +273,21 @@ public class ApiClient
         LogService.Debug("API AI-Antwort von {0}: {1} Zeichen", provider, dto?.Text?.Length ?? 0);
         return dto?.Text ?? "";
     }
+
+    /// <summary>Server-Domänen-Einstellungen lesen (HolidayState, OvernightHoursPerDay).</summary>
+    public async Task<ServerSettingsDto?> GetServerSettingsAsync()
+    {
+        var resp = await _http.GetAsync("api/settings");
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "GET /api/settings");
+        return await resp.Content.ReadFromJsonAsync<ServerSettingsDto>();
+    }
+
+    /// <summary>Server-Domänen-Einstellungen schreiben (nur Admin serverseitig akzeptiert).</summary>
+    public async Task<ServerSettingsDto> UpdateServerSettingsAsync(ServerSettingsDto body)
+    {
+        var resp = await _http.PutAsJsonAsync("api/settings", body);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "PUT /api/settings");
+        var dto = await resp.Content.ReadFromJsonAsync<ServerSettingsDto>();
+        return dto ?? body;
+    }
 }
