@@ -31,20 +31,9 @@ jobs:
       - name: Install wasm-tools workload
         run: dotnet workload install wasm-tools
 
-      - name: Restore
-        run: dotnet restore FlexFamilyCalendar.slnx
-
-      - name: Build (Client)
-        run: dotnet build src/FlexFamilyCalendar.csproj -c Release --no-restore
-
-      - name: Build (Desktop)
-        run: dotnet build desktop/FlexFamilyCalendar.Desktop.csproj -c Release --no-restore
-
-      - name: Build (Server)
-        run: dotnet build server/FlexFamilyCalendar.Api/FlexFamilyCalendar.Api.csproj -c Release --no-restore
-
-      - name: Test (Client)
-        run: dotnet test tests/FlexFamilyCalendar.Tests/FlexFamilyCalendar.Tests.csproj -c Release --no-build --verbosity normal
-
-      - name: Test (Server)
-        run: dotnet test tests/FlexFamilyCalendar.Api.Tests/FlexFamilyCalendar.Api.Tests.csproj -c Release --no-build --verbosity normal
+      # Ein-Schuss-Test über die gesamte Solution. Der csproj-basierte 2-Step-Ansatz
+      # ("Test (Client)" / "Test (Server)") knallte auf dem 10.0.301-Runner mit
+      # MSB4181 "VSTestTask returned false" / "The argument …dll is invalid" — offenbar
+      # eine Ecke im MTP-Kompat-Modus. Die Solution-Variante ist stabil (lokal wie remote).
+      - name: Build & Test (Solution)
+        run: dotnet test FlexFamilyCalendar.slnx -c Release --verbosity normal

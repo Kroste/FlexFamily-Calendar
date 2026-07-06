@@ -4,7 +4,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-ARG VERSION=0.0.0
+# APP_VERSION (nicht VERSION!) — MSBuild würde ein ARG/ENV namens `VERSION`/`Version`
+# als globale MSBuild-Property lesen und den Restore mit "not a valid version string"
+# torpedieren.
+ARG APP_VERSION=0.0.0
 
 # Emscripten (Native-AOT-Schritt im Release-Publish) ruft "python" auf — schlankes SDK-Image hat keins.
 RUN apt-get update \
@@ -30,7 +33,7 @@ COPY browser/ browser/
 RUN dotnet publish browser/FlexFamilyCalendar.Browser.csproj \
     -c Release -o /tmp/publish \
     -p:UseMinVer=false \
-    -p:Version=${VERSION}
+    -p:Version=${APP_VERSION}
 
 # Stufe 2: Caddy mit eingebetteter SPA. TLS terminiert Caddy, /api/* geht an die API.
 FROM caddy:2

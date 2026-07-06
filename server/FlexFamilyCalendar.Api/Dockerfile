@@ -9,7 +9,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-ARG VERSION=0.0.0
+# APP_VERSION (nicht VERSION!) — MSBuild würde ein ENV/ARG namens `VERSION`/`Version`
+# als globale MSBuild-Property lesen und den Restore mit "not a valid version string"
+# torpedieren, wenn der Wert das v-Präfix hätte.
+ARG APP_VERSION=0.0.0
 
 # Nur die relevanten Projekt-Files ins Build-Image ziehen — Repo-Root-Context bringt sonst zu viel.
 COPY Directory.Build.props .
@@ -21,7 +24,7 @@ COPY server/FlexFamilyCalendar.Api/ server/FlexFamilyCalendar.Api/
 RUN dotnet publish server/FlexFamilyCalendar.Api/FlexFamilyCalendar.Api.csproj \
     -c Release -o /app \
     -p:UseMinVer=false \
-    -p:Version=${VERSION}
+    -p:Version=${APP_VERSION}
 
 # Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
