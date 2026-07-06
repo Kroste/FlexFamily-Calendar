@@ -74,6 +74,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
+      # containrrr/watchtower:latest verhandelt sonst die alte Docker-API v1.25, die aktuelle
+      # Docker-Daemons (Debian 13 & Co.) mit "client version too old" ablehnen → CrashLoop.
+      # 1.44 wird von jedem Docker >= 25 unterstützt.
+      DOCKER_API_VERSION: "1.44"
       WATCHTOWER_POLL_INTERVAL: ${WATCHTOWER_INTERVAL:-86400}   # default 24h
       WATCHTOWER_CLEANUP: "true"                                  # alte Images aufräumen
       WATCHTOWER_LABEL_ENABLE: "true"                             # nur markierte Container
