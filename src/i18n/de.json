@@ -327,5 +327,9 @@
   "Settings_About": "Über FlexFamily Calendar",
   "Settings_AboutVersion": "Version",
   "Settings_AboutGithub": "GitHub-Repository",
-  "Settings_AboutCoffee": "☕ Buy me a coffee"
+  "Settings_AboutCoffee": "☕ Buy me a coffee",
+
+  "Info_Title": "Über FlexFamily Calendar",
+  "Info_GitHub": "GitHub-Repository öffnen",
+  "Info_Coffee": "☕ Buy me a coffee"
 }

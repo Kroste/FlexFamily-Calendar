@@ -68,6 +68,7 @@ public partial class MainView : UserControl
             _vm.HoursAccountRequested -= OnHoursAccountRequested;
             _vm.NotificationsRequested -= OnNotificationsRequested;
             _vm.AdminRequested -= OnAdminRequested;
+            _vm.InfoRequested -= OnInfoRequested;
         }
         _vm = DataContext as MainWindowViewModel;
         if (_vm != null)
@@ -77,7 +78,19 @@ public partial class MainView : UserControl
             _vm.HoursAccountRequested += OnHoursAccountRequested;
             _vm.NotificationsRequested += OnNotificationsRequested;
             _vm.AdminRequested += OnAdminRequested;
+            _vm.InfoRequested += OnInfoRequested;
         }
+    }
+
+    private async void OnInfoRequested()
+    {
+        if (_vm == null) return;
+        if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
+        try
+        {
+            await App.DialogService.ShowInfoAsync(_vm.CreateInfo());
+        }
+        catch (Exception ex) { LogService.Error("Fehler im Info-Dialog", ex); }
     }
 
     private async void OnAdminRequested()

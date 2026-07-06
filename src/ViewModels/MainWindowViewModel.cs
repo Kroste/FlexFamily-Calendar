@@ -55,6 +55,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public event Action? HoursAccountRequested;
     public event Action? NotificationsRequested;
     public event Action? AdminRequested;
+    public event Action? InfoRequested;
 
     public MainWindowViewModel(AuthService auth, IStorageService storage, NotificationService notifications, AiService ai, IMailSender mailSender, LoginViewModel loginVm)
     {
@@ -284,6 +285,11 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [RelayCommand]
     private void OpenHoursAccount() => HoursAccountRequested?.Invoke();
+
+    [RelayCommand]
+    private void OpenInfo() => InfoRequested?.Invoke();
+
+    public InfoViewModel CreateInfo() => new();
 
     public UserEditorViewModel CreateProfileEditor()
         => new(_auth, _currentUser, isNew: false, selfMode: true);

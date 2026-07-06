@@ -103,6 +103,27 @@ public class OverlayDialogService : IDialogService
             h => vm.Closed += h, h => vm.Closed -= h,
             () => vm.CancelCommand.Execute(null));
 
+    public Task ShowInfoAsync(InfoViewModel vm)
+    {
+        // Info-Dialog schließt sich über CloseCommand ODER Backdrop-Klick (ESC).
+        var tcs = new TaskCompletionSource<object?>();
+        Action handler = null!;
+        handler = () =>
+        {
+            vm.CloseRequested -= handler;
+            _cancelCurrent = null;
+            _content.Content = null;
+            _overlay.IsVisible = false;
+            tcs.TrySetResult(null);
+        };
+        vm.CloseRequested += handler;
+        _cancelCurrent = () => vm.CloseCommand.Execute(null);
+
+        _content.Content = new InfoView { DataContext = vm };
+        _overlay.IsVisible = true;
+        return tcs.Task;
+    }
+
     public Task ShowAiPlannerAsync(AiPlannerViewModel vm)
     {
         // KI-Planner hat kein „Ergebnis" — Close wird über CloseRequested oder Backdrop ausgelöst.

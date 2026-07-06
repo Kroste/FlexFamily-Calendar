@@ -1,0 +1,44 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.InfoView"
+             x:DataType="vm:InfoViewModel"
+             x:CompileBindings="False"
+             Padding="24" MinWidth="380">
+
+  <StackPanel Spacing="14">
+
+    <StackPanel Orientation="Horizontal" Spacing="10">
+      <TextBlock Text="📅" FontSize="28" VerticalAlignment="Center" />
+      <StackPanel VerticalAlignment="Center">
+        <TextBlock Text="{Binding AppName}" FontSize="18" FontWeight="Bold" />
+        <TextBlock Text="{Binding AppVersion, StringFormat={}v{0}}"
+                   FontSize="12" Opacity="0.7" />
+      </StackPanel>
+    </StackPanel>
+
+    <TextBlock Text="{Binding Description}"
+               TextWrapping="Wrap"
+               MaxWidth="360"
+               LineHeight="18" />
+
+    <StackPanel Spacing="6">
+      <Button Content="{loc:Tr Info_GitHub}"
+              Command="{Binding OpenGitHubCommand}"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Left" />
+      <Button Content="{loc:Tr Info_Coffee}"
+              Command="{Binding OpenCoffeeCommand}"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Left"
+              Background="#FFDD00" Foreground="Black" />
+    </StackPanel>
+
+    <Button Content="{loc:Tr Common_Close}"
+            Command="{Binding CloseCommand}"
+            HorizontalAlignment="Right" />
+
+  </StackPanel>
+
+</UserControl>

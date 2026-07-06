@@ -26,6 +26,8 @@ public interface IDialogService
     Task ShowAiPlannerAsync(AiPlannerViewModel vm);
     Task<ConnectionSettingsResult?> ShowConnectionSettingsAsync(ConnectionSettingsViewModel vm);
 
+    Task ShowInfoAsync(InfoViewModel vm);
+
     /// <summary>
     /// Abbruch des aktuell offenen Dialogs (ESC/Backdrop-Klick im Overlay-Backend).
     /// Desktop-Backend ist No-op — Avalonia-Windows fangen ESC und Außenklicks selbst ab.

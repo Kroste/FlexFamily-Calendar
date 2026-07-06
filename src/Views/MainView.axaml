@@ -63,6 +63,12 @@
                   Command="{Binding OpenProfileCommand}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="12,5" />
+          <Button Command="{Binding OpenInfoCommand}"
+                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  CornerRadius="6" Padding="10,5"
+                  ToolTip.Tip="{loc:Tr Info_Title}">
+            <TextBlock Text="ℹ" FontSize="15" />
+          </Button>
           <Button Content="{loc:Tr Main_Logout}"
                   Command="{Binding LogoutCommand}"
                   Foreground="White"
