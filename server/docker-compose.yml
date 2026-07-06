@@ -58,8 +58,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    # Caddyfile ist im Image gebacken (server/Caddy.Dockerfile) — kein Mount mehr nötig.
+    # Damit reicht auf dem Server ein Deploy-Ordner mit docker-compose.yml + .env,
+    # und Änderungen an der Caddyfile werden via Watchtower/Release automatisch ausgerollt.
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     restart: unless-stopped

@@ -38,3 +38,7 @@ RUN dotnet publish browser/FlexFamilyCalendar.Browser.csproj \
 # Stufe 2: Caddy mit eingebetteter SPA. TLS terminiert Caddy, /api/* geht an die API.
 FROM caddy:2
 COPY --from=build /src/browser/bin/Release/net10.0-browser/browser-wasm/AppBundle/ /srv/spa/
+# Caddyfile mit ins Image — der Operator braucht damit keinen externen Mount mehr,
+# und ein neues Release rollt die Caddyfile-Änderungen (SRI-No-Cache-Header etc.)
+# automatisch mit dem Image aus (Watchtower).
+COPY server/Caddyfile /etc/caddy/Caddyfile
