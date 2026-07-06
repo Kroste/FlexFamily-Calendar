@@ -59,6 +59,10 @@ public class ApiStorageService : IStorageService
     public async Task<AppSettings> LoadSettingsAsync()
     {
         var s = await _settingsStore.LoadSettingsAsync();
+        // Am Login-Screen ist noch kein Token da. GET /api/settings würde dort 401 werfen —
+        // und der Aufruf steht im Init-Pfad des Browser-Heads, was den Login-View blockiert.
+        // In dem Fall bleiben wir bei den lokalen Defaults.
+        if (!_api.IsAuthenticated) return s;
         try
         {
             var srv = await _api.GetServerSettingsAsync();
@@ -79,8 +83,10 @@ public class ApiStorageService : IStorageService
     {
         // Lokale Installations-Config immer schreiben (auch ServerUrl-Änderungen etc.).
         await _settingsStore.SaveSettingsAsync(settings);
-        // Domänen-Config zurück zum Server (403 für Nicht-Admins wird gefangen, damit die
-        // Nicht-Admin-Sicht nicht abstürzt, wenn sie versucht die Settings zu speichern).
+        // Domänen-Config zurück zum Server nur mit Token (Nicht-Admin bekommt 403 — dann
+        // still schlucken, der Server bleibt Source of Truth). Ohne Token gar nicht erst
+        // versuchen — würde 401 loggen.
+        if (!_api.IsAuthenticated) return;
         try
         {
             await _api.UpdateServerSettingsAsync(new ServerSettingsDto(settings.HolidayState, settings.OvernightHoursPerDay));
