@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  build-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # MinVer braucht die volle Historie, um Tags zu finden.
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore FlexFamilyCalendar.slnx
+
+      - name: Build (Client)
+        run: dotnet build src/FlexFamilyCalendar.csproj -c Release --no-restore
+
+      - name: Build (Desktop)
+        run: dotnet build desktop/FlexFamilyCalendar.Desktop.csproj -c Release --no-restore
+
+      - name: Build (Server)
+        run: dotnet build server/FlexFamilyCalendar.Api/FlexFamilyCalendar.Api.csproj -c Release --no-restore
+
+      - name: Test (Client)
+        run: dotnet test tests/FlexFamilyCalendar.Tests/FlexFamilyCalendar.Tests.csproj -c Release --no-build --verbosity normal
+
+      - name: Test (Server)
+        run: dotnet test tests/FlexFamilyCalendar.Api.Tests/FlexFamilyCalendar.Api.Tests.csproj -c Release --no-build --verbosity normal

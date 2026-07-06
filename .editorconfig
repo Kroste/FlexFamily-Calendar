@@ -1,0 +1,48 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+[*.{cs,csx}]
+indent_size = 4
+
+[*.{xml,axaml,xaml,csproj,props,targets,yml,yaml,json}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+# File-scoped Namespaces erzwingen (C# 10+)
+csharp_style_namespace_declarations = file_scoped:error
+
+# Accessibility-Modifier immer explizit
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:error
+
+# var / Typ
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# using-Direktiven außerhalb des Namespaces
+csharp_using_directive_placement = outside_namespace:suggestion
+
+# Ausdrucksstil
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+csharp_prefer_braces = when_multiline:suggestion
+
+# Leerzeilen und Klammern
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+
+# Diagnostics — die vom Compiler kommen: als Fehler behandeln greift über TreatWarningsAsErrors.
+# Analyzer-Rauschen dämpfen, das nicht zwingend Fehler sein soll:
+dotnet_diagnostic.CA1416.severity = suggestion
+dotnet_diagnostic.CS1591.severity = none
