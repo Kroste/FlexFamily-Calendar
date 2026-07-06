@@ -22,7 +22,11 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 var cfg = builder.Configuration;
 
-builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(cfg.GetConnectionString("Default")));
+// Im Testing-Environment registriert die WebApplicationFactory den DbContext selbst
+// (InMemory-Provider). Die Doppel-Registrierung Npgsql+InMemory fällt sonst als
+// "Only a single database provider can be registered" auf die Nase.
+if (!builder.Environment.IsEnvironment("Testing"))
+    builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(cfg.GetConnectionString("Default")));
 builder.Services.AddScoped<TokenService>();
 
 // SMTP über ENV (Smtp__Host etc.) — Operator-Setting, kein DB-Schema.
@@ -88,14 +92,21 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
+var isTesting = app.Environment.IsEnvironment("Testing");
+
 // Ausstehende EF-Migrationen anwenden (legt das Schema an bzw. aktualisiert es). DB-Start abwarten (Retry).
+// Im Testing-Environment übersprungen — dort liefert die Test-Fixture einen InMemory-Provider,
+// der Migrations nicht unterstützt und stattdessen sein Schema aus dem Modell ableitet.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    for (var attempt = 1; attempt <= 10; attempt++)
+    if (!isTesting)
     {
-        try { db.Database.Migrate(); break; }
-        catch when (attempt < 10) { Thread.Sleep(3000); }   // DB evtl. noch nicht bereit
+        for (var attempt = 1; attempt <= 10; attempt++)
+        {
+            try { db.Database.Migrate(); break; }
+            catch when (attempt < 10) { Thread.Sleep(3000); }   // DB evtl. noch nicht bereit
+        }
     }
 
     // Erst-Admin anlegen (idempotent): nur wenn per Konfiguration gesetzt UND noch keine Benutzer existieren.
@@ -779,3 +790,7 @@ internal record SetPasswordRequest(string Password);
 
 internal record UpdateProfileRequest(string? DisplayName, string? Email, string? Language, string? Color,
     string? AiStyleHint = null, string? ThemeVariant = null, bool? ShowHolidays = null);
+
+// Für WebApplicationFactory<Program> in den Integration-Tests: Minimal-API-Program hat sonst
+// keine öffentliche Program-Klasse — der Compiler erzeugt eine mit internem Zugriff.
+public partial class Program { }
