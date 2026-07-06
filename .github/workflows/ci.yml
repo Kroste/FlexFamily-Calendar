@@ -26,6 +26,11 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      # Browser-Head braucht die wasm-tools-Workload; ohne kann `dotnet restore` das
+      # Browser-Projekt nicht auflösen (NETSDK1147).
+      - name: Install wasm-tools workload
+        run: dotnet workload install wasm-tools
+
       - name: Restore
         run: dotnet restore FlexFamilyCalendar.slnx
 

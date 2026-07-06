@@ -193,8 +193,12 @@ jobs:
 
       - uses: docker/build-push-action@v6
         with:
-          context: server/FlexFamilyCalendar.Api
+          # Repo-Root, damit Directory.Build.props (Nullable/ImplicitUsings/MinVer) im Build ist.
+          context: .
+          file: server/FlexFamilyCalendar.Api/Dockerfile
           push: true
+          build-args: |
+            VERSION=${{ env.RELEASE_TAG }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/flexfamily-calendar-api:${{ env.RELEASE_TAG }}
             ${{ secrets.DOCKERHUB_USERNAME }}/flexfamily-calendar-api:latest
@@ -224,6 +228,8 @@ jobs:
           context: .                       # Repo-Root: Caddy.Dockerfile braucht src/ + browser/
           file: server/Caddy.Dockerfile
           push: true
+          build-args: |
+            VERSION=${{ env.RELEASE_TAG }}
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/flexfamily-calendar-caddy:${{ env.RELEASE_TAG }}
             ${{ secrets.DOCKERHUB_USERNAME }}/flexfamily-calendar-caddy:latest

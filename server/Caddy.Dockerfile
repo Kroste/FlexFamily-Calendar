@@ -4,6 +4,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+ARG VERSION=0.0.0
+
 # Emscripten (Native-AOT-Schritt im Release-Publish) ruft "python" auf — schlankes SDK-Image hat keins.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 \
@@ -12,16 +14,23 @@ RUN apt-get update \
 
 RUN dotnet workload install wasm-tools
 
+# Directory.Build.props im Root MUSS mit — sonst greift Nullable/ImplicitUsings/MinVer nicht.
+COPY Directory.Build.props .
+
 # Erst nur die Projektdateien für gecachtes Restore.
 COPY src/FlexFamilyCalendar.csproj src/
 COPY browser/FlexFamilyCalendar.Browser.csproj browser/
-RUN dotnet restore browser/FlexFamilyCalendar.Browser.csproj
+# MinVer aus, weil .dockerignore .git ausschließt (keine Tags im Build-Context).
+RUN dotnet restore browser/FlexFamilyCalendar.Browser.csproj -p:UseMinVer=false
 
 # Dann die Quellen.
 COPY src/ src/
 COPY browser/ browser/
 
-RUN dotnet publish browser/FlexFamilyCalendar.Browser.csproj -c Release -o /tmp/publish
+RUN dotnet publish browser/FlexFamilyCalendar.Browser.csproj \
+    -c Release -o /tmp/publish \
+    -p:UseMinVer=false \
+    -p:Version=${VERSION}
 
 # Stufe 2: Caddy mit eingebetteter SPA. TLS terminiert Caddy, /api/* geht an die API.
 FROM caddy:2
