@@ -1,0 +1,85 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:FlexFamilyCalendar.ViewModels.Mobile"
+             xmlns:vmroot="using:FlexFamilyCalendar.ViewModels"
+             xmlns:views="using:FlexFamilyCalendar.Views"
+             xmlns:mviews="using:FlexFamilyCalendar.Views.Mobile"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.Mobile.MobileMainView"
+             x:DataType="vm:MobileMainViewModel"
+             x:CompileBindings="False">
+
+  <Grid>
+    <!-- Nicht eingeloggt: Login -->
+    <Border IsVisible="{Binding Main.IsNotLoggedIn}">
+      <views:LoginView DataContext="{Binding Main.LoginVm}" />
+    </Border>
+
+    <!-- Eingeloggt -->
+    <Grid IsVisible="{Binding Main.IsLoggedIn}" RowDefinitions="Auto,*,Auto">
+
+      <!-- Header -->
+      <Border Grid.Row="0" Background="{DynamicResource AppHeaderBrush}" Padding="14,10">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{Binding Main.CurrentUserDisplay}"
+                       Foreground="White" FontSize="16" FontWeight="Bold" />
+            <TextBlock Text="FlexFamily Calendar"
+                       Foreground="White" Opacity="0.7" FontSize="11" />
+          </StackPanel>
+          <Button Grid.Column="1" Content="{loc:Tr Main_Logout}"
+                  Command="{Binding Main.LogoutCommand}"
+                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  CornerRadius="6" Padding="12,6" FontSize="12" />
+        </Grid>
+      </Border>
+
+      <!-- Content -->
+      <Grid Grid.Row="1">
+        <mviews:MobileCalendarView IsVisible="{Binding IsCalendarActive}"
+                                   DataContext="{Binding Main.CalendarVm}" />
+        <mviews:MobileAbsenceView IsVisible="{Binding IsSickActive}"
+                                  DataContext="{Binding SickVm}" />
+        <mviews:MobileAbsenceView IsVisible="{Binding IsVacationActive}"
+                                  DataContext="{Binding VacationVm}" />
+        <Border IsVisible="{Binding IsSwapActive}" Padding="24" VerticalAlignment="Center">
+          <StackPanel Spacing="12" HorizontalAlignment="Center">
+            <TextBlock Text="{loc:Tr Mobile_Swap_ComingSoon}"
+                       FontSize="16" FontWeight="SemiBold"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="{loc:Tr Mobile_Swap_Note}"
+                       FontSize="13" Opacity="0.7"
+                       TextWrapping="Wrap" HorizontalAlignment="Center"
+                       TextAlignment="Center" MaxWidth="280" />
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- Bottom-Nav -->
+      <Border Grid.Row="2" Background="{DynamicResource SystemControlBackgroundChromeLowBrush}"
+              BorderThickness="0,1,0,0"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+        <Grid ColumnDefinitions="*,*,*,*">
+          <Button Grid.Column="0" Content="{loc:Tr Mobile_Tab_Plan}"
+                  Command="{Binding ShowCalendarCommand}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                  Padding="0,12" Background="Transparent" BorderThickness="0" />
+          <Button Grid.Column="1" Content="{loc:Tr Mobile_Tab_Sick}"
+                  Command="{Binding ShowSickCommand}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                  Padding="0,12" Background="Transparent" BorderThickness="0" />
+          <Button Grid.Column="2" Content="{loc:Tr Mobile_Tab_Vacation}"
+                  Command="{Binding ShowVacationCommand}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                  Padding="0,12" Background="Transparent" BorderThickness="0" />
+          <Button Grid.Column="3" Content="{loc:Tr Mobile_Tab_Swap}"
+                  Command="{Binding ShowSwapCommand}"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                  Padding="0,12" Background="Transparent" BorderThickness="0" />
+        </Grid>
+      </Border>
+
+    </Grid>
+  </Grid>
+
+</UserControl>

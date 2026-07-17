@@ -5,7 +5,9 @@ using FlexFamilyCalendar.Services;
 using FlexFamilyCalendar.Services.AI;
 using FlexFamilyCalendar.Services.Api;
 using FlexFamilyCalendar.ViewModels;
+using FlexFamilyCalendar.ViewModels.Mobile;
 using FlexFamilyCalendar.Views;
+using FlexFamilyCalendar.Views.Mobile;
 
 namespace FlexFamilyCalendar;
 
@@ -96,7 +98,8 @@ public partial class App : Application
             if (remembered != null) mainVm.AutoLogin(remembered);
         }
 
-        singleView.MainView = new MainView { DataContext = mainVm };
+        var mobileVm = new MobileMainViewModel(mainVm, storage, auth);
+        singleView.MainView = new MobileMainView { DataContext = mobileVm };
         LogService.Info("Android-Head gestartet.");
     }
 

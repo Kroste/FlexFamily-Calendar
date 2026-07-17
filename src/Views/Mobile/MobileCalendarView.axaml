@@ -1,0 +1,83 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+             xmlns:cv="using:FlexFamilyCalendar.Converters"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.Mobile.MobileCalendarView"
+             x:DataType="vm:CalendarViewModel"
+             x:CompileBindings="False">
+
+  <UserControl.Resources>
+    <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
+  </UserControl.Resources>
+
+  <DockPanel LastChildFill="True">
+
+    <!-- Wochen-Nav -->
+    <Border DockPanel.Dock="Top" Padding="10,8"
+            Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+            BorderThickness="0,0,0,1"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Button Grid.Column="0" Content="◀" Command="{Binding PreviousWeekCommand}"
+                Padding="14,8" CornerRadius="6" FontSize="14" />
+        <TextBlock Grid.Column="1" Text="{Binding WeekLabel}"
+                   FontSize="14" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <Button Grid.Column="2" Content="▶" Command="{Binding NextWeekCommand}"
+                Padding="14,8" CornerRadius="6" FontSize="14" />
+      </Grid>
+    </Border>
+
+    <!-- Tage der Woche als vertikale Liste -->
+    <ScrollViewer>
+      <ItemsControl ItemsSource="{Binding Days}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Margin="10,8,10,0" Padding="12,10" CornerRadius="8"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                    BorderThickness="1"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+              <StackPanel Spacing="6">
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding DayName}" FontWeight="SemiBold" FontSize="14" />
+                    <TextBlock Text="{Binding DateLabel}" Opacity="0.7" FontSize="13" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="1" Text="{Binding HolidayName}"
+                             Foreground="#C0392B" FontSize="12"
+                             IsVisible="{Binding HolidayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                </Grid>
+                <ItemsControl ItemsSource="{Binding Entries}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Padding="8,6" Margin="0,3,0,0" CornerRadius="4"
+                              Background="{Binding OwnerColor, Converter={StaticResource ColorStringToBrushConverter}}">
+                        <StackPanel Spacing="2">
+                          <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="White">
+                            <Run Text="{Binding UserDisplayName}" />
+                            <Run Text=" — " />
+                            <Run Text="{Binding StartTime, StringFormat=hh\\:mm}" />
+                            <Run Text="-" />
+                            <Run Text="{Binding EndTime, StringFormat=hh\\:mm}" />
+                          </TextBlock>
+                          <TextBlock Text="{Binding DisplayTitle}"
+                                     FontSize="11" Foreground="White" Opacity="0.9"
+                                     IsVisible="{Binding DisplayTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="{loc:Tr Mobile_Day_Empty}" FontSize="12" Opacity="0.5" FontStyle="Italic"
+                           IsVisible="{Binding !Entries.Count}" />
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+  </DockPanel>
+
+</UserControl>

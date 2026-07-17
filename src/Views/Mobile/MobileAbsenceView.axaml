@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:FlexFamilyCalendar.ViewModels.Mobile"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.Mobile.MobileAbsenceView"
+             x:DataType="vm:MobileAbsenceViewModel"
+             x:CompileBindings="False">
+
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="14">
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="{loc:Tr Mobile_Absence_Type}" FontSize="12" Opacity="0.7" />
+        <ComboBox ItemsSource="{Binding Types}"
+                  SelectedItem="{Binding SelectedType}"
+                  HorizontalAlignment="Stretch">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Label}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="{loc:Tr Mobile_Absence_From}" FontSize="12" Opacity="0.7" />
+        <DatePicker SelectedDate="{Binding From}" HorizontalAlignment="Stretch" />
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="{loc:Tr Mobile_Absence_To}" FontSize="12" Opacity="0.7" />
+        <DatePicker SelectedDate="{Binding To}" HorizontalAlignment="Stretch" />
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="{loc:Tr Mobile_Absence_Reason}" FontSize="12" Opacity="0.7" />
+        <TextBox Text="{Binding Reason}" AcceptsReturn="True" Height="80" TextWrapping="Wrap"
+                 PlaceholderText="{loc:Tr Mobile_Absence_ReasonPlaceholder}" />
+      </StackPanel>
+
+      <Button Content="{loc:Tr Mobile_Absence_Save}" Command="{Binding SaveCommand}"
+              IsEnabled="{Binding !IsSaving}"
+              HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+              Padding="0,14" CornerRadius="6"
+              Background="{DynamicResource SystemAccentColor}" Foreground="White"
+              FontSize="14" FontWeight="SemiBold" />
+
+      <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"
+                 FontSize="12" Opacity="0.85" HorizontalAlignment="Center" />
+
+    </StackPanel>
+  </ScrollViewer>
+
+</UserControl>
