@@ -3,7 +3,7 @@ using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Views;
 
-public partial class ReplanDialog : Window
+public partial class ReplanDialog : ChromeWindow
 {
     private ReplanViewModel? _vm;
 

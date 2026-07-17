@@ -4,7 +4,7 @@ namespace FlexFamilyCalendar.Views;
 
 /// <summary>Dünne Window-Hülle um <see cref="MainView"/>. Logik (Dialog-Handler etc.) liegt in MainView,
 /// damit dieselbe Oberfläche auch im Browser-Head (SingleView) funktioniert.</summary>
-public partial class MainWindow : Window
+public partial class MainWindow : ChromeWindow
 {
     public MainWindow() => InitializeComponent();
 }

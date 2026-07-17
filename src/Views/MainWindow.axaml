@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+<views:ChromeWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:FlexFamilyCalendar.ViewModels"
         xmlns:views="using:FlexFamilyCalendar.Views"
@@ -10,4 +10,4 @@
         Width="1280" Height="800"
         MinWidth="900" MinHeight="600">
   <views:MainView />
-</Window>
+</views:ChromeWindow>

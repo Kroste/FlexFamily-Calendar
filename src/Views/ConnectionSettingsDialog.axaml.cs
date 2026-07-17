@@ -3,7 +3,7 @@ using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Views;
 
-public partial class ConnectionSettingsDialog : Window
+public partial class ConnectionSettingsDialog : ChromeWindow
 {
     private ConnectionSettingsViewModel? _vm;
 

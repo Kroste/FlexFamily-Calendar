@@ -3,7 +3,7 @@ using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Views;
 
-public partial class ShiftSwapDialog : Window
+public partial class ShiftSwapDialog : ChromeWindow
 {
     private ShiftSwapViewModel? _vm;
 

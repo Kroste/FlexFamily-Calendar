@@ -3,7 +3,7 @@ using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Views;
 
-public partial class NotificationsDialog : Window
+public partial class NotificationsDialog : ChromeWindow
 {
     private NotificationsViewModel? _vm;
 

@@ -1,0 +1,68 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:FlexFamilyCalendar.Views">
+
+  <!-- ControlTemplate für die ChromeWindow-Basisklasse: Custom-Titelleiste oben, darunter der
+       eigentliche Fensterinhalt. Wird über App.axaml als globale Style-Ressource eingezogen und
+       greift auf jede Instanz von ChromeWindow, egal welche Subklasse. -->
+  <Style Selector="views|ChromeWindow">
+    <Setter Property="Template">
+      <ControlTemplate TargetType="views:ChromeWindow">
+        <Panel>
+          <VisualLayerManager>
+            <DockPanel LastChildFill="True">
+
+              <Border DockPanel.Dock="Top"
+                      x:Name="PART_DragArea"
+                      Height="32"
+                      Background="{DynamicResource AppHeaderBrush}"
+                      IsHitTestVisible="True">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+
+                  <TextBlock Grid.Column="0" Text="{TemplateBinding Title}"
+                             VerticalAlignment="Center" Margin="12,0,0,0"
+                             Foreground="White" FontSize="13" />
+
+                  <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button x:Name="PART_MinimizeButton"
+                            Content="—" Width="46" Height="32"
+                            Background="Transparent" Foreground="White"
+                            BorderThickness="0" CornerRadius="0"
+                            ToolTip.Tip="Minimieren" />
+                    <Button x:Name="PART_MaximizeButton"
+                            Content="☐" Width="46" Height="32"
+                            Background="Transparent" Foreground="White"
+                            BorderThickness="0" CornerRadius="0"
+                            ToolTip.Tip="Maximieren" />
+                    <Button x:Name="PART_CloseButton"
+                            Content="✕" Width="46" Height="32"
+                            Background="Transparent" Foreground="White"
+                            BorderThickness="0" CornerRadius="0"
+                            ToolTip.Tip="Schließen" />
+                  </StackPanel>
+
+                </Grid>
+              </Border>
+
+              <ContentPresenter Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch" />
+
+            </DockPanel>
+          </VisualLayerManager>
+        </Panel>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+
+  <!-- Hover-Farbe für die Titelleisten-Buttons — Close bekommt Rot, die anderen ein leichtes Weiß. -->
+  <Style Selector="views|ChromeWindow /template/ Button#PART_CloseButton:pointerover">
+    <Setter Property="Background" Value="#E81123" />
+  </Style>
+  <Style Selector="views|ChromeWindow /template/ Button#PART_MinimizeButton:pointerover,
+                   views|ChromeWindow /template/ Button#PART_MaximizeButton:pointerover">
+    <Setter Property="Background" Value="#33FFFFFF" />
+  </Style>
+
+</Styles>

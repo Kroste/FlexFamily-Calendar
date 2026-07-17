@@ -3,7 +3,7 @@ using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Views;
 
-public partial class MoveCopyDialog : Window
+public partial class MoveCopyDialog : ChromeWindow
 {
     private MoveCopyViewModel? _vm;
 

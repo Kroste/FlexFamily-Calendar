@@ -3,7 +3,7 @@ using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Views;
 
-public partial class UpdateDialog : Window
+public partial class UpdateDialog : ChromeWindow
 {
     private UpdateViewModel? _vm;
 

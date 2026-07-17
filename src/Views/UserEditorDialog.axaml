@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+<views:ChromeWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="using:FlexFamilyCalendar.Views"
         x:Class="FlexFamilyCalendar.Views.UserEditorDialog"
@@ -8,4 +8,4 @@
         CanResize="False"
         WindowStartupLocation="CenterOwner">
   <views:UserEditorView />
-</Window>
+</views:ChromeWindow>

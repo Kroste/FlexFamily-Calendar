@@ -3,7 +3,7 @@ using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Views;
 
-public partial class AiPlannerDialog : Window
+public partial class AiPlannerDialog : ChromeWindow
 {
     private AiPlannerViewModel? _vm;
 

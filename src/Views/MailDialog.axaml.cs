@@ -3,7 +3,7 @@ using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Views;
 
-public partial class MailDialog : Window
+public partial class MailDialog : ChromeWindow
 {
     private MailViewModel? _vm;
 

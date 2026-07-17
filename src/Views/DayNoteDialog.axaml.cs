@@ -3,7 +3,7 @@ using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Views;
 
-public partial class DayNoteDialog : Window
+public partial class DayNoteDialog : ChromeWindow
 {
     private DayNoteViewModel? _vm;
 

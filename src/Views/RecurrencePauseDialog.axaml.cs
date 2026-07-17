@@ -4,7 +4,7 @@ using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Views;
 
-public partial class RecurrencePauseDialog : Window
+public partial class RecurrencePauseDialog : ChromeWindow
 {
     private RecurrencePauseViewModel? _vm;
 

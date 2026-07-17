@@ -3,7 +3,7 @@ using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Views;
 
-public partial class EntryEditorDialog : Window
+public partial class EntryEditorDialog : ChromeWindow
 {
     private EntryEditorViewModel? _vm;
 

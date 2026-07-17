@@ -3,7 +3,7 @@ using FlexFamilyCalendar.ViewModels;
 
 namespace FlexFamilyCalendar.Views;
 
-public partial class InfoDialog : Window
+public partial class InfoDialog : ChromeWindow
 {
     public InfoDialog()
     {
