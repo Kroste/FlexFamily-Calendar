@@ -15,6 +15,29 @@
       <views:LoginView DataContext="{Binding Main.LoginVm}" />
     </Border>
 
+    <!-- Modal-Overlay für Android (SingleView-Lifetime, kein Window). Analog zum Browser-Head.
+         Der "Verbindung"-Link auf dem Login-Screen öffnet hier den ConnectionSettingsDialog. -->
+    <Grid x:Name="DialogOverlay"
+          Background="#80000000"
+          IsVisible="False"
+          ZIndex="100">
+      <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+              CornerRadius="10"
+              Margin="16"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              BoxShadow="0 8 24 0 #66000000">
+        <Grid>
+          <ContentControl x:Name="DialogContent" />
+          <Button Click="OnOverlayCloseClick"
+                  Content="×" FontSize="20" FontWeight="Bold"
+                  HorizontalAlignment="Right" VerticalAlignment="Top"
+                  Margin="0,4,4,0" Padding="10,2"
+                  Background="Transparent" BorderThickness="0" />
+        </Grid>
+      </Border>
+    </Grid>
+
     <!-- Eingeloggt -->
     <Grid IsVisible="{Binding Main.IsLoggedIn}" RowDefinitions="Auto,*,Auto">
 
