@@ -10,9 +10,15 @@
     </Application.DataTemplates>
 
     <Application.Resources>
-        <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
-        <!-- Feste Markenfarbe für den Header (nicht benutzerabhängig) -->
-        <SolidColorBrush x:Key="AppHeaderBrush" Color="#1A237E" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://FlexFamilyCalendar/Styles/Icons.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
+            <!-- Feste Markenfarbe für den Header (nicht benutzerabhängig) -->
+            <SolidColorBrush x:Key="AppHeaderBrush" Color="#1A237E" />
+        </ResourceDictionary>
     </Application.Resources>
 
     <Application.Styles>

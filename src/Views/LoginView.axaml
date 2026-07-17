@@ -25,7 +25,10 @@
 
         <!-- Logo / Titel -->
         <StackPanel HorizontalAlignment="Center" Spacing="4">
-          <TextBlock Text="📅" FontSize="40" HorizontalAlignment="Center" />
+          <Path Data="{StaticResource Icon.Calendar}"
+                Fill="{DynamicResource SystemControlForegroundAccentBrush}"
+                Width="40" Height="40" Stretch="Uniform"
+                HorizontalAlignment="Center" />
           <TextBlock Text="{loc:Tr App_Title}"
                      FontSize="22" FontWeight="Bold"
                      HorizontalAlignment="Center" />

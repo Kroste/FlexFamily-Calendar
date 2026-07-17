@@ -20,7 +20,9 @@
             Background="{DynamicResource AppHeaderBrush}">
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-          <TextBlock Text="📅" FontSize="22" />
+          <Path Data="{StaticResource Icon.Calendar}"
+                Fill="White" Stroke="White" StrokeThickness="0"
+                Width="22" Height="22" Stretch="Uniform" />
           <TextBlock Text="{loc:Tr App_Title}"
                      FontSize="18" FontWeight="Bold"
                      Foreground="White"
@@ -33,7 +35,8 @@
                   CornerRadius="6" Padding="10,5" VerticalAlignment="Center"
                   ToolTip.Tip="{loc:Tr Notif_Title}">
             <Grid>
-              <TextBlock Text="🔔" FontSize="15" Foreground="White" />
+              <Path Data="{StaticResource Icon.Bell}"
+                    Fill="White" Width="15" Height="15" Stretch="Uniform" />
               <Border IsVisible="{Binding HasUnread}"
                       Background="#E74C3C" CornerRadius="8" MinWidth="16" Height="16"
                       Padding="4,0" Margin="0,-8,-10,0"
@@ -67,7 +70,8 @@
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="10,5"
                   ToolTip.Tip="{loc:Tr Info_Title}">
-            <TextBlock Text="ℹ" FontSize="15" />
+            <Path Data="{StaticResource Icon.Info}"
+                  Fill="White" Width="15" Height="15" Stretch="Uniform" />
           </Button>
           <Button Content="{loc:Tr Main_Logout}"
                   Command="{Binding LogoutCommand}"

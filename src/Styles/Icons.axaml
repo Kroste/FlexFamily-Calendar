@@ -1,0 +1,26 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Vector-Icons statt Emojis — Emojis rendern im Browser-Head als Tofu-Boxes, weil die
+       Inter-Font keine Emoji-Glyphen enthält und Avalonia.Browser keinen Font-Fallback zum
+       System hat. Path-Daten sind cross-platform 1:1 gleich (SkiaSharp rendert sie überall). -->
+
+  <!-- Kalender: Rahmen + zwei Fahnen oben + Gitternetzlinie -->
+  <StreamGeometry x:Key="Icon.Calendar">M3 4 h18 v16 h-18 z M3 9 h18 M7 2 v4 M17 2 v4</StreamGeometry>
+
+  <!-- Glocke -->
+  <StreamGeometry x:Key="Icon.Bell">M12 3 c-3 0 -5 2 -5 5 v3 l-2 3 h14 l-2 -3 v-3 c0 -3 -2 -5 -5 -5 z M10 18 h4 c0 1 -1 2 -2 2 s-2 -1 -2 -2 z</StreamGeometry>
+
+  <!-- Info (Kreis mit i) -->
+  <StreamGeometry x:Key="Icon.Info">M12 2 a10 10 0 1 0 0.001 0 z M11 7 h2 v2 h-2 z M11 11 h2 v6 h-2 z</StreamGeometry>
+
+  <!-- Roboter (KI-Indikator) -->
+  <StreamGeometry x:Key="Icon.Robot">M8 2 h8 v2 h-8 z M12 4 v2 M5 6 h14 v14 h-14 z M8 10 h2 v2 h-2 z M14 10 h2 v2 h-2 z M8 15 h8 v2 h-8 z</StreamGeometry>
+
+  <!-- Bleistift -->
+  <StreamGeometry x:Key="Icon.Pencil">M3 17 l10 -10 l4 4 l-10 10 h-4 z M14 6 l3 -3 l4 4 l-3 3 z</StreamGeometry>
+
+  <!-- Warnung: Dreieck mit Ausrufezeichen -->
+  <StreamGeometry x:Key="Icon.Warning">M12 3 l10 18 h-20 z M11 10 h2 v6 h-2 z M11 18 h2 v2 h-2 z</StreamGeometry>
+
+</ResourceDictionary>
