@@ -16,6 +16,7 @@ Urlaubsmeldungen und Schichttausch — für Eltern, Kinder, Angestellte und Au-P
 - [Was FlexFamily Calendar für dich macht](#was-flexfamily-calendar-für-dich-macht)
 - [App holen](#app-holen)
 - [Anmelden](#anmelden)
+- [Fenster bedienen](#fenster-bedienen)
 - [Der Wochenplan](#der-wochenplan)
 - [Einen Eintrag anlegen](#einen-eintrag-anlegen)
   - [Arbeit / Schicht](#arbeit--schicht)
@@ -74,7 +75,8 @@ Für Windows und Linux gibt es fertige Pakete unter
 - **Windows**: die `.zip`-Datei entpacken, `FlexFamilyCalendar.Desktop.exe`
   doppelt anklicken.
 - **Linux**: die `.AppImage`-Datei herunterladen, ausführbar machen
-  (`chmod +x`), doppelt anklicken.
+  (`chmod +x`), doppelt anklicken. Alternativ das `.tar.gz`-Archiv entpacken
+  und `FlexFamilyCalendar.Desktop` starten.
 
 Die Desktop-App aktualisiert sich beim Start selbst, wenn eine neue Version
 verfügbar ist — ein Dialog mit den Neuerungen erscheint, und mit einem Klick
@@ -93,6 +95,21 @@ Beim ersten Start zeigt die App den Anmeldebildschirm. Trage deinen
 
 Wenn du deinen Benutzer noch nicht hast, sprich mit dem Elternteil, das den
 Kalender verwaltet — die Benutzerverwaltung liegt beim Admin.
+
+## Fenster bedienen
+
+Die Desktop-App bringt eine eigene Titelleiste mit (die OS-Standard-Titelleiste
+wird bewusst ersetzt, damit die App auf Windows, Linux und macOS identisch
+aussieht):
+
+- **Ziehen** an der farbigen Titelleiste verschiebt das Fenster.
+- **Doppelklick** auf die Titelleiste maximiert / stellt es wieder her.
+- Rechts oben: **—** Minimieren, **☐** Maximieren / Wiederherstellen,
+  **✕** Schließen.
+- Alle Fenster (Hauptfenster und Dialoge) sind über die Ecken frei skalierbar.
+
+Im Browser gibt es keine eigene Titelleiste — dort nutzt du die Browser-Tab-
+und Fenster-Kontrollen.
 
 ## Der Wochenplan
 
@@ -175,11 +192,12 @@ Freitag) trägst du nicht jede Woche neu ein — der **Admin pflegt sie als
 Wochen-Regel** im Admin-Bereich → Wiederkehrend.
 
 Wiederkehrende Aktivitäten erscheinen als **Overlay** im Wochenplan — sie sind
-sichtbar, aber nicht als eigenständige Einträge in der DB gespeichert, sondern
-werden aus der Regel projiziert.
+sichtbar, aber nicht als eigenständige Einträge gespeichert, sondern werden aus
+der Regel projiziert.
 
 Pro Regel entscheidet der Admin, ob sie **an Feiertagen ausfällt** oder ob nur
-ein Hinweis „könnte ausfallen" erscheint.
+ein Hinweis „könnte ausfallen" erscheint. Einzelne Wochen kannst du im Admin-
+Bereich pausieren (Datumsbereich mit Grund).
 
 ## Feiertage
 
@@ -218,7 +236,7 @@ können sie überstimmen.
 
 ## Benachrichtigungen
 
-Die **🔔 Glocke** oben rechts zeigt eine Zahl, wenn ungelesene Benachrichtigungen
+Die **Glocke** oben rechts zeigt eine Zahl, wenn ungelesene Benachrichtigungen
 warten:
 
 - **Krankmeldung**: eine Person hat sich krank gemeldet — Admin sieht das, kann
@@ -274,7 +292,8 @@ maskiert**. Krankmeldungen der anderen erscheinen bei ihm nur als „Abwesend"
 ohne Grund — auch wenn du selbst als Admin die Details siehst.
 
 Der Versand läuft einzeln pro Empfänger (kein sichtbares BCC-Feld) und nutzt
-die SMTP-Einstellungen aus dem Admin-Bereich.
+die SMTP-Einstellungen aus dem Admin-Bereich (im Server-Modus liegen sie
+serverseitig als Umgebungsvariablen).
 
 ## Dein Profil
 
@@ -354,7 +373,7 @@ KI-Tab nur die Provider-Auswahl und optional den Modellnamen.
 
 ## Über und Hilfe
 
-Der Button **ℹ** oben rechts öffnet die Info-Box mit:
+Der **Info-Button** oben rechts (kleines *i* im Header) öffnet die Info-Box mit:
 
 - App-Name und Version
 - Kurzbeschreibung
@@ -388,8 +407,9 @@ dotnet test FlexFamilyCalendar.slnx
 **Anforderungen:** .NET 10 SDK, für den WASM-Build zusätzlich
 `dotnet workload install wasm-tools`.
 
-Auf jedes Tag `vX.Y.Z` läuft `.github/workflows/release.yml` und baut fünf
+Auf jedes Tag `vX.Y.Z` läuft `.github/workflows/release.yml` und baut sechs
 Artefakte parallel: Windows-ZIP, Linux-Tar, Linux-AppImage und zwei
-Docker-Images (API + Caddy mit eingebetteter WASM-SPA).
+Docker-Images (API + Caddy mit eingebetteter WASM-SPA + eingebetteter
+Caddyfile).
 
 **Lizenz:** siehe [LICENSE](LICENSE).
