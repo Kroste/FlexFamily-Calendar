@@ -35,7 +35,9 @@ public record ServerUserDto(
     double OpeningBalanceHours = 0,
     DateOnly AccountStart = default,
     string? ThemeVariant = null,
-    bool ShowHolidays = true);
+    bool ShowHolidays = true,
+    bool ShowHints = true,
+    bool OnboardingSeen = false);
 
 public record LoginResponse(string Token, ServerUserDto User);
 
@@ -56,7 +58,8 @@ public record CreateUserBody(
     double OpeningBalanceHours = 0,
     DateOnly AccountStart = default,
     string? ThemeVariant = null,
-    bool ShowHolidays = true);
+    bool ShowHolidays = true,
+    bool ShowHints = true);
 
 public record UpdateUserBody(
     string Username,
@@ -74,7 +77,8 @@ public record UpdateUserBody(
     double OpeningBalanceHours = 0,
     DateOnly AccountStart = default,
     string? ThemeVariant = null,
-    bool ShowHolidays = true);
+    bool ShowHolidays = true,
+    bool ShowHints = true);
 
 public record ApiErrorBody(string? Error);
 
@@ -128,7 +132,8 @@ public record ServerNotificationDto(
 public record ServerDayNoteDto(string Note, bool IsFinalized, string? NoteUserId = null);
 
 public record UpdateProfileBody(string? DisplayName, string? Email, string? Language, string? Color,
-    string? AiStyleHint = null, string? ThemeVariant = null, bool? ShowHolidays = null);
+    string? AiStyleHint = null, string? ThemeVariant = null, bool? ShowHolidays = null,
+    bool? ShowHints = null, bool? OnboardingSeen = null);
 
 public record CreateEntryBody(
     string? UserId,

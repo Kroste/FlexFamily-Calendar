@@ -60,5 +60,11 @@ public class WindowDialogService : IDialogService
     public Task ShowInfoAsync(InfoViewModel vm)
         => new InfoDialog { DataContext = vm }.ShowDialog(_owner);
 
+    public async Task<bool> ShowOnboardingAsync(OnboardingViewModel vm)
+    {
+        await new OnboardingDialog { DataContext = vm }.ShowDialog(_owner);
+        return vm.CompletedFully;
+    }
+
     public void CancelActive() { }   // Window fängt ESC/Außenklick selbst ab
 }

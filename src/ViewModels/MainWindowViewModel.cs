@@ -56,6 +56,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public event Action? NotificationsRequested;
     public event Action? AdminRequested;
     public event Action? InfoRequested;
+    public event Action? OnboardingRequested;
 
     public MainWindowViewModel(AuthService auth, IStorageService storage, NotificationService notifications, AiService ai, IMailSender mailSender, LoginViewModel loginVm)
     {
@@ -81,12 +82,17 @@ public partial class MainWindowViewModel : ViewModelBase
         _currentUser = user;
         Localizer.Instance.SetLanguage(user.Language);
         ThemeManager.Instance.Apply(user.ThemeVariant);
+        HintService.IsEnabled = user.ShowHints;
 
         CurrentUserDisplay = string.IsNullOrEmpty(user.DisplayName) ? user.Username : user.DisplayName;
         CalendarVm?.Cleanup();
         CalendarVm = new CalendarViewModel(_storage, user, _notifications, _ai, _mailSender);
         IsLoggedIn = true;
         OnPropertyChanged(nameof(IsAdmin));
+
+        // First-Run: Onboarding-Tour anzeigen, bis der User sie einmal ganz durchgeht.
+        if (!user.OnboardingSeen)
+            OnboardingRequested?.Invoke();
         LogService.UserAction(user.Username, logVerb);
         _ = RefreshUnreadCountAsync();
         StartBackgroundSync();
@@ -291,6 +297,23 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public InfoViewModel CreateInfo() => new();
 
+    public OnboardingViewModel CreateOnboarding() => new();
+
+    /// <summary>Nach Onboarding-„Verstanden": Flag auf true setzen und persistieren.</summary>
+    public async Task MarkOnboardingSeenAsync()
+    {
+        if (_currentUser is null || _currentUser.OnboardingSeen) return;
+        _currentUser.OnboardingSeen = true;
+        try
+        {
+            await _auth.UpdateOwnProfileAsync(_currentUser);
+        }
+        catch (Exception ex)
+        {
+            LogService.Warn("OnboardingSeen konnte nicht persistiert werden: {0}", ex.Message);
+        }
+    }
+
     public UserEditorViewModel CreateProfileEditor()
         => new(_auth, _currentUser, isNew: false, selfMode: true);
 
@@ -317,6 +340,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _currentUser = fresh;
         Localizer.Instance.SetLanguage(fresh.Language);
         ThemeManager.Instance.Apply(fresh.ThemeVariant);
+        HintService.IsEnabled = fresh.ShowHints;
         CurrentUserDisplay = string.IsNullOrEmpty(fresh.DisplayName) ? fresh.Username : fresh.DisplayName;
         OnPropertyChanged(nameof(IsAdmin));
     }

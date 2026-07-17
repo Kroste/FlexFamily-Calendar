@@ -45,6 +45,7 @@ public partial class UserEditorViewModel : ViewModelBase
     [ObservableProperty] private ThemeVariantOption? _selectedThemeVariant;
     [ObservableProperty] private string? _selectedColor;
     [ObservableProperty] private string _aiStyleHint = "";
+    [ObservableProperty] private bool _showHints = true;
 
     public bool IsSelfMode { get; }
     public bool CanEditAdminFields => !IsSelfMode;
@@ -96,7 +97,17 @@ public partial class UserEditorViewModel : ViewModelBase
         _selectedColor = PersonColors.FirstOrDefault(c => c.Equals(_user.Color, StringComparison.OrdinalIgnoreCase))
                          ?? (string.IsNullOrEmpty(_user.Color) ? PersonColors[0] : _user.Color);
         _aiStyleHint = _user.AiStyleHint ?? "";
+        _showHints = _user.ShowHints;
         _initialized = true;
+    }
+
+    // Live-Vorschau: Toggle sofort greifen lassen (im Self-Modus), damit der User beim
+    // Umschalten direkt sieht ob die Tooltips verschwinden/erscheinen. Persistiert wird
+    // erst beim Speichern.
+    partial void OnShowHintsChanged(bool value)
+    {
+        if (_initialized && IsSelfMode)
+            HintService.IsEnabled = value;
     }
 
     partial void OnSelectedCategoryChanged(CategoryOption? value)
@@ -161,6 +172,9 @@ public partial class UserEditorViewModel : ViewModelBase
             Color = CanEditAdminFields ? (SelectedColor ?? _user.Color) : _user.Color,
             // KI-Stil-Wunsch darf jeder für sich selbst pflegen (auch im selfMode).
             AiStyleHint = (AiStyleHint ?? "").Trim(),
+            ShowHints = ShowHints,
+            ShowHolidays = _user.ShowHolidays,
+            OnboardingSeen = _user.OnboardingSeen,
             PasswordHash = _user.PasswordHash
         };
 

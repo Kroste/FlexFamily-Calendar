@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:FlexFamilyCalendar.ViewModels"
              xmlns:loc="using:FlexFamilyCalendar.Localization"
+             xmlns:views="using:FlexFamilyCalendar.Views"
              x:Class="FlexFamilyCalendar.Views.LoginView"
              x:DataType="vm:LoginViewModel"
              x:CompileBindings="False">
@@ -62,7 +63,8 @@
                      CornerRadius="6" />
           </StackPanel>
 
-          <CheckBox IsChecked="{Binding RememberMe}" Content="{loc:Tr Login_RememberMe}" />
+          <CheckBox IsChecked="{Binding RememberMe}" Content="{loc:Tr Login_RememberMe}"
+                    views:Hint.Text="{loc:Tr Hint_Login_RememberMe}" />
         </StackPanel>
 
         <!-- Fehlermeldung -->
@@ -105,7 +107,7 @@
                 Background="Transparent" BorderThickness="0"
                 HorizontalAlignment="Center" Padding="6,4" CornerRadius="6"
                 FontSize="11" Opacity="0.65" Cursor="Hand"
-                ToolTip.Tip="{loc:Tr Connection_Tooltip}" />
+                views:Hint.Text="{loc:Tr Hint_Login_Connection}" />
       </StackPanel>
     </Border>
   </Grid>

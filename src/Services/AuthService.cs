@@ -136,7 +136,7 @@ public class AuthService
         {
             await _api.UpdateMyProfileAsync(new Api.UpdateProfileBody(
                 user.DisplayName, user.Email, user.Language, user.Color, user.AiStyleHint,
-                user.ThemeVariant, user.ShowHolidays));
+                user.ThemeVariant, user.ShowHolidays, user.ShowHints, user.OnboardingSeen));
             LogService.Info("Eigenes Profil aktualisiert (Server): {0}", user.Username);
             return;
         }

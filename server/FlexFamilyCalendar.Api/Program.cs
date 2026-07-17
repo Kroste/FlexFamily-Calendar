@@ -187,6 +187,8 @@ app.MapPut("/api/auth/me", async (UpdateProfileRequest req, AppDbContext db, Cla
     if (req.AiStyleHint is not null) user.AiStyleHint = req.AiStyleHint.Trim();
     if (!string.IsNullOrWhiteSpace(req.ThemeVariant)) user.ThemeVariant = req.ThemeVariant.Trim();
     if (req.ShowHolidays is { } showHolidays) user.ShowHolidays = showHolidays;
+    if (req.ShowHints is { } showHints) user.ShowHints = showHints;
+    if (req.OnboardingSeen is { } onboardingSeen) user.OnboardingSeen = onboardingSeen;
 
     await db.SaveChangesAsync();
     return Results.Ok(UserDto.From(user));
@@ -238,6 +240,7 @@ app.MapPost("/api/users", async (CreateUserRequest req, AppDbContext db) =>
         AccountStart = req.AccountStart,
         ThemeVariant = string.IsNullOrWhiteSpace(req.ThemeVariant) ? "System" : req.ThemeVariant!.Trim(),
         ShowHolidays = req.ShowHolidays,
+        ShowHints = req.ShowHints,
         // Leeres Passwort erlaubt = Konto ohne Anmeldung (z.B. Kind).
         PasswordHash = string.IsNullOrWhiteSpace(req.Password) ? "" : BCrypt.Net.BCrypt.HashPassword(req.Password)
     };
@@ -278,6 +281,7 @@ app.MapPut("/api/users/{id:guid}", async (Guid id, UpdateUserRequest req, AppDbC
     user.AccountStart = req.AccountStart;
     if (!string.IsNullOrWhiteSpace(req.ThemeVariant)) user.ThemeVariant = req.ThemeVariant!.Trim();
     user.ShowHolidays = req.ShowHolidays;
+    user.ShowHints = req.ShowHints;
 
     await db.SaveChangesAsync();
     return Results.Ok(UserDto.From(user));
@@ -778,18 +782,21 @@ internal record CreateUserRequest(
     string Username, string Password, string? DisplayName, string? Email, string? Role, string? Category,
     double WeeklyHoursQuota = 0, double MaxWeeklyHours = 0, double MaxDailyHours = 0, double MinRestHours = 0,
     string? Color = null, string? Language = null, string? AiStyleHint = null,
-    double OpeningBalanceHours = 0, DateOnly AccountStart = default, string? ThemeVariant = null, bool ShowHolidays = true);
+    double OpeningBalanceHours = 0, DateOnly AccountStart = default, string? ThemeVariant = null, bool ShowHolidays = true,
+    bool ShowHints = true);
 
 internal record UpdateUserRequest(
     string Username, string? DisplayName, string? Email, string? Role, string? Category,
     double WeeklyHoursQuota = 0, double MaxWeeklyHours = 0, double MaxDailyHours = 0, double MinRestHours = 0,
     string? Color = null, string? Language = null, string? AiStyleHint = null,
-    double OpeningBalanceHours = 0, DateOnly AccountStart = default, string? ThemeVariant = null, bool ShowHolidays = true);
+    double OpeningBalanceHours = 0, DateOnly AccountStart = default, string? ThemeVariant = null, bool ShowHolidays = true,
+    bool ShowHints = true);
 
 internal record SetPasswordRequest(string Password);
 
 internal record UpdateProfileRequest(string? DisplayName, string? Email, string? Language, string? Color,
-    string? AiStyleHint = null, string? ThemeVariant = null, bool? ShowHolidays = null);
+    string? AiStyleHint = null, string? ThemeVariant = null, bool? ShowHolidays = null,
+    bool? ShowHints = null, bool? OnboardingSeen = null);
 
 // Für WebApplicationFactory<Program> in den Integration-Tests: Minimal-API-Program hat sonst
 // keine öffentliche Program-Klasse — der Compiler erzeugt eine mit internem Zugriff.

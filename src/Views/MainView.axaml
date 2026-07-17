@@ -33,7 +33,7 @@
           <Button Command="{Binding OpenNotificationsCommand}"
                   Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="10,5" VerticalAlignment="Center"
-                  ToolTip.Tip="{loc:Tr Notif_Title}">
+                  views:Hint.Text="{loc:Tr Hint_Main_Notifications}">
             <Grid>
               <Path Data="{StaticResource Icon.Bell}"
                     Fill="White" Width="15" Height="15" Stretch="Uniform" />
@@ -53,23 +53,27 @@
                   Command="{Binding OpenAdminCommand}"
                   IsVisible="{Binding IsAdmin}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
-                  CornerRadius="6" Padding="12,5" />
+                  CornerRadius="6" Padding="12,5"
+                  views:Hint.Text="{loc:Tr Hint_Main_Admin}" />
           <Button Content="{loc:Tr Main_MonthOverview}"
                   Command="{Binding OpenMonthOverviewCommand}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
-                  CornerRadius="6" Padding="12,5" />
+                  CornerRadius="6" Padding="12,5"
+                  views:Hint.Text="{loc:Tr Hint_Main_MonthOverview}" />
           <Button Content="{loc:Tr Main_HoursAccount}"
                   Command="{Binding OpenHoursAccountCommand}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
-                  CornerRadius="6" Padding="12,5" />
+                  CornerRadius="6" Padding="12,5"
+                  views:Hint.Text="{loc:Tr Hint_Main_HoursAccount}" />
           <Button Content="{loc:Tr Main_Profile}"
                   Command="{Binding OpenProfileCommand}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
-                  CornerRadius="6" Padding="12,5" />
+                  CornerRadius="6" Padding="12,5"
+                  views:Hint.Text="{loc:Tr Hint_Main_Profile}" />
           <Button Command="{Binding OpenInfoCommand}"
                   Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
                   CornerRadius="6" Padding="10,5"
-                  ToolTip.Tip="{loc:Tr Info_Title}">
+                  views:Hint.Text="{loc:Tr Hint_Main_Info}">
             <Path Data="{StaticResource Icon.Info}"
                   Fill="White" Width="15" Height="15" Stretch="Uniform" />
           </Button>
@@ -79,7 +83,8 @@
                   Background="#33FFFFFF"
                   BorderBrush="#55FFFFFF"
                   CornerRadius="6"
-                  Padding="12,5" />
+                  Padding="12,5"
+                  views:Hint.Text="{loc:Tr Hint_Main_Logout}" />
         </StackPanel>
       </Grid>
     </Border>

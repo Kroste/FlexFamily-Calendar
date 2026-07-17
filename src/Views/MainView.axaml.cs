@@ -69,6 +69,7 @@ public partial class MainView : UserControl
             _vm.NotificationsRequested -= OnNotificationsRequested;
             _vm.AdminRequested -= OnAdminRequested;
             _vm.InfoRequested -= OnInfoRequested;
+            _vm.OnboardingRequested -= OnOnboardingRequested;
         }
         _vm = DataContext as MainWindowViewModel;
         if (_vm != null)
@@ -79,7 +80,20 @@ public partial class MainView : UserControl
             _vm.NotificationsRequested += OnNotificationsRequested;
             _vm.AdminRequested += OnAdminRequested;
             _vm.InfoRequested += OnInfoRequested;
+            _vm.OnboardingRequested += OnOnboardingRequested;
         }
+    }
+
+    private async void OnOnboardingRequested()
+    {
+        if (_vm == null) return;
+        if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
+        try
+        {
+            var completed = await App.DialogService.ShowOnboardingAsync(_vm.CreateOnboarding());
+            if (completed) await _vm.MarkOnboardingSeenAsync();
+        }
+        catch (Exception ex) { LogService.Error("Fehler in der Onboarding-Tour", ex); }
     }
 
     private async void OnInfoRequested()

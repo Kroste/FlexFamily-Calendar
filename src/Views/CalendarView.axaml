@@ -4,6 +4,7 @@
              xmlns:models="using:FlexFamilyCalendar.Models"
              xmlns:cv="using:FlexFamilyCalendar.Converters"
              xmlns:loc="using:FlexFamilyCalendar.Localization"
+             xmlns:views="using:FlexFamilyCalendar.Views"
              x:Class="FlexFamilyCalendar.Views.CalendarView"
              x:CompileBindings="False">
 
@@ -33,45 +34,56 @@
             Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
       <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
         <Button Grid.Column="0" Content="{loc:Tr Cal_PreviousWeek}"
-                Command="{Binding PreviousWeekCommand}" Padding="12,6" CornerRadius="6" />
+                Command="{Binding PreviousWeekCommand}" Padding="12,6" CornerRadius="6"
+                views:Hint.Text="{loc:Tr Hint_Cal_PrevWeek}" />
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="8,0,0,0">
           <ToggleButton Content="{loc:Tr Cal_ViewPersonal}"
                         IsChecked="{Binding IsPersonalView}"
                         IsVisible="{Binding CanSwitchView}"
-                        Padding="12,6" CornerRadius="6" />
+                        Padding="12,6" CornerRadius="6"
+                        views:Hint.Text="{loc:Tr Hint_Cal_ViewToggle}" />
           <Button Content="{loc:Tr Cal_HoursToggle}"
                   Command="{Binding ToggleHoursPanelCommand}"
-                  Padding="12,6" CornerRadius="6" />
+                  Padding="12,6" CornerRadius="6"
+                  views:Hint.Text="{loc:Tr Hint_Cal_HoursBar}" />
           <ToggleButton Content="{loc:Tr Cal_Holidays}"
                         IsChecked="{Binding IsHolidaysVisible}"
-                        Padding="12,6" CornerRadius="6" />
+                        Padding="12,6" CornerRadius="6"
+                        views:Hint.Text="{loc:Tr Hint_Cal_HolidaysToggle}" />
           <Button Content="{loc:Tr Cal_ExportPdf}"
                   Command="{Binding ExportPdfCommand}"
-                  Padding="12,6" CornerRadius="6" />
+                  Padding="12,6" CornerRadius="6"
+                  views:Hint.Text="{loc:Tr Hint_Cal_PDF}" />
           <Button Content="{loc:Tr Cal_Mail}"
                   Command="{Binding MailPlanCommand}"
                   IsVisible="{Binding EffectiveIsAdmin}"
-                  Padding="12,6" CornerRadius="6" />
+                  Padding="12,6" CornerRadius="6"
+                  views:Hint.Text="{loc:Tr Hint_Cal_Mail}" />
           <Button Content="{loc:Tr Cal_AiPlanner}"
                   Command="{Binding OpenAiPlannerCommand}"
                   IsVisible="{Binding EffectiveIsAdmin}"
-                  Padding="12,6" CornerRadius="6" />
+                  Padding="12,6" CornerRadius="6"
+                  views:Hint.Text="{loc:Tr Hint_Cal_AiPlanner}" />
           <Button Content="{loc:Tr Cal_CopyWeek}"
                   Command="{Binding CopyWeekToNextCommand}"
                   IsVisible="{Binding EffectiveIsAdmin}"
-                  Padding="12,6" CornerRadius="6" />
+                  Padding="12,6" CornerRadius="6"
+                  views:Hint.Text="{loc:Tr Hint_Cal_CopyWeek}" />
           <Button Content="{Binding FinalizeButtonKey, Converter={x:Static loc:LocKeyConverter.Instance}}"
                   Command="{Binding ToggleFinalizeWeekCommand}"
                   IsVisible="{Binding CanFinalize}"
-                  Padding="12,6" CornerRadius="6" />
+                  Padding="12,6" CornerRadius="6"
+                  views:Hint.Text="{loc:Tr Hint_Cal_Finalize}" />
         </StackPanel>
         <TextBlock Grid.Column="2" Text="{Binding WeekLabel}"
                    FontSize="18" FontWeight="SemiBold"
                    HorizontalAlignment="Center" VerticalAlignment="Center" />
         <Button Grid.Column="3" Content="{loc:Tr Cal_Today}"
-                Command="{Binding GoToTodayCommand}" Padding="12,6" CornerRadius="6" Margin="0,0,8,0" />
+                Command="{Binding GoToTodayCommand}" Padding="12,6" CornerRadius="6" Margin="0,0,8,0"
+                views:Hint.Text="{loc:Tr Hint_Cal_Today}" />
         <Button Grid.Column="4" Content="{loc:Tr Cal_NextWeek}"
-                Command="{Binding NextWeekCommand}" Padding="12,6" CornerRadius="6" />
+                Command="{Binding NextWeekCommand}" Padding="12,6" CornerRadius="6"
+                views:Hint.Text="{loc:Tr Hint_Cal_NextWeek}" />
       </Grid>
     </Border>
 

@@ -28,6 +28,8 @@ public interface IDialogService
 
     Task ShowInfoAsync(InfoViewModel vm);
 
+    Task<bool> ShowOnboardingAsync(OnboardingViewModel vm);
+
     /// <summary>
     /// Abbruch des aktuell offenen Dialogs (ESC/Backdrop-Klick im Overlay-Backend).
     /// Desktop-Backend ist No-op — Avalonia-Windows fangen ESC und Außenklicks selbst ab.

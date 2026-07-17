@@ -21,4 +21,8 @@ public class User
     public bool ShowHolidays { get; set; } = true;        // Anzeige-Präferenz: Feiertage im Kalender einblenden
     /// <summary>Freitext-Stil-Wunsch für die KI (Anrede, Tonfall). Leer = neutrales Default.</summary>
     public string AiStyleHint { get; set; } = "";
+    /// <summary>Hinweistexte (Tooltips) im UI anzeigen. Default an, kann im Profil abgeschaltet werden.</summary>
+    public bool ShowHints { get; set; } = true;
+    /// <summary>Ist die First-Run-Onboarding-Tour bereits durchgelaufen?</summary>
+    public bool OnboardingSeen { get; set; }
 }

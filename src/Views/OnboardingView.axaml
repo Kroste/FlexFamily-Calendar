@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:FlexFamilyCalendar.ViewModels"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.OnboardingView"
+             x:DataType="vm:OnboardingViewModel"
+             x:CompileBindings="False"
+             Padding="28" MinWidth="440">
+
+  <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
+      <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold"
+                 VerticalAlignment="Center" />
+      <TextBlock Text="{Binding StepLabel}" FontSize="12" Opacity="0.55"
+                 VerticalAlignment="Center" />
+    </StackPanel>
+
+    <Border Grid.Row="1" Margin="0,16,0,16" MinHeight="140" MaxWidth="480">
+      <TextBlock Text="{Binding Body}" TextWrapping="Wrap"
+                 LineHeight="20" FontSize="13" />
+    </Border>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="{loc:Tr Onboarding_Skip}" Command="{Binding SkipCommand}"
+              Padding="14,7" CornerRadius="6" />
+      <Button Content="{loc:Tr Onboarding_Back}" Command="{Binding BackCommand}"
+              IsVisible="{Binding CanGoBack}"
+              Padding="14,7" CornerRadius="6" />
+      <Button Content="{loc:Tr Onboarding_Next}" Command="{Binding NextCommand}"
+              IsVisible="{Binding CanGoForward}"
+              Padding="14,7" CornerRadius="6"
+              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+      <Button Content="{loc:Tr Onboarding_Finish}" Command="{Binding FinishCommand}"
+              IsVisible="{Binding IsLastSlide}"
+              Padding="14,7" CornerRadius="6"
+              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+    </StackPanel>
+
+  </Grid>
+
+</UserControl>

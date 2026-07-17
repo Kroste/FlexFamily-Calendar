@@ -21,4 +21,6 @@ public class UserEntity
     public DateOnly AccountStart { get; set; }           // Stundenkonto: Start (leer = bei Anlage gesetzt)
     public string ThemeVariant { get; set; } = "System"; // System | Light | Dark (UI-Präferenz)
     public bool ShowHolidays { get; set; } = true;       // Anzeige-Präferenz: Feiertage einblenden
+    public bool ShowHints { get; set; } = true;          // UI-Hover-Hinweise anzeigen (Profil-Toggle)
+    public bool OnboardingSeen { get; set; }             // First-Run-Tour bereits durchlaufen?
 }

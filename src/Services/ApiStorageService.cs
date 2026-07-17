@@ -48,7 +48,7 @@ public class ApiStorageService : IStorageService
         if (self is null) return;
         await _api.UpdateMyProfileAsync(new UpdateProfileBody(
             self.DisplayName, self.Email, self.Language, self.Color, self.AiStyleHint,
-            self.ThemeVariant, self.ShowHolidays));
+            self.ThemeVariant, self.ShowHolidays, self.ShowHints, self.OnboardingSeen));
         LogService.Debug("Self-Präferenzen des angemeldeten Benutzers via Profil-Endpunkt gespeichert.");
     }
 

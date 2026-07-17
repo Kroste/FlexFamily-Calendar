@@ -124,6 +124,27 @@ public class OverlayDialogService : IDialogService
         return tcs.Task;
     }
 
+    public Task<bool> ShowOnboardingAsync(OnboardingViewModel vm)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        Action handler = null!;
+        handler = () =>
+        {
+            vm.CloseRequested -= handler;
+            _cancelCurrent = null;
+            _content.Content = null;
+            _overlay.IsVisible = false;
+            tcs.TrySetResult(vm.CompletedFully);
+        };
+        vm.CloseRequested += handler;
+        // Backdrop-Klick / ESC = "Später zeigen" (skip, kein Flag setzen).
+        _cancelCurrent = () => vm.SkipCommand.Execute(null);
+
+        _content.Content = new OnboardingView { DataContext = vm };
+        _overlay.IsVisible = true;
+        return tcs.Task;
+    }
+
     public Task ShowAiPlannerAsync(AiPlannerViewModel vm)
     {
         // KI-Planner hat kein „Ergebnis" — Close wird über CloseRequested oder Backdrop ausgelöst.
