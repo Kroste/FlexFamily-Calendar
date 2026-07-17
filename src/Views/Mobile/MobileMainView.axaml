@@ -57,14 +57,20 @@
         </Grid>
       </Border>
 
-      <!-- Content -->
+      <!-- Content — jeder Tab wird in einem Grid gekapselt: IsVisible bindet gegen den
+           MobileMainViewModel-DataContext, der innere View bekommt erst dann seinen eigenen
+           DataContext. Ohne diese Trennung würde IsVisible gegen den inneren VM aufgelöst
+           (der die IsXxxActive-Properties nicht hat) und alle Views wären gleichzeitig sichtbar. -->
       <Grid Grid.Row="1">
-        <mviews:MobileCalendarView IsVisible="{Binding IsCalendarActive}"
-                                   DataContext="{Binding Main.CalendarVm}" />
-        <mviews:MobileAbsenceView IsVisible="{Binding IsSickActive}"
-                                  DataContext="{Binding SickVm}" />
-        <mviews:MobileAbsenceView IsVisible="{Binding IsVacationActive}"
-                                  DataContext="{Binding VacationVm}" />
+        <Grid IsVisible="{Binding IsCalendarActive}">
+          <mviews:MobileCalendarView DataContext="{Binding Main.CalendarVm}" />
+        </Grid>
+        <Grid IsVisible="{Binding IsSickActive}">
+          <mviews:MobileAbsenceView DataContext="{Binding SickVm}" />
+        </Grid>
+        <Grid IsVisible="{Binding IsVacationActive}">
+          <mviews:MobileAbsenceView DataContext="{Binding VacationVm}" />
+        </Grid>
         <Border IsVisible="{Binding IsSwapActive}" Padding="24" VerticalAlignment="Center">
           <StackPanel Spacing="12" HorizontalAlignment="Center">
             <TextBlock Text="{loc:Tr Mobile_Swap_ComingSoon}"
