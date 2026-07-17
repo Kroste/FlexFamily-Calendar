@@ -5,7 +5,7 @@
   <!-- ControlTemplate für die ChromeWindow-Basisklasse: Custom-Titelleiste oben, darunter der
        eigentliche Fensterinhalt. Wird über App.axaml als globale Style-Ressource eingezogen und
        greift auf jede Instanz von ChromeWindow, egal welche Subklasse. -->
-  <Style Selector="views|ChromeWindow">
+  <Style Selector="Window.chrome-window">
     <Setter Property="Template">
       <ControlTemplate TargetType="views:ChromeWindow">
         <Panel>
@@ -57,11 +57,11 @@
   </Style>
 
   <!-- Hover-Farbe für die Titelleisten-Buttons — Close bekommt Rot, die anderen ein leichtes Weiß. -->
-  <Style Selector="views|ChromeWindow /template/ Button#PART_CloseButton:pointerover">
+  <Style Selector="Window.chrome-window /template/ Button#PART_CloseButton:pointerover">
     <Setter Property="Background" Value="#E81123" />
   </Style>
-  <Style Selector="views|ChromeWindow /template/ Button#PART_MinimizeButton:pointerover,
-                   views|ChromeWindow /template/ Button#PART_MaximizeButton:pointerover">
+  <Style Selector="Window.chrome-window /template/ Button#PART_MinimizeButton:pointerover,
+                   Window.chrome-window /template/ Button#PART_MaximizeButton:pointerover">
     <Setter Property="Background" Value="#33FFFFFF" />
   </Style>
 

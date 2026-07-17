@@ -20,6 +20,10 @@ public class ChromeWindow : Window
         ExtendClientAreaToDecorationsHint = true;
         ExtendClientAreaTitleBarHeightHint = 32;
         CanResize = true;
+
+        // Class-basierter Selector, damit der ChromeWindow-Style auch für alle Subklassen
+        // (MainWindow, *Dialog) greift — Avalonia-Type-Selektoren matchen nur den exakten Typ.
+        Classes.Add("chrome-window");
     }
 
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
