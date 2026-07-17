@@ -8,7 +8,10 @@
   <Style Selector="Window.chrome-window">
     <Setter Property="Template">
       <ControlTemplate TargetType="views:ChromeWindow">
-        <Panel>
+        <!-- ExtendClientAreaToDecorationsHint macht den Fensterhintergrund transparent —
+             der Content-Bereich braucht deshalb einen expliziten Background, sonst schaut
+             man durchs Fenster durch (Bug in v0.1.13). -->
+        <Panel Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
           <VisualLayerManager>
             <DockPanel LastChildFill="True">
 
