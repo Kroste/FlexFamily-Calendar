@@ -54,7 +54,18 @@ public partial class App : Application
         SecretService.Initialize(StorageService.DataDirectory);
         var settings = Task.Run(() => localStorage.LoadSettingsAsync()).GetAwaiter().GetResult();
 
-        // Speicher-Modus: erst mal wie am Desktop (lokal oder Server je nach AppSettings).
+        // Erststart auf dem Handy → immer Server-Modus mit der Live-Instanz vorbelegen.
+        // Lokal (JSON-Dateien) ergibt auf einem Mobilgerät wenig Sinn, weil die Daten damit
+        // nur auf diesem Gerät liegen und weder mit Desktop noch mit anderen Familienmitgliedern
+        // synchronisiert werden. Die URL bleibt im Verbindungs-Dialog später änderbar.
+        if (string.IsNullOrWhiteSpace(settings.ServerUrl))
+        {
+            settings.UseServer = true;
+            settings.ServerUrl = "https://flexfamily.cloud";
+            Task.Run(() => localStorage.SaveSettingsAsync(settings)).GetAwaiter().GetResult();
+            LogService.Info("Android-Erststart: Default-Server flexfamily.cloud gesetzt.");
+        }
+
         IStorageService storage = localStorage;
         ApiClient? apiClient = null;
         if (settings.UseServer && !string.IsNullOrWhiteSpace(settings.ServerUrl))
