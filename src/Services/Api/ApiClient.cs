@@ -274,6 +274,20 @@ public class ApiClient
         return dto?.Text ?? "";
     }
 
+    /// <summary>Urlaubswunsch genehmigen (setzt EntryStatus auf Approved).</summary>
+    public async Task ApproveEntryAsync(string entryId)
+    {
+        var resp = await _http.PostAsync($"api/entries/{entryId}/approve", null);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Approve");
+    }
+
+    /// <summary>Urlaubswunsch ablehnen (setzt EntryStatus auf Rejected).</summary>
+    public async Task RejectEntryAsync(string entryId)
+    {
+        var resp = await _http.PostAsync($"api/entries/{entryId}/reject", null);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Reject");
+    }
+
     /// <summary>Server-Domänen-Einstellungen lesen (HolidayState, OvernightHoursPerDay).</summary>
     public async Task<ServerSettingsDto?> GetServerSettingsAsync()
     {

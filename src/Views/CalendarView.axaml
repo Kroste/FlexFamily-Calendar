@@ -287,6 +287,8 @@
                                                  TextWrapping="Wrap" />
                                       <TextBlock Text="{loc:Tr RecurrencePause_PausedSuffix}" IsVisible="{Binding IsPaused}"
                                                  FontSize="9.5" FontStyle="Italic" Foreground="White" Opacity="0.95" />
+                                      <TextBlock Text="{loc:Tr Entry_PendingSuffix}" IsVisible="{Binding IsPending}"
+                                                 FontSize="9.5" FontStyle="Italic" Foreground="White" Opacity="0.95" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="2"
                                                 HorizontalAlignment="Right" VerticalAlignment="Top">

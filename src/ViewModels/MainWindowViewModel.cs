@@ -162,7 +162,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void OpenNotifications() => NotificationsRequested?.Invoke();
 
-    public NotificationsViewModel CreateNotifications() => new(_notifications, _currentUser!);
+    public NotificationsViewModel CreateNotifications() => new(_notifications, _currentUser!, _auth.ApiClient);
 
     [RelayCommand]
     private void OpenAdmin() => AdminRequested?.Invoke();

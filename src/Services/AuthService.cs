@@ -15,6 +15,8 @@ public class AuthService
     }
 
     public bool IsServerMode => _api is not null;
+    /// <summary>Der ApiClient, wenn im Server-Modus — für Views, die direkt Approve/Reject-Endpunkte brauchen.</summary>
+    public ApiClient? ApiClient => _api;
 
     public async Task<User?> LoginAsync(string username, string password)
     {

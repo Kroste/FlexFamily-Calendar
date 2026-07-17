@@ -385,6 +385,39 @@ app.MapPost("/api/entries", async (CreateEntryRequest req, AppDbContext db, Clai
     };
     db.Entries.Add(entry);
     await db.SaveChangesAsync();
+
+    // Pending Urlaubswunsch → alle Admins bekommen eine Benachrichtigung mit dem Zeitraum
+    // und der Entry-Id, damit die NotificationsView im Client den Eintrag direkt approven
+    // oder rejecten kann (siehe /api/entries/{id}/approve|reject).
+    if (entry.Status == EntryStatus.Pending && entry.Type == EntryTypes.Vacation)
+    {
+        var requesterName = await db.Users
+            .Where(u => u.Id == targetUserId)
+            .Select(u => string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName)
+            .FirstAsync();
+        var admins = await db.Users
+            .Where(u => u.Role == UserRules.Admin)
+            .Select(u => u.Id).ToListAsync();
+        var end = (entry.EndDate ?? entry.Date).ToString("dd.MM.yyyy");
+        var from = entry.Date.ToString("dd.MM.yyyy");
+        foreach (var adminId in admins)
+        {
+            db.Notifications.Add(new NotificationEntity
+            {
+                Id = Guid.NewGuid(),
+                UserId = adminId.ToString(),
+                CreatedAt = DateTime.UtcNow.ToString("O"),
+                IsRead = false,
+                MessageKey = "Notif_VacationRequested",
+                Args = new List<string> { requesterName, from, end },
+                RelatedDate = entry.Date.ToString("yyyy-MM-dd"),
+                Action = "approve-entry:" + entry.Id,
+                RelatedUserId = targetUserId.ToString()
+            });
+        }
+        await db.SaveChangesAsync();
+    }
+
     return Results.Created($"/api/entries/{entry.Id}", EntryDto.Full(entry));
 })
     .RequireAuthorization();

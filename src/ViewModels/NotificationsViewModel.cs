@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using FlexFamilyCalendar.Localization;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.Services;
+using FlexFamilyCalendar.Services.Api;
 using System.Collections.ObjectModel;
 using System.Globalization;
 
@@ -34,6 +35,10 @@ public partial class NotificationItemViewModel : ViewModelBase
         Text = Format(n.MessageKey, n.Args);
     }
 
+    /// <summary>Urlaubswunsch mit angehängter Entry-Id ("approve-entry:<id>") — Approve/Reject sind sichtbar.</summary>
+    public bool IsVacationRequest => Action is not null && Action.StartsWith("approve-entry:");
+    public string? PendingEntryId => IsVacationRequest ? Action![("approve-entry:".Length)..] : null;
+
     private static string Format(string key, IReadOnlyList<string> args)
     {
         var template = Localizer.Instance[key];
@@ -46,6 +51,7 @@ public partial class NotificationsViewModel : ViewModelBase
 {
     private readonly NotificationService _notifications;
     private readonly User _user;
+    private readonly ApiClient? _api;
 
     public ObservableCollection<NotificationItemViewModel> Items { get; } = new();
 
@@ -59,11 +65,38 @@ public partial class NotificationsViewModel : ViewModelBase
     /// <summary>Schließt den Dialog; das Ergebnis steuert Navigation bzw. Start einer Umplanung.</summary>
     public event Action<NotificationResult?>? CloseRequested;
 
-    public NotificationsViewModel(NotificationService notifications, User user)
+    public NotificationsViewModel(NotificationService notifications, User user, ApiClient? api = null)
     {
         _notifications = notifications;
         _user = user;
+        _api = api;
         _ = LoadAsync();
+    }
+
+    [RelayCommand]
+    private async Task ApproveVacation(NotificationItemViewModel? item)
+    {
+        if (item?.PendingEntryId is not { } entryId || _api is null) return;
+        try
+        {
+            await _api.ApproveEntryAsync(entryId);
+            await _notifications.MarkReadAsync(item.Id);
+            Items.Remove(item);
+        }
+        catch (Exception ex) { LogService.Warn("Approve fehlgeschlagen: {0}", ex.Message); }
+    }
+
+    [RelayCommand]
+    private async Task RejectVacation(NotificationItemViewModel? item)
+    {
+        if (item?.PendingEntryId is not { } entryId || _api is null) return;
+        try
+        {
+            await _api.RejectEntryAsync(entryId);
+            await _notifications.MarkReadAsync(item.Id);
+            Items.Remove(item);
+        }
+        catch (Exception ex) { LogService.Warn("Reject fehlgeschlagen: {0}", ex.Message); }
     }
 
     private async Task LoadAsync()

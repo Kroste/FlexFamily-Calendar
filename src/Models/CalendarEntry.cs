@@ -8,12 +8,24 @@ public enum SwapMark
     Outgoing = 2   // von mir gestellt → ausstehend, ich kann zurückziehen
 }
 
+/// <summary>Genehmigungs-Zustand für einen Eintrag. Deckt den serverseitigen EntryStatus 1:1 ab.
+/// Nicht-Admin-Urlaubswünsche entstehen als Pending und werden erst durch Admin-Approve auf
+/// Approved gesetzt; Ablehnung setzt Rejected und macht den Eintrag im Kalender unsichtbar.</summary>
+public static class EntryStatuses
+{
+    public const string Approved = "Approved";
+    public const string Pending = "Pending";
+    public const string Rejected = "Rejected";
+}
+
 public class CalendarEntry
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string UserId { get; set; } = "";
     public string UserDisplayName { get; set; } = "";
     public EntryType Type { get; set; }
+    /// <summary>Genehmigungs-Zustand (<see cref="EntryStatuses"/>). Default = Approved für Bestandsdaten.</summary>
+    public string Status { get; set; } = EntryStatuses.Approved;
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
     public string Title { get; set; } = "";
@@ -112,7 +124,11 @@ public class CalendarEntry
     [System.Text.Json.Serialization.JsonIgnore]
     public bool IsPaused { get; set; }
 
-    /// <summary>Anzeige-Opacity: pausierte Einträge wirken durchscheinend, alles andere voll.</summary>
+    /// <summary>Anzeige-Opacity: pausierte oder noch nicht genehmigte Einträge wirken durchscheinend.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public double DisplayOpacity => IsPaused ? 0.45 : 1.0;
+    public double DisplayOpacity => IsPaused || IsPending ? 0.45 : 1.0;
+
+    /// <summary>Wartet auf Admin-Genehmigung (typisch Urlaubswunsch eines Nicht-Admins).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsPending => Status == EntryStatuses.Pending;
 }

@@ -134,6 +134,11 @@
   "Mobile_Absence_Saved": "Gespeichert.",
   "Mobile_Swap_ComingSoon": "Schichttausch kommt in Kürze",
   "Mobile_Swap_Note": "Bis dahin kannst du eine Tausch-Anfrage über die Web-Ansicht auf flexfamily.cloud stellen.",
+
+  "Entry_PendingSuffix": "(Wunsch, wartet auf Bestätigung)",
+  "Notif_VacationRequested": "{0} wünscht Urlaub vom {1} bis {2}.",
+  "Notif_ApproveButton": "Genehmigen",
+  "Notif_RejectButton": "Ablehnen",
   "User_OpeningBalance": "Anfangssaldo (Stunden)",
   "User_AccountStart": "Konto-Start",
 

@@ -134,6 +134,11 @@
   "Mobile_Absence_Saved": "Saved.",
   "Mobile_Swap_ComingSoon": "Shift swap coming soon",
   "Mobile_Swap_Note": "Until then you can request a swap on the web view at flexfamily.cloud.",
+
+  "Entry_PendingSuffix": "(request, awaiting approval)",
+  "Notif_VacationRequested": "{0} requests vacation from {1} to {2}.",
+  "Notif_ApproveButton": "Approve",
+  "Notif_RejectButton": "Reject",
   "User_OpeningBalance": "Opening balance (hours)",
   "User_AccountStart": "Account start",
 

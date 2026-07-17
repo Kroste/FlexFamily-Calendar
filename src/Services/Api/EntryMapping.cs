@@ -34,6 +34,9 @@ public static class EntryMapping
             Id = dto.Id,
             UserId = dto.UserId,
             Type = type,
+            // Server-Status übernehmen (Pending/Approved/Rejected). Approved-Default deckt den
+            // Fall ab, dass eine ältere Server-Version das Feld noch nicht mitliefert.
+            Status = string.IsNullOrWhiteSpace(dto.Status) ? EntryStatuses.Approved : dto.Status,
             Title = dto.CategoryLabel ?? "",
             ActivityTypeId = NullIfEmpty(dto.ActivityTypeId),   // Kategorie-Referenz → Desktop löst Name/Farbe auf
             Notes = dto.Note ?? ""

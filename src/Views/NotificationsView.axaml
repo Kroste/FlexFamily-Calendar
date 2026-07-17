@@ -31,7 +31,7 @@
                     Margin="0,0,0,8" Cursor="Hand">
               <Border Padding="12,10" CornerRadius="6" HorizontalAlignment="Stretch"
                       Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
-                <StackPanel Spacing="4">
+                <StackPanel Spacing="6">
                   <Grid ColumnDefinitions="Auto,*">
                     <Ellipse Grid.Column="0" Width="8" Height="8" Margin="0,0,8,0"
                              VerticalAlignment="Center" Fill="#2E86C1"
@@ -39,6 +39,21 @@
                     <TextBlock Grid.Column="1" Text="{Binding Text}" TextWrapping="Wrap" FontSize="14" />
                   </Grid>
                   <TextBlock Text="{Binding TimeLabel}" FontSize="11" Opacity="0.6" />
+                  <!-- Approve/Reject bei Urlaubswunsch — greifen den zugehörigen Eintrag über
+                       die Entry-Id im Action-Feld an (approve-entry:<id>). -->
+                  <StackPanel Orientation="Horizontal" Spacing="6"
+                              IsVisible="{Binding IsVacationRequest}">
+                    <Button Content="{loc:Tr Notif_ApproveButton}"
+                            Command="{Binding $parent[ItemsControl].DataContext.ApproveVacationCommand}"
+                            CommandParameter="{Binding}"
+                            Padding="10,5" CornerRadius="6"
+                            Background="#27AE60" Foreground="White" />
+                    <Button Content="{loc:Tr Notif_RejectButton}"
+                            Command="{Binding $parent[ItemsControl].DataContext.RejectVacationCommand}"
+                            CommandParameter="{Binding}"
+                            Padding="10,5" CornerRadius="6"
+                            Background="#C0392B" Foreground="White" />
+                  </StackPanel>
                 </StackPanel>
               </Border>
             </Button>
