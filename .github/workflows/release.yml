@@ -102,6 +102,53 @@ jobs:
           tag_name: ${{ env.RELEASE_TAG }}
           files: FlexFamilyCalendar-${{ env.RELEASE_TAG }}-${{ matrix.rid }}.*
 
+  # ─────────── Android APK ───────────
+  # Signiert per Debug-Keystore — für Verteilung über die GitHub-Release-Seite reicht das;
+  # Play-Store-Distribution wäre eine spätere Stufe (Release-Keystore in Secrets, .aab statt .apk).
+  android-apk:
+    name: Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install android workload
+        run: dotnet workload install android
+
+      - name: Publish APK
+        shell: bash
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          NUMERIC="${VERSION%%-*}"
+          # ApplicationDisplayVersion (SemVer, User-sichtbar) + ApplicationVersion (VersionCode,
+          # muss strikt aufwärts sein — leiten wir aus dem numeric-Anteil ab: 0.1.18 → 118)
+          IFS='.' read -r MAJ MIN PAT <<< "$NUMERIC"
+          VERSION_CODE=$(( MAJ * 10000 + MIN * 100 + PAT ))
+          dotnet publish mobile/FlexFamilyCalendar.Android.csproj \
+            -c Release \
+            -p:ApplicationDisplayVersion="$NUMERIC" \
+            -p:ApplicationVersion="$VERSION_CODE" \
+            -o publish
+          # Der Publish legt ein signed APK (Debug-Keystore) unter publish ab.
+          find publish -maxdepth 2 -name "*.apk" -print
+          APK=$(find publish -maxdepth 2 -name "*-Signed.apk" | head -1)
+          if [ -z "$APK" ]; then APK=$(find publish -maxdepth 2 -name "*.apk" | head -1); fi
+          cp "$APK" "FlexFamilyCalendar-${RELEASE_TAG}-android.apk"
+          ls -lh FlexFamilyCalendar-*.apk
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: FlexFamilyCalendar-${{ env.RELEASE_TAG }}-android.apk
+
   # ─────────── Linux AppImage ───────────
   appimage:
     name: Linux AppImage

@@ -20,6 +20,9 @@ public partial class App : Application
     /// <summary>Plattform-Backend für modale Dialoge — Desktop nutzt Window, Browser ein Overlay.</summary>
     public static IDialogService? DialogService { get; set; }
 
+    /// <summary>true, wenn wir auf Android laufen (SingleView, aber mit Dateisystem — anders als WASM).</summary>
+    public static bool IsAndroid { get; set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -30,9 +33,71 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             InitializeDesktop(desktop);
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
-            InitializeBrowser(singleView);
+        {
+            if (IsAndroid) InitializeAndroid(singleView);
+            else           InitializeBrowser(singleView);
+        }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    /// <summary>
+    /// Android-Init — SingleView-Lifetime wie Browser, aber mit Dateisystem-Storage (Isolated
+    /// Storage im App-Bundle) und dadurch persistenten AppSettings + gemerktem Token. Nutzt für's
+    /// Erste dieselbe MainView wie der Desktop; Mobile-optimierte Views kommen in Folge-Tags.
+    /// </summary>
+    private void InitializeAndroid(ISingleViewApplicationLifetime singleView)
+    {
+        var localStorage = new StorageService();
+        SecretService.Initialize(StorageService.DataDirectory);
+        var settings = Task.Run(() => localStorage.LoadSettingsAsync()).GetAwaiter().GetResult();
+
+        // Speicher-Modus: erst mal wie am Desktop (lokal oder Server je nach AppSettings).
+        IStorageService storage = localStorage;
+        ApiClient? apiClient = null;
+        if (settings.UseServer && !string.IsNullOrWhiteSpace(settings.ServerUrl))
+        {
+            apiClient = new ApiClient(settings.ServerUrl);
+            storage = new ApiStorageService(apiClient, localStorage);
+            LogService.Info("Speicher-Modus: Server ({0}, Android)", settings.ServerUrl);
+        }
+        else
+        {
+            LogService.Info("Speicher-Modus: lokal (Android)");
+        }
+
+        var auth = new AuthService(storage, apiClient);
+        var notifications = new NotificationService(storage);
+        IMailSender mailSender = apiClient is not null
+            ? new ApiMailSender(apiClient)
+            : new LocalMailSender(localStorage);
+
+        var loginVm = new LoginViewModel(auth);
+        var hasUsers = Task.Run(() => auth.HasAnyUsersAsync()).GetAwaiter().GetResult();
+        loginVm.IsFirstRun = !hasUsers;
+
+        // KI im Android-Head: alle Provider verfügbar wie am Desktop, da Dateisystem und HttpClient
+        // vorhanden sind (im Gegensatz zum Browser-Head).
+        var aiService = new AiService(new IAiProvider[]
+        {
+            new GeminiProvider(),
+            new OpenAiProvider(),
+            new AnthropicProvider(),
+            new PerplexityProvider(),
+            new LlamaProvider()
+        });
+        aiService.ApplySettings(settings);
+
+        var mainVm = new MainWindowViewModel(auth, storage, notifications, aiService, mailSender, loginVm);
+
+        if (hasUsers)
+        {
+            var remembered = Task.Run(() => auth.GetRememberedUserAsync()).GetAwaiter().GetResult();
+            if (remembered != null) mainVm.AutoLogin(remembered);
+        }
+
+        singleView.MainView = new MainView { DataContext = mainVm };
+        LogService.Info("Android-Head gestartet.");
     }
 
     private void InitializeDesktop(IClassicDesktopStyleApplicationLifetime desktop)

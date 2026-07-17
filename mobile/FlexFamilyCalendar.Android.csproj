@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>26</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>FlexFamilyCalendar.Android</RootNamespace>
+    <AssemblyName>FlexFamilyCalendar.Android</AssemblyName>
+    <ApplicationId>de.kroste.flexfamily</ApplicationId>
+    <ApplicationTitle>FlexFamily Calendar</ApplicationTitle>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
+    <!-- MinVer ausgeschaltet: Android-Build übernimmt seine Version über
+         ApplicationDisplayVersion/-Version, die im Release-Workflow überschrieben werden. -->
+    <UseMinVer>false</UseMinVer>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Android" Version="12.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\FlexFamilyCalendar.csproj" />
+  </ItemGroup>
+</Project>
