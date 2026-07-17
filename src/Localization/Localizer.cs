@@ -1,7 +1,7 @@
-using Newtonsoft.Json;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
+using System.Text.Json;
 
 namespace FlexFamilyCalendar.Localization;
 
@@ -77,7 +77,7 @@ public sealed class Localizer : INotifyPropertyChanged
             {
                 using var reader = new StreamReader(stream);
                 var json = reader.ReadToEnd();
-                dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(json)
+                dict = JsonSerializer.Deserialize<Dictionary<string, string>>(json)
                        ?? new(StringComparer.Ordinal);
             }
         }

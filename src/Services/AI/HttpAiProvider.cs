@@ -1,6 +1,6 @@
 using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace FlexFamilyCalendar.Services.AI;
 
@@ -27,7 +27,7 @@ public abstract class HttpAiProvider : IAiProvider
     public abstract Task<string> CompleteAsync(string prompt, CancellationToken ct = default);
 
     /// <summary>Sendet die Anfrage, prüft den Statuscode und gibt die geparste JSON-Antwort zurück.</summary>
-    protected async Task<JObject> SendAsync(HttpRequestMessage request, CancellationToken ct)
+    protected async Task<JsonNode?> SendAsync(HttpRequestMessage request, CancellationToken ct)
     {
         using var resp = await _http.SendAsync(request, ct);
         var body = await resp.Content.ReadAsStringAsync(ct);
@@ -40,9 +40,9 @@ public abstract class HttpAiProvider : IAiProvider
             throw new HttpRequestException(
                 $"{Name}: HTTP {(int)resp.StatusCode} {resp.ReasonPhrase} — {snippet}");
         }
-        return JObject.Parse(body);
+        return JsonNode.Parse(body);
     }
 
     protected static StringContent JsonBody(object body)
-        => new(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json");
+        => new(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
 }

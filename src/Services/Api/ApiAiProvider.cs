@@ -1,6 +1,4 @@
-using System.Net.Http.Json;
 using FlexFamilyCalendar.Services.AI;
-using Newtonsoft.Json.Linq;
 
 namespace FlexFamilyCalendar.Services.Api;
 

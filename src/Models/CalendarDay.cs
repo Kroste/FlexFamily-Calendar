@@ -9,6 +9,6 @@ public class CalendarDay
     public string? NoteUserId { get; set; }       // Adressat des Hinweises (optional)
     public List<CalendarEntry> Entries { get; set; } = new();
 
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public DateOnly Date => DateOnly.Parse(DateString);
 }

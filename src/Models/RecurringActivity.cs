@@ -33,14 +33,14 @@ public class RecurringActivity
     public bool IsPausedOn(DateOnly date) => Skips.Any(s => s.Contains(date));
 
     /// <summary>Aufgelöster Kategoriename (Laufzeit; für die Verwaltungsliste). Die Kategorie ist der Name im Kalender.</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string CategoryName { get; set; } = "";
 
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string TimeRange => $"{StartTime:hh\\:mm}–{EndTime:hh\\:mm}";
 
     /// <summary>Kompakte Wochentags-Liste (Mo→So-Reihenfolge, kulturabhängige Kurznamen).</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string WeekdaysLabel => string.Join(", ", Weekdays
         .OrderBy(WeekOrder)
         .Select(d => CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(d)));

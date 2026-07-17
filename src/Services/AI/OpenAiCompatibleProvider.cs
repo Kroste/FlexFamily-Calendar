@@ -17,6 +17,6 @@ public abstract class OpenAiCompatibleProvider : HttpAiProvider
             messages = new[] { new { role = "user", content = prompt } }
         });
         var json = await SendAsync(req, ct);
-        return json["choices"]?[0]?["message"]?["content"]?.ToString() ?? "";
+        return json?["choices"]?[0]?["message"]?["content"]?.ToString() ?? "";
     }
 }

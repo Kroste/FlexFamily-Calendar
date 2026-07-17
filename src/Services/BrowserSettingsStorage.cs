@@ -1,5 +1,5 @@
 using FlexFamilyCalendar.Models;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace FlexFamilyCalendar.Services;
 
@@ -21,7 +21,7 @@ public class BrowserSettingsStorage : IStorageService
         var raw = store.Get(Key);
         _cached = string.IsNullOrEmpty(raw)
             ? new AppSettings()
-            : (JsonConvert.DeserializeObject<AppSettings>(raw) ?? new AppSettings());
+            : (JsonSerializer.Deserialize<AppSettings>(raw, JsonOptions.Compact) ?? new AppSettings());
     }
 
     public Task<AppSettings> LoadSettingsAsync() => Task.FromResult(_cached);
@@ -29,7 +29,7 @@ public class BrowserSettingsStorage : IStorageService
     public Task SaveSettingsAsync(AppSettings settings)
     {
         _cached = settings;
-        _store.Set(Key, JsonConvert.SerializeObject(settings));
+        _store.Set(Key, JsonSerializer.Serialize(settings, JsonOptions.Compact));
         return Task.CompletedTask;
     }
 

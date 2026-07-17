@@ -21,6 +21,6 @@ public class AnthropicProvider : HttpAiProvider
             messages = new[] { new { role = "user", content = prompt } }
         });
         var json = await SendAsync(req, ct);
-        return json["content"]?[0]?["text"]?.ToString() ?? "";
+        return json?["content"]?[0]?["text"]?.ToString() ?? "";
     }
 }

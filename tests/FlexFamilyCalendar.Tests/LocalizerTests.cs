@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Reflection;
+using System.Text.Json;
 using FlexFamilyCalendar.Localization;
-using Newtonsoft.Json;
 using Xunit;
 
 namespace FlexFamilyCalendar.Tests;
@@ -78,7 +78,7 @@ public class LocalizerTests
             .First(n => n.EndsWith($"i18n.{code}.json", StringComparison.OrdinalIgnoreCase));
         using var stream = asm.GetManifestResourceStream(name)!;
         using var reader = new StreamReader(stream);
-        var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.ReadToEnd())!;
+        var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(reader.ReadToEnd())!;
         return dict.Keys.ToHashSet();
     }
 }

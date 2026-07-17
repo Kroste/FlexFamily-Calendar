@@ -1,6 +1,6 @@
 using FlexFamilyCalendar.Models;
-using Newtonsoft.Json;
 using System.Globalization;
+using System.Text.Json;
 
 namespace FlexFamilyCalendar.Services;
 
@@ -25,12 +25,12 @@ public class StorageService : IStorageService
     {
         if (!File.Exists(UsersFile)) return new();
         var json = await File.ReadAllTextAsync(UsersFile);
-        return JsonConvert.DeserializeObject<List<User>>(json) ?? new();
+        return JsonSerializer.Deserialize<List<User>>(json, JsonOptions.Pretty) ?? new();
     }
 
     public async Task SaveUsersAsync(List<User> users)
     {
-        await File.WriteAllTextAsync(UsersFile, JsonConvert.SerializeObject(users, Formatting.Indented));
+        await File.WriteAllTextAsync(UsersFile, JsonSerializer.Serialize(users, JsonOptions.Pretty));
         LogService.Debug("Benutzerdaten gespeichert ({0} Benutzer)", users.Count);
     }
 
@@ -38,12 +38,12 @@ public class StorageService : IStorageService
     {
         if (!File.Exists(SwapRequestsFile)) return new();
         var json = await File.ReadAllTextAsync(SwapRequestsFile);
-        return JsonConvert.DeserializeObject<List<ShiftSwapRequest>>(json) ?? new();
+        return JsonSerializer.Deserialize<List<ShiftSwapRequest>>(json, JsonOptions.Pretty) ?? new();
     }
 
     public async Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests)
     {
-        await File.WriteAllTextAsync(SwapRequestsFile, JsonConvert.SerializeObject(requests, Formatting.Indented));
+        await File.WriteAllTextAsync(SwapRequestsFile, JsonSerializer.Serialize(requests, JsonOptions.Pretty));
         LogService.Debug("Tausch-Anfragen gespeichert ({0})", requests.Count);
     }
 
@@ -51,12 +51,12 @@ public class StorageService : IStorageService
     {
         if (!File.Exists(NotificationsFile)) return new();
         var json = await File.ReadAllTextAsync(NotificationsFile);
-        return JsonConvert.DeserializeObject<List<Notification>>(json) ?? new();
+        return JsonSerializer.Deserialize<List<Notification>>(json, JsonOptions.Pretty) ?? new();
     }
 
     public async Task SaveNotificationsAsync(List<Notification> notifications)
     {
-        await File.WriteAllTextAsync(NotificationsFile, JsonConvert.SerializeObject(notifications, Formatting.Indented));
+        await File.WriteAllTextAsync(NotificationsFile, JsonSerializer.Serialize(notifications, JsonOptions.Pretty));
         LogService.Debug("Benachrichtigungen gespeichert ({0})", notifications.Count);
     }
 
@@ -64,12 +64,12 @@ public class StorageService : IStorageService
     {
         if (!File.Exists(ActivityTypesFile)) return new();
         var json = await File.ReadAllTextAsync(ActivityTypesFile);
-        return JsonConvert.DeserializeObject<List<ActivityType>>(json) ?? new();
+        return JsonSerializer.Deserialize<List<ActivityType>>(json, JsonOptions.Pretty) ?? new();
     }
 
     public async Task SaveActivityTypesAsync(List<ActivityType> types)
     {
-        await File.WriteAllTextAsync(ActivityTypesFile, JsonConvert.SerializeObject(types, Formatting.Indented));
+        await File.WriteAllTextAsync(ActivityTypesFile, JsonSerializer.Serialize(types, JsonOptions.Pretty));
         LogService.Debug("Aktivitätstypen gespeichert ({0})", types.Count);
     }
 
@@ -77,12 +77,12 @@ public class StorageService : IStorageService
     {
         if (!File.Exists(RecurringActivitiesFile)) return new();
         var json = await File.ReadAllTextAsync(RecurringActivitiesFile);
-        return JsonConvert.DeserializeObject<List<RecurringActivity>>(json) ?? new();
+        return JsonSerializer.Deserialize<List<RecurringActivity>>(json, JsonOptions.Pretty) ?? new();
     }
 
     public async Task SaveRecurringActivitiesAsync(List<RecurringActivity> activities)
     {
-        await File.WriteAllTextAsync(RecurringActivitiesFile, JsonConvert.SerializeObject(activities, Formatting.Indented));
+        await File.WriteAllTextAsync(RecurringActivitiesFile, JsonSerializer.Serialize(activities, JsonOptions.Pretty));
         LogService.Debug("Wiederkehrende Aktivitäten gespeichert ({0})", activities.Count);
     }
 
@@ -90,12 +90,12 @@ public class StorageService : IStorageService
     {
         if (!File.Exists(PlannerNotesFile)) return new();
         var json = await File.ReadAllTextAsync(PlannerNotesFile);
-        return JsonConvert.DeserializeObject<List<PlannerNote>>(json) ?? new();
+        return JsonSerializer.Deserialize<List<PlannerNote>>(json, JsonOptions.Pretty) ?? new();
     }
 
     public async Task SavePlannerNotesAsync(List<PlannerNote> notes)
     {
-        await File.WriteAllTextAsync(PlannerNotesFile, JsonConvert.SerializeObject(notes, Formatting.Indented));
+        await File.WriteAllTextAsync(PlannerNotesFile, JsonSerializer.Serialize(notes, JsonOptions.Pretty));
         LogService.Debug("KI-Planungshinweise gespeichert ({0})", notes.Count);
     }
 
@@ -103,12 +103,12 @@ public class StorageService : IStorageService
     {
         if (!File.Exists(ChatHistoryFile)) return new();
         var json = await File.ReadAllTextAsync(ChatHistoryFile);
-        return JsonConvert.DeserializeObject<List<ChatHistoryEntry>>(json) ?? new();
+        return JsonSerializer.Deserialize<List<ChatHistoryEntry>>(json, JsonOptions.Pretty) ?? new();
     }
 
     public async Task SaveChatHistoryAsync(List<ChatHistoryEntry> history)
     {
-        await File.WriteAllTextAsync(ChatHistoryFile, JsonConvert.SerializeObject(history, Formatting.Indented));
+        await File.WriteAllTextAsync(ChatHistoryFile, JsonSerializer.Serialize(history, JsonOptions.Pretty));
         LogService.Debug("KI-Chat-Verlauf gespeichert ({0})", history.Count);
     }
 
@@ -116,12 +116,12 @@ public class StorageService : IStorageService
     {
         if (!File.Exists(SettingsFile)) return new();
         var json = await File.ReadAllTextAsync(SettingsFile);
-        return JsonConvert.DeserializeObject<AppSettings>(json) ?? new();
+        return JsonSerializer.Deserialize<AppSettings>(json, JsonOptions.Pretty) ?? new();
     }
 
     public async Task SaveSettingsAsync(AppSettings settings)
     {
-        await File.WriteAllTextAsync(SettingsFile, JsonConvert.SerializeObject(settings, Formatting.Indented));
+        await File.WriteAllTextAsync(SettingsFile, JsonSerializer.Serialize(settings, JsonOptions.Pretty));
         LogService.Debug("Einstellungen gespeichert");
     }
 
@@ -131,7 +131,7 @@ public class StorageService : IStorageService
         if (!File.Exists(file))
             return new() { DateString = date.ToString("yyyy-MM-dd") };
         var json = await File.ReadAllTextAsync(file);
-        var day = JsonConvert.DeserializeObject<CalendarDay>(json)
+        var day = JsonSerializer.Deserialize<CalendarDay>(json, JsonOptions.Pretty)
                   ?? new() { DateString = date.ToString("yyyy-MM-dd") };
 
         // Migration: ehemaliges AuPairShift (=1) → Arbeit
@@ -146,7 +146,7 @@ public class StorageService : IStorageService
         var date = DateOnly.Parse(day.DateString);
         var file = GetDayFilePath(date);
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-        await File.WriteAllTextAsync(file, JsonConvert.SerializeObject(day, Formatting.Indented));
+        await File.WriteAllTextAsync(file, JsonSerializer.Serialize(day, JsonOptions.Pretty));
         LogService.Debug("Kalendertag gespeichert: {0}", day.DateString);
     }
 

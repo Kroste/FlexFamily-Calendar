@@ -26,7 +26,7 @@ public class CalendarEntry
     public DateOnly? AbsenceEnd { get; set; }      // letzter Tag des Zeitraums
 
     /// <summary>Stunden der Schicht; Schichten über Mitternacht (EndTime ≤ StartTime) zählen den Folgetag-Anteil mit.</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public double DurationHours
     {
         get
@@ -37,82 +37,82 @@ public class CalendarEntry
     }
 
     /// <summary>Schicht überschreitet die Tagesgrenze (z.B. 20:00–06:00, auch 20:00–00:00).</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool CrossesMidnight => EndTime <= StartTime;
 
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string TimeRange => $"{StartTime:hh\\:mm}–{EndTime:hh\\:mm}";
 
     /// <summary>Kompakter Zeitraum einer mehrtägigen Abwesenheit (leer, wenn nur ein Tag).</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string AbsenceSpanLabel =>
         AbsenceStart is { } s && AbsenceEnd is { } e && e > s ? $"{s:dd.MM.}–{e:dd.MM.}" : "";
 
     /// <summary>Anzeige als Abwesenheit (Urlaub/Krank/Abwesend) — in der Tabellenzelle ohne Uhrzeit.</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsAbsenceDisplay => EntryTypeInfo.IsAbsence(DisplayType);
 
     /// <summary>Uhrzeit anzeigen (Schichten/Aktivitäten) — nicht bei Abwesenheiten.</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool ShowsTime => !IsAbsenceDisplay;
 
     /// <summary>Zeitraum einer Abwesenheit in der Zelle anzeigen (nur wenn mehrtägig).</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool ShowAbsenceSpan => IsAbsenceDisplay && !string.IsNullOrEmpty(AbsenceSpanLabel);
 
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string EntryColor => EntryTypeInfo.Color(Type);
 
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string TypeLabel => EntryTypeInfo.Label(Type);
 
     /// <summary>Personenfarbe (zur Laufzeit aus dem Benutzer aufgelöst, nicht persistiert).</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string OwnerColor { get; set; } = "#7F8C8D";
 
     /// <summary>Datenschutz-maskierter Anzeigetyp (Laufzeit; Default = echter Typ).</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public EntryType DisplayType { get; set; }
 
     /// <summary>Datenschutz-maskierter Titel (Laufzeit; leer = verborgen).</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string DisplayTitle { get; set; } = "";
 
     /// <summary>Markierung einer offenen Tausch-Anfrage an dieser Schicht (Laufzeit, nicht persistiert).</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public SwapMark SwapMark { get; set; } = SwapMark.None;
 
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool HasSwap => SwapMark != SwapMark.None;
 
     /// <summary>Aufgelöster Aktivitäts-Kategoriename (Laufzeit; leer = keine Kategorie).</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string ActivityName { get; set; } = "";
 
     /// <summary>Farbe der Aktivitäts-Kategorie (Laufzeit).</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public string ActivityColor { get; set; } = "#7F8C8D";
 
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool HasActivity => !string.IsNullOrEmpty(ActivityName);
 
     /// <summary>Karte zeigt das feste Typ-Label nur, wenn keine Aktivitäts-Kategorie aufgelöst ist.</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool ShowsTypeLabel => !HasActivity;
 
     /// <summary>Laufzeit: aus einer wiederkehrenden Regel projiziert (nicht persistiert, nicht editierbar).</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsRecurring { get; set; }
 
     /// <summary>Laufzeit: fällt auf einen Feiertag → Hinweis „könnte ausfallen".</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool HolidayConflict { get; set; }
 
     /// <summary>Laufzeit: projizierter Eintrag liegt in einer aktiven Aussetzung (Urlaub/Krank/…). UI: grau + „(pausiert)".</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsPaused { get; set; }
 
     /// <summary>Anzeige-Opacity: pausierte Einträge wirken durchscheinend, alles andere voll.</summary>
-    [Newtonsoft.Json.JsonIgnore]
+    [System.Text.Json.Serialization.JsonIgnore]
     public double DisplayOpacity => IsPaused ? 0.45 : 1.0;
 }

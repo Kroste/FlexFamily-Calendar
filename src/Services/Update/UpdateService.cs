@@ -2,7 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace FlexFamilyCalendar.Services.Update;
 
@@ -76,12 +76,13 @@ public class UpdateService
     /// <summary>Pure JSON→UpdateInfo (testbar ohne HttpClient).</summary>
     public static UpdateInfo? Parse(string releaseJson, string currentVersion, UpdatePlatform platform)
     {
-        var release = JObject.Parse(releaseJson);
+        var release = JsonNode.Parse(releaseJson) as JsonObject;
+        if (release is null) return null;
         var tag = release["tag_name"]?.ToString() ?? "";
         if (string.IsNullOrEmpty(tag)) return null;
         if (!VersionCompare.IsNewer(tag, currentVersion)) return null;
 
-        var assets = release["assets"] as JArray ?? new JArray();
+        var assets = release["assets"] as JsonArray ?? new JsonArray();
         var asset = PickAsset(assets, platform);
 
         return new UpdateInfo(
@@ -92,7 +93,7 @@ public class UpdateService
             Asset: asset);
     }
 
-    private static UpdateAsset? PickAsset(JArray assets, UpdatePlatform platform)
+    private static UpdateAsset? PickAsset(JsonArray assets, UpdatePlatform platform)
     {
         var suffix = platform switch
         {
@@ -105,12 +106,13 @@ public class UpdateService
 
         foreach (var a in assets)
         {
+            if (a is null) continue;
             var name = a["name"]?.ToString() ?? "";
             if (!name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)) continue;
             return new UpdateAsset(
                 FileName: name,
                 DownloadUrl: a["browser_download_url"]?.ToString() ?? "",
-                Size: a["size"]?.Value<long>() ?? 0,
+                Size: a["size"]?.GetValue<long>() ?? 0,
                 Platform: platform);
         }
         return null;

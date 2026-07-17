@@ -16,6 +16,6 @@ public class GeminiProvider : HttpAiProvider
             contents = new[] { new { parts = new[] { new { text = prompt } } } }
         });
         var json = await SendAsync(req, ct);
-        return json["candidates"]?[0]?["content"]?["parts"]?[0]?["text"]?.ToString() ?? "";
+        return json?["candidates"]?[0]?["content"]?["parts"]?[0]?["text"]?.ToString() ?? "";
     }
 }

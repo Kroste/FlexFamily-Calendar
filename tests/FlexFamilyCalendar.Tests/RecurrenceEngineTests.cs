@@ -252,8 +252,8 @@ public class RecurrenceEngineTests
         rule.Skips.Add(new RecurrenceSkip { From = new(2026, 7, 1), To = new(2026, 7, 14), Reason = "Urlaub" });
         rule.Skips.Add(new RecurrenceSkip { From = new(2026, 12, 22), To = new(2027, 1, 5), Reason = "Weihnachten" });
 
-        var json = Newtonsoft.Json.JsonConvert.SerializeObject(rule);
-        var loaded = Newtonsoft.Json.JsonConvert.DeserializeObject<RecurringActivity>(json)!;
+        var json = System.Text.Json.JsonSerializer.Serialize(rule, FlexFamilyCalendar.Services.JsonOptions.Pretty);
+        var loaded = System.Text.Json.JsonSerializer.Deserialize<RecurringActivity>(json, FlexFamilyCalendar.Services.JsonOptions.Pretty)!;
 
         Assert.Equal(2, loaded.Skips.Count);
         Assert.Equal(new DateOnly(2026, 7, 1), loaded.Skips[0].From);

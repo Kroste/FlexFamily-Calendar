@@ -20,6 +20,6 @@ public class LlamaProvider : HttpAiProvider
         var req = new HttpRequestMessage(HttpMethod.Post, $"{_endpoint.TrimEnd('/')}/api/generate");
         req.Content = JsonBody(new { model = EffectiveModel, prompt, stream = false });
         var json = await SendAsync(req, ct);
-        return json["response"]?.ToString() ?? "";
+        return json?["response"]?.ToString() ?? "";
     }
 }
