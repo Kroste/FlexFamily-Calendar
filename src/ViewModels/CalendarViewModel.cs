@@ -1108,6 +1108,15 @@ public partial class CalendarViewModel : ViewModelBase
         foreach (var e in day.Entries)
         {
             e.OwnerColor = _userColors.GetValueOrDefault(e.UserId, "#7F8C8D");
+            // ServerEntryDto liefert keinen DisplayName mit — im Server-Modus ist e.UserDisplayName
+            // deshalb leer. Aus den geladenen Benutzern nachschlagen, damit UI-Bindings (v.a. der
+            // Mobile-Kalender, der pro Zeile einen Namen zeigt) einen Anzeigenamen bekommen.
+            if (string.IsNullOrEmpty(e.UserDisplayName))
+            {
+                var owner = _allUsers.FirstOrDefault(u => u.Id == e.UserId);
+                if (owner is not null)
+                    e.UserDisplayName = string.IsNullOrEmpty(owner.DisplayName) ? owner.Username : owner.DisplayName;
+            }
             var isOwn = e.UserId == EffectiveUserId;
 
             // Datenschutz: Krank/Urlaub für Fremde als „Abwesend" ohne Grund
