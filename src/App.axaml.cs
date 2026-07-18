@@ -109,7 +109,7 @@ public partial class App : Application
             if (remembered != null) mainVm.AutoLogin(remembered);
         }
 
-        var mobileVm = new MobileMainViewModel(mainVm, storage, auth);
+        var mobileVm = new MobileMainViewModel(mainVm, storage, auth, notifications);
         singleView.MainView = new MobileMainView { DataContext = mobileVm };
         LogService.Info("Android-Head gestartet.");
     }

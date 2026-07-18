@@ -71,17 +71,9 @@
         <Grid IsVisible="{Binding IsVacationActive}">
           <mviews:MobileAbsenceView DataContext="{Binding VacationVm}" />
         </Grid>
-        <Border IsVisible="{Binding IsSwapActive}" Padding="24" VerticalAlignment="Center">
-          <StackPanel Spacing="12" HorizontalAlignment="Center">
-            <TextBlock Text="{loc:Tr Mobile_Swap_ComingSoon}"
-                       FontSize="16" FontWeight="SemiBold"
-                       HorizontalAlignment="Center" />
-            <TextBlock Text="{loc:Tr Mobile_Swap_Note}"
-                       FontSize="13" Opacity="0.7"
-                       TextWrapping="Wrap" HorizontalAlignment="Center"
-                       TextAlignment="Center" MaxWidth="280" />
-          </StackPanel>
-        </Border>
+        <Grid IsVisible="{Binding IsSwapActive}">
+          <mviews:MobileSwapView DataContext="{Binding SwapVm}" />
+        </Grid>
       </Grid>
 
       <!-- Bottom-Nav -->

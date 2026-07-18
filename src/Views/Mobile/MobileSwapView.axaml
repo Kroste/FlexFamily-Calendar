@@ -1,0 +1,129 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:FlexFamilyCalendar.ViewModels.Mobile"
+             xmlns:loc="using:FlexFamilyCalendar.Localization"
+             x:Class="FlexFamilyCalendar.Views.Mobile.MobileSwapView"
+             x:DataType="vm:MobileSwapViewModel"
+             x:CompileBindings="False">
+
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="18">
+
+      <!-- Eingehende Anfragen -->
+      <StackPanel Spacing="6" IsVisible="{Binding HasIncoming}">
+        <TextBlock Text="{loc:Tr Mobile_Swap_Incoming}" FontWeight="SemiBold" FontSize="14" />
+        <ItemsControl ItemsSource="{Binding Incoming}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Padding="12,10" Margin="0,4,0,0" CornerRadius="8"
+                      Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+                <StackPanel Spacing="6">
+                  <TextBlock FontSize="13">
+                    <Run Text="{Binding FromUserName}" FontWeight="SemiBold" />
+                    <Run Text=" — Schicht am " />
+                    <Run Text="{Binding FromDate}" />
+                  </TextBlock>
+                  <TextBlock Text="{Binding Message}" FontSize="12" Opacity="0.8"
+                             IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Button Content="{loc:Tr Mobile_Swap_Accept}"
+                            Command="{Binding $parent[ItemsControl].DataContext.AcceptCommand}"
+                            CommandParameter="{Binding}"
+                            Padding="12,6" CornerRadius="6"
+                            Background="#27AE60" Foreground="White" />
+                    <Button Content="{loc:Tr Mobile_Swap_Reject}"
+                            Command="{Binding $parent[ItemsControl].DataContext.RejectCommand}"
+                            CommandParameter="{Binding}"
+                            Padding="12,6" CornerRadius="6"
+                            Background="#C0392B" Foreground="White" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <!-- Ausgehende Anfragen -->
+      <StackPanel Spacing="6" IsVisible="{Binding HasOutgoing}">
+        <TextBlock Text="{loc:Tr Mobile_Swap_Outgoing}" FontWeight="SemiBold" FontSize="14" />
+        <ItemsControl ItemsSource="{Binding Outgoing}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Padding="12,10" Margin="0,4,0,0" CornerRadius="8"
+                      Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+                <StackPanel Spacing="6">
+                  <TextBlock FontSize="13">
+                    <Run Text="An " />
+                    <Run Text="{Binding ToUserName}" FontWeight="SemiBold" />
+                    <Run Text=" — Schicht am " />
+                    <Run Text="{Binding FromDate}" />
+                  </TextBlock>
+                  <TextBlock Text="{Binding Message}" FontSize="12" Opacity="0.8"
+                             IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  <Button Content="{loc:Tr Mobile_Swap_Withdraw}"
+                          Command="{Binding $parent[ItemsControl].DataContext.WithdrawCommand}"
+                          CommandParameter="{Binding}"
+                          HorizontalAlignment="Left"
+                          Padding="12,6" CornerRadius="6" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <!-- Neue Anfrage -->
+      <StackPanel Spacing="10">
+        <TextBlock Text="{loc:Tr Mobile_Swap_NewTitle}" FontWeight="SemiBold" FontSize="14" />
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="{loc:Tr Mobile_Swap_ShiftLabel}" FontSize="12" Opacity="0.7" />
+          <ComboBox ItemsSource="{Binding MyShifts}"
+                    SelectedItem="{Binding SelectedShift}"
+                    HorizontalAlignment="Stretch"
+                    PlaceholderText="{loc:Tr Mobile_Swap_ShiftPlaceholder}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Label}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="{loc:Tr Mobile_Swap_TargetLabel}" FontSize="12" Opacity="0.7" />
+          <ComboBox ItemsSource="{Binding Targets}"
+                    SelectedItem="{Binding SelectedTarget}"
+                    HorizontalAlignment="Stretch"
+                    PlaceholderText="{loc:Tr Mobile_Swap_TargetPlaceholder}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding DisplayName}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="{loc:Tr Mobile_Swap_MessageLabel}" FontSize="12" Opacity="0.7" />
+          <TextBox Text="{Binding Message}" AcceptsReturn="True" Height="70" TextWrapping="Wrap"
+                   PlaceholderText="{loc:Tr Mobile_Swap_MessagePlaceholder}" />
+        </StackPanel>
+
+        <Button Content="{loc:Tr Mobile_Swap_Send}"
+                Command="{Binding CreateCommand}"
+                IsEnabled="{Binding !IsBusy}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                Padding="0,14" CornerRadius="6"
+                Background="{DynamicResource SystemAccentColor}" Foreground="White"
+                FontSize="14" FontWeight="SemiBold" />
+
+        <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"
+                   FontSize="12" Opacity="0.85" HorizontalAlignment="Center" />
+      </StackPanel>
+
+    </StackPanel>
+  </ScrollViewer>
+
+</UserControl>

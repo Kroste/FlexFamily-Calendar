@@ -22,17 +22,22 @@ public partial class MobileMainViewModel : ObservableObject
     [ObservableProperty] private MobileTab _activeTab = MobileTab.Calendar;
     [ObservableProperty] private MobileAbsenceViewModel? _sickVm;
     [ObservableProperty] private MobileAbsenceViewModel? _vacationVm;
+    [ObservableProperty] private MobileSwapViewModel? _swapVm;
 
     public bool IsCalendarActive => ActiveTab == MobileTab.Calendar;
     public bool IsSickActive => ActiveTab == MobileTab.Sick;
     public bool IsVacationActive => ActiveTab == MobileTab.Vacation;
     public bool IsSwapActive => ActiveTab == MobileTab.Swap;
 
-    public MobileMainViewModel(MainWindowViewModel main, IStorageService storage, AuthService auth)
+    private readonly NotificationService _notifications;
+
+    public MobileMainViewModel(MainWindowViewModel main, IStorageService storage, AuthService auth,
+        NotificationService notifications)
     {
         Main = main;
         _storage = storage;
         _auth = auth;
+        _notifications = notifications;
 
         Main.PropertyChanged += (_, e) =>
         {
@@ -48,11 +53,13 @@ public partial class MobileMainViewModel : ObservableObject
         {
             SickVm = new MobileAbsenceViewModel(_storage, user, EntryType.SickLeave);
             VacationVm = new MobileAbsenceViewModel(_storage, user, EntryType.Vacation);
+            SwapVm = new MobileSwapViewModel(_storage, _notifications, user);
         }
         else
         {
             SickVm = null;
             VacationVm = null;
+            SwapVm = null;
         }
     }
 
