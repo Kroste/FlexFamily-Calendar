@@ -16,8 +16,10 @@ Urlaubsmeldungen und Schichttausch — für Eltern, Kinder, Angestellte und Au-P
 - [Was FlexFamily Calendar für dich macht](#was-flexfamily-calendar-für-dich-macht)
 - [App holen](#app-holen)
 - [Anmelden](#anmelden)
+- [Erste Schritte](#erste-schritte)
 - [Fenster bedienen](#fenster-bedienen)
 - [Der Wochenplan](#der-wochenplan)
+- [Sicht-Regel: was du wann siehst](#sicht-regel-was-du-wann-siehst)
 - [Einen Eintrag anlegen](#einen-eintrag-anlegen)
   - [Arbeit / Schicht](#arbeit--schicht)
   - [Aktivität](#aktivität)
@@ -33,9 +35,12 @@ Urlaubsmeldungen und Schichttausch — für Eltern, Kinder, Angestellte und Au-P
 - [Wochenplan als PDF](#wochenplan-als-pdf)
 - [Wochenplan per E-Mail versenden](#wochenplan-per-e-mail-versenden)
 - [Dein Profil](#dein-profil)
+- [Hinweise ein/aus](#hinweise-einaus)
 - [Datenschutz](#datenschutz)
 - [Admin-Bereich (nur Eltern)](#admin-bereich-nur-eltern)
+- [Als Admin: Sicht als andere Person](#als-admin-sicht-als-andere-person)
 - [KI-Unterstützung](#ki-unterstützung)
+- [Auf dem Handy](#auf-dem-handy)
 - [Über und Hilfe](#über-und-hilfe)
 - [Für Betreiber und Entwickler](#für-betreiber-und-entwickler)
 
@@ -58,12 +63,13 @@ sieht die Sicht, die zu ihrer Rolle passt.
 
 ## App holen
 
-FlexFamily Calendar läuft auf zwei Wegen:
+FlexFamily Calendar läuft auf **vier Wegen** — Web, Desktop, Android — alle greifen
+auf denselben Familien-Server zu.
 
 ### Im Browser
 
 Wenn eure Familie einen eigenen Server hat, öffnest du einfach die Adresse
-(z.B. `https://flexfamily.dein-name.de`) in Chrome, Firefox oder Edge und
+(z.B. `https://flexfamily.dein-name.de`) in Chrome, Firefox, Edge oder Brave und
 meldest dich an. Kein Download nötig, funktioniert auf jedem Gerät mit modernem
 Browser.
 
@@ -82,6 +88,22 @@ Die Desktop-App aktualisiert sich beim Start selbst, wenn eine neue Version
 verfügbar ist — ein Dialog mit den Neuerungen erscheint, und mit einem Klick
 läuft die neue Version.
 
+### Als Android-App
+
+Aus dem gleichen Release auf GitHub gibt es eine **`.apk`-Datei**
+(`FlexFamilyCalendar-vX.Y.Z-android.apk`). Auf dem Handy im Browser öffnen und
+herunterladen, „Installation aus unbekannter Quelle zulassen", installieren.
+
+Beim ersten Start ist der Server bereits auf `https://flexfamily.cloud`
+voreingestellt — du landest direkt auf dem Anmeldebildschirm. Falls dein
+Familien-Server unter einer anderen Adresse läuft, kannst du sie über den
+grauen „Verbindung"-Link unten auf dem Login-Screen ändern.
+
+Die Handy-Version ist **bewusst reduziert** auf die vier Dinge, die man von
+unterwegs braucht: Anmelden, Plan anzeigen, Krank melden, Urlaub beantragen,
+Schichttausch. Admin-Bereich, PDF-Export, E-Mail, KI-Planer, Monatsübersicht
+und Profil-Editor findest du weiter im Web oder auf dem Desktop.
+
 ## Anmelden
 
 Beim ersten Start zeigt die App den Anmeldebildschirm. Trage deinen
@@ -96,11 +118,21 @@ Beim ersten Start zeigt die App den Anmeldebildschirm. Trage deinen
 Wenn du deinen Benutzer noch nicht hast, sprich mit dem Elternteil, das den
 Kalender verwaltet — die Benutzerverwaltung liegt beim Admin.
 
+## Erste Schritte
+
+Beim allerersten Login zeigt die App eine kurze **Willkommens-Tour** in vier
+Slides: Wochenplan, Übersichten & Export, Hover-Hinweise. Klick auf „Verstanden"
+schließt die Tour dauerhaft; „Später zeigen" bringt sie beim nächsten Login
+wieder.
+
+Danach findest du **Hover-Hinweise** an fast allen Bedienelementen — Maus
+darüber halten, kurze Erklärung erscheint. Du kannst sie im
+[Profil](#hinweise-einaus) abschalten, wenn dir die App schon vertraut ist.
+
 ## Fenster bedienen
 
 Die Desktop-App bringt eine eigene Titelleiste mit (die OS-Standard-Titelleiste
-wird bewusst ersetzt, damit die App auf Windows, Linux und macOS identisch
-aussieht):
+wird bewusst ersetzt, damit die App auf Windows und Linux identisch aussieht):
 
 - **Ziehen** an der farbigen Titelleiste verschiebt das Fenster.
 - **Doppelklick** auf die Titelleiste maximiert / stellt es wieder her.
@@ -108,8 +140,8 @@ aussieht):
   **✕** Schließen.
 - Alle Fenster (Hauptfenster und Dialoge) sind über die Ecken frei skalierbar.
 
-Im Browser gibt es keine eigene Titelleiste — dort nutzt du die Browser-Tab-
-und Fenster-Kontrollen.
+Im Browser und auf dem Handy gibt es keine eigene Titelleiste — dort nutzt du
+die Browser- bzw. Android-Kontrollen.
 
 ## Der Wochenplan
 
@@ -131,9 +163,31 @@ Jede Zelle zeigt, was diese Person an diesem Tag macht — Schichten, Aktivität
 - **◀ Vorherige Woche** / **Nächste Woche ▶** — springt eine Woche weiter.
 - **Heute** — springt in die aktuelle Woche.
 - **Meine Sicht** / **Alle** — Admin schaltet zwischen der eigenen Sicht (nur du)
-  und der Familien-Sicht (alle). Nicht-Admins sehen immer nur sich selbst.
+  und der Familien-Sicht (alle). Nicht-Admins sehen ohnehin nur ihre eigene
+  Zeile befüllt (siehe unten).
 - **Stunden** — zeigt einen Balken pro Person mit den Arbeitsstunden dieser Woche.
 - **Feiertage** — blendet Feiertage im Kopf der Wochentage ein/aus.
+
+## Sicht-Regel: was du wann siehst
+
+FlexFamily unterscheidet Rollen, damit halbfertige Planungen nicht als Fakten
+missverstanden werden:
+
+- **Admin** sieht alles. Er plant, tauscht Schichten um, gibt frei.
+- **Nicht-Admin** (Angestellte, Au-Pairs, Kinder mit Login):
+  - Die **eigene Zeile** zeigt deine selbst erfassten Krank/Urlaub-Wünsche und
+    Aktivitäten sofort — auch bevor der Admin die Woche freigibt.
+  - Die **eigene Work-Schicht** siehst du **erst, wenn der Admin den Tag
+    finalisiert** hat. Der Grund: bis dahin kann der Admin die Schicht noch
+    ändern; du sollst nicht auf einen unfertigen Plan reagieren.
+  - **Andere Personen** siehst du im Grid, aber die Zellen sind leer, bis der
+    Admin den jeweiligen Tag freigibt. Nach Freigabe siehst du die Zeiten der
+    Kolleg:innen und deren Aktivitäten; Krank/Urlaub bleibt maskiert als
+    „Abwesend" ohne Grund.
+
+Der Admin erkennt einen **finalisierten Tag** am grünen „✓ Final"-Chip im
+Wochentag-Kopf und schaltet ihn über den Button **Woche finalisieren** / **Freigabe
+aufheben** um.
 
 ## Einen Eintrag anlegen
 
@@ -178,12 +232,16 @@ Krank- und Urlaubsmeldungen laufen **als Zeitbereich** (von–bis). Im
 Eintrag-Editor Typ auswählen, Startdatum und Enddatum setzen — die App legt für
 jeden betroffenen Tag einen Eintrag an und verknüpft sie miteinander.
 
-Im Wochenplan erscheint deine Abwesenheit als kompakter Hinweis unter dem
-Datum. Als Nicht-Admin siehst du bei fremden Personen nur den Hinweis
-„Abwesend" ohne Grund — die App maskiert Krank/Urlaub für andere.
+- **Krankmeldung**: gilt sofort. Der Admin bekommt eine Benachrichtigung; wenn
+  die Woche schon finalisiert war, kann er einen KI-Umplanungsvorschlag anfordern.
+- **Urlaubswunsch**: gilt erst als **Wunsch**. Der Eintrag erscheint bei dir
+  grau/durchscheinend mit „*(Wunsch, wartet auf Bestätigung)*". Alle Admins
+  bekommen eine Benachrichtigung mit **Genehmigen** (grün) und **Ablehnen**
+  (rot) direkt an der Zeile in der Glocke — kein Umweg über einen Extra-Dialog.
+  Erst nach Genehmigung ist der Urlaub voll deckend sichtbar.
 
-Als Angestellte(r) oder Au-Pair kannst du dich für dich selbst krank- oder
-urlaubsmelden. Der Admin bekommt automatisch eine Benachrichtigung.
+Als Angestellte(r) oder Au-Pair kannst du dich nur für dich selbst
+krank- oder urlaubsmelden. Der Admin bekommt automatisch eine Benachrichtigung.
 
 ## Wiederkehrende Aktivitäten
 
@@ -216,8 +274,10 @@ Im Kalender-Header:
   nächste. Praktisch für stabile Grundwochen; wiederkehrende Aktivitäten werden
   dabei ignoriert (die kommen ja automatisch).
 - **Woche finalisieren**: markiert die Woche als fest — für Angestellte und
-  Au-Pairs bedeutet das „die Planung steht". Krankmeldung ist weiter möglich,
-  löst dann aber den KI-Umplanungs-Vorschlag aus (siehe unten).
+  Au-Pairs bedeutet das „die Planung steht" und die Zellen der Kolleg:innen
+  werden sichtbar (siehe [Sicht-Regel](#sicht-regel-was-du-wann-siehst)).
+  Krankmeldung ist weiter möglich, löst dann aber den KI-Umplanungs-Vorschlag
+  aus (siehe unten).
 
 Nur Admin und Eltern können finalisieren.
 
@@ -225,14 +285,19 @@ Nur Admin und Eltern können finalisieren.
 
 Wenn du eine Schicht hast, aber jemand anderes einspringen soll:
 
-1. Auf deine Schicht klicken → Editor öffnen.
+1. Auf deine Schicht klicken → Editor öffnen (Desktop/Web).
 2. **Tausch vorschlagen** wählen und die Zielperson auswählen.
 3. Der Vorschlag geht als Benachrichtigung an die andere Person.
 4. Die andere Person bestätigt oder lehnt ab. Bei Bestätigung wechselt die
    Schicht automatisch.
 
-Eltern sehen alle Tauschvorgänge im **Admin → Schichttausch**-Bereich und
-können sie überstimmen.
+Auf dem **Handy** hat der Tausch-Tab ein eigenes Formular: Deine Schichten der
+nächsten 21 Tage im Dropdown, Zielperson auswählen, optional eine Nachricht,
+absenden. Eingehende und ausgehende Anfragen siehst du im selben Tab und kannst
+sie dort direkt bestätigen, ablehnen oder zurückziehen.
+
+Eltern sehen alle Tauschvorgänge im **Admin → Schichttausch**-Bereich (Web/
+Desktop) und können sie überstimmen.
 
 ## Benachrichtigungen
 
@@ -243,8 +308,11 @@ warten:
   einen KI-Umplanungsvorschlag anfordern.
 - **Gesund gemeldet**: eine krank gemeldete Person meldet sich wieder gesund —
   vorgeschlagene Umplanungen können zurückgenommen werden.
-- **Schichttausch vorgeschlagen / bestätigt / abgelehnt**.
-- **Urlaubswunsch** einer angestellten Person.
+- **Schichttausch vorgeschlagen / bestätigt / abgelehnt / zurückgezogen**.
+- **Urlaubswunsch**: an alle Admins. Direkt in der Zeile: grün **Genehmigen**,
+  rot **Ablehnen**. Der Antragsteller bekommt danach eine Rückmeldung, und der
+  Kalender-Eintrag wechselt von grau (Wunsch) auf voll deckend (bestätigt) — oder
+  verschwindet (abgelehnt).
 
 Klick auf die Glocke → Liste der Benachrichtigungen. Von dort kannst du direkt
 zur betroffenen Woche oder Person springen.
@@ -305,11 +373,25 @@ Der Button **Profil** öffnet deine persönlichen Einstellungen:
 - **Kennwort ändern**.
 - **KI-Stil-Hinweis** — Freitext, den die KI beim Erstellen von Vorschlägen
   berücksichtigt (z.B. „bevorzugt Vormittage", „arbeitet nicht am Wochenende").
-- **Theme** (Hell / Dunkel / System).
+- **Theme** (Hell / Dunkel / System) — schaltet live um.
 - **Feiertage anzeigen** ein/aus.
+- **Hinweistexte einblenden** ein/aus (siehe unten).
 
 Angestellte und Au-Pairs sehen nur ihr eigenes Profil. Admin sieht dieselbe
 Ansicht — und im Admin-Bereich alle anderen.
+
+## Hinweise ein/aus
+
+An fast allen Schaltflächen und Feldern schwebt beim Mauszeigen ein kurzer
+Erklärungstext — praktisch beim Einarbeiten, störend wenn du die App kennst.
+
+Im Profil-Dialog gibt es einen Toggle **„Hinweistexte einblenden"**. Das
+schaltet global alle Tooltips für deinen User an oder aus, live und
+über Sessions hinweg gespeichert.
+
+Beim Erst-Login zeigt die App zusätzlich eine 4-Slide-Willkommens-Tour, die du
+mit „Verstanden" dauerhaft schließen oder mit „Später zeigen" beim nächsten
+Login erneut auslösen kannst.
 
 ## Datenschutz
 
@@ -320,11 +402,14 @@ Privatsphäre der einzelnen Personen:
   sichtbar. Alle anderen sehen den Zeitbereich als „Abwesend" ohne Detail.
 - Die Maskierung greift **im Plan, im PDF-Export und im E-Mail-Versand** —
   jeder Empfänger bekommt seine eigene, maskierte Sicht.
+- **Nicht-Admins sehen fremde Einträge erst nach Freigabe des Tages** — siehe
+  [Sicht-Regel](#sicht-regel-was-du-wann-siehst).
 - **Passwörter** werden serverseitig mit BCrypt gehasht (nie im Klartext
-  gespeichert). Auf dem Desktop bleibt dein gemerktes JWT-Token verschlüsselt
-  im lokalen Speicher.
+  gespeichert). Auf dem Desktop und in der Android-App bleibt dein gemerktes
+  JWT-Token verschlüsselt im lokalen Speicher.
 - **SMTP- und KI-API-Schlüssel** liegen im Server-Modus ausschließlich
-  serverseitig als Umgebungsvariablen — der Browser sieht sie nie.
+  serverseitig als Umgebungsvariablen — der Browser und die Android-App sehen
+  sie nie.
 
 ## Admin-Bereich (nur Eltern)
 
@@ -343,6 +428,18 @@ Als Admin öffnet der Button **Admin** einen Dialog mit fünf Tabs:
   Stunden pro Tag, SMTP-Server (nur wenn lokal — im Server-Modus liegt SMTP
   in ENV), Update-Prüfintervall.
 - **KI**: aktiven KI-Provider auswählen (siehe unten).
+
+## Als Admin: Sicht als andere Person
+
+Als Admin kannst du **auf einen Personennamen** in der linken Spalte der
+Wochentabelle klicken — die App wechselt dann in die Sicht dieser Person: du
+siehst genau das, was sie sehen würde (Sicht-Regel und Datenschutz-Maskierung
+werden nachgezogen). Ein oranger Banner oben erinnert dich, dass du gerade
+fremd unterwegs bist; mit **„Sicht verlassen"** (oder erneutem Klick auf denselben
+Namen) kommst du zurück zu deiner vollen Admin-Sicht.
+
+Praktisch, um vor der Finalisierung zu prüfen: „Was sieht mein Angestellter
+gerade eigentlich?"
 
 ## KI-Unterstützung
 
@@ -370,6 +467,26 @@ Bestätigung durch Admin oder Betroffene live.
 
 Im Server-Modus liegen die API-Schlüssel serverseitig — du siehst im
 KI-Tab nur die Provider-Auswahl und optional den Modellnamen.
+
+Die KI-Funktionen stehen im Web und auf dem Desktop zur Verfügung. Auf dem
+Handy ist die KI-Fläche bewusst weggelassen.
+
+## Auf dem Handy
+
+Die Android-App zeigt vier Tabs am unteren Rand:
+
+- **Plan** — Wochenübersicht als Karten (Tag pro Karte, vertikal scrollen).
+  Zeigt nur deine eigenen Einträge; die Sicht auf die Familie machst du weiter
+  im Web oder Desktop.
+- **Krank** — Formular: Von-Bis-Datum, kurzer Grund, Speichern.
+- **Urlaub** — gleiches Formular für Urlaubswünsche. Landet beim Admin als
+  Genehmigungs-Anfrage.
+- **Tausch** — eingehende und ausgehende Schichttausch-Anfragen mit Aktionen,
+  plus ein Formular für neue Anfragen (deine Schichten der nächsten 21 Tage im
+  Dropdown, Zielperson auswählen, Nachricht, senden).
+
+Kein Admin-Bereich, kein PDF/Mail/KI, keine Monatsübersicht — die macht der
+Admin bewusst am Desktop oder im Web.
 
 ## Über und Hilfe
 
@@ -400,16 +517,20 @@ Kurzstart:
 # Desktop lokal starten
 dotnet run --project desktop/FlexFamilyCalendar.Desktop.csproj
 
-# Tests
+# Tests (Client + Server)
 dotnet test FlexFamilyCalendar.slnx
+
+# Android-APK lokal (braucht Java 17 + android-Workload)
+dotnet workload install android
+dotnet publish mobile/FlexFamilyCalendar.Android.csproj -c Release -o publish
 ```
 
 **Anforderungen:** .NET 10 SDK, für den WASM-Build zusätzlich
-`dotnet workload install wasm-tools`.
+`dotnet workload install wasm-tools`, für den Android-Build
+`dotnet workload install android` + Java 17.
 
-Auf jedes Tag `vX.Y.Z` läuft `.github/workflows/release.yml` und baut sechs
-Artefakte parallel: Windows-ZIP, Linux-Tar, Linux-AppImage und zwei
-Docker-Images (API + Caddy mit eingebetteter WASM-SPA + eingebetteter
-Caddyfile).
+Auf jedes Tag `vX.Y.Z` läuft `.github/workflows/release.yml` und baut sieben
+Artefakte parallel: Windows-ZIP, Linux-Tar, Linux-AppImage, **Android-APK**
+und zwei Docker-Images (API + Caddy mit eingebetteter WASM-SPA und Caddyfile).
 
 **Lizenz:** siehe [LICENSE](LICENSE).
