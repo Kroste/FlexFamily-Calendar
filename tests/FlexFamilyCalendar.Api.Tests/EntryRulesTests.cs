@@ -75,12 +75,9 @@ public class EntryVisibilityTests
     }
 
     [Fact]
-    public void Stranger_sees_work_shift_in_full()
+    public void Stranger_sees_work_shift_when_day_finalized()
     {
-        // Angestellte sollen die Zeiten der Kolleg:innen sehen können, damit sie ihren Alltag
-        // planen können — Datenschutzmaskierung greift bei privaten Typen (Krank/Urlaub),
-        // nicht bei Arbeit. isDayFinalized ist hier nicht mehr relevant.
-        var dto = EntryVisibility.Project(Work(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false, isDayFinalized: false);
+        var dto = EntryVisibility.Project(Work(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false, isDayFinalized: true);
         Assert.NotNull(dto);
         Assert.False(dto!.Masked);
         Assert.Equal(EntryTypes.Work, dto.Type);
@@ -88,10 +85,32 @@ public class EntryVisibilityTests
     }
 
     [Fact]
-    public void Owner_sees_own_work_regardless_of_finalization()
+    public void Stranger_does_not_see_work_before_finalization()
+    {
+        var dto = EntryVisibility.Project(Work(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false, isDayFinalized: false);
+        Assert.Null(dto);
+    }
+
+    [Fact]
+    public void Owner_does_not_see_own_work_before_finalization()
     {
         var owner = Guid.NewGuid();
         var dto = EntryVisibility.Project(Work(owner), requesterId: owner, isAdmin: false, isDayFinalized: false);
+        Assert.Null(dto);
+    }
+
+    [Fact]
+    public void Owner_sees_own_work_when_finalized()
+    {
+        var owner = Guid.NewGuid();
+        var dto = EntryVisibility.Project(Work(owner), requesterId: owner, isAdmin: false, isDayFinalized: true);
+        Assert.NotNull(dto);
+    }
+
+    [Fact]
+    public void Admin_sees_work_even_when_not_finalized()
+    {
+        var dto = EntryVisibility.Project(Work(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: true, isDayFinalized: false);
         Assert.NotNull(dto);
     }
 }

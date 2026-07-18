@@ -13,19 +13,24 @@ public static class EntryVisibility
     /// </summary>
     public static EntryDto? Project(CalendarEntry e, Guid requesterId, bool isAdmin, bool isDayFinalized)
     {
-        // Admin und Eigentümer sehen alles — als Angestellte/r sehe ich die Zeiten aller
-        // Kolleg:innen, damit ich meinen Alltag drum herum planen kann (Kinder abholen,
-        // Termine legen etc.). Die Zeitenanzeige ist keine Genehmigungsentscheidung —
-        // isDayFinalized/Approval steht am eigentlichen Genehmigungs-Flow für Urlaubswünsche.
-        if (isAdmin || e.UserId == requesterId)
-            return EntryDto.Full(e);
+        var isOwner = e.UserId == requesterId;
 
-        // Fremde sehen nur genehmigte Einträge …
-        if (e.Status != EntryStatus.Approved)
-            return null;
+        // Admin sieht alles — er ist derjenige, der die Planung macht.
+        if (isAdmin) return EntryDto.Full(e);
 
-        // … und private Typen (Urlaub/Krank) nur maskiert als „Abwesend" (Zeitraum sichtbar,
-        // Grund nicht). Arbeit bleibt voll sichtbar — Kolleg:innen sollen sich koordinieren.
+        // Ungenehmigte Einträge (Pending/Rejected) sieht nur der Eigentümer selbst.
+        if (!isOwner && e.Status != EntryStatus.Approved) return null;
+
+        // Arbeit/Schichten sind für alle Nicht-Admins (auch den Eigentümer) erst nach
+        // Finalisierung des Tages sichtbar. Während der Planungsphase ändert der Admin
+        // die Schichten noch — der User soll nicht auf halbfertige Pläne reagieren.
+        if (e.Type == EntryTypes.Work && !isDayFinalized) return null;
+
+        // Eigentümer sieht seine anderen Einträge (Krank/Urlaub-Wunsch, Aktivität) voll.
+        if (isOwner) return EntryDto.Full(e);
+
+        // Fremde: private Typen (Krank/Urlaub) maskiert als „Abwesend" (Zeitraum sichtbar,
+        // Grund nicht). Aktivitäten und Übernachtungen voll sichtbar.
         return EntryTypes.IsPrivate(e.Type) ? EntryDto.Mask(e) : EntryDto.Full(e);
     }
 }
