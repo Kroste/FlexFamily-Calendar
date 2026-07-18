@@ -1102,6 +1102,36 @@ public partial class CalendarViewModel : ViewModelBase
         => _userColors = _allUsers.ToDictionary(
             u => u.Id, u => string.IsNullOrEmpty(u.Color) ? "#7F8C8D" : u.Color);
 
+    /// <summary>
+    /// Spiegelt die serverseitige EntryVisibility-Regel clientseitig für den View-as-Modus.
+    /// Der Admin bekommt vom Server (aus Effizienzgründen) alle Einträge — beim Impersonate
+    /// soll er aber nur das sehen, was der beobachtete Nicht-Admin-Kollege sehen würde:
+    /// nichts von Fremden vor Finalisierung, eigene Work erst nach Finalisierung.
+    /// Ohne Impersonate wird die Liste unverändert zurückgegeben.
+    /// </summary>
+    private IReadOnlyList<CalendarEntry> EntriesVisibleUnderImpersonation(CalendarDay day)
+    {
+        if (!IsImpersonating) return day.Entries;
+        var effUserId = EffectiveUserId;
+        var result = new List<CalendarEntry>(day.Entries.Count);
+        foreach (var e in day.Entries)
+        {
+            var isOwner = e.UserId == effUserId;
+            if (!isOwner)
+            {
+                if (!day.IsFinalized) continue;
+                // Server würde hier Pending/Rejected wegwerfen — im Server-Modus kommen die
+                // ohnehin nur maskiert an; wir filtern hier nur die Finalisierung nach.
+            }
+            else if (e.Type == EntryType.Work && !day.IsFinalized)
+            {
+                continue;
+            }
+            result.Add(e);
+        }
+        return result;
+    }
+
     /// <summary>Setzt je Eintrag Personenfarbe, Deckkraft und Hervorhebung (Laufzeit, nicht persistiert).</summary>
     private void ApplyEntryDisplay(CalendarDay day)
     {
@@ -1215,7 +1245,8 @@ public partial class CalendarViewModel : ViewModelBase
             var date = WeekStart.AddDays(i);
             var day = await _storage.LoadDayAsync(date);
             ApplyEntryDisplay(day);
-            var (timeline, absences) = BuildDisplay(date, day.Entries);
+            var entries = EntriesVisibleUnderImpersonation(day);
+            var (timeline, absences) = BuildDisplay(date, entries);
             Days[i].LoadFromModel(day, timeline, absences, CanSeeNote(day.NoteUserId));
             Days[i].SetHoliday(_weekHolidays.FirstOrDefault(h => h.Date == date)?.NameKey, IsHolidaysVisible);
         }
