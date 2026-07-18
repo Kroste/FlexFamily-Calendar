@@ -211,9 +211,23 @@ app.MapPost("/api/auth/me/password", async (SetPasswordRequest req, AppDbContext
 })
     .RequireAuthorization();
 
-app.MapGet("/api/users", async (AppDbContext db) =>
-    (await db.Users.OrderBy(u => u.DisplayName).ToListAsync()).Select(UserDto.From))
-    .RequireAuthorization("Admin");
+// Benutzerliste. Admin bekommt alle Felder (für die Benutzerverwaltung); Nicht-Admin
+// bekommt eine reduzierte Sicht mit nur den Feldern, die für das Wochen-Grid gebraucht
+// werden (Name, Kategorie, Farbe) — damit sie die Zeilen ihrer Kolleg:innen sehen können,
+// ohne Personalstammdaten preiszugeben.
+app.MapGet("/api/users", async (AppDbContext db, ClaimsPrincipal principal) =>
+{
+    var users = await db.Users.OrderBy(u => u.DisplayName).ToListAsync();
+    if (principal.IsInRole("Admin"))
+        return Results.Ok(users.Select(UserDto.From));
+    return Results.Ok(users.Select(u => new UserDto(
+        u.Id, u.Username, u.DisplayName, "" /*Email*/, "User", u.Category,
+        0, 0, 0, 0,
+        u.Color, u.Language, "" /*AiStyleHint*/,
+        0, default, u.ThemeVariant, u.ShowHolidays,
+        u.ShowHints, u.OnboardingSeen)));
+})
+    .RequireAuthorization();
 
 app.MapPost("/api/users", async (CreateUserRequest req, AppDbContext db) =>
 {
