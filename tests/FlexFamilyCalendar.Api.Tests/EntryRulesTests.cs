@@ -75,9 +75,12 @@ public class EntryVisibilityTests
     }
 
     [Fact]
-    public void Stranger_sees_work_shift_when_day_finalized()
+    public void Stranger_sees_work_shift_in_full()
     {
-        var dto = EntryVisibility.Project(Work(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false, isDayFinalized: true);
+        // Angestellte sollen die Zeiten der Kolleg:innen sehen können, damit sie ihren Alltag
+        // planen können — Datenschutzmaskierung greift bei privaten Typen (Krank/Urlaub),
+        // nicht bei Arbeit. isDayFinalized ist hier nicht mehr relevant.
+        var dto = EntryVisibility.Project(Work(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false, isDayFinalized: false);
         Assert.NotNull(dto);
         Assert.False(dto!.Masked);
         Assert.Equal(EntryTypes.Work, dto.Type);
@@ -85,35 +88,10 @@ public class EntryVisibilityTests
     }
 
     [Fact]
-    public void Stranger_does_not_see_work_shift_before_finalization()
+    public void Owner_sees_own_work_regardless_of_finalization()
     {
-        var dto = EntryVisibility.Project(Work(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false, isDayFinalized: false);
-        Assert.Null(dto);
-    }
-
-    [Fact]
-    public void Owner_does_not_see_own_work_before_finalization()
-    {
-        // Auch der Eigentümer sieht seine Schicht erst nach Freigabe. Während der Planungsphase
-        // könnte sich die Schicht noch ändern; der Eigentümer soll nicht auf einen unfertigen
-        // Plan reagieren (siehe v0.1.28-Änderung).
         var owner = Guid.NewGuid();
         var dto = EntryVisibility.Project(Work(owner), requesterId: owner, isAdmin: false, isDayFinalized: false);
-        Assert.Null(dto);
-    }
-
-    [Fact]
-    public void Owner_sees_own_work_when_finalized()
-    {
-        var owner = Guid.NewGuid();
-        var dto = EntryVisibility.Project(Work(owner), requesterId: owner, isAdmin: false, isDayFinalized: true);
-        Assert.NotNull(dto);
-    }
-
-    [Fact]
-    public void Admin_sees_work_even_when_not_finalized()
-    {
-        var dto = EntryVisibility.Project(Work(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: true, isDayFinalized: false);
         Assert.NotNull(dto);
     }
 }
