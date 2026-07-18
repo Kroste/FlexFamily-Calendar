@@ -333,7 +333,16 @@ app.MapGet("/api/entries", async (DateOnly from, DateOnly to, AppDbContext db, C
         .Where(e => e.Date <= to && (e.EndDate ?? e.Date) >= from)
         .ToListAsync();
 
-    var dtos = raw.Select(e => EntryVisibility.Project(e, requester.Value, isAdmin))
+    // Finalisierungs-Status pro Tag: für Fremde sind Work-Einträge nur sichtbar, wenn der
+    // Admin die Woche freigegeben hat. Verhindert, dass halbfertige Pläne von anderen
+    // Familienmitgliedern eingesehen werden können.
+    var finalizedDays = await db.DayMeta
+        .Where(m => m.Date >= from && m.Date <= to && m.IsFinalized)
+        .Select(m => m.Date)
+        .ToListAsync();
+    var finalizedSet = finalizedDays.ToHashSet();
+
+    var dtos = raw.Select(e => EntryVisibility.Project(e, requester.Value, isAdmin, finalizedSet.Contains(e.Date)))
                   .Where(d => d is not null)
                   .ToList();
     return Results.Ok(dtos);

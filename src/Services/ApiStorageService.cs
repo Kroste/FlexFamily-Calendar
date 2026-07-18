@@ -31,9 +31,13 @@ public class ApiStorageService : IStorageService
         }
         catch (Exception ex)
         {
-            // z.B. 403 für Nicht-Admins (Benutzerliste ist Admin-only). Slice ist Admin-orientiert;
-            // damit die App nicht abstürzt, fällt sie auf den angemeldeten Benutzer zurück.
-            LogService.Warn("Benutzerliste vom Server nicht ladbar: {0}", ex.Message);
+            // /api/users ist Admin-only → 403 für Nicht-Admins ist normal, gehört nicht in die
+            // Status-Message-Bar. Nur wenn wir tatsächlich als Admin angemeldet sind, ist der
+            // Fehler ein echter Warnsignal.
+            if (_api.CurrentUserIsAdmin)
+                LogService.Warn("Benutzerliste vom Server nicht ladbar: {0}", ex.Message);
+            else
+                LogService.Debug("Benutzerliste als Nicht-Admin nicht abrufbar (erwartet): {0}", ex.Message);
             return _api.CurrentUser is { } me ? new List<User> { UserMapping.ToDesktop(me) } : new();
         }
     }

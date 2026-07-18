@@ -5,8 +5,13 @@ namespace FlexFamilyCalendar.Api.Entries;
 /// <summary>Entscheidet serverseitig, was ein Anfragender von einem Eintrag sehen darf.</summary>
 public static class EntryVisibility
 {
-    /// <summary>Projiziert einen Eintrag für den Anfragenden – oder null, wenn er ihn nicht sehen darf.</summary>
-    public static EntryDto? Project(CalendarEntry e, Guid requesterId, bool isAdmin)
+    /// <summary>
+    /// Projiziert einen Eintrag für den Anfragenden – oder null, wenn er ihn nicht sehen darf.
+    /// <paramref name="isDayFinalized"/> signalisiert, dass der Admin den Tag als „Planung fertig"
+    /// markiert hat — vorher bleiben Schichten für Fremde verborgen, damit halbfertige
+    /// Wochenplanungen nicht als Fakten missverstanden werden.
+    /// </summary>
+    public static EntryDto? Project(CalendarEntry e, Guid requesterId, bool isAdmin, bool isDayFinalized)
     {
         // Admin und Eigentümer sehen alles.
         if (isAdmin || e.UserId == requesterId)
@@ -14,6 +19,10 @@ public static class EntryVisibility
 
         // Fremde sehen nur genehmigte Einträge …
         if (e.Status != EntryStatus.Approved)
+            return null;
+
+        // Arbeit (Schichten) für Fremde nur sichtbar, wenn der Tag finalisiert ist.
+        if (e.Type == EntryTypes.Work && !isDayFinalized)
             return null;
 
         // … und private (Urlaub/Krank) nur maskiert als „Abwesend".

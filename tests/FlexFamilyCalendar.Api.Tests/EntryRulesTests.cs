@@ -28,7 +28,7 @@ public class EntryVisibilityTests
     [Fact]
     public void Admin_sees_full_private_entry()
     {
-        var dto = EntryVisibility.Project(Sick(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: true);
+        var dto = EntryVisibility.Project(Sick(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: true, isDayFinalized: false);
         Assert.NotNull(dto);
         Assert.False(dto!.Masked);
         Assert.Equal(EntryTypes.SickLeave, dto.Type);
@@ -39,7 +39,7 @@ public class EntryVisibilityTests
     public void Owner_sees_full_private_entry()
     {
         var owner = Guid.NewGuid();
-        var dto = EntryVisibility.Project(Sick(owner), requesterId: owner, isAdmin: false);
+        var dto = EntryVisibility.Project(Sick(owner), requesterId: owner, isAdmin: false, isDayFinalized: true);
         Assert.NotNull(dto);
         Assert.False(dto!.Masked);
         Assert.Equal("Grippe", dto.Note);
@@ -48,7 +48,7 @@ public class EntryVisibilityTests
     [Fact]
     public void Stranger_sees_private_entry_masked_as_absence()
     {
-        var dto = EntryVisibility.Project(Sick(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false);
+        var dto = EntryVisibility.Project(Sick(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false, isDayFinalized: true);
         Assert.NotNull(dto);
         Assert.True(dto!.Masked);
         Assert.Equal(EntryTypes.Absence, dto.Type);
@@ -62,7 +62,7 @@ public class EntryVisibilityTests
     [Fact]
     public void Stranger_does_not_see_pending_entry()
     {
-        var dto = EntryVisibility.Project(Sick(Guid.NewGuid(), EntryStatus.Pending), requesterId: Guid.NewGuid(), isAdmin: false);
+        var dto = EntryVisibility.Project(Sick(Guid.NewGuid(), EntryStatus.Pending), requesterId: Guid.NewGuid(), isAdmin: false, isDayFinalized: true);
         Assert.Null(dto);
     }
 
@@ -70,18 +70,33 @@ public class EntryVisibilityTests
     public void Owner_sees_own_pending_entry()
     {
         var owner = Guid.NewGuid();
-        var dto = EntryVisibility.Project(Sick(owner, EntryStatus.Pending), requesterId: owner, isAdmin: false);
+        var dto = EntryVisibility.Project(Sick(owner, EntryStatus.Pending), requesterId: owner, isAdmin: false, isDayFinalized: true);
         Assert.NotNull(dto);
     }
 
     [Fact]
-    public void Stranger_sees_work_shift_in_full()
+    public void Stranger_sees_work_shift_when_day_finalized()
     {
-        var dto = EntryVisibility.Project(Work(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false);
+        var dto = EntryVisibility.Project(Work(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false, isDayFinalized: true);
         Assert.NotNull(dto);
         Assert.False(dto!.Masked);
         Assert.Equal(EntryTypes.Work, dto.Type);
         Assert.Equal(new TimeOnly(8, 0), dto.StartTime);
+    }
+
+    [Fact]
+    public void Stranger_does_not_see_work_shift_before_finalization()
+    {
+        var dto = EntryVisibility.Project(Work(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false, isDayFinalized: false);
+        Assert.Null(dto);
+    }
+
+    [Fact]
+    public void Owner_sees_own_work_even_when_not_finalized()
+    {
+        var owner = Guid.NewGuid();
+        var dto = EntryVisibility.Project(Work(owner), requesterId: owner, isAdmin: false, isDayFinalized: false);
+        Assert.NotNull(dto);
     }
 }
 
