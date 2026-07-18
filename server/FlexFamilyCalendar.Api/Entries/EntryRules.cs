@@ -13,19 +13,28 @@ public static class EntryVisibility
     /// </summary>
     public static EntryDto? Project(CalendarEntry e, Guid requesterId, bool isAdmin, bool isDayFinalized)
     {
-        // Admin und Eigentümer sehen alles.
-        if (isAdmin || e.UserId == requesterId)
+        var isOwner = e.UserId == requesterId;
+
+        // Admin sieht alles — er ist derjenige, der die Planung macht.
+        if (isAdmin)
             return EntryDto.Full(e);
 
-        // Fremde sehen nur genehmigte Einträge …
-        if (e.Status != EntryStatus.Approved)
+        // Ungenehmigte Einträge (Pending/Rejected) sieht nur der Eigentümer selbst.
+        if (!isOwner && e.Status != EntryStatus.Approved)
             return null;
 
-        // Arbeit (Schichten) für Fremde nur sichtbar, wenn der Tag finalisiert ist.
+        // Arbeit/Schichten sind für ALLE (auch für den Eigentümer) erst nach Freigabe des
+        // Tages sichtbar. Während der Planungsphase kann sich die Schicht noch ändern; wenn
+        // der Eigentümer sie zu früh sieht und darauf reagiert (z.B. privaten Termin plant),
+        // kollidiert das mit späteren Admin-Änderungen.
         if (e.Type == EntryTypes.Work && !isDayFinalized)
             return null;
 
-        // … und private (Urlaub/Krank) nur maskiert als „Abwesend".
+        // Eigentümer sieht seine anderen Einträge (Krank/Urlaub-Wunsch, Aktivität) voll.
+        if (isOwner)
+            return EntryDto.Full(e);
+
+        // Fremde: private Typen (Krank/Urlaub) maskiert als „Abwesend".
         return EntryTypes.IsPrivate(e.Type) ? EntryDto.Mask(e) : EntryDto.Full(e);
     }
 }

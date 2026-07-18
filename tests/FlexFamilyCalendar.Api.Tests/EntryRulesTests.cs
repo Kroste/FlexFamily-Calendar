@@ -92,10 +92,28 @@ public class EntryVisibilityTests
     }
 
     [Fact]
-    public void Owner_sees_own_work_even_when_not_finalized()
+    public void Owner_does_not_see_own_work_before_finalization()
     {
+        // Auch der Eigentümer sieht seine Schicht erst nach Freigabe. Während der Planungsphase
+        // könnte sich die Schicht noch ändern; der Eigentümer soll nicht auf einen unfertigen
+        // Plan reagieren (siehe v0.1.28-Änderung).
         var owner = Guid.NewGuid();
         var dto = EntryVisibility.Project(Work(owner), requesterId: owner, isAdmin: false, isDayFinalized: false);
+        Assert.Null(dto);
+    }
+
+    [Fact]
+    public void Owner_sees_own_work_when_finalized()
+    {
+        var owner = Guid.NewGuid();
+        var dto = EntryVisibility.Project(Work(owner), requesterId: owner, isAdmin: false, isDayFinalized: true);
+        Assert.NotNull(dto);
+    }
+
+    [Fact]
+    public void Admin_sees_work_even_when_not_finalized()
+    {
+        var dto = EntryVisibility.Project(Work(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: true, isDayFinalized: false);
         Assert.NotNull(dto);
     }
 }
