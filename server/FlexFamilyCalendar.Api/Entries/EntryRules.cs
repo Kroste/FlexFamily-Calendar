@@ -15,23 +15,25 @@ public static class EntryVisibility
     {
         var isOwner = e.UserId == requesterId;
 
-        // Admin sieht alles — er ist derjenige, der die Planung macht.
+        // Admin sieht alles — er macht die Planung.
         if (isAdmin) return EntryDto.Full(e);
 
-        // Ungenehmigte Einträge (Pending/Rejected) sieht nur der Eigentümer selbst.
-        if (!isOwner && e.Status != EntryStatus.Approved) return null;
+        // Für Nicht-Admins: ALLE Einträge anderer Personen (unabhängig vom Typ) sind erst
+        // sichtbar, wenn der Admin den Tag freigegeben hat. Vorher sind Schichten, Aktivitäten
+        // der Kinder etc. Planungsentwürfe, die sich noch ändern können.
+        if (!isOwner)
+        {
+            if (!isDayFinalized) return null;
+            if (e.Status != EntryStatus.Approved) return null;   // Pending/Rejected weiter nur Owner+Admin
+            return EntryTypes.IsPrivate(e.Type) ? EntryDto.Mask(e) : EntryDto.Full(e);
+        }
 
-        // Arbeit/Schichten sind für alle Nicht-Admins (auch den Eigentümer) erst nach
-        // Finalisierung des Tages sichtbar. Während der Planungsphase ändert der Admin
-        // die Schichten noch — der User soll nicht auf halbfertige Pläne reagieren.
+        // Eigentümer: eigene Work-Schichten kommen vom Admin — auch die erst nach Freigabe.
         if (e.Type == EntryTypes.Work && !isDayFinalized) return null;
 
-        // Eigentümer sieht seine anderen Einträge (Krank/Urlaub-Wunsch, Aktivität) voll.
-        if (isOwner) return EntryDto.Full(e);
-
-        // Fremde: private Typen (Krank/Urlaub) maskiert als „Abwesend" (Zeitraum sichtbar,
-        // Grund nicht). Aktivitäten und Übernachtungen voll sichtbar.
-        return EntryTypes.IsPrivate(e.Type) ? EntryDto.Mask(e) : EntryDto.Full(e);
+        // Alle anderen eigenen Einträge (Krank-/Urlaubswunsch, Aktivität, Übernachtung)
+        // sind immer sichtbar — auch Pending, damit der User seinen offenen Wunsch sieht.
+        return EntryDto.Full(e);
     }
 }
 

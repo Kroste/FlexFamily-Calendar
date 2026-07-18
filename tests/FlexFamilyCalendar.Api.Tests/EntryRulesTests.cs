@@ -46,7 +46,7 @@ public class EntryVisibilityTests
     }
 
     [Fact]
-    public void Stranger_sees_private_entry_masked_as_absence()
+    public void Stranger_sees_private_entry_masked_as_absence_when_finalized()
     {
         var dto = EntryVisibility.Project(Sick(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false, isDayFinalized: true);
         Assert.NotNull(dto);
@@ -57,6 +57,15 @@ public class EntryVisibilityTests
         // Zeitraum bleibt sichtbar (Verfügbarkeit), Grund nicht.
         Assert.Equal(new DateOnly(2026, 5, 25), dto.Date);
         Assert.Equal(new DateOnly(2026, 5, 27), dto.EndDate);
+    }
+
+    [Fact]
+    public void Stranger_does_not_see_private_entry_before_finalization()
+    {
+        // Alle Einträge anderer sind für Nicht-Admins erst nach Tagesfreigabe sichtbar,
+        // auch die maskierten Krank/Urlaub-Abwesenheiten.
+        var dto = EntryVisibility.Project(Sick(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false, isDayFinalized: false);
+        Assert.Null(dto);
     }
 
     [Fact]
