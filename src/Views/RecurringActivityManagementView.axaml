@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:cv="using:FlexFamilyCalendar.Converters"
              xmlns:loc="using:FlexFamilyCalendar.Localization"
+             xmlns:ctrl="using:FlexFamilyCalendar.Controls"
              x:Class="FlexFamilyCalendar.Views.RecurringActivityManagementView"
              x:CompileBindings="False">
 
@@ -73,11 +74,11 @@
         <Grid ColumnDefinitions="*,16,*">
           <StackPanel Grid.Column="0" Spacing="4">
             <TextBlock Text="{loc:Tr Entry_StartTime}" FontSize="12" Opacity="0.7" />
-            <TimePicker SelectedTime="{Binding StartTime}" ClockIdentifier="24HourClock" HorizontalAlignment="Stretch" />
+            <ctrl:TimeEntryBox Time="{Binding StartTime, Mode=TwoWay}" HorizontalAlignment="Stretch" />
           </StackPanel>
           <StackPanel Grid.Column="2" Spacing="4">
             <TextBlock Text="{loc:Tr Entry_EndTime}" FontSize="12" Opacity="0.7" />
-            <TimePicker SelectedTime="{Binding EndTime}" ClockIdentifier="24HourClock" HorizontalAlignment="Stretch" />
+            <ctrl:TimeEntryBox Time="{Binding EndTime, Mode=TwoWay}" HorizontalAlignment="Stretch" />
           </StackPanel>
         </Grid>
 

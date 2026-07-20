@@ -17,6 +17,7 @@ public static class EntryMapping
         "Activity" => EntryType.Activity,
         "Absence" => EntryType.Absence,
         "Overnight" => EntryType.Overnight,
+        "Custom" => EntryType.Custom,
         _ => EntryType.Work
     };
 

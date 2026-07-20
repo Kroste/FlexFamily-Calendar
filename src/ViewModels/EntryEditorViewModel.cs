@@ -139,6 +139,9 @@ public partial class EntryEditorViewModel : ViewModelBase
         if (EndTime == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoEnd"]; return; }
         // EndTime < StartTime ist erlaubt (Schicht über Mitternacht); nur identische Zeiten sind ungültig.
         if (EndTime == StartTime) { ErrorMessage = Localizer.Instance["Entry_ErrorSameTime"]; return; }
+        // Custom-Termine brauchen einen Titel — der Eintrag wäre sonst im Plan namenlos.
+        if (SelectedType.Type == EntryType.Custom && string.IsNullOrWhiteSpace(Title))
+        { ErrorMessage = Localizer.Instance["Entry_ErrorNoTitle"]; return; }
 
         DateOnly rangeStart, rangeEnd;
         if (ShowDateRange)

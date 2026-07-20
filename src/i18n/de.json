@@ -382,6 +382,7 @@
   "Entry_NotesPlaceholder": "Weitere Informationen...",
   "Entry_ErrorNoUser": "Bitte einen Benutzer auswählen.",
   "Entry_ErrorNoType": "Bitte einen Typ auswählen.",
+  "Entry_ErrorNoTitle": "Bitte einen Titel eintragen.",
   "Entry_ErrorNoStart": "Bitte eine Startzeit angeben.",
   "Entry_ErrorNoEnd": "Bitte eine Endzeit angeben.",
   "Entry_ErrorSameTime": "Start- und Endzeit dürfen nicht identisch sein.",
@@ -394,6 +395,7 @@
   "EntryType_Activity": "Aktivität",
   "EntryType_Absence": "Abwesend",
   "EntryType_Overnight": "Übernachtung",
+  "EntryType_Custom": "Termin",
 
   "MoveCopy_Title": "Eintrag verschieben oder kopieren?",
   "MoveCopy_Move": "Verschieben",

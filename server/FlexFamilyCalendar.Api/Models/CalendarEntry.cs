@@ -27,16 +27,18 @@ public static class EntryTypes
     public const string Vacation = "Vacation";
     public const string SickLeave = "SickLeave";
     public const string Absence = "Absence";
+    /// <summary>Freier Zeitblock mit Titel (kein Work — zählt NICHT zur Arbeitszeit).</summary>
+    public const string Custom = "Custom";
 
-    public static readonly string[] All = { Work, Overnight, Activity, Vacation, SickLeave, Absence };
+    public static readonly string[] All = { Work, Overnight, Activity, Vacation, SickLeave, Absence, Custom };
 
     public static bool IsKnown(string type) => Array.IndexOf(All, type) >= 0;
 
     /// <summary>Urlaub und Krankheit sind privat und werden Fremden maskiert.</summary>
     public static bool IsPrivate(string type) => type is Vacation or SickLeave;
 
-    /// <summary>Verplante Schichten mit Uhrzeit.</summary>
-    public static bool IsTimed(string type) => type is Work or Overnight;
+    /// <summary>Verplante Schichten mit Uhrzeit (Custom hat auch Zeit, aber wird separat behandelt).</summary>
+    public static bool IsTimed(string type) => type is Work or Overnight or Custom;
 }
 
 public static class EntryStatus

@@ -9,5 +9,6 @@ public enum EntryType
     SickLeave = 3,
     Activity = 4,
     Absence = 5,
-    Overnight = 6   // Übernachtung (auf Abruf): volle Zeit sichtbar, zählt pauschal x Std./Tag aufs Konto
+    Overnight = 6,  // Übernachtung (auf Abruf): volle Zeit sichtbar, zählt pauschal x Std./Tag aufs Konto
+    Custom = 7      // Freier Zeitblock mit Titel (kein Work — zählt NICHT zur Arbeitszeit)
 }

@@ -49,8 +49,10 @@ public static class EntryWriteRules
             return null;
         if (targetUserId != requesterId)
             return "Du darfst nur eigene Einträge anlegen.";
-        if (type is not (EntryTypes.Vacation or EntryTypes.SickLeave))
-            return "Als Nicht-Admin sind nur Urlaubswunsch oder Krankmeldung möglich.";
+        // Nicht-Admin darf für sich anlegen: Urlaubswunsch, Krankmeldung ODER einen freien
+        // Custom-Zeitblock (persönlicher Termin) — Custom zählt nicht zur Arbeitszeit.
+        if (type is not (EntryTypes.Vacation or EntryTypes.SickLeave or EntryTypes.Custom))
+            return "Als Nicht-Admin sind nur Urlaubswunsch, Krankmeldung oder ein freier Termin möglich.";
         return null;
     }
 
@@ -76,6 +78,9 @@ public static class EntryWriteRules
             && string.IsNullOrWhiteSpace(categoryLabel)
             && string.IsNullOrWhiteSpace(activityTypeId))
             return "Aktivitäten brauchen eine Kategorie.";
+        // Custom braucht immer einen Freitext-Titel, sonst ist der Eintrag nichtssagend.
+        if (type == EntryTypes.Custom && string.IsNullOrWhiteSpace(categoryLabel))
+            return "Freie Termine brauchen einen Titel.";
         return null;
     }
 }

@@ -26,6 +26,7 @@ public static class EntryTypeInfo
         EntryType.Activity => "Aktivität",
         EntryType.Absence => "Abwesend",
         EntryType.Overnight => "Übernachtung",
+        EntryType.Custom => "Termin",
         _ => type.ToString()
     };
 
@@ -37,6 +38,7 @@ public static class EntryTypeInfo
         EntryType.Activity => "#E67E22",
         EntryType.Absence => "#7F8C8D",
         EntryType.Overnight => "#5B4B8A",
+        EntryType.Custom => "#16A085",
         _ => "#2E86C1"
     };
 }

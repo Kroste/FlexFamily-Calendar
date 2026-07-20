@@ -156,6 +156,35 @@ public class EntryWriteRulesTests
     }
 
     [Fact]
+    public void Nonadmin_may_create_custom_appointment_for_self()
+    {
+        // Custom = freier persönlicher Termin (kein Work-Anrecht) — darf jeder für sich anlegen.
+        var me = Guid.NewGuid();
+        Assert.Null(EntryWriteRules.CheckCreate(EntryTypes.Custom, me, me, isAdmin: false));
+    }
+
+    [Fact]
+    public void Nonadmin_may_not_create_custom_for_others()
+    {
+        Assert.NotNull(EntryWriteRules.CheckCreate(EntryTypes.Custom, Guid.NewGuid(), Guid.NewGuid(), isAdmin: false));
+    }
+
+    [Fact]
+    public void Custom_without_title_is_rejected()
+        => Assert.NotNull(EntryWriteRules.Validate(EntryTypes.Custom, new DateOnly(2026, 5, 25), null,
+            new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: null, activityTypeId: null));
+
+    [Fact]
+    public void Custom_with_title_and_times_is_accepted()
+        => Assert.Null(EntryWriteRules.Validate(EntryTypes.Custom, new DateOnly(2026, 5, 25), null,
+            new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: "Zahnarzt", activityTypeId: null));
+
+    [Fact]
+    public void Custom_without_times_is_rejected()
+        => Assert.NotNull(EntryWriteRules.Validate(EntryTypes.Custom, new DateOnly(2026, 5, 25), null,
+            null, null, categoryLabel: "Zahnarzt", activityTypeId: null));
+
+    [Fact]
     public void Unknown_type_is_rejected()
         => Assert.NotNull(EntryWriteRules.CheckCreate("Nonsense", Guid.NewGuid(), Guid.NewGuid(), isAdmin: true));
 

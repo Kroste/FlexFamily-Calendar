@@ -382,6 +382,7 @@
   "Entry_NotesPlaceholder": "Additional information...",
   "Entry_ErrorNoUser": "Please select a user.",
   "Entry_ErrorNoType": "Please select a type.",
+  "Entry_ErrorNoTitle": "Please enter a title.",
   "Entry_ErrorNoStart": "Please enter a start time.",
   "Entry_ErrorNoEnd": "Please enter an end time.",
   "Entry_ErrorSameTime": "Start and end time must not be identical.",
@@ -394,6 +395,7 @@
   "EntryType_Activity": "Activity",
   "EntryType_Absence": "Absent",
   "EntryType_Overnight": "Overnight",
+  "EntryType_Custom": "Appointment",
 
   "MoveCopy_Title": "Move or copy entry?",
   "MoveCopy_Move": "Move",
