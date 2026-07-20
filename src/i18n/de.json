@@ -59,7 +59,6 @@
   "User_ErrorNoPassword": "Bitte ein Kennwort vergeben.",
   "User_Theme": "Design",
   "User_Color": "Kalenderfarbe",
-  "User_ColorPaletteHint": "Schnellauswahl aus der Standard-Palette:",
   "User_AiStyleHint": "Dein KI-Stil (optional)",
   "User_AiStyleHintPlaceholder": "z.B. 'Sprich mit mir wie mein bester Kumpel, mach gerne Witze' oder 'Bitte siezen Sie mich.'",
   "User_AiStyleHintHint": "Wird im KI-Plan als Anrede-/Tonfall-Wunsch mitgegeben. Bleibt leer = neutraler Default.",

@@ -14,15 +14,20 @@
 
   <DockPanel>
 
-    <!-- View-As-Banner: Admin schaut aus der Sicht einer anderen Person -->
-    <Border DockPanel.Dock="Top" Background="#E67E22" Padding="14,8"
-            IsVisible="{Binding IsImpersonating}">
+    <!-- View-As-Banner: Admin schaut aus der Sicht einer anderen Person. Die Bannerfarbe
+         nimmt die Personenfarbe des Beobachteten an, damit man auf einen Blick sieht,
+         aus wessen Sicht die Woche gerade dargestellt wird. -->
+    <Border DockPanel.Dock="Top" Padding="14,8"
+            IsVisible="{Binding IsImpersonating}"
+            Background="{Binding ViewAsUserColor, Converter={StaticResource ColorStringToBrushConverter}}">
       <Grid ColumnDefinitions="*,Auto">
         <TextBlock Grid.Column="0" Text="{Binding ViewAsBanner}" Foreground="White"
                    FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+        <!-- Ghost-Button (transparent + weißer Rand) funktioniert auf jeder Personenfarbe lesbar. -->
         <Button Grid.Column="1" Content="{loc:Tr Cal_ExitViewAs}" Command="{Binding ExitImpersonationCommand}"
                 Padding="12,6" CornerRadius="6"
-                Background="White" Foreground="#E67E22" FontWeight="SemiBold" />
+                Background="#33FFFFFF" BorderBrush="White" BorderThickness="1"
+                Foreground="White" FontWeight="SemiBold" />
       </Grid>
     </Border>
 

@@ -59,7 +59,6 @@
   "User_ErrorNoPassword": "Please set a password.",
   "User_Theme": "Theme",
   "User_Color": "Calendar color",
-  "User_ColorPaletteHint": "Quick pick from the default palette:",
   "User_AiStyleHint": "Your AI style (optional)",
   "User_AiStyleHintPlaceholder": "e.g. 'Talk to me like a buddy, feel free to be witty' or 'Please address me formally.'",
   "User_AiStyleHintHint": "Sent to the AI planner as a tone hint. Empty = neutral default.",

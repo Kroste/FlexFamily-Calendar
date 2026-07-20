@@ -61,7 +61,7 @@ public partial class CalendarViewModel : ViewModelBase
     /// sind im View-as-Modus deaktiviert — der Admin schaut nur, was die Person sehen würde.
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsImpersonating), nameof(ViewAsBanner),
+    [NotifyPropertyChangedFor(nameof(IsImpersonating), nameof(ViewAsBanner), nameof(ViewAsUserColor),
         nameof(EffectiveUserId), nameof(EffectiveIsAdmin),
         nameof(CanSwitchView), nameof(CanFinalize))]
     private string? _viewAsUserId;
@@ -79,6 +79,18 @@ public partial class CalendarViewModel : ViewModelBase
             var name = u is null ? ViewAsUserId
                 : string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName;
             return string.Format(Localizer.Instance["Cal_ViewAsBanner"], name);
+        }
+    }
+
+    /// <summary>Farbe der beobachteten Person (Hex) — färbt den View-As-Banner ein,
+    /// damit der Admin auf einen Blick sieht, aus wessen Sicht er gerade schaut.</summary>
+    public string ViewAsUserColor
+    {
+        get
+        {
+            if (ViewAsUserId is null) return "#E67E22";  // Fallback-Orange, wird eh unsichtbar
+            var u = _allUsers.FirstOrDefault(x => x.Id == ViewAsUserId);
+            return string.IsNullOrEmpty(u?.Color) ? "#7F8C8D" : u!.Color;
         }
     }
 

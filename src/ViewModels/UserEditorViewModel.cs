@@ -47,13 +47,6 @@ public partial class UserEditorViewModel : ViewModelBase
     [ObservableProperty] private string _aiStyleHint = "";
     [ObservableProperty] private bool _showHints = true;
 
-    /// <summary>Klick auf ein Palettenfarbenfeld → übernimmt die Farbe als aktuelle Auswahl.</summary>
-    [RelayCommand]
-    private void PickPaletteColor(string? hex)
-    {
-        if (!string.IsNullOrWhiteSpace(hex)) SelectedColor = hex;
-    }
-
     public bool IsSelfMode { get; }
     public bool CanEditAdminFields => !IsSelfMode;
     public bool IsRoleEditable => CanEditAdminFields;

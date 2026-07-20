@@ -106,34 +106,17 @@
         </StackPanel>
 
         <!-- Farbe: darf jeder für sich wählen (auch im Self-Modus) — Personenfarben sind
-             Anzeige-Präferenz, keine Berechtigung. -->
+             Anzeige-Präferenz, keine Berechtigung. Nur der Avalonia-ColorPicker
+             (HSV-Rad + Hex + eingebaute Standard-Palette); der VM-String wird per Konverter gemappt. -->
         <StackPanel Spacing="6">
           <TextBlock Text="{loc:Tr User_Color}" FontSize="12" Opacity="0.7" />
-          <!-- Freie Farbwahl (HSV-Rad + Hex-Feld) über den Avalonia-ColorPicker.
-               SelectedColor bleibt im VM ein Hex-String — der Konverter mappt hin und zurück. -->
           <ColorPicker Color="{Binding SelectedColor, Converter={StaticResource HexToColorConverter}, Mode=TwoWay}"
                        HorizontalAlignment="Stretch"
                        IsAlphaEnabled="False"
                        IsAlphaVisible="False"
-                       IsColorPaletteVisible="False"
+                       IsColorPaletteVisible="True"
                        IsColorPreviewVisible="True"
                        IsColorComponentsVisible="True" />
-          <TextBlock Text="{loc:Tr User_ColorPaletteHint}" FontSize="11" Opacity="0.55" />
-          <ItemsControl ItemsSource="{Binding PersonColors}">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-              <DataTemplate>
-                <Button Padding="0" Margin="0,0,6,6" Width="26" Height="26" CornerRadius="4"
-                        BorderThickness="1" BorderBrush="#33000000"
-                        Background="{Binding ., Converter={StaticResource ColorStringToBrushConverter}}"
-                        Command="{Binding $parent[ItemsControl].DataContext.PickPaletteColorCommand}"
-                        CommandParameter="{Binding .}"
-                        ToolTip.Tip="{Binding .}" />
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
         </StackPanel>
 
         <StackPanel Spacing="4" IsVisible="{Binding ShowPassword}">
