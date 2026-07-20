@@ -19,6 +19,11 @@ namespace FlexFamilyCalendar.Controls;
 /// </summary>
 public class TimeEntryBox : TextBox
 {
+    // Avalonia sucht Styles per Typ-Selektor. Ohne diesen Override würden die Fluent-TextBox-Styles
+    // (Border, Padding, Template) nicht auf TimeEntryBox greifen — Ergebnis: das Feld ist "unsichtbar"
+    // und nicht bedienbar. Mit dem Override erbt es das komplette TextBox-Aussehen.
+    protected override Type StyleKeyOverride => typeof(TextBox);
+
     /// <summary>Der aktuell eingestellte Zeitwert (null = leer). Bindable, Zwei-Wege per Default.</summary>
     public static readonly DirectProperty<TimeEntryBox, TimeSpan?> TimeProperty =
         AvaloniaProperty.RegisterDirect<TimeEntryBox, TimeSpan?>(
