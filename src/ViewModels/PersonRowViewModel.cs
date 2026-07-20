@@ -15,9 +15,12 @@ public class PersonRowViewModel
     /// <summary>Klick auf den Personennamen schaltet die Sicht in deren Perspektive (Admin-only).</summary>
     public IRelayCommand? ImpersonateCommand { get; }
     public bool CanImpersonate => ImpersonateCommand is not null;
+    /// <summary>Zeigt, dass der Admin diese Zeile per Drag&amp;Drop verschieben darf (Sortier-Griff sichtbar).</summary>
+    public bool CanReorder { get; }
 
     public PersonRowViewModel(string userId, string name, string color, string categoryLabel,
-        bool isCurrentUser, IReadOnlyList<PersonDayCellViewModel> cells, IRelayCommand? impersonateCommand = null)
+        bool isCurrentUser, IReadOnlyList<PersonDayCellViewModel> cells, IRelayCommand? impersonateCommand = null,
+        bool canReorder = false)
     {
         UserId = userId;
         Name = name;
@@ -26,6 +29,7 @@ public class PersonRowViewModel
         IsCurrentUser = isCurrentUser;
         Cells = cells;
         ImpersonateCommand = impersonateCommand;
+        CanReorder = canReorder;
     }
 }
 

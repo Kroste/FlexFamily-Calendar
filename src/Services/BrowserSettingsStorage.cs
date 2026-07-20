@@ -36,6 +36,7 @@ public class BrowserSettingsStorage : IStorageService
     // ApiStorageService nutzt den settingsStore NUR für AppSettings — alle anderen Methoden bleiben ungenutzt.
     public Task<List<User>> LoadUsersAsync() => throw new NotSupportedException();
     public Task SaveUsersAsync(List<User> users) => throw new NotSupportedException();
+    public Task ReorderUsersAsync(IReadOnlyList<string> userIds) => throw new NotSupportedException();
     public Task<CalendarDay> LoadDayAsync(DateOnly date) => throw new NotSupportedException();
     public Task SaveDayAsync(CalendarDay day) => throw new NotSupportedException();
     public Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync() => throw new NotSupportedException();

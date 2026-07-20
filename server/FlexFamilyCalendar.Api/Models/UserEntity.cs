@@ -23,4 +23,5 @@ public class UserEntity
     public bool ShowHolidays { get; set; } = true;       // Anzeige-Präferenz: Feiertage einblenden
     public bool ShowHints { get; set; } = true;          // UI-Hover-Hinweise anzeigen (Profil-Toggle)
     public bool OnboardingSeen { get; set; }             // First-Run-Tour bereits durchlaufen?
+    public int PlanOrder { get; set; } = 100;            // Anzeige-Reihenfolge in der Planansicht (Admin-gesteuert)
 }

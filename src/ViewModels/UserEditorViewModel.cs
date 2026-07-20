@@ -47,6 +47,13 @@ public partial class UserEditorViewModel : ViewModelBase
     [ObservableProperty] private string _aiStyleHint = "";
     [ObservableProperty] private bool _showHints = true;
 
+    /// <summary>Klick auf ein Palettenfarbenfeld → übernimmt die Farbe als aktuelle Auswahl.</summary>
+    [RelayCommand]
+    private void PickPaletteColor(string? hex)
+    {
+        if (!string.IsNullOrWhiteSpace(hex)) SelectedColor = hex;
+    }
+
     public bool IsSelfMode { get; }
     public bool CanEditAdminFields => !IsSelfMode;
     public bool IsRoleEditable => CanEditAdminFields;
@@ -169,7 +176,9 @@ public partial class UserEditorViewModel : ViewModelBase
             OpeningBalanceHours = CanEditAdminFields ? opening : _user.OpeningBalanceHours,
             AccountStart = CanEditAdminFields ? accountStart : _user.AccountStart,
             ThemeVariant = SelectedThemeVariant?.Id ?? _user.ThemeVariant,
-            Color = CanEditAdminFields ? (SelectedColor ?? _user.Color) : _user.Color,
+            // Farbe: darf jeder für sich pflegen (Anzeige-Präferenz, keine Berechtigung).
+            Color = SelectedColor ?? _user.Color,
+            PlanOrder = _user.PlanOrder,
             // KI-Stil-Wunsch darf jeder für sich selbst pflegen (auch im selfMode).
             AiStyleHint = (AiStyleHint ?? "").Trim(),
             ShowHints = ShowHints,

@@ -25,7 +25,8 @@ public static class UserMapping
         ThemeVariant = string.IsNullOrWhiteSpace(d.ThemeVariant) ? "System" : d.ThemeVariant!,
         ShowHolidays = d.ShowHolidays,
         ShowHints = d.ShowHints,
-        OnboardingSeen = d.OnboardingSeen
+        OnboardingSeen = d.OnboardingSeen,
+        PlanOrder = d.PlanOrder
     };
 
     public static CreateUserBody ToCreateBody(User u, string password) => new(
@@ -35,7 +36,7 @@ public static class UserMapping
         u.Color, string.IsNullOrWhiteSpace(u.Language) ? "de" : u.Language,
         string.IsNullOrWhiteSpace(u.AiStyleHint) ? null : u.AiStyleHint,
         u.OpeningBalanceHours, u.AccountStart,
-        string.IsNullOrWhiteSpace(u.ThemeVariant) ? "System" : u.ThemeVariant, u.ShowHolidays, u.ShowHints);
+        string.IsNullOrWhiteSpace(u.ThemeVariant) ? "System" : u.ThemeVariant, u.ShowHolidays, u.ShowHints, u.PlanOrder);
 
     public static UpdateUserBody ToUpdateBody(User u) => new(
         u.Username, u.DisplayName, u.Email,
@@ -44,7 +45,7 @@ public static class UserMapping
         u.Color, string.IsNullOrWhiteSpace(u.Language) ? "de" : u.Language,
         string.IsNullOrWhiteSpace(u.AiStyleHint) ? null : u.AiStyleHint,
         u.OpeningBalanceHours, u.AccountStart,
-        string.IsNullOrWhiteSpace(u.ThemeVariant) ? "System" : u.ThemeVariant, u.ShowHolidays, u.ShowHints);
+        string.IsNullOrWhiteSpace(u.ThemeVariant) ? "System" : u.ThemeVariant, u.ShowHolidays, u.ShowHints, u.PlanOrder);
 
     public static string RoleToServer(UserRole role) => role == UserRole.Admin ? "Admin" : "User";
 }

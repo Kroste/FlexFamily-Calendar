@@ -19,17 +19,19 @@ public class UserColorScopeTests
     }
 
     [Fact]
-    public async Task SelfMode_DoesNotChangeColor_ButSavesOtherFields()
+    public async Task SelfMode_ChangesColor_AlongsideOtherFields()
     {
+        // Personenfarbe ist ab v0.1.34 eine Anzeige-Präferenz und darf jeder selbst wählen —
+        // Self-Mode setzt die Farbe genauso wie andere pflegbare Profil-Felder.
         var (auth, user) = await SeedAsync("#2E86C1");
         var vm = new UserEditorViewModel(auth, user, isNew: false, selfMode: true);
 
-        vm.SelectedColor = "#E84393";          // Pink – darf NICHT greifen
-        vm.DisplayName = "Anna B.";            // soll greifen
+        vm.SelectedColor = "#E84393";
+        vm.DisplayName = "Anna B.";
         await vm.SaveCommand.ExecuteAsync(null);
 
         var saved = (await auth.GetUsersAsync()).Single();
-        Assert.Equal("#2E86C1", saved.Color);  // Farbe unverändert
+        Assert.Equal("#E84393", saved.Color);
         Assert.Equal("Anna B.", saved.DisplayName);
     }
 

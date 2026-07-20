@@ -25,4 +25,6 @@ public class User
     public bool ShowHints { get; set; } = true;
     /// <summary>Ist die First-Run-Onboarding-Tour bereits durchgelaufen?</summary>
     public bool OnboardingSeen { get; set; }
+    /// <summary>Anzeige-Position in der Personen-Sortierung der Planansicht (kleinere Zahl = weiter oben).</summary>
+    public int PlanOrder { get; set; } = 100;
 }

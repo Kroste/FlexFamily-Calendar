@@ -56,6 +56,8 @@ public class ApiStorageService : IStorageService
         LogService.Debug("Self-Präferenzen des angemeldeten Benutzers via Profil-Endpunkt gespeichert.");
     }
 
+    public Task ReorderUsersAsync(IReadOnlyList<string> userIds) => _api.ReorderUsersAsync(userIds);
+
     // --- Einstellungen (Trennung: lokal = Installations-Config, Server = Domänen-Config) --
     // Kanon: im Server-Modus MUSS die Domänen-Config (HolidayState, OvernightHoursPerDay)
     // vom Server kommen — kein stiller lokaler Fallback. Installations-Config (ServerUrl, JWT,

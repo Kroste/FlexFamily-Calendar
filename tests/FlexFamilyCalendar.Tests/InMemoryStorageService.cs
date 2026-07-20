@@ -24,6 +24,16 @@ public class InMemoryStorageService : IStorageService
         return Task.CompletedTask;
     }
 
+    public Task ReorderUsersAsync(IReadOnlyList<string> userIds)
+    {
+        for (int i = 0; i < userIds.Count; i++)
+        {
+            var u = _users.FirstOrDefault(x => x.Id == userIds[i]);
+            if (u is not null) u.PlanOrder = i;
+        }
+        return Task.CompletedTask;
+    }
+
     public Task<AppSettings> LoadSettingsAsync() => Task.FromResult(_settings);
     public Task SaveSettingsAsync(AppSettings settings) { _settings = settings; return Task.CompletedTask; }
 

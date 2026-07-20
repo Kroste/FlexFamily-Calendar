@@ -22,14 +22,15 @@ public record UserDto(
     string ThemeVariant,
     bool ShowHolidays,
     bool ShowHints,
-    bool OnboardingSeen)
+    bool OnboardingSeen,
+    int PlanOrder)
 {
     public static UserDto From(UserEntity u) => new(
         u.Id, u.Username, u.DisplayName, u.Email, u.Role, u.Category,
         u.WeeklyHoursQuota, u.MaxWeeklyHours, u.MaxDailyHours, u.MinRestHours,
         u.Color, u.Language, u.AiStyleHint,
         u.OpeningBalanceHours, u.AccountStart, u.ThemeVariant, u.ShowHolidays,
-        u.ShowHints, u.OnboardingSeen);
+        u.ShowHints, u.OnboardingSeen, u.PlanOrder);
 }
 
 /// <summary>Reine Invarianten der Benutzerverwaltung (serverseitig erzwungen, testbar).</summary>

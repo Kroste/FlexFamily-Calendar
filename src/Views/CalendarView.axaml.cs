@@ -21,6 +21,10 @@ public partial class CalendarView : UserControl
         DataFormat.CreateInProcessFormat<string>("ffc-entry-id");
     private static readonly DataFormat<string> SourceDateFormat =
         DataFormat.CreateInProcessFormat<string>("ffc-source-date");
+    // Reorder-Drag: nur die User-Id der gezogenen Zeile — Ziel bestimmt sich aus dem DataContext
+    // der Drop-Zeile.
+    private static readonly DataFormat<string> RowUserIdFormat =
+        DataFormat.CreateInProcessFormat<string>("ffc-row-user-id");
 
     private static readonly IBrush DropTargetBrush =
         new SolidColorBrush(Color.FromArgb(0x55, 0x2E, 0x86, 0xC1));
@@ -33,6 +37,13 @@ public partial class CalendarView : UserControl
     private Control? _pendingDragCtrl;
     private Point? _pendingDragStart;
     private bool _dragStarted;
+
+    // Analog für den Reorder-Drag auf Zeilenebene (Admin schiebt eine Personenzeile).
+    private PointerPressedEventArgs? _pendingRowDragArgs;
+    private PersonRowViewModel? _pendingRowDragRow;
+    private Control? _pendingRowDragCtrl;
+    private Point? _pendingRowDragStart;
+    private bool _rowDragStarted;
 
     public CalendarView() => InitializeComponent();
 
@@ -349,5 +360,116 @@ public partial class CalendarView : UserControl
             v = v.GetVisualParent();
         }
         return null;
+    }
+
+    // ───────── Drag&Drop: Personenzeile → neue Position (Admin) ─────────
+
+    /// <summary>Wird auf jeder Zeile beim ersten Layout aufgerufen — registriert Pointer+Drop-Handler.</summary>
+    private void OnRowLoaded(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Control c) return;
+        // handledEventsToo:true, damit wir den Press auch mitbekommen, wenn der innere Button
+        // ihn schon konsumiert (sonst würde er den Reorder-Drag unterdrücken).
+        c.AddHandler(PointerPressedEvent, OnRowPointerPressed, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
+        c.AddHandler(PointerMovedEvent, OnRowPointerMoved, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
+        c.AddHandler(PointerReleasedEvent, OnRowPointerReleased, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
+        DragDrop.SetAllowDrop(c, true);
+        c.AddHandler(DragDrop.DragOverEvent, OnRowDragOver);
+        c.AddHandler(DragDrop.DropEvent, OnRowDrop);
+    }
+
+    private void OnRowPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        ClearPendingRowDrag();
+        if (_vm?.EffectiveIsAdmin != true) return;
+        if (sender is not Control ctrl || ctrl.DataContext is not PersonRowViewModel row) return;
+        if (!row.CanReorder) return;
+
+        _pendingRowDragArgs = e;
+        _pendingRowDragRow = row;
+        _pendingRowDragCtrl = ctrl;
+        _pendingRowDragStart = e.GetPosition(this);
+    }
+
+    private async void OnRowPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_pendingRowDragArgs is null || _pendingRowDragStart is null || _rowDragStarted) return;
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) { ClearPendingRowDrag(); return; }
+
+        var p = e.GetPosition(this);
+        var dx = p.X - _pendingRowDragStart.Value.X;
+        var dy = p.Y - _pendingRowDragStart.Value.Y;
+        if (dx * dx + dy * dy < 25) return;
+
+        _rowDragStarted = true;
+
+        var item = new DataTransferItem();
+        item.Set(RowUserIdFormat, _pendingRowDragRow!.UserId);
+        var transfer = new DataTransfer();
+        transfer.Add(item);
+
+        var ctrl = _pendingRowDragCtrl;
+        var originalOpacity = ctrl?.Opacity ?? 1.0;
+        if (ctrl is not null) ctrl.Opacity = 0.4;
+
+        try
+        {
+            await DragDrop.DoDragDropAsync(_pendingRowDragArgs, transfer, DragDropEffects.Move);
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("Personen-Reihen-Drag&Drop fehlgeschlagen", ex);
+        }
+        finally
+        {
+            if (ctrl is not null) ctrl.Opacity = originalOpacity;
+            ClearPendingRowDrag();
+        }
+    }
+
+    private void OnRowPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (!_rowDragStarted) ClearPendingRowDrag();
+    }
+
+    private void ClearPendingRowDrag()
+    {
+        _pendingRowDragArgs = null;
+        _pendingRowDragRow = null;
+        _pendingRowDragCtrl = null;
+        _pendingRowDragStart = null;
+        _rowDragStarted = false;
+    }
+
+    private void OnRowDragOver(object? sender, DragEventArgs e)
+    {
+        if (e.DataTransfer.Contains(RowUserIdFormat))
+        {
+            e.DragEffects &= DragDropEffects.Move;
+        }
+        else
+        {
+            e.DragEffects = DragDropEffects.None;
+        }
+        e.Handled = true;
+    }
+
+    private async void OnRowDrop(object? sender, DragEventArgs e)
+    {
+        if (sender is not Control c || c.DataContext is not PersonRowViewModel targetRow) return;
+        var sourceId = e.DataTransfer.TryGetValue(RowUserIdFormat);
+        if (string.IsNullOrEmpty(sourceId)) return;
+
+        e.Handled = true;
+        if (_vm is null) return;
+
+        try
+        {
+            await _vm.ReorderPersonAsync(sourceId, targetRow.UserId);
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("Personen-Reihenfolge speichern fehlgeschlagen", ex);
+        }
     }
 }

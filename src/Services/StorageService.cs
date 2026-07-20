@@ -34,6 +34,17 @@ public class StorageService : IStorageService
         LogService.Debug("Benutzerdaten gespeichert ({0} Benutzer)", users.Count);
     }
 
+    public async Task ReorderUsersAsync(IReadOnlyList<string> userIds)
+    {
+        var users = await LoadUsersAsync();
+        for (int i = 0; i < userIds.Count; i++)
+        {
+            var u = users.FirstOrDefault(x => x.Id == userIds[i]);
+            if (u is not null) u.PlanOrder = i;
+        }
+        await SaveUsersAsync(users);
+    }
+
     public async Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync()
     {
         if (!File.Exists(SwapRequestsFile)) return new();

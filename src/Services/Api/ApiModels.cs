@@ -37,7 +37,8 @@ public record ServerUserDto(
     string? ThemeVariant = null,
     bool ShowHolidays = true,
     bool ShowHints = true,
-    bool OnboardingSeen = false);
+    bool OnboardingSeen = false,
+    int PlanOrder = 100);
 
 public record LoginResponse(string Token, ServerUserDto User);
 
@@ -59,7 +60,8 @@ public record CreateUserBody(
     DateOnly AccountStart = default,
     string? ThemeVariant = null,
     bool ShowHolidays = true,
-    bool ShowHints = true);
+    bool ShowHints = true,
+    int PlanOrder = 100);
 
 public record UpdateUserBody(
     string Username,
@@ -78,7 +80,10 @@ public record UpdateUserBody(
     DateOnly AccountStart = default,
     string? ThemeVariant = null,
     bool ShowHolidays = true,
-    bool ShowHints = true);
+    bool ShowHints = true,
+    int PlanOrder = 100);
+
+public record ReorderUsersBody(List<string> UserIds);
 
 public record ApiErrorBody(string? Error);
 

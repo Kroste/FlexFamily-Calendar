@@ -7,8 +7,9 @@ namespace FlexFamilyCalendar.Tests;
 public class PlanLayoutTests
 {
     [Fact]
-    public void OrderPeople_ByRole_ThenName()
+    public void OrderPeople_WhenNoPlanOrderSet_FallsBackToRoleThenName()
     {
+        // PlanOrder-Default ist bei allen gleich (100) → Rollen-Rang + Name greifen.
         var users = new[]
         {
             new User { DisplayName = "Zoe", Category = PersonCategory.Employee },
@@ -20,8 +21,24 @@ public class PlanLayoutTests
 
         var ordered = PlanLayout.OrderPeople(users).Select(u => u.DisplayName).ToArray();
 
-        // Reihenfolge: Eltern → Au-Pair → Angestellte → Kinder, je Gruppe nach Name
         Assert.Equal(new[] { "Anna", "Bob", "Yan", "Zoe", "Alice" }, ordered);
+    }
+
+    [Fact]
+    public void OrderPeople_PlanOrder_OverridesRoleAndName()
+    {
+        // Admin hat die Reihenfolge frei gesetzt — PlanOrder gewinnt vor Rolle und Name.
+        var users = new[]
+        {
+            new User { DisplayName = "Zoe",   Category = PersonCategory.Employee, PlanOrder = 0 },
+            new User { DisplayName = "Bob",   Category = PersonCategory.Parent,   PlanOrder = 1 },
+            new User { DisplayName = "Alice", Category = PersonCategory.Child,    PlanOrder = 2 },
+            new User { DisplayName = "Yan",   Category = PersonCategory.AuPair,   PlanOrder = 3 },
+        };
+
+        var ordered = PlanLayout.OrderPeople(users).Select(u => u.DisplayName).ToArray();
+
+        Assert.Equal(new[] { "Zoe", "Bob", "Alice", "Yan" }, ordered);
     }
 
     [Fact]

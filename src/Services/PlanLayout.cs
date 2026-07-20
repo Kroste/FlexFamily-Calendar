@@ -8,7 +8,7 @@ namespace FlexFamilyCalendar.Services;
 /// </summary>
 public static class PlanLayout
 {
-    /// <summary>Anzeige-Reihenfolge der Rollen (unabhängig vom persistierten Enum-Wert): Eltern → Au-Pair → Angestellte → Kinder.</summary>
+    /// <summary>Fallback-Rang nach Rolle für Personen, die noch keine explizite <c>PlanOrder</c> vom Admin haben.</summary>
     private static int Rank(PersonCategory c) => c switch
     {
         PersonCategory.Parent => 0,
@@ -18,10 +18,14 @@ public static class PlanLayout
         _ => 9
     };
 
-    /// <summary>Personen in Rollen-Reihenfolge: Eltern → Au-Pair → Angestellte → Kinder, je Gruppe nach Name.</summary>
+    /// <summary>
+    /// Personen für die Planansicht sortieren. Primär die vom Admin gesetzte <see cref="User.PlanOrder"/>
+    /// (per Drag&amp;Drop pflegbar); bei Gleichstand Rollen-Rang und Anzeigename als stabiler Fallback.
+    /// </summary>
     public static IReadOnlyList<User> OrderPeople(IEnumerable<User> users)
         => users
-            .OrderBy(u => Rank(u.Category))
+            .OrderBy(u => u.PlanOrder)
+            .ThenBy(u => Rank(u.Category))
             .ThenBy(u => string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName,
                     StringComparer.CurrentCultureIgnoreCase)
             .ToList();

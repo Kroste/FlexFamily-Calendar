@@ -113,6 +113,14 @@ public class ApiClient
         LogService.Info("API Kennwort gesetzt: id={0}", id);
     }
 
+    /// <summary>Admin: Personen-Reihenfolge in der Planansicht setzen. Reihenfolge im Array = Anzeigereihenfolge.</summary>
+    public async Task ReorderUsersAsync(IReadOnlyList<string> userIds)
+    {
+        var resp = await _http.PostAsJsonAsync("api/users/order", new ReorderUsersBody(userIds.ToList()));
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Personen-Reihenfolge speichern");
+        LogService.Info("API Personen-Reihenfolge gespeichert: {0} Einträge", userIds.Count);
+    }
+
     public async Task<List<ServerActivityTypeDto>> GetActivityTypesAsync()
     {
         var list = await _http.GetFromJsonAsync<List<ServerActivityTypeDto>>("api/activity-types") ?? new();

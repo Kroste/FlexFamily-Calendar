@@ -217,7 +217,9 @@ app.MapPost("/api/auth/me/password", async (SetPasswordRequest req, AppDbContext
 // ohne Personalstammdaten preiszugeben.
 app.MapGet("/api/users", async (AppDbContext db, ClaimsPrincipal principal) =>
 {
-    var users = await db.Users.OrderBy(u => u.DisplayName).ToListAsync();
+    var users = await db.Users
+        .OrderBy(u => u.PlanOrder).ThenBy(u => u.DisplayName)
+        .ToListAsync();
     if (principal.IsInRole("Admin"))
         return Results.Ok(users.Select(UserDto.From));
     return Results.Ok(users.Select(u => new UserDto(
@@ -225,7 +227,7 @@ app.MapGet("/api/users", async (AppDbContext db, ClaimsPrincipal principal) =>
         0, 0, 0, 0,
         u.Color, u.Language, "" /*AiStyleHint*/,
         0, default, u.ThemeVariant, u.ShowHolidays,
-        u.ShowHints, u.OnboardingSeen)));
+        u.ShowHints, u.OnboardingSeen, u.PlanOrder)));
 })
     .RequireAuthorization();
 
@@ -255,6 +257,7 @@ app.MapPost("/api/users", async (CreateUserRequest req, AppDbContext db) =>
         ThemeVariant = string.IsNullOrWhiteSpace(req.ThemeVariant) ? "System" : req.ThemeVariant!.Trim(),
         ShowHolidays = req.ShowHolidays,
         ShowHints = req.ShowHints,
+        PlanOrder = req.PlanOrder,
         // Leeres Passwort erlaubt = Konto ohne Anmeldung (z.B. Kind).
         PasswordHash = string.IsNullOrWhiteSpace(req.Password) ? "" : BCrypt.Net.BCrypt.HashPassword(req.Password)
     };
@@ -296,9 +299,28 @@ app.MapPut("/api/users/{id:guid}", async (Guid id, UpdateUserRequest req, AppDbC
     if (!string.IsNullOrWhiteSpace(req.ThemeVariant)) user.ThemeVariant = req.ThemeVariant!.Trim();
     user.ShowHolidays = req.ShowHolidays;
     user.ShowHints = req.ShowHints;
+    user.PlanOrder = req.PlanOrder;
 
     await db.SaveChangesAsync();
     return Results.Ok(UserDto.From(user));
+})
+    .RequireAuthorization("Admin");
+
+// Anzeige-Reihenfolge der Personen im Plan festlegen. Nur Admin; Server nummeriert die
+// gelieferte ID-Reihenfolge 0..n-1, unbekannte oder fehlende IDs bleiben bei ihrem alten Wert.
+app.MapPost("/api/users/order", async (ReorderUsersRequest req, AppDbContext db) =>
+{
+    if (req?.UserIds is null) return Results.BadRequest(new { error = "UserIds fehlt." });
+    var all = await db.Users.ToListAsync();
+    var index = 0;
+    foreach (var id in req.UserIds)
+    {
+        var u = all.FirstOrDefault(x => x.Id == id);
+        if (u is null) continue;
+        u.PlanOrder = index++;
+    }
+    await db.SaveChangesAsync();
+    return Results.NoContent();
 })
     .RequireAuthorization("Admin");
 
@@ -839,16 +861,18 @@ internal record CreateUserRequest(
     double WeeklyHoursQuota = 0, double MaxWeeklyHours = 0, double MaxDailyHours = 0, double MinRestHours = 0,
     string? Color = null, string? Language = null, string? AiStyleHint = null,
     double OpeningBalanceHours = 0, DateOnly AccountStart = default, string? ThemeVariant = null, bool ShowHolidays = true,
-    bool ShowHints = true);
+    bool ShowHints = true, int PlanOrder = 100);
 
 internal record UpdateUserRequest(
     string Username, string? DisplayName, string? Email, string? Role, string? Category,
     double WeeklyHoursQuota = 0, double MaxWeeklyHours = 0, double MaxDailyHours = 0, double MinRestHours = 0,
     string? Color = null, string? Language = null, string? AiStyleHint = null,
     double OpeningBalanceHours = 0, DateOnly AccountStart = default, string? ThemeVariant = null, bool ShowHolidays = true,
-    bool ShowHints = true);
+    bool ShowHints = true, int PlanOrder = 100);
 
 internal record SetPasswordRequest(string Password);
+
+internal record ReorderUsersRequest(List<Guid> UserIds);
 
 internal record UpdateProfileRequest(string? DisplayName, string? Email, string? Language, string? Color,
     string? AiStyleHint = null, string? ThemeVariant = null, bool? ShowHolidays = null,

@@ -1276,8 +1276,54 @@ public partial class CalendarViewModel : ViewModelBase
             var rowCmd = impersonateCmd is null
                 ? (IRelayCommand?)null
                 : new CommunityToolkit.Mvvm.Input.RelayCommand(() => impersonateCmd.Execute(u.Id));
-            Rows.Add(new PersonRowViewModel(u.Id, name, color, Localizer.Instance[$"PersonCategory_{u.Category}"], isSelf, cells, rowCmd));
+            // Admin darf die Personen-Reihenfolge in der Planansicht per Drag&Drop pflegen —
+            // View-as-Modus zeigt eine Nicht-Admin-Sicht, dort kein Reorder.
+            var canReorder = EffectiveIsAdmin && !IsPersonalView;
+            Rows.Add(new PersonRowViewModel(u.Id, name, color, Localizer.Instance[$"PersonCategory_{u.Category}"], isSelf, cells, rowCmd, canReorder));
         }
+    }
+
+    /// <summary>
+    /// Admin-Aktion: Personenzeile <paramref name="sourceUserId"/> per Drag&amp;Drop in der Plansicht
+    /// an die Stelle von <paramref name="targetUserId"/> setzen. Berechnet die neue vollständige
+    /// Reihenfolge, persistiert sie über den Storage und baut die Zeilen neu.
+    /// </summary>
+    public async Task ReorderPersonAsync(string sourceUserId, string targetUserId)
+    {
+        if (!EffectiveIsAdmin) return;
+        if (string.IsNullOrEmpty(sourceUserId) || string.IsNullOrEmpty(targetUserId)) return;
+        if (sourceUserId == targetUserId) return;
+
+        // In der aktuellen Reihenfolge arbeiten, damit die UI ohne erneutes Serverladen konsistent bleibt.
+        var ordered = PlanLayout.OrderPeople(_allUsers).ToList();
+        var src = ordered.FirstOrDefault(u => u.Id == sourceUserId);
+        var tgt = ordered.FirstOrDefault(u => u.Id == targetUserId);
+        if (src is null || tgt is null) return;
+
+        ordered.Remove(src);
+        var targetIndex = ordered.IndexOf(tgt);
+        if (targetIndex < 0) return;
+        ordered.Insert(targetIndex, src);
+
+        var ids = ordered.Select(u => u.Id).ToList();
+
+        try
+        {
+            await _storage.ReorderUsersAsync(ids);
+        }
+        catch (Exception ex)
+        {
+            LogService.Error("Personen-Reihenfolge konnte nicht gespeichert werden", ex);
+            return;
+        }
+
+        for (int i = 0; i < ids.Count; i++)
+        {
+            var u = _allUsers.FirstOrDefault(x => x.Id == ids[i]);
+            if (u is not null) u.PlanOrder = i;
+        }
+        RebuildRows();
+        LogService.UserAction(CurrentUser.Username, $"Personen-Reihenfolge geändert ({ids.Count} Personen)");
     }
 
     /// <summary>

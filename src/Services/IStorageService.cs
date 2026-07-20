@@ -7,6 +7,11 @@ public interface IStorageService
 {
     Task<List<User>> LoadUsersAsync();
     Task SaveUsersAsync(List<User> users);
+    /// <summary>
+    /// Personen-Reihenfolge im Plan setzen (Admin-Aktion). Die übergebene ID-Reihenfolge ist die
+    /// gewünschte Anzeigereihenfolge; der Backing-Store setzt <c>PlanOrder</c> entsprechend.
+    /// </summary>
+    Task ReorderUsersAsync(IReadOnlyList<string> userIds);
     Task<AppSettings> LoadSettingsAsync();
     Task SaveSettingsAsync(AppSettings settings);
     Task<CalendarDay> LoadDayAsync(DateOnly date);
