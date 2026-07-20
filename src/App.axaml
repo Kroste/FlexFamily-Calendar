@@ -23,6 +23,9 @@
 
     <Application.Styles>
         <FluentTheme />
+        <!-- Avalonia.Controls.ColorPicker bringt seine Styles in einem eigenen Ressourcen-Sheet mit;
+             ohne den Include ist der ColorPicker/ColorView im Dialog unsichtbar. -->
+        <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
         <StyleInclude Source="avares://FlexFamilyCalendar/Styles/AppStyles.axaml" />
         <StyleInclude Source="avares://FlexFamilyCalendar/Views/ChromeWindow.axaml" />
     </Application.Styles>

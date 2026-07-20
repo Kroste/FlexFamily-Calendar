@@ -105,18 +105,18 @@
           </ComboBox>
         </StackPanel>
 
-        <!-- Farbe: darf jeder für sich wählen (auch im Self-Modus) — Personenfarben sind
-             Anzeige-Präferenz, keine Berechtigung. Nur der Avalonia-ColorPicker
-             (HSV-Rad + Hex + eingebaute Standard-Palette); der VM-String wird per Konverter gemappt. -->
+        <!-- Farbe: darf jeder für sich wählen (auch im Self-Modus). Wir nehmen den Inline-ColorView
+             (HSV-Rad, Palette, Hex-Feld direkt sichtbar) statt des Button-mit-Flyout-ColorPicker,
+             damit man im Editor die Auswahl direkt sieht. Der VM-Hex-String wird per Konverter gemappt. -->
         <StackPanel Spacing="6">
           <TextBlock Text="{loc:Tr User_Color}" FontSize="12" Opacity="0.7" />
-          <ColorPicker Color="{Binding SelectedColor, Converter={StaticResource HexToColorConverter}, Mode=TwoWay}"
-                       HorizontalAlignment="Stretch"
-                       IsAlphaEnabled="False"
-                       IsAlphaVisible="False"
-                       IsColorPaletteVisible="True"
-                       IsColorPreviewVisible="True"
-                       IsColorComponentsVisible="True" />
+          <ColorView Color="{Binding SelectedColor, Converter={StaticResource HexToColorConverter}, Mode=TwoWay}"
+                     HorizontalAlignment="Stretch"
+                     IsAlphaEnabled="False"
+                     IsAlphaVisible="False"
+                     IsColorPaletteVisible="True"
+                     IsColorPreviewVisible="True"
+                     IsColorComponentsVisible="True" />
         </StackPanel>
 
         <StackPanel Spacing="4" IsVisible="{Binding ShowPassword}">
