@@ -256,7 +256,6 @@
                     <DataTemplate>
                       <Border BorderThickness="1,0,0,1" MinHeight="46" Padding="3" Cursor="Hand"
                               Tapped="OnCellTapped" Background="Transparent" ClipToBounds="True"
-                              DragDrop.AllowDrop="True" Loaded="OnCellLoaded"
                               BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
                         <Grid>
                           <Border IsVisible="{Binding IsToday}" Background="#142E86C1" />

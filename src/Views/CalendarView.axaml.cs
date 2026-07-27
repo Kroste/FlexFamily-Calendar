@@ -15,35 +15,29 @@ public partial class CalendarView : UserControl
 {
     private CalendarViewModel? _vm;
 
-    // Avalonia 12 verlangt DataFormat-Instanzen für DragDrop-Payloads. In-Process-Format reicht,
-    // weil wir die Daten nur zwischen Controls in derselben App reichen.
-    private static readonly DataFormat<string> EntryIdFormat =
-        DataFormat.CreateInProcessFormat<string>("ffc-entry-id");
-    private static readonly DataFormat<string> SourceDateFormat =
-        DataFormat.CreateInProcessFormat<string>("ffc-source-date");
-    // Reorder-Drag: nur die User-Id der gezogenen Zeile — Ziel bestimmt sich aus dem DataContext
-    // der Drop-Zeile.
-    private static readonly DataFormat<string> RowUserIdFormat =
-        DataFormat.CreateInProcessFormat<string>("ffc-row-user-id");
-
+    // Drop-Ziel-Highlight (transparentes Blau) — wird während des Drags auf der Ziel-Zelle
+    // eingesetzt. Bewusst kein Avalonia DragDrop-System, weil DoDragDropAsync im Browser/WASM
+    // nur eingeschränkt funktioniert; wir tracken die Geste rein per Pointer-Events.
     private static readonly IBrush DropTargetBrush =
         new SolidColorBrush(Color.FromArgb(0x55, 0x2E, 0x86, 0xC1));
 
-    // Drag-Pending: erst nach echter Bewegung > 5px wird DragDrop gestartet — sonst
-    // verschluckt DoDragDropAsync das Tapped-Event und Klick öffnet den Editor nicht mehr.
-    private PointerPressedEventArgs? _pendingDragArgs;
+    // Drag-Pending: erst nach echter Bewegung > 5px startet der Drag — sonst verschluckt
+    // die Pointer-Verarbeitung das Tapped-Event und der Editor öffnet sich nicht mehr.
     private CalendarEntry? _pendingDragEntry;
     private PersonDayCellViewModel? _pendingDragCell;
     private Control? _pendingDragCtrl;
     private Point? _pendingDragStart;
     private bool _dragStarted;
+    private double _pendingDragOriginalOpacity = 1.0;
+    private Border? _highlightedDropCell;
+    private IBrush? _highlightedDropCellPrev;
 
     // Analog für den Reorder-Drag auf Zeilenebene (Admin schiebt eine Personenzeile).
-    private PointerPressedEventArgs? _pendingRowDragArgs;
     private PersonRowViewModel? _pendingRowDragRow;
     private Control? _pendingRowDragCtrl;
     private Point? _pendingRowDragStart;
     private bool _rowDragStarted;
+    private double _pendingRowDragOriginalOpacity = 1.0;
 
     public CalendarView() => InitializeComponent();
 
@@ -227,10 +221,10 @@ public partial class CalendarView : UserControl
         }
     }
 
-    // ───────── Drag&Drop: Schicht-Chip → andere Zelle ─────────
+    // ───────── Drag&Drop: Schicht-Chip → andere Zelle (rein Pointer-basiert, WASM-tauglich) ─────────
 
-    /// <summary>Pointer-Pressed merkt nur die Start-Position; der echte Drag startet erst, wenn
-    /// PointerMoved eine Bewegung > 5px sieht. Sonst verschluckt DoDragDropAsync das Tapped-Event.</summary>
+    /// <summary>Pointer-Pressed merkt nur die Start-Position und captured den Pointer; der echte Drag startet
+    /// erst, wenn PointerMoved eine Bewegung > 5px sieht — sonst würde ein einfacher Klick als Drag missdeutet.</summary>
     private void OnEntryPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         ClearPendingDrag();
@@ -241,113 +235,111 @@ public partial class CalendarView : UserControl
         var cell = FindAncestorContext<PersonDayCellViewModel>(ctrl);
         if (cell is null) return;
 
-        _pendingDragArgs = e;
         _pendingDragEntry = entry;
         _pendingDragCell = cell;
         _pendingDragCtrl = ctrl;
         _pendingDragStart = e.GetPosition(this);
+        // Explizit Capture setzen — sonst gehen Moves außerhalb des Chips verloren
+        // (insbesondere im Browser, wo implizites Capture nicht garantiert ist).
+        e.Pointer.Capture(ctrl);
     }
 
-    private async void OnEntryPointerMoved(object? sender, PointerEventArgs e)
+    private void OnEntryPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (_pendingDragArgs is null || _pendingDragStart is null || _dragStarted) return;
-        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) { ClearPendingDrag(); return; }
+        if (_pendingDragCtrl is null || _pendingDragStart is null) return;
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) { CancelPendingDrag(); return; }
 
         var p = e.GetPosition(this);
         var dx = p.X - _pendingDragStart.Value.X;
         var dy = p.Y - _pendingDragStart.Value.Y;
-        if (dx * dx + dy * dy < 25) return;   // unter 5px = Klick, kein Drag
+        if (!_dragStarted)
+        {
+            if (dx * dx + dy * dy < 25) return;   // unter 5px = Klick, kein Drag
+            _dragStarted = true;
+            _pendingDragOriginalOpacity = _pendingDragCtrl.Opacity;
+            _pendingDragCtrl.Opacity = 0.4;
+        }
 
-        _dragStarted = true;
+        UpdateDropTargetHighlight(HitTestDropCell(p));
+    }
 
-        var item = new DataTransferItem();
-        item.Set(EntryIdFormat, _pendingDragEntry!.Id);
-        item.Set(SourceDateFormat, _pendingDragCell!.Date.ToString("yyyy-MM-dd"));
-        var transfer = new DataTransfer();
-        transfer.Add(item);
-
-        var ctrl = _pendingDragCtrl;
-        var originalOpacity = ctrl?.Opacity ?? 1.0;
-        if (ctrl is not null) ctrl.Opacity = 0.4;
-
+    private async void OnEntryPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
         try
         {
-            await DragDrop.DoDragDropAsync(_pendingDragArgs, transfer, DragDropEffects.Move | DragDropEffects.Copy);
-        }
-        catch (Exception ex)
-        {
-            LogService.Error("Drag&Drop fehlgeschlagen", ex);
+            e.Pointer.Capture(null);
+            if (!_dragStarted) return;   // reiner Klick → Tapped übernimmt
+
+            var target = HitTestDropCell(e.GetPosition(this));
+            UpdateDropTargetHighlight(null);
+            if (target is null || _vm is null) return;
+
+            var cell = FindAncestorContext<PersonDayCellViewModel>(target);
+            if (cell is null || _pendingDragEntry is null || _pendingDragCell is null) return;
+
+            try
+            {
+                await _vm.HandleEntryDropAsync(_pendingDragEntry.Id, _pendingDragCell.Date, cell);
+            }
+            catch (Exception ex)
+            {
+                LogService.Error("Drop-Verarbeitung fehlgeschlagen", ex);
+            }
         }
         finally
         {
-            if (ctrl is not null) ctrl.Opacity = originalOpacity;
             ClearPendingDrag();
         }
     }
 
-    private void OnEntryPointerReleased(object? sender, PointerReleasedEventArgs e)
+    private void CancelPendingDrag()
     {
-        // Maus-Up ohne überschrittenen Threshold → Klick, Tapped läuft normal weiter.
-        if (!_dragStarted) ClearPendingDrag();
+        UpdateDropTargetHighlight(null);
+        ClearPendingDrag();
     }
 
     private void ClearPendingDrag()
     {
-        _pendingDragArgs = null;
+        if (_pendingDragCtrl is not null && _dragStarted)
+            _pendingDragCtrl.Opacity = _pendingDragOriginalOpacity;
         _pendingDragEntry = null;
         _pendingDragCell = null;
         _pendingDragCtrl = null;
         _pendingDragStart = null;
         _dragStarted = false;
+        _pendingDragOriginalOpacity = 1.0;
     }
 
-    /// <summary>Wird beim ersten Layout der Tageszelle aufgerufen — registriert sie als Drop-Target.</summary>
-    private void OnCellLoaded(object? sender, RoutedEventArgs e)
+    /// <summary>Sucht per HitTest die Border-Zelle unter dem angegebenen Punkt und liefert sie zurück,
+    /// falls sie an einen <see cref="PersonDayCellViewModel"/> gebunden ist.</summary>
+    private Border? HitTestDropCell(Point p)
     {
-        if (sender is not Control c) return;
-        c.AddHandler(DragDrop.DragOverEvent, OnCellDragOver);
-        c.AddHandler(DragDrop.DragLeaveEvent, OnCellDragLeave);
-        c.AddHandler(DragDrop.DropEvent, OnCellDrop);
-    }
-
-    private void OnCellDragOver(object? sender, DragEventArgs e)
-    {
-        if (e.DataTransfer.Contains(EntryIdFormat))
+        var hit = this.InputHitTest(p) as Visual;
+        while (hit is not null)
         {
-            e.DragEffects &= (DragDropEffects.Move | DragDropEffects.Copy);
-            if (sender is Border b) b.Background = DropTargetBrush;
+            if (hit is Border b && b.DataContext is PersonDayCellViewModel) return b;
+            hit = hit.GetVisualParent();
+        }
+        return null;
+    }
+
+    /// <summary>Setzt/entfernt die visuelle Hervorhebung der aktuellen Ziel-Zelle. Merkt sich den
+    /// vorherigen Hintergrund, damit auch nicht-transparente Wochentags-Highlights sauber
+    /// wiederhergestellt werden.</summary>
+    private void UpdateDropTargetHighlight(Border? newTarget)
+    {
+        if (ReferenceEquals(_highlightedDropCell, newTarget)) return;
+        if (_highlightedDropCell is not null)
+            _highlightedDropCell.Background = _highlightedDropCellPrev;
+        _highlightedDropCell = newTarget;
+        if (newTarget is not null)
+        {
+            _highlightedDropCellPrev = newTarget.Background;
+            newTarget.Background = DropTargetBrush;
         }
         else
         {
-            e.DragEffects = DragDropEffects.None;
-        }
-        e.Handled = true;
-    }
-
-    private void OnCellDragLeave(object? sender, DragEventArgs e)
-    {
-        if (sender is Border b) b.Background = Brushes.Transparent;
-    }
-
-    private async void OnCellDrop(object? sender, DragEventArgs e)
-    {
-        if (sender is not Control c || c.DataContext is not PersonDayCellViewModel cell) return;
-        var entryId = e.DataTransfer.TryGetValue(EntryIdFormat);
-        var srcStr = e.DataTransfer.TryGetValue(SourceDateFormat);
-        if (string.IsNullOrEmpty(entryId) || string.IsNullOrEmpty(srcStr)) return;
-        if (!DateOnly.TryParse(srcStr, out var srcDate)) return;
-
-        e.Handled = true;
-        if (c is Border b) b.Background = Brushes.Transparent;
-        if (_vm is null) return;
-
-        try
-        {
-            await _vm.HandleEntryDropAsync(entryId, srcDate, cell);
-        }
-        catch (Exception ex)
-        {
-            LogService.Error("Drop-Verarbeitung fehlgeschlagen", ex);
+            _highlightedDropCellPrev = null;
         }
     }
 
@@ -362,20 +354,16 @@ public partial class CalendarView : UserControl
         return null;
     }
 
-    // ───────── Drag&Drop: Personenzeile → neue Position (Admin) ─────────
+    // ───────── Pointer-basiertes Reorder: Personenzeile → neue Position (Admin) ─────────
 
-    /// <summary>Wird auf jeder Zeile beim ersten Layout aufgerufen — registriert Pointer+Drop-Handler.</summary>
+    /// <summary>Wird auf jeder Zeile beim ersten Layout aufgerufen — registriert Pointer-Handler,
+    /// die den Klick auf den inneren Impersonate-Button nicht schlucken (handledEventsToo).</summary>
     private void OnRowLoaded(object? sender, RoutedEventArgs e)
     {
         if (sender is not Control c) return;
-        // handledEventsToo:true, damit wir den Press auch mitbekommen, wenn der innere Button
-        // ihn schon konsumiert (sonst würde er den Reorder-Drag unterdrücken).
         c.AddHandler(PointerPressedEvent, OnRowPointerPressed, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
         c.AddHandler(PointerMovedEvent, OnRowPointerMoved, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
         c.AddHandler(PointerReleasedEvent, OnRowPointerReleased, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
-        DragDrop.SetAllowDrop(c, true);
-        c.AddHandler(DragDrop.DragOverEvent, OnRowDragOver);
-        c.AddHandler(DragDrop.DropEvent, OnRowDrop);
     }
 
     private void OnRowPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -385,16 +373,17 @@ public partial class CalendarView : UserControl
         if (sender is not Control ctrl || ctrl.DataContext is not PersonRowViewModel row) return;
         if (!row.CanReorder) return;
 
-        _pendingRowDragArgs = e;
         _pendingRowDragRow = row;
         _pendingRowDragCtrl = ctrl;
         _pendingRowDragStart = e.GetPosition(this);
+        e.Pointer.Capture(ctrl);
     }
 
-    private async void OnRowPointerMoved(object? sender, PointerEventArgs e)
+    private void OnRowPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (_pendingRowDragArgs is null || _pendingRowDragStart is null || _rowDragStarted) return;
+        if (_pendingRowDragCtrl is null || _pendingRowDragStart is null) return;
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) { ClearPendingRowDrag(); return; }
+        if (_rowDragStarted) return;
 
         var p = e.GetPosition(this);
         var dx = p.X - _pendingRowDragStart.Value.X;
@@ -402,74 +391,55 @@ public partial class CalendarView : UserControl
         if (dx * dx + dy * dy < 25) return;
 
         _rowDragStarted = true;
+        _pendingRowDragOriginalOpacity = _pendingRowDragCtrl.Opacity;
+        _pendingRowDragCtrl.Opacity = 0.4;
+    }
 
-        var item = new DataTransferItem();
-        item.Set(RowUserIdFormat, _pendingRowDragRow!.UserId);
-        var transfer = new DataTransfer();
-        transfer.Add(item);
-
-        var ctrl = _pendingRowDragCtrl;
-        var originalOpacity = ctrl?.Opacity ?? 1.0;
-        if (ctrl is not null) ctrl.Opacity = 0.4;
-
+    private async void OnRowPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
         try
         {
-            await DragDrop.DoDragDropAsync(_pendingRowDragArgs, transfer, DragDropEffects.Move);
-        }
-        catch (Exception ex)
-        {
-            LogService.Error("Personen-Reihen-Drag&Drop fehlgeschlagen", ex);
+            e.Pointer.Capture(null);
+            if (!_rowDragStarted) return;
+
+            var targetRow = FindRowViewModelAt(e.GetPosition(this));
+            if (targetRow is null || _vm is null || _pendingRowDragRow is null) return;
+
+            try
+            {
+                await _vm.ReorderPersonAsync(_pendingRowDragRow.UserId, targetRow.UserId);
+            }
+            catch (Exception ex)
+            {
+                LogService.Error("Personen-Reihenfolge speichern fehlgeschlagen", ex);
+            }
         }
         finally
         {
-            if (ctrl is not null) ctrl.Opacity = originalOpacity;
             ClearPendingRowDrag();
         }
     }
 
-    private void OnRowPointerReleased(object? sender, PointerReleasedEventArgs e)
-    {
-        if (!_rowDragStarted) ClearPendingRowDrag();
-    }
-
     private void ClearPendingRowDrag()
     {
-        _pendingRowDragArgs = null;
+        if (_pendingRowDragCtrl is not null && _rowDragStarted)
+            _pendingRowDragCtrl.Opacity = _pendingRowDragOriginalOpacity;
         _pendingRowDragRow = null;
         _pendingRowDragCtrl = null;
         _pendingRowDragStart = null;
         _rowDragStarted = false;
+        _pendingRowDragOriginalOpacity = 1.0;
     }
 
-    private void OnRowDragOver(object? sender, DragEventArgs e)
+    private PersonRowViewModel? FindRowViewModelAt(Point p)
     {
-        if (e.DataTransfer.Contains(RowUserIdFormat))
+        var hit = this.InputHitTest(p) as Visual;
+        while (hit is not null)
         {
-            e.DragEffects &= DragDropEffects.Move;
+            if (hit is Control c && c.DataContext is PersonRowViewModel row) return row;
+            hit = hit.GetVisualParent();
         }
-        else
-        {
-            e.DragEffects = DragDropEffects.None;
-        }
-        e.Handled = true;
+        return null;
     }
 
-    private async void OnRowDrop(object? sender, DragEventArgs e)
-    {
-        if (sender is not Control c || c.DataContext is not PersonRowViewModel targetRow) return;
-        var sourceId = e.DataTransfer.TryGetValue(RowUserIdFormat);
-        if (string.IsNullOrEmpty(sourceId)) return;
-
-        e.Handled = true;
-        if (_vm is null) return;
-
-        try
-        {
-            await _vm.ReorderPersonAsync(sourceId, targetRow.UserId);
-        }
-        catch (Exception ex)
-        {
-            LogService.Error("Personen-Reihenfolge speichern fehlgeschlagen", ex);
-        }
-    }
 }
