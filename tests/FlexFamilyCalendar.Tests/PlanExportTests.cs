@@ -39,6 +39,20 @@ public class PlanExportTests
     }
 
     [Fact]
+    public void IsInExport_ExcludesPausedAndPending()
+    {
+        // Pausierte Wiederkehr-Overlays und ausstehende Urlaubswünsche sind im UI ausgegraut
+        // und dürfen deshalb nicht als Fakten im PDF/Mail auftauchen.
+        var paused = new CalendarEntry { Type = EntryType.Activity, IsPaused = true };
+        var pending = new CalendarEntry { Type = EntryType.Vacation, Status = EntryStatuses.Pending };
+        var normal = new CalendarEntry { Type = EntryType.Work, Status = EntryStatuses.Approved };
+
+        Assert.False(PlanExportBuilder.IsInExport(paused));
+        Assert.False(PlanExportBuilder.IsInExport(pending));
+        Assert.True(PlanExportBuilder.IsInExport(normal));
+    }
+
+    [Fact]
     public void CellEntry_MultiDayAbsence_AdminSeesReasonAndSpan()
     {
         var e = Vacation("u1");

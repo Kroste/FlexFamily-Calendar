@@ -286,6 +286,7 @@ public partial class CalendarViewModel : ViewModelBase
         {
             var cells = r.Cells
                 .Select(c => (IReadOnlyList<PlanCellEntry>)c.Entries
+                    .Where(PlanExportBuilder.IsInExport)
                     .Select(e => PlanExportBuilder.CellEntry(e, isAdmin, viewer.Id, TypeLabel)).ToList())
                 .ToList();
             rows.Add(new PlanPersonRow(r.Name, r.Color, r.CategoryLabel, cells));

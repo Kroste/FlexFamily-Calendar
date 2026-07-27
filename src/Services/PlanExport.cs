@@ -20,6 +20,14 @@ public record WeekExport(
 public static class PlanExportBuilder
 {
     /// <summary>
+    /// Filter für die Zelle: pausierte Overlays (wiederkehrende Aktivität an einem Krank/Urlaubs-Tag)
+    /// und noch nicht bestätigte Urlaubswünsche (Status = Pending) gehören nicht in den
+    /// „offiziellen" Wochenplan (PDF/Mail) — im UI sind sie ausgegraut, im Export würden sie
+    /// wie Fakten wirken.
+    /// </summary>
+    public static bool IsInExport(CalendarEntry e) => !e.IsPaused && !e.IsPending;
+
+    /// <summary>
     /// Ein Zellen-Eintrag aus Sicht eines bestimmten Empfängers: Uhrzeit (bzw. Abwesenheits-Zeitraum)
     /// + Kategorie/Typ (+ Titel), in Personenfarbe. Fremde private Abwesenheiten (Krank/Urlaub) werden
     /// zu „Abwesend" ohne Grund maskiert (nur Admin oder der Betroffene sehen den Grund).
