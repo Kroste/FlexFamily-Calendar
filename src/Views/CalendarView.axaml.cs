@@ -239,9 +239,9 @@ public partial class CalendarView : UserControl
         _pendingDragCell = cell;
         _pendingDragCtrl = ctrl;
         _pendingDragStart = e.GetPosition(this);
-        // Explizit Capture setzen — sonst gehen Moves außerhalb des Chips verloren
-        // (insbesondere im Browser, wo implizites Capture nicht garantiert ist).
-        e.Pointer.Capture(ctrl);
+        // Kein manuelles Capture hier — würde den Tapped-Event auf leeren Zellen unterbinden
+        // (Klick zum Anlegen einer neuen Schicht). Capture wird erst gesetzt, wenn wir ab
+        // 5 px Bewegung wirklich in den Drag-Modus wechseln.
     }
 
     private void OnEntryPointerMoved(object? sender, PointerEventArgs e)
@@ -258,6 +258,9 @@ public partial class CalendarView : UserControl
             _dragStarted = true;
             _pendingDragOriginalOpacity = _pendingDragCtrl.Opacity;
             _pendingDragCtrl.Opacity = 0.4;
+            // Ab jetzt ist es ein echter Drag → Pointer capturen, damit wir auch außerhalb
+            // des Chips weitere Moves und das Release bekommen.
+            e.Pointer.Capture(_pendingDragCtrl);
         }
 
         UpdateDropTargetHighlight(HitTestDropCell(p));
@@ -376,7 +379,8 @@ public partial class CalendarView : UserControl
         _pendingRowDragRow = row;
         _pendingRowDragCtrl = ctrl;
         _pendingRowDragStart = e.GetPosition(this);
-        e.Pointer.Capture(ctrl);
+        // Kein manuelles Capture hier — würde den Tapped-Event auf leeren Zellen unterbinden
+        // (Klick zum Anlegen einer neuen Schicht). Capture kommt erst beim echten Drag-Start.
     }
 
     private void OnRowPointerMoved(object? sender, PointerEventArgs e)
@@ -393,6 +397,7 @@ public partial class CalendarView : UserControl
         _rowDragStarted = true;
         _pendingRowDragOriginalOpacity = _pendingRowDragCtrl.Opacity;
         _pendingRowDragCtrl.Opacity = 0.4;
+        e.Pointer.Capture(_pendingRowDragCtrl);
     }
 
     private async void OnRowPointerReleased(object? sender, PointerReleasedEventArgs e)
