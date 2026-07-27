@@ -7,6 +7,7 @@
 
   <UserControl.Resources>
     <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
+    <cv:HexToColorConverter x:Key="HexToColorConverter" />
   </UserControl.Resources>
 
   <Grid Margin="16" ColumnDefinitions="240,16,*">
@@ -43,20 +44,17 @@
         <TextBox Text="{Binding EditName}" CornerRadius="6" />
       </StackPanel>
 
-      <StackPanel Spacing="4">
+      <StackPanel Spacing="6">
         <TextBlock Text="{loc:Tr ActType_Color}" FontSize="12" Opacity="0.7" />
-        <ComboBox ItemsSource="{Binding Colors}" SelectedItem="{Binding EditColor}"
-                  HorizontalAlignment="Stretch">
-          <ComboBox.ItemTemplate>
-            <DataTemplate>
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <Border Width="20" Height="20" CornerRadius="4"
-                        Background="{Binding ., Converter={StaticResource ColorStringToBrushConverter}}" />
-                <TextBlock Text="{Binding .}" VerticalAlignment="Center" />
-              </StackPanel>
-            </DataTemplate>
-          </ComboBox.ItemTemplate>
-        </ComboBox>
+        <!-- Wie in der Benutzerverwaltung: Inline-ColorView (HSV-Rad, Palette, Hex). Der
+             EditColor-Hex-String wird per Konverter aufs Avalonia Color gemappt. -->
+        <ColorView Color="{Binding EditColor, Converter={StaticResource HexToColorConverter}, Mode=TwoWay}"
+                   HorizontalAlignment="Stretch"
+                   IsAlphaEnabled="False"
+                   IsAlphaVisible="False"
+                   IsColorPaletteVisible="True"
+                   IsColorPreviewVisible="True"
+                   IsColorComponentsVisible="True" />
       </StackPanel>
 
       <StackPanel Spacing="4">
