@@ -12,7 +12,11 @@ public static class PdfExportService
     private const double PageW = 842, PageH = 595, Margin = 20;
     private const double PersonColW = 150;
     private const double HeaderTop = 52, HeaderH = 42;
-    private const double NotesH = 28;
+    // Hinweiszeile: Platz für den Titel „Hinweise" links und pro Wochentag bis zu 2 Zeilen
+    // umgebrochenen Text — sonst würden lange Hinweise stumm abgeschnitten.
+    private const int NotesLineLimit = 2;
+    private const double NotesLineH = 10;
+    private const double NotesH = 14 + NotesLineLimit * NotesLineH;
 
     public static byte[] Render(WeekExport export) => Assemble(BuildContent(export));
 
@@ -89,15 +93,19 @@ public static class PdfExportService
             Stroke(0.88); Line(left, y, right, y);   // Zeilentrenner
         }
 
-        // Hinweiszeile direkt unter der letzten Person
+        // Hinweiszeile direkt unter der letzten Person — Hinweise werden bei Bedarf auf bis
+        // zu NotesLineLimit Zeilen umgebrochen; alles darüber wird mit „…" abgeschnitten.
         var notesTop = y;
         var tableBottom = notesTop + NotesH;
-        Fill(0.4, 0.4, 0.4); Text(left + 6, notesTop + 16, 9, true, "Hinweise");
+        Fill(0.4, 0.4, 0.4); Text(left + 6, notesTop + 14, 9, true, "Hinweise");
         for (int i = 0; i < export.Notes.Count && i < 7; i++)
         {
             if (string.IsNullOrEmpty(export.Notes[i])) continue;
             var cx = dayX + i * colW + colW / 2;
-            Fill(0.3, 0.3, 0.3); Center(cx, notesTop + 16, 7.5, false, Truncate(export.Notes[i], colW - 6, 7.5));
+            Fill(0.3, 0.3, 0.3);
+            var lines = WrapText(export.Notes[i], colW - 6, 7.5, NotesLineLimit);
+            for (int ln = 0; ln < lines.Count; ln++)
+                Center(cx, notesTop + 14 + ln * NotesLineH, 7.5, false, lines[ln]);
         }
 
         // Rahmen + Spaltenlinien
@@ -135,6 +143,33 @@ public static class PdfExportService
         if (string.IsNullOrEmpty(text)) return "";
         var max = Math.Max(1, (int)(width / (size * 0.5)));
         return text.Length <= max ? text : text[..Math.Max(1, max - 1)] + "…";
+    }
+
+    /// <summary>Bricht Text an Wortgrenzen in bis zu <paramref name="maxLines"/> Zeilen um. Reicht
+    /// der Platz nicht, endet die letzte Zeile mit „…". Öffentlich für den Test.</summary>
+    public static IReadOnlyList<string> WrapText(string text, double width, double size, int maxLines)
+    {
+        if (string.IsNullOrWhiteSpace(text) || maxLines <= 0) return Array.Empty<string>();
+        var max = Math.Max(1, (int)(width / (size * 0.5)));
+        var result = new List<string>();
+        var remaining = text.Trim();
+        while (remaining.Length > 0)
+        {
+            if (remaining.Length <= max) { result.Add(remaining); break; }
+            var isLast = result.Count == maxLines - 1;
+            if (isLast)
+            {
+                result.Add(remaining[..Math.Max(1, max - 1)] + "…");
+                break;
+            }
+            // Zeile bis zum letzten Space vor `max` — sonst hart am Char-Limit brechen.
+            var searchEnd = Math.Min(max, remaining.Length - 1);
+            var split = remaining.LastIndexOf(' ', searchEnd);
+            if (split <= 0) split = max;
+            result.Add(remaining[..split].TrimEnd());
+            remaining = remaining[split..].TrimStart();
+        }
+        return result;
     }
 
     private static (double, double, double) Hex(string hex)
