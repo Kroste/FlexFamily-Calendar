@@ -4,6 +4,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <RootNamespace>FlexFamilyCalendar</RootNamespace>
+    <!-- Setzt das Icon der Windows-.exe (Explorer/Alt-Tab). Das Fenster-Icon kommt zusätzlich
+         über die PNG-Ressource in MainWindow.axaml. -->
+    <ApplicationIcon>..\src\Assets\flexfamily-calendar.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

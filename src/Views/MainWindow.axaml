@@ -5,7 +5,7 @@
         x:Class="FlexFamilyCalendar.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         x:CompileBindings="False"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/flexfamily-calendar.ico"
         Title="FlexFamily Calendar"
         Width="1280" Height="800"
         MinWidth="900" MinHeight="600">

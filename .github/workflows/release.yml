@@ -184,11 +184,10 @@ jobs:
           cp -r publish/* AppDir/usr/bin/
           chmod +x AppDir/usr/bin/FlexFamilyCalendar.Desktop
 
-          # Icon aus dem vorhandenen .ico (Avalonia-Default) — kann später durch ein
-          # branded Icon im Repo ersetzt werden.
-          convert "src/Assets/avalonia-logo.ico[0]" -resize 256x256 \
-            AppDir/usr/share/icons/hicolor/256x256/apps/flexfamily-calendar.png
-          cp AppDir/usr/share/icons/hicolor/256x256/apps/flexfamily-calendar.png AppDir/flexfamily-calendar.png
+          # Branded 256x256-PNG direkt kopieren (aus scripts/build_icon.py reproduzierbar).
+          cp src/Assets/flexfamily-calendar.png \
+             AppDir/usr/share/icons/hicolor/256x256/apps/flexfamily-calendar.png
+          cp src/Assets/flexfamily-calendar.png AppDir/flexfamily-calendar.png
 
           cat > AppDir/usr/share/applications/flexfamily-calendar.desktop <<EOF
           [Desktop Entry]
