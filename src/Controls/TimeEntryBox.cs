@@ -43,9 +43,6 @@ public class TimeEntryBox : TextBox
         }
     }
 
-    // Verhindert Rekursion, wenn wir den Text aus dem Time-Setter selbst schreiben.
-    private bool _syncingText;
-
     public TimeEntryBox()
     {
         MaxLength = 5;
@@ -54,33 +51,28 @@ public class TimeEntryBox : TextBox
         HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left;
         UseFloatingPlaceholder = false;
 
-        // Avalonia 12: OnTextChanged/OnLostFocus sind nicht virtual — deshalb per Event-Subscription
-        // gehen. Der Guard `_syncingText` verhindert Rekursion, wenn der Time-Setter Text neu setzt.
-        TextChanged += (_, _) =>
-        {
-            if (_syncingText) return;
-            if (TryParse(Text, out var parsed))
-                Time = parsed;
-        };
+        // Bewusst KEIN Live-Parse auf TextChanged: das würde beim Tippen den Cursor umsetzen
+        // (Time-Setter → SyncTextFromTime → Text wird überschrieben). Auswertung passiert erst
+        // beim Verlassen des Feldes; Save auf einem Button transferiert Fokus und triggert
+        // LostFocus zuverlässig, bevor das Command läuft.
         LostFocus += (_, _) =>
         {
-            // Beim Verlassen: auf sauberes HH:mm normalisieren — oder, falls Müll drinsteht,
-            // auf den letzten gültigen Wert zurückschreiben.
-            SyncTextFromTime();
+            if (TryParse(Text, out var parsed))
+            {
+                Time = parsed;              // ggf. SetAndRaise → SyncTextFromTime
+                SyncTextFromTime();          // garantiert normalisiertes „HH:mm", auch bei gleichem Wert
+            }
+            else
+            {
+                // Müll drin → auf letzten gültigen Wert zurückrollen.
+                SyncTextFromTime();
+            }
         };
     }
 
     private void SyncTextFromTime()
     {
-        _syncingText = true;
-        try
-        {
-            Text = Time is null ? "" : $"{Time.Value.Hours:D2}:{Time.Value.Minutes:D2}";
-        }
-        finally
-        {
-            _syncingText = false;
-        }
+        Text = Time is null ? "" : $"{Time.Value.Hours:D2}:{Time.Value.Minutes:D2}";
     }
 
     /// <summary>Robuste Parse-Logik: <c>null</c>/leer = ok mit result=null; sonst muss es eine gültige 24-h-Zeit sein.</summary>
