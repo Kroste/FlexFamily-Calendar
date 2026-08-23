@@ -8,13 +8,13 @@
   <!-- Avalonia: alle Heads MÜSSEN auf derselben Linie sitzen, sonst driften managed
        und native Assets auseinander (siehe kroste-avalonia → Skia-Falle). -->
   <ItemGroup Label="Avalonia">
-    <PackageVersion Include="Avalonia" Version="12.1.0" />
+    <PackageVersion Include="Avalonia" Version="12.1.1" />
     <PackageVersion Include="Avalonia.Android" Version="12.1.0" />
-    <PackageVersion Include="Avalonia.Browser" Version="12.1.0" />
-    <PackageVersion Include="Avalonia.Controls.ColorPicker" Version="12.1.0" />
-    <PackageVersion Include="Avalonia.Desktop" Version="12.1.0" />
-    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.0" />
-    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.0" />
+    <PackageVersion Include="Avalonia.Browser" Version="12.1.1" />
+    <PackageVersion Include="Avalonia.Controls.ColorPicker" Version="12.1.1" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.1" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.1" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.1" />
     <!-- Folgt NICHT der Avalonia-Versionierung (eigene 2.x-Reihe). -->
     <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
   </ItemGroup>
