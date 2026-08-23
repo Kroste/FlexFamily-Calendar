@@ -77,6 +77,25 @@
     <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
   </Style>
 
+  <!-- Buttons auf der farbigen Kopfleiste: dort trägt der Card-Look nicht, weil der Grund
+       die Markenfarbe ist. Weiße Schrift auf leicht aufgehelltem Grund bleibt auf jedem
+       Header-Ton lesbar — dieselbe Kombination stand vorher fünfmal inline im MainView. -->
+  <Style Selector="Button.on-header">
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="Background" Value="{DynamicResource OverlayLightBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource OverlayMediumBrush}" />
+    <Setter Property="Padding" Value="12,5" />
+  </Style>
+  <Style Selector="Button.on-header /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource OverlayLightBrush}" />
+    <Setter Property="Foreground" Value="White" />
+  </Style>
+  <Style Selector="Button.on-header:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource OverlayMediumBrush}" />
+    <Setter Property="BorderBrush" Value="White" />
+    <Setter Property="Foreground" Value="White" />
+  </Style>
+
   <!-- ── Karten ────────────────────────────────────────────────────────────── -->
 
   <Style Selector="Border.card">
@@ -135,16 +154,24 @@
   </Style>
 
   <!--
-    OFFEN: Fokus-Ring in der Markenfarbe statt Fluent-Blau.
-    Der naheliegende Weg wäre ein Selektor auf die Template-Interna
-    (`TextBox:focus /template/ Border#PART_BorderElement`). Genau solche Selektoren
-    scheitern in Avalonia aber STILL, wenn der Name im Template anders lautet — kein
-    Compile-Fehler, das Feld sieht nur aus wie vorher. Die Fluent-Templates liegen als
-    kompiliertes XAML im Paket, die Namen sind also nicht nachschlagbar, und ohne
-    laufende UI ist die Wirkung nicht belegbar. Deshalb hier bewusst nichts, statt eines
-    Styles, von dem niemand weiß, ob er greift. Beim nächsten Mal, wenn ohnehin jemand
-    mit sichtbarer App an einem Formular arbeitet: Ring einbauen und ansehen.
+    Fokus-Ring in der Markenfarbe statt Fluent-Blau. Selektoren auf Template-Interna
+    scheitern in Avalonia STILL, wenn der Name nicht stimmt — kein Compile-Fehler, das Feld
+    sieht nur aus wie vorher. Die Fluent-Templates liegen als kompiliertes XAML im Paket,
+    die Namen sind also nicht nachschlagbar.
+
+    Beide Namen hier sind NICHT geraten, sondern aus der laufenden App ausgelesen:
+    `GET /elements` der Design-Test-API listet die Namen aller Controls im Visual Tree,
+    Template-Interna eingeschlossen. Wer die Namen ändert oder auf ein anderes Theme
+    wechselt, prüft sie genauso nach — und sieht das Ergebnis per /focus + /screenshot.
   -->
+  <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="BorderThickness" Value="2" />
+  </Style>
+  <Style Selector="ComboBox:focus /template/ Border#Background">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="BorderThickness" Value="2" />
+  </Style>
 
   <!-- ── Fortschritt und Trenner ───────────────────────────────────────────── -->
 

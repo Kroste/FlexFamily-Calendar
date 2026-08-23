@@ -33,6 +33,14 @@ public static class DestructiveGuard
         "ToggleHoursPanel", "PreviousWeek", "NextWeek", "GoToToday",
         // Lesende Prüfung
         "CheckForUpdates",
+        // Element-Namen der Kopfleiste und Wochenleiste: /click spricht Controls über ihren
+        // x:Name an, nicht über den Command-Namen. Alle hier öffnen nur Ansichten oder
+        // schalten die Darstellung um.
+        "AdminButton", "MonthOverviewButton", "HoursAccountButton", "ProfileButton",
+        "NotificationsButton", "InfoButton",
+        "PreviousWeekButton", "NextWeekButton", "TodayButton",
+        "PersonalViewToggle", "HoursToggleButton", "HolidaysToggle",
+        "LanguageBox", "ConnectionButton",
     };
 
     /// <summary>
@@ -58,6 +66,9 @@ public static class DestructiveGuard
         "Logout",
         // Bestätigungs-Schaltflächen: sonst klickt man die Sperre einfach weg
         "OkButton", "ConfirmButton", "SaveButton", "DeleteButton", "ApplyButton", "SendButton",
+        // Element-Namen schreibender Aktionen
+        "LogoutButton", "ExportPdfButton", "MailButton", "AiPlannerButton",
+        "CopyWeekButton", "FinalizeButton", "SignInButton", "CreateAdminButton",
     };
 
     /// <summary>

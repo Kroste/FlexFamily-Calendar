@@ -84,9 +84,12 @@
   `Rectangle.divider-h`/`-v`. Neue Views nutzen diese Klassen; bestehende werden **beiläufig**
   nachgezogen, wenn sie ohnehin angefasst werden — der Kroste-Standard verlangt ausdrücklich
   keinen separaten Refactor-Ritt, sonst driftet der Look während des Umbaus auseinander.
-  Selektoren auf Template-Interna (`/template/ Border#PART_…`) nur mit sichtbarer App
-  einbauen: falsche PART-Namen scheitern still, und die Fluent-Templates liegen als
-  kompiliertes XAML vor, sind also nicht nachschlagbar. Deshalb fehlt der Fokus-Ring noch.
+  Selektoren auf Template-Interna (`/template/ Border#PART_…`) scheitern bei falschem Namen
+  **still**, und die Fluent-Templates liegen als kompiliertes XAML vor, sind also nicht
+  nachschlagbar. Die Namen kommen deshalb aus der laufenden App: `GET /elements` der
+  Design-Test-API listet auch Template-Interna. So sind die beiden Namen für den Fokus-Ring
+  belegt (`PART_BorderElement` für TextBox, `Background` für ComboBox) — bei Änderungen
+  genauso nachprüfen, nicht raten.
 - **Sprachwechsel über `LocalizedString`**, nicht über Indexer-Binding. Ein
   `PropertyChanged("Item[]")` ist die WPF-Konvention und wird von Avalonia 12 nur unzuverlässig
   verarbeitet: Fenster ohne Fokus bleiben stale. Die Wrapper liegen in einem **statischen**

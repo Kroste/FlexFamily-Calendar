@@ -30,9 +30,8 @@
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
           <!-- Benachrichtigungs-Glocke mit Ungelesen-Badge -->
-          <Button Command="{Binding OpenNotificationsCommand}"
-                  Background="{DynamicResource OverlayLightBrush}" BorderBrush="{DynamicResource OverlayMediumBrush}"
-                  CornerRadius="6" Padding="10,5" VerticalAlignment="Center"
+          <Button x:Name="NotificationsButton" Command="{Binding OpenNotificationsCommand}"
+                  Classes="on-header" CornerRadius="6" Padding="10,5" VerticalAlignment="Center"
                   views:Hint.Text="{loc:Tr Hint_Main_Notifications}">
             <Grid>
               <Path Data="{StaticResource Icon.Bell}"
@@ -50,40 +49,32 @@
                      Foreground="White" Opacity="0.85"
                      VerticalAlignment="Center" FontSize="13" />
           <Button Content="{loc:Tr Main_Admin}"
-                  Command="{Binding OpenAdminCommand}"
+                  x:Name="AdminButton" Command="{Binding OpenAdminCommand}"
                   IsVisible="{Binding IsAdmin}"
-                  Foreground="White" Background="{DynamicResource OverlayLightBrush}" BorderBrush="{DynamicResource OverlayMediumBrush}"
-                  CornerRadius="6" Padding="12,5"
+                  Classes="on-header" CornerRadius="6"
                   views:Hint.Text="{loc:Tr Hint_Main_Admin}" />
-          <Button Content="{loc:Tr Main_MonthOverview}"
+          <Button x:Name="MonthOverviewButton" Content="{loc:Tr Main_MonthOverview}"
                   Command="{Binding OpenMonthOverviewCommand}"
-                  Foreground="White" Background="{DynamicResource OverlayLightBrush}" BorderBrush="{DynamicResource OverlayMediumBrush}"
-                  CornerRadius="6" Padding="12,5"
+                  Classes="on-header" CornerRadius="6"
                   views:Hint.Text="{loc:Tr Hint_Main_MonthOverview}" />
-          <Button Content="{loc:Tr Main_HoursAccount}"
+          <Button x:Name="HoursAccountButton" Content="{loc:Tr Main_HoursAccount}"
                   Command="{Binding OpenHoursAccountCommand}"
-                  Foreground="White" Background="{DynamicResource OverlayLightBrush}" BorderBrush="{DynamicResource OverlayMediumBrush}"
-                  CornerRadius="6" Padding="12,5"
+                  Classes="on-header" CornerRadius="6"
                   views:Hint.Text="{loc:Tr Hint_Main_HoursAccount}" />
-          <Button Content="{loc:Tr Main_Profile}"
+          <Button x:Name="ProfileButton" Content="{loc:Tr Main_Profile}"
                   Command="{Binding OpenProfileCommand}"
-                  Foreground="White" Background="{DynamicResource OverlayLightBrush}" BorderBrush="{DynamicResource OverlayMediumBrush}"
-                  CornerRadius="6" Padding="12,5"
+                  Classes="on-header" CornerRadius="6"
                   views:Hint.Text="{loc:Tr Hint_Main_Profile}" />
-          <Button Command="{Binding OpenInfoCommand}"
-                  Foreground="White" Background="{DynamicResource OverlayLightBrush}" BorderBrush="{DynamicResource OverlayMediumBrush}"
-                  CornerRadius="6" Padding="10,5"
+          <Button x:Name="InfoButton" Command="{Binding OpenInfoCommand}"
+                  Classes="on-header" CornerRadius="6" Padding="10,5"
                   views:Hint.Text="{loc:Tr Hint_Main_Info}">
             <Path Data="{StaticResource Icon.Info}"
                   Fill="White" Width="15" Height="15" Stretch="Uniform" />
           </Button>
-          <Button Content="{loc:Tr Main_Logout}"
+          <Button x:Name="LogoutButton" Content="{loc:Tr Main_Logout}"
                   Command="{Binding LogoutCommand}"
-                  Foreground="White"
-                  Background="{DynamicResource OverlayLightBrush}"
-                  BorderBrush="{DynamicResource OverlayMediumBrush}"
+                  Classes="on-header"
                   CornerRadius="6"
-                  Padding="12,5"
                   views:Hint.Text="{loc:Tr Hint_Main_Logout}" />
         </StackPanel>
       </Grid>

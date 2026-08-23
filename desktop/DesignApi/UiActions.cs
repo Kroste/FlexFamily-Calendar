@@ -133,8 +133,23 @@ public sealed class UiActions(bool allowClicks)
     public Task<bool> FocusAsync(string elementId) =>
         Dispatcher.UIThread.InvokeAsync(() =>
         {
-            if (FindControl(elementId) is not InputElement el) return false;
-            return el.Focus();
+            // Erst über den x:Name. Findet das nichts, wird der Wert als Typname gelesen
+            // ("TextBox", "ComboBox") und das erste fokussierbare Control dieser Art genommen.
+            // Formularfelder tragen selten alle einen Namen, und für die Abnahme eines
+            // Fokus-Rings reicht irgendein Feld.
+            if (FindControl(elementId) is InputElement named && named.Focus()) return true;
+
+            var byType = Desktop?.Windows
+                .OrderByDescending(w => w.IsActive)
+                .SelectMany(w => w.GetVisualDescendants().OfType<InputElement>())
+                .FirstOrDefault(c => c.GetType().Name.Equals(elementId, StringComparison.OrdinalIgnoreCase)
+                                     && c is { IsVisible: true, Focusable: true });
+
+            // Hinweis für die Fehlersuche: Focus() liefert false, wenn das Fenster keinen
+            // OS-Fokus hat. Unter Wayland bekommt ein Fenster den nicht auf Zuruf, ein per
+            // API geöffneter Dialog also oft gar nicht — dann lässt sich ein Fokus-Ring hier
+            // nicht abnehmen, obwohl der Style stimmt.
+            return byType?.Focus() ?? false;
         }).GetTask();
 
     public Task<byte[]> ScreenshotAsync(string? target) =>
