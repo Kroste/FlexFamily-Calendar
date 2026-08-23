@@ -78,11 +78,11 @@
               Padding="16,8" CornerRadius="6"
               Background="{DynamicResource SystemAccentColor}" Foreground="White" />
       <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center"
-                 Foreground="#27AE60" FontSize="13" />
+                 Foreground="{DynamicResource SuccessBrush}" FontSize="13" />
     </StackPanel>
 
     <!-- Über die App: Version + Links -->
-    <Border Background="#F8F8F8" CornerRadius="6" Padding="14,12" Margin="0,16,0,0">
+    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="6" Padding="14,12" Margin="0,16,0,0">
       <StackPanel Spacing="6">
         <TextBlock Text="{loc:Tr Settings_About}" FontSize="13" FontWeight="SemiBold" />
         <TextBlock FontSize="12" Opacity="0.85">
@@ -95,7 +95,7 @@
                   Padding="10,5" CornerRadius="6" FontSize="12" />
           <Button Content="{loc:Tr Settings_AboutCoffee}" Command="{Binding OpenCoffeeCommand}"
                   Padding="10,5" CornerRadius="6" FontSize="12"
-                  Background="#FFDD00" Foreground="#0D0C22" />
+                  Background="{DynamicResource CoffeeBrush}" Foreground="{DynamicResource CoffeeForegroundBrush}" />
         </StackPanel>
       </StackPanel>
     </Border>

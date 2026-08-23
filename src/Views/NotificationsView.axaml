@@ -34,7 +34,7 @@
                 <StackPanel Spacing="6">
                   <Grid ColumnDefinitions="Auto,*">
                     <Ellipse Grid.Column="0" Width="8" Height="8" Margin="0,0,8,0"
-                             VerticalAlignment="Center" Fill="#2E86C1"
+                             VerticalAlignment="Center" Fill="{DynamicResource InfoStrongBrush}"
                              IsVisible="{Binding !IsRead}" />
                     <TextBlock Grid.Column="1" Text="{Binding Text}" TextWrapping="Wrap" FontSize="14" />
                   </Grid>
@@ -47,12 +47,12 @@
                             Command="{Binding $parent[ItemsControl].DataContext.ApproveVacationCommand}"
                             CommandParameter="{Binding}"
                             Padding="10,5" CornerRadius="6"
-                            Background="#27AE60" Foreground="White" />
+                            Background="{DynamicResource SuccessBrush}" Foreground="White" />
                     <Button Content="{loc:Tr Notif_RejectButton}"
                             Command="{Binding $parent[ItemsControl].DataContext.RejectVacationCommand}"
                             CommandParameter="{Binding}"
                             Padding="10,5" CornerRadius="6"
-                            Background="#C0392B" Foreground="White" />
+                            Background="{DynamicResource DangerBrush}" Foreground="White" />
                   </StackPanel>
                 </StackPanel>
               </Border>

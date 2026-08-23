@@ -69,8 +69,8 @@
 
         <!-- Fehlermeldung -->
         <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                Background="#33C0392B" CornerRadius="6" Padding="10,8">
-          <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" FontSize="13" />
+                Background="{DynamicResource DangerFillBrush}" CornerRadius="6" Padding="10,8">
+          <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" FontSize="13" />
         </Border>
 
         <!-- Buttons -->
@@ -93,7 +93,7 @@
                 HorizontalContentAlignment="Center"
                 Height="40"
                 CornerRadius="6"
-                Background="#27AE60"
+                Background="{DynamicResource SuccessBrush}"
                 Foreground="White" />
 
         <!-- Ladeindikator -->

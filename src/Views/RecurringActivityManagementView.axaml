@@ -98,8 +98,8 @@
         <CheckBox Content="{loc:Tr Recur_SkipOnHolidays}" IsChecked="{Binding SkipOnHolidays}" />
 
         <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                Background="#33C0392B" CornerRadius="6" Padding="10,8">
-          <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" FontSize="13" TextWrapping="Wrap" />
+                Background="{DynamicResource DangerFillBrush}" CornerRadius="6" Padding="10,8">
+          <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" FontSize="13" TextWrapping="Wrap" />
         </Border>
 
         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -108,7 +108,7 @@
                   Background="{DynamicResource SystemAccentColor}" Foreground="White" />
           <Button Content="{loc:Tr Common_Delete}" Command="{Binding DeleteCommand}"
                   IsEnabled="{Binding SelectedActivity, Converter={x:Static ObjectConverters.IsNotNull}}"
-                  Padding="16,8" CornerRadius="6" Background="#C0392B" Foreground="White" />
+                  Padding="16,8" CornerRadius="6" Background="{DynamicResource DangerBrush}" Foreground="White" />
         </StackPanel>
 
       </StackPanel>

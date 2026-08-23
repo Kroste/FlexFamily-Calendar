@@ -46,7 +46,7 @@
                     <TextBlock Text="{Binding DateLabel}" Opacity="0.7" FontSize="13" />
                   </StackPanel>
                   <TextBlock Grid.Column="1" Text="{Binding HolidayName}"
-                             Foreground="#C0392B" FontSize="12"
+                             Foreground="{DynamicResource DangerBrush}" FontSize="12"
                              IsVisible="{Binding HolidayName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 </Grid>
                 <!-- Nur eigene Einträge im Handy-Kalender — den Familienplan bekommt der User

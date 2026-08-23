@@ -1,0 +1,87 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!--
+    Zentrale Farbpalette. Views referenzieren ausschließlich diese Keys — keine #RRGGBB-
+    Literale im XAML (Kroste-Standard). Vorher lagen 89 Literale in 21 Views verstreut;
+    dieselbe Semantik wurde dort mit leicht verschiedenen Tönen ausgedrückt, und eine
+    Theme-Änderung hätte in jeder Datei einzeln nachgezogen werden müssen.
+
+    Die Keys sind nach ihrer ROLLE benannt, nicht nach der Farbe: wer "Danger" sucht,
+    findet es, auch wenn Rot irgendwann ein anderes Rot wird.
+
+    Achtung bei Umbenennungen: ein toter {DynamicResource …}-Verweis erzeugt KEINEN
+    Compile-Fehler, das Element rendert einfach falsch. ResourceKeyTests gleicht deshalb
+    alle referenzierten gegen alle definierten Keys ab.
+  -->
+
+  <!-- ── Statusfarben ──────────────────────────────────────────────────────── -->
+
+  <!-- Danger/Abwesenheit: Krank, Löschen, Ablehnen. -->
+  <SolidColorBrush x:Key="DangerBrush" Color="#C0392B" />
+  <!-- Flächige Danger-Hinterlegung (Zellen, Badges) — bewusst durchscheinend, damit die
+       Personenfarbe darunter erkennbar bleibt. -->
+  <SolidColorBrush x:Key="DangerFillBrush" Color="#33C0392B" />
+  <!-- Sehr dezente Danger-Tönung für ganze Zeilen. -->
+  <SolidColorBrush x:Key="DangerSubtleBrush" Color="#1AC0392B" />
+  <!-- Kräftigeres Rot für den Schließen-Hover der Titelleiste (Windows-Konvention). -->
+  <SolidColorBrush x:Key="DangerStrongBrush" Color="#E74C3C" />
+  <Color x:Key="TitleBarCloseHoverColor">#E81123</Color>
+
+  <!-- Erfolg/Zusage: Genehmigen, bestätigter Tausch. -->
+  <SolidColorBrush x:Key="SuccessBrush" Color="#27AE60" />
+
+  <!-- Warnung/Wartend: Urlaubswunsch ohne Entscheidung, Konflikthinweise. -->
+  <SolidColorBrush x:Key="WarningBrush" Color="#E67E22" />
+
+  <!-- Information/Hinweis. -->
+  <SolidColorBrush x:Key="InfoBrush" Color="#3498DB" />
+  <SolidColorBrush x:Key="InfoStrongBrush" Color="#2E86C1" />
+  <SolidColorBrush x:Key="InfoFillBrush" Color="#1A2E86C1" />
+  <SolidColorBrush x:Key="InfoSubtleBrush" Color="#142E86C1" />
+
+  <!-- ── Hinweiskarten (helle Flächen mit dunkler Schrift) ─────────────────── -->
+
+  <!-- KI-Hinweise: warmer Gelbton, damit sie sich vom regulären Plan abheben. -->
+  <SolidColorBrush x:Key="NoteBackgroundBrush" Color="#FFF6E0" />
+  <SolidColorBrush x:Key="NoteForegroundBrush" Color="#7A4500" />
+  <!-- Feiertags-/Ferienmarkierung im Kalender. -->
+  <SolidColorBrush x:Key="HolidayBackgroundBrush" Color="#FFF1A8" />
+  <SolidColorBrush x:Key="HolidayBorderBrush" Color="#D4A300" />
+  <SolidColorBrush x:Key="HolidayForegroundBrush" Color="#4A3A00" />
+  <!-- Blaue Info-Karte (KI-Planer). -->
+  <SolidColorBrush x:Key="InfoCardBackgroundBrush" Color="#E8F0FE" />
+  <SolidColorBrush x:Key="InfoCardBorderBrush" Color="#B8D2F8" />
+
+  <!-- ── Neutrale Flächen ──────────────────────────────────────────────────── -->
+
+  <SolidColorBrush x:Key="SurfaceBrush" Color="#F8F8F8" />
+  <SolidColorBrush x:Key="SurfaceAltBrush" Color="#FAFAFA" />
+  <SolidColorBrush x:Key="SurfaceOnDarkBrush" Color="#FFFFFF" />
+  <!-- Auswahl-Hinterlegung im Eintrags-Editor. -->
+  <SolidColorBrush x:Key="SelectionFillBrush" Color="#225B4B8A" />
+  <!-- Neutrale Abtönung für deaktivierte Bereiche. -->
+  <SolidColorBrush x:Key="MutedFillBrush" Color="#22808080" />
+
+  <!-- ── Overlays und Trennlinien (auf dunklem Grund) ──────────────────────── -->
+
+  <SolidColorBrush x:Key="OverlayLightBrush" Color="#33FFFFFF" />
+  <SolidColorBrush x:Key="OverlayMediumBrush" Color="#55FFFFFF" />
+  <SolidColorBrush x:Key="OverlayStrongBrush" Color="#E6FFFFFF" />
+
+  <!-- Abdunkelung hinter modalen Overlay-Dialogen (Browser-Head). -->
+  <SolidColorBrush x:Key="ScrimLightBrush" Color="#33000000" />
+  <SolidColorBrush x:Key="ScrimBrush" Color="#80000000" />
+  <SolidColorBrush x:Key="ScrimStrongBrush" Color="#B0000000" />
+  <SolidColorBrush x:Key="ScrimHeavyBrush" Color="#CC000000" />
+  <SolidColorBrush x:Key="ShadowBrush" Color="#000000" />
+
+  <!-- ── Marke ─────────────────────────────────────────────────────────────── -->
+
+  <!-- Feste Markenfarbe für den Header (nicht benutzerabhängig). -->
+  <SolidColorBrush x:Key="AppHeaderBrush" Color="#1A237E" />
+  <!-- Buy me a coffee: Farben gehören der Marke, nicht dem Theme. -->
+  <SolidColorBrush x:Key="CoffeeBrush" Color="#FFDD00" />
+  <SolidColorBrush x:Key="CoffeeForegroundBrush" Color="#0D0C22" />
+
+</ResourceDictionary>

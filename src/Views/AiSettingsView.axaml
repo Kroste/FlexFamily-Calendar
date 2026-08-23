@@ -35,7 +35,7 @@
       </StackPanel>
 
       <Border IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-              Background="#22808080" CornerRadius="6" Padding="10,8">
+              Background="{DynamicResource MutedFillBrush}" CornerRadius="6" Padding="10,8">
         <TextBlock Text="{Binding StatusMessage}" FontSize="13" TextWrapping="Wrap" />
       </Border>
 

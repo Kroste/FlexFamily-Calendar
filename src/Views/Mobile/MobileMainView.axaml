@@ -18,7 +18,7 @@
     <!-- Modal-Overlay für Android (SingleView-Lifetime, kein Window). Analog zum Browser-Head.
          Der "Verbindung"-Link auf dem Login-Screen öffnet hier den ConnectionSettingsDialog. -->
     <Grid x:Name="DialogOverlay"
-          Background="#80000000"
+          Background="{DynamicResource ScrimBrush}"
           IsVisible="False"
           ZIndex="100">
       <Border Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
@@ -52,7 +52,7 @@
           </StackPanel>
           <Button Grid.Column="1" Content="{loc:Tr Main_Logout}"
                   Command="{Binding Main.LogoutCommand}"
-                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  Foreground="White" Background="{DynamicResource OverlayLightBrush}" BorderBrush="{DynamicResource OverlayMediumBrush}"
                   CornerRadius="6" Padding="12,6" FontSize="12" />
         </Grid>
       </Border>

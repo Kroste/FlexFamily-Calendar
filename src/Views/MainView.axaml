@@ -31,14 +31,14 @@
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
           <!-- Benachrichtigungs-Glocke mit Ungelesen-Badge -->
           <Button Command="{Binding OpenNotificationsCommand}"
-                  Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  Background="{DynamicResource OverlayLightBrush}" BorderBrush="{DynamicResource OverlayMediumBrush}"
                   CornerRadius="6" Padding="10,5" VerticalAlignment="Center"
                   views:Hint.Text="{loc:Tr Hint_Main_Notifications}">
             <Grid>
               <Path Data="{StaticResource Icon.Bell}"
                     Fill="White" Width="15" Height="15" Stretch="Uniform" />
               <Border IsVisible="{Binding HasUnread}"
-                      Background="#E74C3C" CornerRadius="8" MinWidth="16" Height="16"
+                      Background="{DynamicResource DangerStrongBrush}" CornerRadius="8" MinWidth="16" Height="16"
                       Padding="4,0" Margin="0,-8,-10,0"
                       HorizontalAlignment="Right" VerticalAlignment="Top">
                 <TextBlock Text="{Binding UnreadBadge}" FontSize="10" FontWeight="Bold"
@@ -52,26 +52,26 @@
           <Button Content="{loc:Tr Main_Admin}"
                   Command="{Binding OpenAdminCommand}"
                   IsVisible="{Binding IsAdmin}"
-                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  Foreground="White" Background="{DynamicResource OverlayLightBrush}" BorderBrush="{DynamicResource OverlayMediumBrush}"
                   CornerRadius="6" Padding="12,5"
                   views:Hint.Text="{loc:Tr Hint_Main_Admin}" />
           <Button Content="{loc:Tr Main_MonthOverview}"
                   Command="{Binding OpenMonthOverviewCommand}"
-                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  Foreground="White" Background="{DynamicResource OverlayLightBrush}" BorderBrush="{DynamicResource OverlayMediumBrush}"
                   CornerRadius="6" Padding="12,5"
                   views:Hint.Text="{loc:Tr Hint_Main_MonthOverview}" />
           <Button Content="{loc:Tr Main_HoursAccount}"
                   Command="{Binding OpenHoursAccountCommand}"
-                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  Foreground="White" Background="{DynamicResource OverlayLightBrush}" BorderBrush="{DynamicResource OverlayMediumBrush}"
                   CornerRadius="6" Padding="12,5"
                   views:Hint.Text="{loc:Tr Hint_Main_HoursAccount}" />
           <Button Content="{loc:Tr Main_Profile}"
                   Command="{Binding OpenProfileCommand}"
-                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  Foreground="White" Background="{DynamicResource OverlayLightBrush}" BorderBrush="{DynamicResource OverlayMediumBrush}"
                   CornerRadius="6" Padding="12,5"
                   views:Hint.Text="{loc:Tr Hint_Main_Profile}" />
           <Button Command="{Binding OpenInfoCommand}"
-                  Foreground="White" Background="#33FFFFFF" BorderBrush="#55FFFFFF"
+                  Foreground="White" Background="{DynamicResource OverlayLightBrush}" BorderBrush="{DynamicResource OverlayMediumBrush}"
                   CornerRadius="6" Padding="10,5"
                   views:Hint.Text="{loc:Tr Hint_Main_Info}">
             <Path Data="{StaticResource Icon.Info}"
@@ -80,8 +80,8 @@
           <Button Content="{loc:Tr Main_Logout}"
                   Command="{Binding LogoutCommand}"
                   Foreground="White"
-                  Background="#33FFFFFF"
-                  BorderBrush="#55FFFFFF"
+                  Background="{DynamicResource OverlayLightBrush}"
+                  BorderBrush="{DynamicResource OverlayMediumBrush}"
                   CornerRadius="6"
                   Padding="12,5"
                   views:Hint.Text="{loc:Tr Hint_Main_Logout}" />
@@ -117,7 +117,7 @@
        Liegt über dem DockPanel, deckt also auch Header und Statusleiste ab — Logout/Glocke
        sind während eines offenen Dialogs nicht klickbar. -->
   <Grid x:Name="DialogOverlay"
-        Background="#80000000"
+        Background="{DynamicResource ScrimBrush}"
         IsVisible="False"
         ZIndex="100">
     <!-- Karte trägt KEIN festes MaxWidth/MaxHeight mehr — jeder UserControl bestimmt seine

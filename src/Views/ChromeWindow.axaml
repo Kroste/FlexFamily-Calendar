@@ -61,11 +61,11 @@
 
   <!-- Hover-Farbe für die Titelleisten-Buttons — Close bekommt Rot, die anderen ein leichtes Weiß. -->
   <Style Selector="Window.chrome-window /template/ Button#PART_CloseButton:pointerover">
-    <Setter Property="Background" Value="#E81123" />
+    <Setter Property="Background" Value="{StaticResource TitleBarCloseHoverColor}" />
   </Style>
   <Style Selector="Window.chrome-window /template/ Button#PART_MinimizeButton:pointerover,
                    Window.chrome-window /template/ Button#PART_MaximizeButton:pointerover">
-    <Setter Property="Background" Value="#33FFFFFF" />
+    <Setter Property="Background" Value="{DynamicResource OverlayLightBrush}" />
   </Style>
 
 </Styles>

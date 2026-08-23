@@ -16,13 +16,13 @@
               Padding="14,7" CornerRadius="6" />
       <Button Content="{loc:Tr Common_Delete}" Command="{Binding DeleteUserCommand}"
               IsEnabled="{Binding SelectedUser, Converter={x:Static ObjectConverters.IsNotNull}}"
-              Padding="14,7" CornerRadius="6" Background="#C0392B" Foreground="White" />
+              Padding="14,7" CornerRadius="6" Background="{DynamicResource DangerBrush}" Foreground="White" />
     </StackPanel>
 
     <Border DockPanel.Dock="Bottom"
             IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-            Background="#33C0392B" CornerRadius="6" Padding="10,8" Margin="0,12,0,0">
-      <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" FontSize="13" TextWrapping="Wrap" />
+            Background="{DynamicResource DangerFillBrush}" CornerRadius="6" Padding="10,8" Margin="0,12,0,0">
+      <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" FontSize="13" TextWrapping="Wrap" />
     </Border>
 
     <!-- Benutzerliste -->

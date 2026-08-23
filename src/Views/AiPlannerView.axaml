@@ -21,7 +21,7 @@
     <!-- Persistente Hinweise oben -->
     <StackPanel Grid.Row="1" Spacing="6">
       <TextBlock Text="{loc:Tr AiPlanner_NotesHeader}" FontSize="13" FontWeight="SemiBold" />
-      <Border Background="#F8F8F8" CornerRadius="6" Padding="4"
+      <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="6" Padding="4"
               IsVisible="{Binding Notes.Count}">
         <ItemsControl ItemsSource="{Binding Notes}">
           <ItemsControl.ItemTemplate>
@@ -45,14 +45,14 @@
     </StackPanel>
 
     <!-- Hinweis ohne KI-Provider -->
-    <Border Grid.Row="2" Background="#FFF6E0" BorderBrush="#E67E22" BorderThickness="1"
+    <Border Grid.Row="2" Background="{DynamicResource NoteBackgroundBrush}" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1"
             CornerRadius="6" Padding="10" Margin="0,14,0,0"
             IsVisible="{Binding HasNoProvider}">
       <TextBlock Text="{loc:Tr AiPlanner_NoProvider}" FontSize="12" />
     </Border>
 
     <!-- Chat-Verlauf -->
-    <Border Grid.Row="3" Background="#FAFAFA" CornerRadius="6" Padding="4" Margin="0,14,0,0">
+    <Border Grid.Row="3" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="6" Padding="4" Margin="0,14,0,0">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
         <ItemsControl ItemsSource="{Binding Messages}">
           <ItemsControl.ItemTemplate>
@@ -60,7 +60,7 @@
               <StackPanel Margin="4,3" Spacing="6">
                 <Grid ColumnDefinitions="*,*">
                   <Border Grid.Column="0" IsVisible="{Binding IsAssistant}"
-                          Background="#E8F0FE" CornerRadius="10" Padding="10,7"
+                          Background="{DynamicResource InfoCardBackgroundBrush}" CornerRadius="10" Padding="10,7"
                           HorizontalAlignment="Left" MaxWidth="480">
                     <TextBlock Text="{Binding Text}" TextWrapping="Wrap" FontSize="13" />
                   </Border>
@@ -75,13 +75,13 @@
                               HorizontalAlignment="Left" MaxWidth="480">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                      <Border Background="#FFFFFF" BorderBrush="#B8D2F8" BorderThickness="1"
+                      <Border Background="{DynamicResource SurfaceOnDarkBrush}" BorderBrush="{DynamicResource InfoCardBorderBrush}" BorderThickness="1"
                               CornerRadius="8" Padding="10,8" Margin="0,2,0,0">
                         <StackPanel Spacing="6">
                           <Grid ColumnDefinitions="*,Auto">
                             <StackPanel Grid.Column="0" Spacing="2">
                               <TextBlock Text="{Binding ActionLabel}" FontSize="10" FontWeight="Bold"
-                                         Foreground="#3498DB" />
+                                         Foreground="{DynamicResource InfoBrush}" />
                               <TextBlock Text="{Binding Person}" FontWeight="SemiBold" FontSize="13" />
                               <TextBlock Text="{Binding Date}" FontSize="12" Opacity="0.75" />
                               <StackPanel Orientation="Horizontal" Spacing="6"
@@ -95,7 +95,7 @@
                               <TextBlock Text="{Binding Title}" FontSize="12" Opacity="0.75"
                                          IsVisible="{Binding HasTitle}" TextWrapping="Wrap" />
                               <TextBlock Text="{Binding StateLabel}" FontSize="11" FontStyle="Italic"
-                                         Foreground="#27AE60" IsVisible="{Binding IsApplied}" />
+                                         Foreground="{DynamicResource SuccessBrush}" IsVisible="{Binding IsApplied}" />
                             </StackPanel>
                             <Button Grid.Column="1" Content="{loc:Tr AiPlanner_ApplySuggestion}"
                                     Command="{Binding ApplyCommand}" IsEnabled="{Binding CanApply}"
@@ -104,7 +104,7 @@
                           </Grid>
                           <!-- Konflikt-Warnungen — Klick auf eine Zeile springt im Kalender
                                zum betroffenen Tag (und schließt den Dialog). -->
-                          <Border Background="#FFF6E0" BorderBrush="#E67E22" BorderThickness="1"
+                          <Border Background="{DynamicResource NoteBackgroundBrush}" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1"
                                   CornerRadius="6" Padding="6,3" IsVisible="{Binding HasWarnings}">
                             <ItemsControl ItemsSource="{Binding WarningRows}">
                               <ItemsControl.ItemTemplate>
@@ -115,7 +115,7 @@
                                           CornerRadius="4" Cursor="Hand"
                                           ToolTip.Tip="{loc:Tr AiPlanner_JumpToDate}">
                                     <TextBlock Text="{Binding Message}" FontSize="12"
-                                               TextWrapping="Wrap" Foreground="#7A4500" />
+                                               TextWrapping="Wrap" Foreground="{DynamicResource NoteForegroundBrush}" />
                                   </Button>
                                 </DataTemplate>
                               </ItemsControl.ItemTemplate>

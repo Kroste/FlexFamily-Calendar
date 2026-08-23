@@ -10,7 +10,7 @@
     <!-- Kopf: Krankmeldung + Gesund melden -->
     <StackPanel Grid.Row="0" Spacing="10" Margin="0,0,0,14">
       <TextBlock Text="{loc:Tr Replan_Title}" FontSize="18" FontWeight="Bold" />
-      <Border Background="#1AC0392B" CornerRadius="6" Padding="10,8">
+      <Border Background="{DynamicResource DangerSubtleBrush}" CornerRadius="6" Padding="10,8">
         <Grid ColumnDefinitions="*,Auto">
           <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
             <TextBlock Text="{loc:Tr EntryType_SickLeave}" FontSize="12" Opacity="0.7" />
@@ -19,7 +19,7 @@
           <Button Grid.Column="1" Content="{loc:Tr Replan_MarkHealthy}"
                   Command="{Binding MarkHealthyCommand}"
                   Padding="12,6" CornerRadius="6"
-                  Background="#27AE60" Foreground="White" VerticalAlignment="Center" />
+                  Background="{DynamicResource SuccessBrush}" Foreground="White" VerticalAlignment="Center" />
         </Grid>
       </Border>
     </StackPanel>
@@ -41,7 +41,7 @@
             </StackPanel>
           </Border>
 
-          <Border Background="#1A2E86C1" CornerRadius="6" Padding="10,8"
+          <Border Background="{DynamicResource InfoFillBrush}" CornerRadius="6" Padding="10,8"
                   IsVisible="{Binding HasCandidates}">
             <StackPanel Spacing="4">
               <TextBlock Text="🤖 KI" FontSize="12" Opacity="0.7" />

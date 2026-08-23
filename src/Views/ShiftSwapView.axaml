@@ -74,8 +74,8 @@
         </StackPanel>
 
         <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                Background="#33C0392B" CornerRadius="6" Padding="10,8">
-          <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" FontSize="13" TextWrapping="Wrap" />
+                Background="{DynamicResource DangerFillBrush}" CornerRadius="6" Padding="10,8">
+          <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" FontSize="13" TextWrapping="Wrap" />
         </Border>
 
       </StackPanel>
@@ -99,9 +99,9 @@
         <Button Content="{loc:Tr Common_Cancel}" Command="{Binding CancelCommand}"
                 Padding="16,8" CornerRadius="6" />
         <Button Content="{loc:Tr Swap_Reject}" Command="{Binding RejectCommand}"
-                Padding="16,8" CornerRadius="6" Background="#C0392B" Foreground="White" />
+                Padding="16,8" CornerRadius="6" Background="{DynamicResource DangerBrush}" Foreground="White" />
         <Button Content="{loc:Tr Swap_Accept}" Command="{Binding AcceptCommand}"
-                Padding="16,8" CornerRadius="6" Background="#27AE60" Foreground="White" />
+                Padding="16,8" CornerRadius="6" Background="{DynamicResource SuccessBrush}" Foreground="White" />
       </StackPanel>
 
       <!-- Withdraw -->
@@ -110,7 +110,7 @@
         <Button Content="{loc:Tr Common_Cancel}" Command="{Binding CancelCommand}"
                 Padding="16,8" CornerRadius="6" />
         <Button Content="{loc:Tr Swap_Withdraw}" Command="{Binding WithdrawCommand}"
-                Padding="16,8" CornerRadius="6" Background="#C0392B" Foreground="White" />
+                Padding="16,8" CornerRadius="6" Background="{DynamicResource DangerBrush}" Foreground="White" />
       </StackPanel>
     </Grid>
 

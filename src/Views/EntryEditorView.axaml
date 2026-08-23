@@ -94,7 +94,7 @@
         </Grid>
 
         <Border IsVisible="{Binding ShowOvernightNote}"
-                Background="#225B4B8A" CornerRadius="6" Padding="10,8">
+                Background="{DynamicResource SelectionFillBrush}" CornerRadius="6" Padding="10,8">
           <TextBlock Text="{Binding OvernightNote}" FontSize="12" TextWrapping="Wrap" />
         </Border>
 
@@ -116,8 +116,8 @@
         </StackPanel>
 
         <Border IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                Background="#33C0392B" CornerRadius="6" Padding="10,8">
-          <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" FontSize="13" TextWrapping="Wrap" />
+                Background="{DynamicResource DangerFillBrush}" CornerRadius="6" Padding="10,8">
+          <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}" FontSize="13" TextWrapping="Wrap" />
         </Border>
 
       </StackPanel>
@@ -130,7 +130,7 @@
               Command="{Binding DeleteCommand}"
               IsVisible="{Binding IsEditMode}"
               Padding="16,8" CornerRadius="6"
-              Background="#C0392B" Foreground="White" />
+              Background="{DynamicResource DangerBrush}" Foreground="White" />
       <Button Grid.Column="2"
               Content="{loc:Tr Common_Cancel}"
               Command="{Binding CancelCommand}"
