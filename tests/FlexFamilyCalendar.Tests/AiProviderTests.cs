@@ -36,7 +36,7 @@ public class AiProviderTests
         p.SetApiKey("k");
         Assert.True(p.RequiresApiKey);
         Assert.True(p.IsConfigured);
-        Assert.Equal("Hallo", await p.CompleteAsync("hi"));
+        Assert.Equal("Hallo", await p.CompleteAsync("hi", TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class AiProviderTests
     {
         var p = new PerplexityProvider(Client("{\"choices\":[{\"message\":{\"content\":\"Pong\"}}]}"));
         p.SetApiKey("k");
-        Assert.Equal("Pong", await p.CompleteAsync("hi"));
+        Assert.Equal("Pong", await p.CompleteAsync("hi", TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public class AiProviderTests
     {
         var p = new AnthropicProvider(Client("{\"content\":[{\"type\":\"text\",\"text\":\"Servus\"}]}"));
         p.SetApiKey("k");
-        Assert.Equal("Servus", await p.CompleteAsync("hi"));
+        Assert.Equal("Servus", await p.CompleteAsync("hi", TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public class AiProviderTests
     {
         var p = new GeminiProvider(Client("{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"Moin\"}]}}]}"));
         p.SetApiKey("k");
-        Assert.Equal("Moin", await p.CompleteAsync("hi"));
+        Assert.Equal("Moin", await p.CompleteAsync("hi", TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class AiProviderTests
         var p = new LlamaProvider(Client("{\"response\":\"Hi vom lokalen Modell\"}"));
         Assert.False(p.RequiresApiKey);
         Assert.True(p.IsConfigured);   // lokal, kein Schlüssel nötig
-        Assert.Equal("Hi vom lokalen Modell", await p.CompleteAsync("hi"));
+        Assert.Equal("Hi vom lokalen Modell", await p.CompleteAsync("hi", TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class AiProviderTests
         var p = new OpenAiProvider(new HttpClient(handler));
         p.SetApiKey("k");
         p.SetModel("gpt-4o");
-        await p.CompleteAsync("hi");
+        await p.CompleteAsync("hi", TestContext.Current.CancellationToken);
         Assert.Contains("\"model\":\"gpt-4o\"", handler.LastBody);
         Assert.Equal("Bearer k", handler.LastRequest!.Headers.GetValues("Authorization").Single());
     }
@@ -97,7 +97,7 @@ public class AiProviderTests
         var handler = new ThrowingHandler();
         var p = new OpenAiProvider(new HttpClient(handler));
         p.SetApiKey("k");
-        await Assert.ThrowsAsync<HttpRequestException>(() => p.CompleteAsync("hi"));
+        await Assert.ThrowsAsync<HttpRequestException>(() => p.CompleteAsync("hi", TestContext.Current.CancellationToken));
     }
 
     private sealed class ThrowingHandler : HttpMessageHandler

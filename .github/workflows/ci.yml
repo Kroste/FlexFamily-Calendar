@@ -31,9 +31,8 @@ jobs:
       - name: Install wasm-tools workload
         run: dotnet workload install wasm-tools
 
-      # Ein-Schuss-Test über die gesamte Solution. Der csproj-basierte 2-Step-Ansatz
-      # ("Test (Client)" / "Test (Server)") knallte auf dem 10.0.301-Runner mit
-      # MSB4181 "VSTestTask returned false" / "The argument …dll is invalid" — offenbar
-      # eine Ecke im MTP-Kompat-Modus. Die Solution-Variante ist stabil (lokal wie remote).
+      # Tests laufen auf xunit.v3 / Microsoft.Testing.Platform (Opt-in in der global.json).
+      # Keine VSTest-Flags anhängen — die reicht `dotnet test` an die Test-Exe durch, die
+      # sie nicht kennt, und der Lauf endet mit "Es wurden keine Tests ausgeführt".
       - name: Build & Test (Solution)
         run: dotnet test FlexFamilyCalendar.slnx -c Release --verbosity normal

@@ -15,7 +15,7 @@ public class UserReorderEndpointTests : IClassFixture<ApiTestFactory>
         var client = await _factory.CreateAuthenticatedClientAsync(
             ApiTestFactory.PlainUser, ApiTestFactory.PlainPassword);
         var resp = await client.PostAsJsonAsync("api/users/order",
-            new { userIds = Array.Empty<Guid>() });
+            new { userIds = Array.Empty<Guid>() }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
     }
 
@@ -25,17 +25,17 @@ public class UserReorderEndpointTests : IClassFixture<ApiTestFactory>
         var client = await _factory.CreateAuthenticatedClientAsync(
             ApiTestFactory.AdminUser, ApiTestFactory.AdminPassword);
 
-        var before = await client.GetFromJsonAsync<List<UserDto>>("api/users");
+        var before = await client.GetFromJsonAsync<List<UserDto>>("api/users", TestContext.Current.CancellationToken);
         Assert.NotNull(before);
         Assert.True(before!.Count >= 2);
 
         // Reihenfolge umdrehen und speichern.
         var reversed = before.AsEnumerable().Reverse().Select(u => u.Id).ToArray();
         var putResp = await client.PostAsJsonAsync("api/users/order",
-            new { userIds = reversed });
+            new { userIds = reversed }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, putResp.StatusCode);
 
-        var after = await client.GetFromJsonAsync<List<UserDto>>("api/users");
+        var after = await client.GetFromJsonAsync<List<UserDto>>("api/users", TestContext.Current.CancellationToken);
         Assert.NotNull(after);
         Assert.Equal(reversed, after!.Select(u => u.Id).ToArray());
         // Erster hat den kleinsten PlanOrder-Index bekommen.

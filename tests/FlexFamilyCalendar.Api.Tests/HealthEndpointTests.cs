@@ -13,9 +13,9 @@ public class HealthEndpointTests : IClassFixture<ApiTestFactory>
     public async Task Health_liefert_200_ohne_Auth()
     {
         var client = _factory.CreateClient();
-        var resp = await client.GetAsync("/health");
+        var resp = await client.GetAsync("/health", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
-        var body = await resp.Content.ReadAsStringAsync();
+        var body = await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("\"status\"", body);
     }
 }

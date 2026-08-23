@@ -15,15 +15,19 @@ public class ServerSettingsEndpointTests : IClassFixture<ApiTestFactory>
     public async Task GET_ohne_Auth_gibt_401()
     {
         var client = _factory.CreateSeededClient();
-        var resp = await client.GetAsync("api/settings");
+        var resp = await client.GetAsync("api/settings", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
     }
 
     [Fact]
     public async Task GET_mit_User_liefert_Defaults()
     {
-        var client = await _factory.CreateAuthenticatedClientAsync(ApiTestFactory.PlainUser, ApiTestFactory.PlainPassword);
-        var dto = await client.GetFromJsonAsync<ServerSettingsDto>("api/settings");
+        // Eigene Factory (= eigene InMemory-DB), weil die Klassen-Fixture von den PUT-Tests
+        // beschrieben wird. xunit.v3 fixiert die Reihenfolge innerhalb einer Klasse nicht,
+        // dieser Test darf also nicht auf "noch niemand hat geschrieben" bauen.
+        using var factory = new ApiTestFactory();
+        var client = await factory.CreateAuthenticatedClientAsync(ApiTestFactory.PlainUser, ApiTestFactory.PlainPassword);
+        var dto = await client.GetFromJsonAsync<ServerSettingsDto>("api/settings", TestContext.Current.CancellationToken);
         Assert.NotNull(dto);
         Assert.Equal("BY", dto!.HolidayState);
         Assert.Equal(2.0, dto.OvernightHoursPerDay);
@@ -33,7 +37,7 @@ public class ServerSettingsEndpointTests : IClassFixture<ApiTestFactory>
     public async Task PUT_mit_User_ist_verboten()
     {
         var client = await _factory.CreateAuthenticatedClientAsync(ApiTestFactory.PlainUser, ApiTestFactory.PlainPassword);
-        var resp = await client.PutAsJsonAsync("api/settings", new ServerSettingsDto("NW", 3.0));
+        var resp = await client.PutAsJsonAsync("api/settings", new ServerSettingsDto("NW", 3.0), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
     }
 
@@ -41,14 +45,14 @@ public class ServerSettingsEndpointTests : IClassFixture<ApiTestFactory>
     public async Task PUT_mit_Admin_setzt_und_normalisiert_Bundesland()
     {
         var client = await _factory.CreateAuthenticatedClientAsync(ApiTestFactory.AdminUser, ApiTestFactory.AdminPassword);
-        var resp = await client.PutAsJsonAsync("api/settings", new ServerSettingsDto("nw", 3.5));
+        var resp = await client.PutAsJsonAsync("api/settings", new ServerSettingsDto("nw", 3.5), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
-        var dto = await resp.Content.ReadFromJsonAsync<ServerSettingsDto>();
+        var dto = await resp.Content.ReadFromJsonAsync<ServerSettingsDto>(TestContext.Current.CancellationToken);
         Assert.Equal("NW", dto!.HolidayState);
         Assert.Equal(3.5, dto.OvernightHoursPerDay);
 
         // Wert bleibt persistent für die nächste Anfrage.
-        var fresh = await client.GetFromJsonAsync<ServerSettingsDto>("api/settings");
+        var fresh = await client.GetFromJsonAsync<ServerSettingsDto>("api/settings", TestContext.Current.CancellationToken);
         Assert.Equal("NW", fresh!.HolidayState);
         Assert.Equal(3.5, fresh.OvernightHoursPerDay);
     }
@@ -57,7 +61,7 @@ public class ServerSettingsEndpointTests : IClassFixture<ApiTestFactory>
     public async Task PUT_mit_leerem_Bundesland_gibt_400()
     {
         var client = await _factory.CreateAuthenticatedClientAsync(ApiTestFactory.AdminUser, ApiTestFactory.AdminPassword);
-        var resp = await client.PutAsJsonAsync("api/settings", new ServerSettingsDto("   ", 2.0));
+        var resp = await client.PutAsJsonAsync("api/settings", new ServerSettingsDto("   ", 2.0), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
@@ -65,7 +69,7 @@ public class ServerSettingsEndpointTests : IClassFixture<ApiTestFactory>
     public async Task PUT_mit_negativen_Stunden_gibt_400()
     {
         var client = await _factory.CreateAuthenticatedClientAsync(ApiTestFactory.AdminUser, ApiTestFactory.AdminPassword);
-        var resp = await client.PutAsJsonAsync("api/settings", new ServerSettingsDto("BY", -1));
+        var resp = await client.PutAsJsonAsync("api/settings", new ServerSettingsDto("BY", -1), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 }

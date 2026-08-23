@@ -14,7 +14,7 @@
 
   <!-- MinVer: Version kommt aus dem Git-Tag (vX.Y.Z). Kein manuelles Hochzählen in den csproj. -->
   <ItemGroup Condition="'$(UseMinVer)' != 'false'">
-    <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="all" />
+    <PackageReference Include="MinVer" PrivateAssets="all" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(UseMinVer)' != 'false'">

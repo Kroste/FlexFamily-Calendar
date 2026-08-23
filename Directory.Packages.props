@@ -1,0 +1,53 @@
+<Project>
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <!-- Avalonia: alle Heads MÜSSEN auf derselben Linie sitzen, sonst driften managed
+       und native Assets auseinander (siehe kroste-avalonia → Skia-Falle). -->
+  <ItemGroup Label="Avalonia">
+    <PackageVersion Include="Avalonia" Version="12.1.0" />
+    <PackageVersion Include="Avalonia.Android" Version="12.1.0" />
+    <PackageVersion Include="Avalonia.Browser" Version="12.1.0" />
+    <PackageVersion Include="Avalonia.Controls.ColorPicker" Version="12.1.0" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.0" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.0" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.0" />
+    <!-- Folgt NICHT der Avalonia-Versionierung (eigene 2.x-Reihe). -->
+    <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
+  </ItemGroup>
+
+  <ItemGroup Label="Client">
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.1" />
+    <PackageVersion Include="NLog" Version="5.3.4" />
+  </ItemGroup>
+
+  <ItemGroup Label="Server">
+    <!-- Client und Server teilen sich BCrypt: eine Version für beide, sonst hashen
+         Desktop und API unterschiedlich. -->
+    <PackageVersion Include="BCrypt.Net-Next" Version="4.2.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup Label="Build">
+    <PackageVersion Include="MinVer" Version="6.0.0" />
+  </ItemGroup>
+
+  <!-- Tests laufen auf xunit.v3 / Microsoft.Testing.Platform. Microsoft.NET.Test.Sdk und
+       xunit.runner.visualstudio gehören zum alten VSTest-Pfad und dürfen NICHT zurück —
+       das .NET-10-SDK hat den abgeschaltet. Opt-in steht in der global.json. -->
+  <ItemGroup Label="Tests">
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.8" />
+    <!-- Explizit, weil der Web-SDK-ProjectReference Relational nicht in den Test-Output kopiert:
+         ohne diese Zeile stirbt jeder WebApplicationFactory-Test mit FileNotFoundException. -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.8" />
+  </ItemGroup>
+
+</Project>

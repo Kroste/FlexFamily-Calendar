@@ -13,7 +13,7 @@ public class AuthEndpointTests : IClassFixture<ApiTestFactory>
     {
         var client = _factory.CreateSeededClient();
         var resp = await client.PostAsJsonAsync("api/auth/login",
-            new { username = ApiTestFactory.AdminUser, password = "wrong" });
+            new { username = ApiTestFactory.AdminUser, password = "wrong" }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
     }
 
@@ -22,7 +22,7 @@ public class AuthEndpointTests : IClassFixture<ApiTestFactory>
     {
         var client = _factory.CreateSeededClient();
         var resp = await client.PostAsJsonAsync("api/auth/login",
-            new { username = "gibtsnicht", password = "xxx" });
+            new { username = "gibtsnicht", password = "xxx" }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
     }
 
@@ -31,9 +31,9 @@ public class AuthEndpointTests : IClassFixture<ApiTestFactory>
     {
         var client = _factory.CreateSeededClient();
         var resp = await client.PostAsJsonAsync("api/auth/login",
-            new { username = ApiTestFactory.AdminUser, password = ApiTestFactory.AdminPassword });
+            new { username = ApiTestFactory.AdminUser, password = ApiTestFactory.AdminPassword }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
-        var body = await resp.Content.ReadAsStringAsync();
+        var body = await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("\"token\"", body);
         Assert.Contains("\"user\"", body);
     }

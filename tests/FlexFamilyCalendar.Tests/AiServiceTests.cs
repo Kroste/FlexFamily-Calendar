@@ -48,7 +48,7 @@ public class AiServiceTests
     public async Task SuggestAsync_NoActiveProvider_ReturnsNull()
     {
         var svc = new AiService(new IAiProvider[] { new FakeProvider("X") });
-        Assert.Null(await svc.SuggestAsync("hi"));
+        Assert.Null(await svc.SuggestAsync("hi", TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public class AiServiceTests
         fake.SetApiKey("k");
         var svc = new AiService(new IAiProvider[] { fake });
         svc.SetActiveProvider("X");
-        Assert.True(await svc.TestAsync());
+        Assert.True(await svc.TestAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]

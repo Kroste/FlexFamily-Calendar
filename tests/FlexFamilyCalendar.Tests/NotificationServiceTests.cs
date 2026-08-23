@@ -26,7 +26,7 @@ public class NotificationServiceTests
     {
         var svc = NewService();
         await svc.AddAsync("u1", "A", null);
-        await Task.Delay(5);
+        await Task.Delay(5, TestContext.Current.CancellationToken);
         await svc.AddAsync("u1", "B", null);
         await svc.AddAsync("u2", "C", null);
 
