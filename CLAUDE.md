@@ -83,6 +83,17 @@
   Newtonsoft.Json ist als Dependency raus.
 - **Datenschutz:** Fremde Krank-/Urlaubsgründe erscheinen nur als „Abwesend" (Maskierung pro Betrachter),
   im Plan, PDF und Mail-Versand (je Empfänger aus dessen Sicht).
+- **Titelleiste:** Die Drag-Fläche trägt `chrome:WindowDecorationProperties.ElementRole="TitleBar"`,
+  die drei Fensterbuttons `="User"` — **nicht** `MinimizeButton`/`MaximizeButton`/`CloseButton`,
+  diese Rollen laufen über den Non-Client-Pfad, wo DWM die Klicks schlucken kann. Zusätzlich
+  prüft der managed `PointerPressed`-Handler über `LandedOnInteractiveChild`, ob der Klick auf
+  einem interaktiven Control gelandet ist. Der Guard löst ein anderes Problem als die Rollen
+  (managed Fallback statt OS-Hit-Test) und darf nicht als „dank ElementRole überflüssig"
+  entfernt werden: sobald ein Umschalter oder Suchfeld in die Leiste kommt, startet sonst jeder
+  Klick darauf einen Fenster-Drag und das Dropdown öffnet nie.
+  `ExtendClientAreaTitleBarHeightHint` steht bewusst auf `32` statt dem im Skill genannten `-1`:
+  der Wert passt exakt zur Höhe der gerenderten Leiste, und das Symptom „tote Titelleiste",
+  gegen das `-1` hilft, liegt hier nicht vor.
 - **Single-Instance-Guard (nur Desktop):** `SingleInstanceGuard` in `Program.Main`, **vor**
   Avalonia. Ein Zweitstart holt die laufende Instanz nach vorn und beendet sich. Nötig wegen
   Tray-Icon und weil im lokalen Modus zwei Prozesse dieselben JSON-Dateien überschreiben.

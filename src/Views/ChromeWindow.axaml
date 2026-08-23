@@ -1,5 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:chrome="using:Avalonia.Controls.Chrome"
         xmlns:views="using:FlexFamilyCalendar.Views">
 
   <!-- ControlTemplate für die ChromeWindow-Basisklasse: Custom-Titelleiste oben, darunter der
@@ -17,6 +18,7 @@
 
               <Border DockPanel.Dock="Top"
                       x:Name="PART_DragArea"
+                      chrome:WindowDecorationProperties.ElementRole="TitleBar"
                       Height="32"
                       Background="{DynamicResource AppHeaderBrush}"
                       IsHitTestVisible="True">
@@ -28,16 +30,19 @@
 
                   <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <Button x:Name="PART_MinimizeButton"
+                            chrome:WindowDecorationProperties.ElementRole="User"
                             Content="—" Width="46" Height="32"
                             Background="Transparent" Foreground="White"
                             BorderThickness="0" CornerRadius="0"
                             ToolTip.Tip="Minimieren" />
                     <Button x:Name="PART_MaximizeButton"
+                            chrome:WindowDecorationProperties.ElementRole="User"
                             Content="☐" Width="46" Height="32"
                             Background="Transparent" Foreground="White"
                             BorderThickness="0" CornerRadius="0"
                             ToolTip.Tip="Maximieren" />
                     <Button x:Name="PART_CloseButton"
+                            chrome:WindowDecorationProperties.ElementRole="User"
                             Content="✕" Width="46" Height="32"
                             Background="Transparent" Foreground="White"
                             BorderThickness="0" CornerRadius="0"
