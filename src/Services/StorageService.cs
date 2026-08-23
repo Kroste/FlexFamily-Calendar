@@ -1,6 +1,5 @@
 using FlexFamilyCalendar.Models;
 using System.Globalization;
-using System.Text.Json;
 
 namespace FlexFamilyCalendar.Services;
 
@@ -23,14 +22,12 @@ public class StorageService : IStorageService
 
     public async Task<List<User>> LoadUsersAsync()
     {
-        if (!File.Exists(UsersFile)) return new();
-        var json = await File.ReadAllTextAsync(UsersFile);
-        return JsonSerializer.Deserialize<List<User>>(json, JsonOptions.Pretty) ?? new();
+        return await JsonFileStore.LoadAsync<List<User>>(UsersFile, static () => new());
     }
 
     public async Task SaveUsersAsync(List<User> users)
     {
-        await File.WriteAllTextAsync(UsersFile, JsonSerializer.Serialize(users, JsonOptions.Pretty));
+        await JsonFileStore.WriteAtomicAsync(UsersFile, users);
         LogService.Debug("Benutzerdaten gespeichert ({0} Benutzer)", users.Count);
     }
 
@@ -47,103 +44,86 @@ public class StorageService : IStorageService
 
     public async Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync()
     {
-        if (!File.Exists(SwapRequestsFile)) return new();
-        var json = await File.ReadAllTextAsync(SwapRequestsFile);
-        return JsonSerializer.Deserialize<List<ShiftSwapRequest>>(json, JsonOptions.Pretty) ?? new();
+        return await JsonFileStore.LoadAsync<List<ShiftSwapRequest>>(SwapRequestsFile, static () => new());
     }
 
     public async Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests)
     {
-        await File.WriteAllTextAsync(SwapRequestsFile, JsonSerializer.Serialize(requests, JsonOptions.Pretty));
+        await JsonFileStore.WriteAtomicAsync(SwapRequestsFile, requests);
         LogService.Debug("Tausch-Anfragen gespeichert ({0})", requests.Count);
     }
 
     public async Task<List<Notification>> LoadNotificationsAsync()
     {
-        if (!File.Exists(NotificationsFile)) return new();
-        var json = await File.ReadAllTextAsync(NotificationsFile);
-        return JsonSerializer.Deserialize<List<Notification>>(json, JsonOptions.Pretty) ?? new();
+        return await JsonFileStore.LoadAsync<List<Notification>>(NotificationsFile, static () => new());
     }
 
     public async Task SaveNotificationsAsync(List<Notification> notifications)
     {
-        await File.WriteAllTextAsync(NotificationsFile, JsonSerializer.Serialize(notifications, JsonOptions.Pretty));
+        await JsonFileStore.WriteAtomicAsync(NotificationsFile, notifications);
         LogService.Debug("Benachrichtigungen gespeichert ({0})", notifications.Count);
     }
 
     public async Task<List<ActivityType>> LoadActivityTypesAsync()
     {
-        if (!File.Exists(ActivityTypesFile)) return new();
-        var json = await File.ReadAllTextAsync(ActivityTypesFile);
-        return JsonSerializer.Deserialize<List<ActivityType>>(json, JsonOptions.Pretty) ?? new();
+        return await JsonFileStore.LoadAsync<List<ActivityType>>(ActivityTypesFile, static () => new());
     }
 
     public async Task SaveActivityTypesAsync(List<ActivityType> types)
     {
-        await File.WriteAllTextAsync(ActivityTypesFile, JsonSerializer.Serialize(types, JsonOptions.Pretty));
+        await JsonFileStore.WriteAtomicAsync(ActivityTypesFile, types);
         LogService.Debug("Aktivitätstypen gespeichert ({0})", types.Count);
     }
 
     public async Task<List<RecurringActivity>> LoadRecurringActivitiesAsync()
     {
-        if (!File.Exists(RecurringActivitiesFile)) return new();
-        var json = await File.ReadAllTextAsync(RecurringActivitiesFile);
-        return JsonSerializer.Deserialize<List<RecurringActivity>>(json, JsonOptions.Pretty) ?? new();
+        return await JsonFileStore.LoadAsync<List<RecurringActivity>>(RecurringActivitiesFile, static () => new());
     }
 
     public async Task SaveRecurringActivitiesAsync(List<RecurringActivity> activities)
     {
-        await File.WriteAllTextAsync(RecurringActivitiesFile, JsonSerializer.Serialize(activities, JsonOptions.Pretty));
+        await JsonFileStore.WriteAtomicAsync(RecurringActivitiesFile, activities);
         LogService.Debug("Wiederkehrende Aktivitäten gespeichert ({0})", activities.Count);
     }
 
     public async Task<List<PlannerNote>> LoadPlannerNotesAsync()
     {
-        if (!File.Exists(PlannerNotesFile)) return new();
-        var json = await File.ReadAllTextAsync(PlannerNotesFile);
-        return JsonSerializer.Deserialize<List<PlannerNote>>(json, JsonOptions.Pretty) ?? new();
+        return await JsonFileStore.LoadAsync<List<PlannerNote>>(PlannerNotesFile, static () => new());
     }
 
     public async Task SavePlannerNotesAsync(List<PlannerNote> notes)
     {
-        await File.WriteAllTextAsync(PlannerNotesFile, JsonSerializer.Serialize(notes, JsonOptions.Pretty));
+        await JsonFileStore.WriteAtomicAsync(PlannerNotesFile, notes);
         LogService.Debug("KI-Planungshinweise gespeichert ({0})", notes.Count);
     }
 
     public async Task<List<ChatHistoryEntry>> LoadChatHistoryAsync()
     {
-        if (!File.Exists(ChatHistoryFile)) return new();
-        var json = await File.ReadAllTextAsync(ChatHistoryFile);
-        return JsonSerializer.Deserialize<List<ChatHistoryEntry>>(json, JsonOptions.Pretty) ?? new();
+        return await JsonFileStore.LoadAsync<List<ChatHistoryEntry>>(ChatHistoryFile, static () => new());
     }
 
     public async Task SaveChatHistoryAsync(List<ChatHistoryEntry> history)
     {
-        await File.WriteAllTextAsync(ChatHistoryFile, JsonSerializer.Serialize(history, JsonOptions.Pretty));
+        await JsonFileStore.WriteAtomicAsync(ChatHistoryFile, history);
         LogService.Debug("KI-Chat-Verlauf gespeichert ({0})", history.Count);
     }
 
     public async Task<AppSettings> LoadSettingsAsync()
     {
-        if (!File.Exists(SettingsFile)) return new();
-        var json = await File.ReadAllTextAsync(SettingsFile);
-        return JsonSerializer.Deserialize<AppSettings>(json, JsonOptions.Pretty) ?? new();
+        return await JsonFileStore.LoadAsync<AppSettings>(SettingsFile, static () => new());
     }
 
     public async Task SaveSettingsAsync(AppSettings settings)
     {
-        await File.WriteAllTextAsync(SettingsFile, JsonSerializer.Serialize(settings, JsonOptions.Pretty));
+        await JsonFileStore.WriteAtomicAsync(SettingsFile, settings);
         LogService.Debug("Einstellungen gespeichert");
     }
 
     public async Task<CalendarDay> LoadDayAsync(DateOnly date)
     {
         var file = GetDayFilePath(date);
-        if (!File.Exists(file))
-            return new() { DateString = date.ToString("yyyy-MM-dd") };
-        var json = await File.ReadAllTextAsync(file);
-        var day = JsonSerializer.Deserialize<CalendarDay>(json, JsonOptions.Pretty)
-                  ?? new() { DateString = date.ToString("yyyy-MM-dd") };
+        var iso = date.ToString("yyyy-MM-dd");
+        var day = await JsonFileStore.LoadAsync(file, () => new CalendarDay { DateString = iso });
 
         // Migration: ehemaliges AuPairShift (=1) → Arbeit
         foreach (var e in day.Entries)
@@ -157,7 +137,7 @@ public class StorageService : IStorageService
         var date = DateOnly.Parse(day.DateString);
         var file = GetDayFilePath(date);
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-        await File.WriteAllTextAsync(file, JsonSerializer.Serialize(day, JsonOptions.Pretty));
+        await JsonFileStore.WriteAtomicAsync(file, day);
         LogService.Debug("Kalendertag gespeichert: {0}", day.DateString);
     }
 

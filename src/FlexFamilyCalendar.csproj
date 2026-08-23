@@ -5,6 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- JsonFileStore ist internal, wird aber direkt getestet (Persistenz-Regeln). -->
+    <InternalsVisibleTo Include="FlexFamilyCalendar.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
     <EmbeddedResource Include="i18n\**" />
     <Content Include="nlog.config">
