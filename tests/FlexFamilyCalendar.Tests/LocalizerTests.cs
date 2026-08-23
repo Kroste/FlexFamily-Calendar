@@ -6,6 +6,7 @@ using Xunit;
 
 namespace FlexFamilyCalendar.Tests;
 
+[Collection("Localizer")]
 public class LocalizerTests
 {
     [Fact]
@@ -43,14 +44,89 @@ public class LocalizerTests
     }
 
     [Fact]
-    public void SetLanguage_Raises_IndexerPropertyChanged()
+    public void SetLanguage_benachrichtigt_jeden_gebundenen_Wrapper()
     {
-        string? changed = null;
-        void Handler(object? s, PropertyChangedEventArgs e) => changed = e.PropertyName;
-        Localizer.Instance.PropertyChanged += Handler;
+        // Ersetzt den alten Test auf PropertyChanged("Item[]"). Die WPF-Indexer-Konvention
+        // verarbeitet Avalonia 12 nur unzuverlässig — Fenster ohne Fokus blieben stale.
+        // Jetzt feuert jeder LocalizedString ein reguläres PropertyChanged(Value).
+        var wrapper = LocalizedString.Get("Common_Close");
+        var changed = new List<string?>();
+        void Handler(object? s, PropertyChangedEventArgs e) => changed.Add(e.PropertyName);
+        wrapper.PropertyChanged += Handler;
+
         try { Localizer.Instance.SetLanguage("en"); }
-        finally { Localizer.Instance.PropertyChanged -= Handler; Localizer.Instance.SetLanguage("de"); }
-        Assert.Equal("Item[]", changed);
+        finally { wrapper.PropertyChanged -= Handler; Localizer.Instance.SetLanguage("de"); }
+
+        Assert.Contains(nameof(LocalizedString.Value), changed);
+    }
+
+    [Fact]
+    public void Wrapper_liefert_pro_Schluessel_immer_dieselbe_Instanz()
+    {
+        // Der statische Cache ist die Lebensversicherung: Avalonia hält Binding.Source nicht
+        // stark, ein pro Binding neu erzeugter Wrapper wäre nach dem ersten Rendering weg.
+        Assert.Same(LocalizedString.Get("Common_Close"), LocalizedString.Get("Common_Close"));
+    }
+
+    [Fact]
+    public void Wrapper_Wert_folgt_der_Sprache()
+    {
+        var wrapper = LocalizedString.Get("Common_Close");
+        try
+        {
+            Localizer.Instance.SetLanguage("de");
+            var de = wrapper.Value;
+            Localizer.Instance.SetLanguage("en");
+            var en = wrapper.Value;
+
+            Assert.Equal(Localizer.Instance["Common_Close"], en);
+            Assert.NotEqual(de, en);
+        }
+        finally { Localizer.Instance.SetLanguage("de"); }
+    }
+
+    [Fact]
+    public void Mehrere_Wrapper_werden_alle_benachrichtigt()
+    {
+        // Der eigentliche Bug hinter dem Umbau: es aktualisierte sich nur das Fenster, das den
+        // Wechsel ausgelöst hat. Mehrere Wrapper stehen hier für mehrere Fenster. Gezählt wird
+        // pro Wrapper — der Localizer ist ein Singleton, ein absoluter Gesamtzähler wäre von
+        // anderen Tests beeinflussbar.
+        var a = LocalizedString.Get("Common_Close");
+        var b = LocalizedString.Get("Common_Cancel");
+        var hitsA = 0;
+        var hitsB = 0;
+        void HandlerA(object? s, PropertyChangedEventArgs e) => hitsA++;
+        void HandlerB(object? s, PropertyChangedEventArgs e) => hitsB++;
+
+        a.PropertyChanged += HandlerA;
+        b.PropertyChanged += HandlerB;
+        try { Localizer.Instance.SetLanguage("en"); }
+        finally
+        {
+            a.PropertyChanged -= HandlerA;
+            b.PropertyChanged -= HandlerB;
+            Localizer.Instance.SetLanguage("de");
+        }
+
+        Assert.True(hitsA > 0, "Wrapper A wurde nicht benachrichtigt");
+        Assert.True(hitsB > 0, "Wrapper B wurde nicht benachrichtigt");
+    }
+
+    [Fact]
+    public void Ein_Sprachwechsel_benachrichtigt_jeden_Wrapper_genau_einmal()
+    {
+        // Doppelte Notifications wären kein Fehler, aber unnötige Re-Layouts bei gut 400
+        // gebundenen Schlüsseln.
+        var wrapper = LocalizedString.Get("Common_Save");
+        var hits = 0;
+        void Handler(object? s, PropertyChangedEventArgs e) => hits++;
+
+        wrapper.PropertyChanged += Handler;
+        try { Localizer.Instance.SetLanguage("en"); }
+        finally { wrapper.PropertyChanged -= Handler; Localizer.Instance.SetLanguage("de"); }
+
+        Assert.Equal(1, hits);
     }
 
     [Fact]

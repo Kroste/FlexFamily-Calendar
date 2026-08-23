@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
@@ -9,10 +8,14 @@ public record LanguageOption(string Code, string DisplayName);
 
 /// <summary>
 /// Lädt UI-Sprachen aus eingebetteten Ressourcen (web-tauglich, ohne Dateisystem).
-/// Live-Umschaltung über Indexer-Binding: bei Sprachwechsel feuert "Item[]" → alle
-/// {loc:Tr Key}-Bindings aktualisieren sofort. Fallback: aktuell → en → de → Key.
+/// Fallback-Kette pro Schlüssel: aktuelle Sprache → Englisch → Schlüsselname.
+///
+/// Die Live-Umschaltung läuft über <see cref="LocalizedString"/>: beim Sprachwechsel feuert
+/// jeder gecachte Wrapper ein reguläres PropertyChanged. Vorher lief das über ein
+/// <c>PropertyChanged("Item[]")</c> auf dem Indexer — die WPF-Konvention, die Avalonia 12 nur
+/// unzuverlässig verarbeitet: Fenster ohne Fokus blieben in der alten Sprache stehen.
 /// </summary>
-public sealed class Localizer : INotifyPropertyChanged
+public sealed class Localizer
 {
     public static Localizer Instance { get; } = new();
 
@@ -25,13 +28,17 @@ public sealed class Localizer : INotifyPropertyChanged
 
     public string CurrentLanguage { get; private set; } = BaseLanguage;
 
+    /// <summary>
+    /// Auswahlliste für die Sprach-ComboBox. Die Länderflagge als Emoji ist Kroste-Standard;
+    /// Englisch bekommt die UK-Flagge als international neutrales Symbol.
+    /// </summary>
     public IReadOnlyList<LanguageOption> AvailableLanguages { get; } =
     [
-        new("de", "Deutsch"),
-        new("en", "English"),
+        new("de", "🇩🇪 Deutsch"),
+        new("en", "🇬🇧 English"),
     ];
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    /// <summary>Für ViewModels, die bei Sprachwechsel selbst gebaute Texte neu erzeugen müssen.</summary>
     public event EventHandler? LanguageChanged;
 
     private Localizer() => SetLanguage(BaseLanguage);
@@ -57,7 +64,8 @@ public sealed class Localizer : INotifyPropertyChanged
         CultureInfo.DefaultThreadCurrentCulture = culture;
         CultureInfo.DefaultThreadCurrentUICulture = culture;
 
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
+        // Alle gebundenen Wrapper aktualisieren — erreicht jedes Fenster, nicht nur das aktive.
+        LocalizedString.NotifyAllChanged();
         LanguageChanged?.Invoke(this, EventArgs.Empty);
     }
 
