@@ -20,4 +20,9 @@
     <ProjectReference Include="..\..\src\FlexFamilyCalendar.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- NLogConfigTests lädt die echte Config — sie muss also auch im Test-Output liegen. -->
+    <Content Include="..\..\src\nlog.config" Link="nlog.config" CopyToOutputDirectory="Always" />
+  </ItemGroup>
+
 </Project>

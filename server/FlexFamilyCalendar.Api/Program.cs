@@ -3,6 +3,7 @@ using System.Text;
 using FlexFamilyCalendar.Api.Auth;
 using FlexFamilyCalendar.Api.ChatHistory;
 using FlexFamilyCalendar.Api.Data;
+using FlexFamilyCalendar.Api.Logging;
 using FlexFamilyCalendar.Api.ActivityTypes;
 using FlexFamilyCalendar.Api.DayNotes;
 using FlexFamilyCalendar.Api.Ai;
@@ -18,9 +19,16 @@ using FlexFamilyCalendar.Api.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using NLog.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 var cfg = builder.Configuration;
+
+// NLog als einziger Logging-Provider: dieselbe Konfiguration wie der Client (Datei ab Trace,
+// Konsole ab Info, ${masked} über allem). Die Konsole ist im Container das, was `docker logs`
+// zeigt — deshalb bleibt sie an.
+builder.Logging.ClearProviders();
+builder.Logging.AddNLog();
 
 // Im Testing-Environment registriert die WebApplicationFactory den DbContext selbst
 // (InMemory-Provider). Die Doppel-Registrierung Npgsql+InMemory fällt sonst als
@@ -91,6 +99,9 @@ var app = builder.Build();
 // entkommt eine Exception der Pipeline und ASP.NET liefert die Default-Fehlerseite (HTML) aus.
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+// Direkt hinter dem Exception-Handler, damit auch ein 500er noch seine Zugriffszeile bekommt.
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 var isTesting = app.Environment.IsEnvironment("Testing");
 
