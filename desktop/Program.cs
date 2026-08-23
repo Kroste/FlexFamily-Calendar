@@ -1,4 +1,7 @@
 ﻿using Avalonia;
+using Avalonia.Media;
+using Avalonia.Media.Fonts;
+using FlexFamilyCalendar.DesignApi;
 using FlexFamilyCalendar.Services;
 using System;
 using System.Threading.Tasks;
@@ -36,6 +39,8 @@ internal sealed class Program
         }
 
         App.PendingGuard = guard;
+        App.PendingApiArgs = args;
+        App.DesignApiStarter = DesignApiHost.MaybeStart;
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
@@ -47,5 +52,28 @@ internal sealed class Program
             .WithDeveloperTools()
 #endif
             .WithInterFont()
+            .With(EmojiFontOptions())
             .LogToTrace();
+
+    /// <summary>
+    /// Fallback auf den Farb-Emoji-Font des Systems. Inter bringt keine Emoji-Glyphen mit;
+    /// ohne diesen Fallback rendert Avalonia zum Beispiel die Länderflaggen in der
+    /// Sprachauswahl als Ersatzkästchen statt als 🇩🇪 / 🇬🇧.
+    ///
+    /// Wichtig: <c>WithInterFont()</c> setzt die Standard-Schriftfamilie selbst über
+    /// FontManagerOptions. Da wir die Options hier ersetzen, muss Inter erneut angegeben
+    /// werden — sonst fällt die ganze App auf die System-Schrift zurück.
+    /// </summary>
+    private static FontManagerOptions EmojiFontOptions()
+    {
+        var emojiFont = OperatingSystem.IsWindows() ? "Segoe UI Emoji"
+            : OperatingSystem.IsMacOS() ? "Apple Color Emoji"
+            : "Noto Color Emoji";
+
+        return new FontManagerOptions
+        {
+            DefaultFamilyName = "fonts:Inter#Inter",
+            FontFallbacks = [new FontFallback { FontFamily = new FontFamily(emojiFont) }],
+        };
+    }
 }

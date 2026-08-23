@@ -18,9 +18,20 @@ public partial class LoginView : UserControl
             _settingsStore = new StorageService();
 
         DataContextChanged += OnDataContextChanged;
+
+        // Das Verbindungs-Label ist ein zusammengesetzter Text und deshalb kein
+        // {loc:Tr}-Binding — der Sprachwechsel erreicht es nicht von selbst. Ohne dieses
+        // Abo blieb die Zeile beim Umschalten auf Englisch sichtbar deutsch stehen.
+        Localizer.Instance.LanguageChanged += OnLanguageChanged;
+        Unloaded += (_, _) => Localizer.Instance.LanguageChanged -= OnLanguageChanged;
     }
 
+    private void OnLanguageChanged(object? sender, EventArgs e) => _ = RefreshConnectionLabelAsync();
+
     private async void OnDataContextChanged(object? sender, EventArgs e)
+        => await RefreshConnectionLabelAsync();
+
+    private async Task RefreshConnectionLabelAsync()
     {
         if (DataContext is not LoginViewModel vm) return;
         if (OperatingSystem.IsBrowser() || _settingsStore is null)
@@ -35,8 +46,9 @@ public partial class LoginView : UserControl
                 ? string.Format(Localizer.Instance["Connection_LabelServer"], s.ServerUrl)
                 : Localizer.Instance["Connection_LabelLocal"];
         }
-        catch
+        catch (Exception ex)
         {
+            LogService.Warn("Verbindungs-Label konnte nicht gelesen werden: {0}", ex.Message);
             vm.ConnectionLabel = Localizer.Instance["Connection_LabelLocal"];
         }
     }

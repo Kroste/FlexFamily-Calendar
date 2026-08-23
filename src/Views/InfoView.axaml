@@ -11,7 +11,8 @@
 
     <StackPanel Orientation="Horizontal" Spacing="10">
       <Path Data="{StaticResource Icon.Calendar}"
-            Fill="{DynamicResource SystemControlForegroundAccentBrush}"
+            Stroke="{DynamicResource SystemControlForegroundAccentBrush}"
+            StrokeThickness="2"
             Width="28" Height="28" Stretch="Uniform"
             VerticalAlignment="Center" />
       <StackPanel VerticalAlignment="Center">

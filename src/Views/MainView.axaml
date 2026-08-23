@@ -21,7 +21,7 @@
       <Grid ColumnDefinitions="*,Auto">
         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
           <Path Data="{StaticResource Icon.Calendar}"
-                Fill="White" Stroke="White" StrokeThickness="0"
+                Stroke="White" StrokeThickness="2"
                 Width="22" Height="22" Stretch="Uniform" />
           <TextBlock Text="{loc:Tr App_Title}"
                      FontSize="18" FontWeight="Bold"

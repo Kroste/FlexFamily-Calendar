@@ -6,6 +6,9 @@
        System hat. Path-Daten sind cross-platform 1:1 gleich (SkiaSharp rendert sie überall). -->
 
   <!-- Kalender: Rahmen + zwei Fahnen oben + Gitternetzlinie -->
+  <!-- Umriss-Geometrie: die Pfade beschreiben Linien, keine Flächen. Verwendende Views
+       MÜSSEN sie mit Stroke zeichnen, nicht mit Fill — sonst füllt Avalonia das äußere
+       Rechteck aus und das Icon erscheint als einfarbiger Klotz. -->
   <StreamGeometry x:Key="Icon.Calendar">M3 4 h18 v16 h-18 z M3 9 h18 M7 2 v4 M17 2 v4</StreamGeometry>
 
   <!-- Glocke -->

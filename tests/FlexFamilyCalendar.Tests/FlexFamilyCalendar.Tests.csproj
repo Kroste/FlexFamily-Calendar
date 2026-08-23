@@ -18,6 +18,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FlexFamilyCalendar.csproj" />
+    <!-- Die Design-Test-API liegt im Desktop-Head (Kestrel gehört nicht in die geteilte
+         Bibliothek, Browser und Android könnten es nicht laden). Getestet werden nur die
+         UI-freien Teile: Options-Parser und Sperrliste. -->
+    <ProjectReference Include="..\..\desktop\FlexFamilyCalendar.Desktop.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -108,6 +108,33 @@
   `ExtendClientAreaTitleBarHeightHint` steht bewusst auf `32` statt dem im Skill genannten `-1`:
   der Wert passt exakt zur Höhe der gerenderten Leiste, und das Symptom „tote Titelleiste",
   gegen das `-1` hilft, liegt hier nicht vor.
+- **Design-Test-API (`desktop/DesignApi/`, nur Desktop):** lokale REST-Schnittstelle, mit der
+  sich UI-Änderungen prüfen lassen — Zustand lesen, Theme und Sprache umschalten, Fenster
+  öffnen, Screenshot per `RenderTargetBitmap`. Fernsteuerung von außen
+  (`SetForegroundWindow`/`mouse_event`/`PrintWindow`) ist ausdrücklich das falsche Mittel:
+  Verhaltens-AV blockiert das Muster, und DPI-Skalierung verschiebt Klick-Koordinaten.
+  **Standardmäßig aus**, nur mit `--api-port`, nur Loopback, ohne Bearer-Token antwortet
+  jede Anfrage mit 403. `/click` ist zusätzlich hinter `--api-allow-clicks`, und
+  `DestructiveGuard` lässt **nur ausdrücklich als unbedenklich gelistete Namen** durch —
+  umgekehrt zum Skill-Vorbild, weil die App im Server-Modus an der Live-DB hängt und Mails
+  verschickt. Ein Test erzwingt, dass jeder Command des MainWindowViewModel in genau einer
+  der beiden Listen steht.
+
+  ```bash
+  FlexFamilyCalendar.Desktop --api-port 8765 --api-token geheim --auto-shutdown-after 10m
+  curl -s --noproxy '*' -H "Authorization: Bearer geheim" http://127.0.0.1:8765/state
+  curl -s --noproxy '*' -H "Authorization: Bearer geheim" \
+       -X POST "http://127.0.0.1:8765/theme?variant=Dark" 
+  curl -s --noproxy '*' -H "Authorization: Bearer geheim" \
+       -X POST "http://127.0.0.1:8765/screenshot?target=main" -o shot.png
+  ```
+- **Emoji-Fallback:** `BuildAvaloniaApp` setzt `FontManagerOptions` mit dem Farb-Emoji-Font des
+  Systems. Inter bringt keine Emoji-Glyphen mit — ohne den Fallback rendern die Länderflaggen
+  in der Sprachauswahl als Ersatzkästchen. Wichtig: `WithInterFont()` setzt die Standardfamilie
+  selbst über dieselben Options, deshalb muss `DefaultFamilyName` dort erneut gesetzt werden.
+- **Icon-Geometrien in `Styles/Icons.axaml` sind Umrisse.** Sie gehören mit `Stroke` +
+  `StrokeThickness` gezeichnet, nicht mit `Fill` — sonst füllt Avalonia das äußere Rechteck und
+  aus dem Kalender wird ein einfarbiger Klotz.
 - **Single-Instance-Guard (nur Desktop):** `SingleInstanceGuard` in `Program.Main`, **vor**
   Avalonia. Ein Zweitstart holt die laufende Instanz nach vorn und beendet sich. Nötig wegen
   Tray-Icon und weil im lokalen Modus zwei Prozesse dieselben JSON-Dateien überschreiben.

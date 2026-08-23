@@ -539,6 +539,18 @@ dotnet workload install android
 dotnet publish mobile/FlexFamilyCalendar.Android.csproj -c Release -o publish
 ```
 
+**UI-Änderungen prüfen:** Der Desktop-Head bringt eine lokale Test-Schnittstelle mit,
+die auf Wunsch Screenshots der laufenden App liefert und Theme oder Sprache
+umschaltet. Sie ist standardmäßig aus und lauscht nur auf 127.0.0.1:
+
+```bash
+FlexFamilyCalendar.Desktop --api-port 8765 --api-token geheim --auto-shutdown-after 10m
+curl -s --noproxy '*' -H "Authorization: Bearer geheim" \
+     -X POST "http://127.0.0.1:8765/screenshot?target=main" -o shot.png
+```
+
+Details in [CLAUDE.md](CLAUDE.md).
+
 **Anforderungen:** .NET 10 SDK, für den WASM-Build zusätzlich
 `dotnet workload install wasm-tools`, für den Android-Build
 `dotnet workload install android` + Java 17.

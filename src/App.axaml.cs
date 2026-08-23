@@ -38,6 +38,18 @@ public partial class App : Application
     /// </summary>
     public static SingleInstanceGuard? PendingGuard { get; set; }
 
+    /// <summary>
+    /// Kommandozeile des Desktop-Heads. Wird nach dem Aufbau des Hauptfensters an den Starter der
+    /// Design-Test-API gereicht — vorher gäbe es kein Fenster zum Abbilden.
+    /// </summary>
+    public static string[]? PendingApiArgs { get; set; }
+
+    /// <summary>
+    /// Startet die Design-Test-API. Vom Desktop-Head gesetzt; die geteilte Bibliothek kennt
+    /// Kestrel nicht (Browser und Android brauchen es nicht und könnten es nicht laden).
+    /// </summary>
+    public static Action<string[]>? DesignApiStarter { get; set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -203,6 +215,10 @@ public partial class App : Application
             // Prozessende des OS-Aufräumens.
             desktop.Exit += (_, _) => guard.Dispose();
         }
+
+        // Zuletzt: die Design-Test-API braucht ein fertiges Hauptfenster, sonst liefert der
+        // erste Screenshot ein leeres Bild. Bleibt aus, wenn --api-port fehlt.
+        if (DesignApiStarter is { } start && PendingApiArgs is { } apiArgs) start(apiArgs);
     }
 
     private void InitializeBrowser(ISingleViewApplicationLifetime singleView)
