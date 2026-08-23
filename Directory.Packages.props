@@ -39,14 +39,14 @@
   </ItemGroup>
 
   <ItemGroup Label="Build">
-    <PackageVersion Include="MinVer" Version="6.0.0" />
+    <PackageVersion Include="MinVer" Version="7.0.0" />
   </ItemGroup>
 
   <!-- Tests laufen auf xunit.v3 / Microsoft.Testing.Platform. Microsoft.NET.Test.Sdk und
        xunit.runner.visualstudio gehören zum alten VSTest-Pfad und dürfen NICHT zurück —
        das .NET-10-SDK hat den abgeschaltet. Opt-in steht in der global.json. -->
   <ItemGroup Label="Tests">
-    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="xunit.v3" Version="4.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.11" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.11" />
     <!-- Explizit, weil der Web-SDK-ProjectReference Relational nicht in den Test-Output kopiert:
