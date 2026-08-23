@@ -109,7 +109,7 @@ und Profil-Editor findest du weiter im Web oder auf dem Desktop.
 Beim ersten Start zeigt die App den Anmeldebildschirm. Trage deinen
 **Benutzernamen** und dein **Kennwort** ein.
 
-- **Sprache** oben rechts umschaltbar (Deutsch / English).
+- **Sprache** oben rechts umschaltbar (🇩🇪 Deutsch / 🇬🇧 English).
 - **Login merken**: mit einem Häkchen bleibst du auf diesem Gerät angemeldet,
   bis du dich abmeldest.
 - **Verbindung**: unten am kleinen grauen Link kannst du zwischen „Lokal" und
@@ -139,6 +139,12 @@ wird bewusst ersetzt, damit die App auf Windows und Linux identisch aussieht):
 - Rechts oben: **—** Minimieren, **☐** Maximieren / Wiederherstellen,
   **✕** Schließen.
 - Alle Fenster (Hauptfenster und Dialoge) sind über die Ecken frei skalierbar.
+
+**Minimieren legt die App ins System-Tray.** Sie läuft dann im Hintergrund
+weiter und ist über das Kalender-Symbol neben der Uhr wieder erreichbar:
+Linksklick holt das Fenster zurück, Rechtsklick öffnet ein kleines Menü mit
+*Anzeigen* und *Beenden*. Über **✕** beendet sich die App wie gewohnt ganz.
+Auf Systemen ohne Tray-Bereich verhält sich Minimieren wie überall sonst.
 
 Im Browser und auf dem Handy gibt es keine eigene Titelleiste — dort nutzt du
 die Browser- bzw. Android-Kontrollen.
@@ -368,7 +374,8 @@ serverseitig als Umgebungsvariablen).
 Der Button **Profil** öffnet deine persönlichen Einstellungen:
 
 - **Anzeigename**, **E-Mail-Adresse**.
-- **Sprache** (Deutsch / English).
+- **Sprache** (🇩🇪 Deutsch / 🇬🇧 English) — die Umschaltung wirkt sofort in allen
+  offenen Fenstern, kein Neustart nötig.
 - **Farbe** — die Farbe, mit der du im Plan angezeigt wirst.
 - **Kennwort ändern**.
 - **KI-Stil-Hinweis** — Freitext, den die KI beim Erstellen von Vorschlägen
@@ -496,6 +503,10 @@ Der **Info-Button** oben rechts (kleines *i* im Header) öffnet die Info-Box mit
 - Kurzbeschreibung
 - **GitHub-Link** zum Repository
 - **☕ Buy me a coffee** — Unterstützung für den Entwickler
+- **Nach Updates suchen** (nur Desktop) — prüft sofort, ob eine neuere Version
+  vorliegt, unabhängig vom automatischen Intervall. Gibt es eine, kannst du sie
+  direkt installieren lassen; die App tauscht sich dann selbst aus und startet
+  neu. Im Browser fehlt der Knopf, dort genügt ein Neuladen der Seite.
 
 Fehler oder Wunsch? Ein Issue auf
 [github.com/Kroste/FlexFamily-Calendar/issues](https://github.com/Kroste/FlexFamily-Calendar/issues)
