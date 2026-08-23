@@ -18,7 +18,10 @@ RUN apt-get update \
 RUN dotnet workload install wasm-tools
 
 # Directory.Build.props im Root MUSS mit — sonst greift Nullable/ImplicitUsings/MinVer nicht.
+# Directory.Packages.props ebenso: seit Central Package Management stehen dort alle
+# Versionen, ohne die Datei scheitert der Restore mit NU1015.
 COPY Directory.Build.props .
+COPY Directory.Packages.props .
 
 # Erst nur die Projektdateien für gecachtes Restore.
 COPY src/FlexFamilyCalendar.csproj src/

@@ -15,7 +15,11 @@ WORKDIR /src
 ARG APP_VERSION=0.0.0
 
 # Nur die relevanten Projekt-Files ins Build-Image ziehen — Repo-Root-Context bringt sonst zu viel.
+# Directory.Packages.props MUSS mit: seit der Umstellung auf Central Package Management
+# stehen dort alle Versionen, und die csproj referenziert ohne Version-Attribut. Ohne die
+# Datei scheitert schon der Restore mit NU1008.
 COPY Directory.Build.props .
+COPY Directory.Packages.props .
 COPY server/FlexFamilyCalendar.Api/FlexFamilyCalendar.Api.csproj server/FlexFamilyCalendar.Api/
 RUN dotnet restore server/FlexFamilyCalendar.Api/FlexFamilyCalendar.Api.csproj \
     -p:UseMinVer=false
