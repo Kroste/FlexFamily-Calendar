@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Desktop (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/desktop/bin/Debug/net10.0/FlexFamilyCalendar.Desktop",
+      "args": [],
+      "cwd": "${workspaceFolder}/desktop",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Server-API (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/server/FlexFamilyCalendar.Api/bin/Debug/net10.0/FlexFamilyCalendar.Api.dll",
+      "cwd": "${workspaceFolder}/server/FlexFamilyCalendar.Api",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5080"
+      }
+    },
+    {
+      "name": "An Prozess anhängen",
+      "type": "coreclr",
+      "request": "attach"
+    }
+  ]
+}

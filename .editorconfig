@@ -46,3 +46,9 @@ csharp_new_line_before_finally = true
 # Analyzer-Rauschen dämpfen, das nicht zwingend Fehler sein soll:
 dotnet_diagnostic.CA1416.severity = suggestion
 dotnet_diagnostic.CS1591.severity = none
+
+# EF-Core-Migrationen sind generierter Code (dotnet ef migrations add). Der Generator
+# schreibt klassische Block-Namespaces; ein Nachformatieren würde beim nächsten
+# generierten File sofort wieder auffallen. Deshalb hier keine Stilregeln erzwingen.
+[server/FlexFamilyCalendar.Api/Migrations/*.cs]
+dotnet_diagnostic.IDE0161.severity = none

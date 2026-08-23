@@ -5,7 +5,7 @@ namespace FlexFamilyCalendar.Api.Tests;
 
 public class EntryVisibilityTests
 {
-    static CalendarEntry Sick(Guid owner, string status = EntryStatus.Approved) => new()
+    private static CalendarEntry Sick(Guid owner, string status = EntryStatus.Approved) => new()
     {
         UserId = owner,
         Type = EntryTypes.SickLeave,
@@ -15,7 +15,7 @@ public class EntryVisibilityTests
         Status = status
     };
 
-    static CalendarEntry Work(Guid owner) => new()
+    private static CalendarEntry Work(Guid owner) => new()
     {
         UserId = owner,
         Type = EntryTypes.Work,

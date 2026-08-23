@@ -1,0 +1,71 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/FlexFamilyCalendar.slnx"],
+      "problemMatcher": "$msCompile",
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "build-release",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/FlexFamilyCalendar.slnx", "-c", "Release"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "test",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["test", "${workspaceFolder}/FlexFamilyCalendar.slnx"],
+      "problemMatcher": "$msCompile",
+      "group": { "kind": "test", "isDefault": true }
+    },
+    {
+      "label": "watch (Desktop)",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["watch", "--project", "${workspaceFolder}/desktop/FlexFamilyCalendar.Desktop.csproj", "run"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "clean",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["clean", "${workspaceFolder}/FlexFamilyCalendar.slnx"],
+      "problemMatcher": []
+    },
+    {
+      "label": "clean-hard",
+      "detail": "Löscht alle bin/ und obj/ rekursiv — hilft, wenn Restore oder XAML-Codegen hängen.",
+      "type": "shell",
+      "command": "find '${workspaceFolder}' -type d \\( -name bin -o -name obj \\) -not -path '*/node_modules/*' -prune -exec rm -rf {} + && echo 'bin/ und obj/ entfernt'",
+      "problemMatcher": []
+    },
+    {
+      "label": "Logfile öffnen (Client)",
+      "detail": "Öffnet das heutige Client-Log aus ~/.local/share/FlexFamilyCalendar/logs.",
+      "type": "shell",
+      "command": "f=\"${XDG_DATA_HOME:-$HOME/.local/share}/FlexFamilyCalendar/logs/flexfamily-$(date +%Y-%m-%d).log\"; if [ -f \"$f\" ]; then ${EDITOR:-less} \"$f\"; else echo \"Kein Log für heute: $f\"; fi",
+      "problemMatcher": []
+    },
+    {
+      "label": "Logfile folgen (Client)",
+      "detail": "tail -f auf das heutige Client-Log.",
+      "type": "shell",
+      "command": "f=\"${XDG_DATA_HOME:-$HOME/.local/share}/FlexFamilyCalendar/logs/flexfamily-$(date +%Y-%m-%d).log\"; touch \"$f\"; tail -f \"$f\"",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "release (tag + push)",
+      "detail": "Prüft sauberen Git-Zustand, fragt den Versions-Bump ab, setzt den Tag und pusht.",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/release.sh",
+      "problemMatcher": []
+    }
+  ]
+}

@@ -9,6 +9,10 @@
     <RepositoryUrl>https://github.com/Kroste/FlexFamily-Calendar</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Ohne diese Property ist die .editorconfig zahnlos: die Stilregeln laufen nur in der
+         IDE. Zusammen mit TreatWarningsAsErrors sind Stilverstöße Compile-Fehler statt
+         Review-Fundsachen. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <MSBuildWarningsAsMessages>MSB3277</MSBuildWarningsAsMessages>
   </PropertyGroup>
 

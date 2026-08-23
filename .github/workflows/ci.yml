@@ -10,21 +10,26 @@ env:
   DOTNET_VERSION: '10.0.x'
   DOTNET_NOLOGO: 'true'
   DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   build-test:
     name: Build & Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # MinVer braucht die volle Historie, um Tags zu finden.
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+          # Spart pro Lauf die komplette Restore-Zeit. Der Cache-Key hängt an den
+          # Lock-/Projektdateien, mit CPM also an Directory.Packages.props.
+          cache: true
+          cache-dependency-path: |
+            Directory.Packages.props
+            **/*.csproj
 
       # Browser-Head braucht die wasm-tools-Workload; ohne kann `dotnet restore` das
       # Browser-Projekt nicht auflösen (NETSDK1147).
