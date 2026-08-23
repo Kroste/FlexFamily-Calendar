@@ -25,6 +25,12 @@ public partial class App : Application
     /// <summary>true, wenn wir auf Android laufen (SingleView, aber mit Dateisystem — anders als WASM).</summary>
     public static bool IsAndroid { get; set; }
 
+    /// <summary>
+    /// Tray-Controller des Desktop-Heads. MUSS als Feld gehalten werden — ohne diese Referenz
+    /// sammelt der GC das TrayIcon ein und es verschwindet nach einiger Laufzeit.
+    /// </summary>
+    private TrayController? _trayController;
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -172,6 +178,9 @@ public partial class App : Application
         var mainWindow = new MainWindow { DataContext = mainVm };
         desktop.MainWindow = mainWindow;
         DialogService = new WindowDialogService(mainWindow);
+
+        // Nach der Fenster-Erzeugung: Minimieren legt ins Tray, Schließen beendet regulär.
+        _trayController = new TrayController(this, mainWindow);
     }
 
     private void InitializeBrowser(ISingleViewApplicationLifetime singleView)

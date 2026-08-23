@@ -17,6 +17,9 @@
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.0" />
     <!-- Folgt NICHT der Avalonia-Versionierung (eigene 2.x-Reihe). -->
     <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
+    <!-- Der Linux-Tray hängt an DBus. Version transitiv über Avalonia — hier gepinnt, damit
+         ein Dependabot-Bump sie nicht von Avalonia wegzieht (CentralPackageTransitivePinning). -->
+    <PackageVersion Include="Tmds.DBus.Protocol" Version="0.94.1" />
   </ItemGroup>
 
   <ItemGroup Label="Client">
