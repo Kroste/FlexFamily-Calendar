@@ -8,7 +8,8 @@
              x:CompileBindings="False">
 
   <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-    <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+    <Border Classes="card"
+            x:Name="LoginCard"
             CornerRadius="12"
             Padding="40,36"
             Width="380"
@@ -16,7 +17,8 @@
       <StackPanel Spacing="20">
 
         <!-- Sprachwahl -->
-        <ComboBox ItemsSource="{Binding AvailableLanguages}"
+        <ComboBox x:Name="LanguageBox"
+                  ItemsSource="{Binding AvailableLanguages}"
                   SelectedItem="{Binding SelectedLanguage}"
                   HorizontalAlignment="Right" MinWidth="120">
           <ComboBox.ItemTemplate>
@@ -32,39 +34,39 @@
                 Width="40" Height="40" Stretch="Uniform"
                 HorizontalAlignment="Center" />
           <TextBlock Text="{loc:Tr App_Title}"
-                     FontSize="22" FontWeight="Bold"
+                     Classes="h1"
                      HorizontalAlignment="Center" />
           <TextBlock IsVisible="{Binding IsFirstRun}"
                      Text="{loc:Tr Login_FirstRunSubtitle}"
-                     FontSize="13" Opacity="0.6"
+                     Classes="muted" FontSize="13"
                      HorizontalAlignment="Center" />
         </StackPanel>
 
         <!-- Felder -->
         <StackPanel Spacing="12">
           <StackPanel Spacing="4" IsVisible="{Binding IsFirstRun}">
-            <TextBlock Text="{loc:Tr Login_DisplayName}" FontSize="12" Opacity="0.7" />
-            <TextBox Text="{Binding DisplayName}"
-                     PlaceholderText="{loc:Tr Login_DisplayNamePlaceholder}"
-                     CornerRadius="6" />
+            <TextBlock Text="{loc:Tr Login_DisplayName}" Classes="muted" FontSize="12" />
+            <TextBox x:Name="DisplayNameBox"
+                     Text="{Binding DisplayName}"
+                     PlaceholderText="{loc:Tr Login_DisplayNamePlaceholder}" />
           </StackPanel>
 
           <StackPanel Spacing="4">
-            <TextBlock Text="{loc:Tr Login_Username}" FontSize="12" Opacity="0.7" />
-            <TextBox Text="{Binding Username}"
-                     PlaceholderText="{loc:Tr Login_Username}"
-                     CornerRadius="6" />
+            <TextBlock Text="{loc:Tr Login_Username}" Classes="muted" FontSize="12" />
+            <TextBox x:Name="UsernameBox"
+                     Text="{Binding Username}"
+                     PlaceholderText="{loc:Tr Login_Username}" />
           </StackPanel>
 
           <StackPanel Spacing="4">
-            <TextBlock Text="{loc:Tr Login_Password}" FontSize="12" Opacity="0.7" />
-            <TextBox Text="{Binding Password}"
+            <TextBlock Text="{loc:Tr Login_Password}" Classes="muted" FontSize="12" />
+            <TextBox x:Name="PasswordBox"
+                     Text="{Binding Password}"
                      PlaceholderText="{loc:Tr Login_Password}"
-                     PasswordChar="*"
-                     CornerRadius="6" />
+                     PasswordChar="*" />
           </StackPanel>
 
-          <CheckBox IsChecked="{Binding RememberMe}" Content="{loc:Tr Login_RememberMe}"
+          <CheckBox x:Name="RememberMeBox" IsChecked="{Binding RememberMe}" Content="{loc:Tr Login_RememberMe}"
                     views:Hint.Text="{loc:Tr Hint_Login_RememberMe}" />
         </StackPanel>
 
@@ -75,27 +77,27 @@
         </Border>
 
         <!-- Buttons -->
-        <Button IsVisible="{Binding !IsFirstRun}"
+        <Button x:Name="SignInButton"
+                Classes="accent"
+                IsVisible="{Binding !IsFirstRun}"
                 Content="{loc:Tr Login_SignIn}"
                 Command="{Binding LoginCommand}"
                 IsEnabled="{Binding !IsLoading}"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Center"
-                Height="40"
-                CornerRadius="6"
-                Background="{DynamicResource SystemAccentColor}"
-                Foreground="White" />
+                Height="40" />
 
-        <Button IsVisible="{Binding IsFirstRun}"
+        <Button x:Name="CreateAdminButton"
+                Classes="accent"
+                IsVisible="{Binding IsFirstRun}"
                 Content="{loc:Tr Login_CreateAdmin}"
                 Command="{Binding CreateAdminCommand}"
                 IsEnabled="{Binding !IsLoading}"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Center"
                 Height="40"
-                CornerRadius="6"
                 Background="{DynamicResource SuccessBrush}"
-                Foreground="White" />
+                BorderBrush="{DynamicResource SuccessBrush}" />
 
         <!-- Ladeindikator -->
         <ProgressBar IsVisible="{Binding IsLoading}"
@@ -104,9 +106,10 @@
                      CornerRadius="2" />
 
         <!-- Verbindungs-Modus: lokal oder Server (URL einstellen) -->
-        <Button Content="{Binding ConnectionLabel}" Click="OnConnectionClick"
-                Background="Transparent" BorderThickness="0"
-                HorizontalAlignment="Center" Padding="6,4" CornerRadius="6"
+        <Button x:Name="ConnectionButton"
+                Classes="ghost"
+                Content="{Binding ConnectionLabel}" Click="OnConnectionClick"
+                HorizontalAlignment="Center" Padding="6,4"
                 FontSize="11" Opacity="0.65" Cursor="Hand"
                 views:Hint.Text="{loc:Tr Hint_Login_Connection}" />
       </StackPanel>

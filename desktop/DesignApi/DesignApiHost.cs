@@ -93,8 +93,18 @@ public static class DesignApiHost
     {
         app.MapGet("/state", async () => Results.Json(await a.GetStateAsync()));
 
+        // Explizit serialisiert statt über Results.Json: dort kam die Antwort als HTTP 200 mit
+        // null Bytes zurück, während /state mit demselben Muster funktioniert. Der Unterschied
+        // ist nicht geklärt; CreateSlimBuilder bringt eine getrimmte Serialisierung mit, und ein
+        // stiller Leerlauf ist hier das schlechteste Ergebnis — /elements ist der Endpunkt, mit
+        // dem man die Namen für /click und /focus überhaupt erst herausfindet.
         app.MapGet("/elements", async (HttpContext ctx) =>
-            Results.Json(new { elements = await a.ListElementsAsync(ctx.Request.Query["window"]) }));
+        {
+            var list = await a.ListElementsAsync(ctx.Request.Query["window"]);
+            return Results.Text(
+                System.Text.Json.JsonSerializer.Serialize(list),
+                "application/json");
+        });
 
         app.MapPost("/screenshot", async (HttpContext ctx) =>
         {
@@ -148,6 +158,17 @@ public static class DesignApiHost
             return await a.CloseWindowAsync(window)
                 ? Results.Ok(new { closed = window })
                 : Results.Problem("Nichts zu schließen (das Hauptfenster bleibt offen).",
+                    statusCode: StatusCodes.Status404NotFound);
+        });
+
+        // Fokus ist rein visuell und braucht deshalb kein --api-allow-clicks.
+        app.MapPost("/focus", async (HttpContext ctx) =>
+        {
+            var element = ctx.Request.Query["element"].ToString();
+            return await a.FocusAsync(element)
+                ? Results.Ok(new { focused = element })
+                : Results.Json(new { error = "nicht fokussierbar", element,
+                                     hint = "Namen über GET /elements abfragen" },
                     statusCode: StatusCodes.Status404NotFound);
         });
 

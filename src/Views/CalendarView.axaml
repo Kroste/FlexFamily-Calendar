@@ -31,65 +31,106 @@
       </Grid>
     </Border>
 
-    <!-- Wochennavigation -->
+    <!-- Wochennavigation und Aktionen.
+         Bewusst zwei Zeilen: vorher lagen Navigation, acht Aktions-Buttons und das
+         Wochenlabel in einer Grid-Zeile, in der die Button-Gruppe auf Auto stand. Beim Admin
+         mit allen Aktionen blieb für das Label nichts übrig — aus "KW 34 / 2026" wurde ein
+         abgeschnittenes "KW". Jetzt hat die Navigation ihre eigene Zeile, und die Aktionen
+         darunter sind nach Zweck gruppiert (Ansicht | Export | Planung), getrennt durch
+         divider-v statt als flache Reihe. -->
     <Border DockPanel.Dock="Top"
             Padding="12,8"
             BorderThickness="0,0,0,1"
-            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            BorderBrush="{DynamicResource DividerBrush}"
             Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
-      <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
-        <Button Grid.Column="0" Content="{loc:Tr Cal_PreviousWeek}"
-                Command="{Binding PreviousWeekCommand}" Padding="12,6" CornerRadius="6"
-                views:Hint.Text="{loc:Tr Hint_Cal_PrevWeek}" />
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="8,0,0,0">
-          <ToggleButton Content="{loc:Tr Cal_ViewPersonal}"
+      <StackPanel Spacing="8">
+
+        <!-- Zeile 1: Navigation. Das Label steht mittig und hat die dehnbare Spalte für sich. -->
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+          <Button Grid.Column="0" x:Name="PreviousWeekButton"
+                  Content="{loc:Tr Cal_PreviousWeek}"
+                  Command="{Binding PreviousWeekCommand}" Padding="12,6"
+                  views:Hint.Text="{loc:Tr Hint_Cal_PrevWeek}" />
+
+          <TextBlock Grid.Column="1" Text="{Binding WeekLabel}"
+                     Classes="h2" FontSize="18"
+                     TextTrimming="CharacterEllipsis"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                     Margin="12,0" />
+
+          <Button Grid.Column="2" x:Name="TodayButton"
+                  Content="{loc:Tr Cal_Today}"
+                  Command="{Binding GoToTodayCommand}" Padding="12,6" Margin="0,0,8,0"
+                  views:Hint.Text="{loc:Tr Hint_Cal_Today}" />
+          <Button Grid.Column="3" x:Name="NextWeekButton"
+                  Content="{loc:Tr Cal_NextWeek}"
+                  Command="{Binding NextWeekCommand}" Padding="12,6"
+                  views:Hint.Text="{loc:Tr Hint_Cal_NextWeek}" />
+        </Grid>
+
+        <!-- Zeile 2: Aktionen nach Zweck gruppiert. Umbricht auf schmalen Fenstern, statt
+             das Layout zu sprengen. -->
+        <WrapPanel Orientation="Horizontal" ItemSpacing="8" LineSpacing="8">
+
+          <!-- Ansicht -->
+          <ToggleButton x:Name="PersonalViewToggle"
+                        Content="{loc:Tr Cal_ViewPersonal}"
                         IsChecked="{Binding IsPersonalView}"
                         IsVisible="{Binding CanSwitchView}"
-                        Padding="12,6" CornerRadius="6"
+                        Padding="12,6"
                         views:Hint.Text="{loc:Tr Hint_Cal_ViewToggle}" />
-          <Button Content="{loc:Tr Cal_HoursToggle}"
+          <Button x:Name="HoursToggleButton"
+                  Content="{loc:Tr Cal_HoursToggle}"
                   Command="{Binding ToggleHoursPanelCommand}"
-                  Padding="12,6" CornerRadius="6"
+                  Padding="12,6"
                   views:Hint.Text="{loc:Tr Hint_Cal_HoursBar}" />
-          <ToggleButton Content="{loc:Tr Cal_Holidays}"
+          <ToggleButton x:Name="HolidaysToggle"
+                        Content="{loc:Tr Cal_Holidays}"
                         IsChecked="{Binding IsHolidaysVisible}"
-                        Padding="12,6" CornerRadius="6"
+                        Padding="12,6"
                         views:Hint.Text="{loc:Tr Hint_Cal_HolidaysToggle}" />
-          <Button Content="{loc:Tr Cal_ExportPdf}"
+
+          <Rectangle Classes="divider-v" Height="24" />
+
+          <!-- Export -->
+          <Button x:Name="ExportPdfButton"
+                  Content="{loc:Tr Cal_ExportPdf}"
                   Command="{Binding ExportPdfCommand}"
-                  Padding="12,6" CornerRadius="6"
+                  Padding="12,6"
                   views:Hint.Text="{loc:Tr Hint_Cal_PDF}" />
-          <Button Content="{loc:Tr Cal_Mail}"
+          <Button x:Name="MailButton"
+                  Content="{loc:Tr Cal_Mail}"
                   Command="{Binding MailPlanCommand}"
                   IsVisible="{Binding EffectiveIsAdmin}"
-                  Padding="12,6" CornerRadius="6"
+                  Padding="12,6"
                   views:Hint.Text="{loc:Tr Hint_Cal_Mail}" />
-          <Button Content="{loc:Tr Cal_AiPlanner}"
+
+          <Rectangle Classes="divider-v" Height="24"
+                     IsVisible="{Binding EffectiveIsAdmin}" />
+
+          <!-- Planung (nur Admin) -->
+          <Button x:Name="AiPlannerButton"
+                  Content="{loc:Tr Cal_AiPlanner}"
                   Command="{Binding OpenAiPlannerCommand}"
                   IsVisible="{Binding EffectiveIsAdmin}"
-                  Padding="12,6" CornerRadius="6"
+                  Padding="12,6"
                   views:Hint.Text="{loc:Tr Hint_Cal_AiPlanner}" />
-          <Button Content="{loc:Tr Cal_CopyWeek}"
+          <Button x:Name="CopyWeekButton"
+                  Content="{loc:Tr Cal_CopyWeek}"
                   Command="{Binding CopyWeekToNextCommand}"
                   IsVisible="{Binding EffectiveIsAdmin}"
-                  Padding="12,6" CornerRadius="6"
+                  Padding="12,6"
                   views:Hint.Text="{loc:Tr Hint_Cal_CopyWeek}" />
-          <Button Content="{Binding FinalizeButtonKey, Converter={x:Static loc:LocKeyConverter.Instance}}"
+          <Button x:Name="FinalizeButton"
+                  Classes="accent"
+                  Content="{Binding FinalizeButtonKey, Converter={x:Static loc:LocKeyConverter.Instance}}"
                   Command="{Binding ToggleFinalizeWeekCommand}"
                   IsVisible="{Binding CanFinalize}"
-                  Padding="12,6" CornerRadius="6"
+                  Padding="12,6"
                   views:Hint.Text="{loc:Tr Hint_Cal_Finalize}" />
-        </StackPanel>
-        <TextBlock Grid.Column="2" Text="{Binding WeekLabel}"
-                   FontSize="18" FontWeight="SemiBold"
-                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-        <Button Grid.Column="3" Content="{loc:Tr Cal_Today}"
-                Command="{Binding GoToTodayCommand}" Padding="12,6" CornerRadius="6" Margin="0,0,8,0"
-                views:Hint.Text="{loc:Tr Hint_Cal_Today}" />
-        <Button Grid.Column="4" Content="{loc:Tr Cal_NextWeek}"
-                Command="{Binding NextWeekCommand}" Padding="12,6" CornerRadius="6"
-                views:Hint.Text="{loc:Tr Hint_Cal_NextWeek}" />
-      </Grid>
+        </WrapPanel>
+
+      </StackPanel>
     </Border>
 
     <!-- Wochenstunden-Panel (Admin, einklappbar) -->

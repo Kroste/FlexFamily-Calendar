@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -15,6 +16,14 @@ namespace FlexFamilyCalendar.DesignApi;
 
 /// <summary>Ein offenes Fenster im Zustands-Abzug.</summary>
 public sealed record WindowInfo(string Title, string Type, double Width, double Height, bool IsActive);
+
+/// <summary>
+/// Antwort auf <c>GET /elements</c>. Bewusst ein Record und kein anonymes Objekt:
+/// <c>CreateSlimBuilder</c> serialisiert anonyme Typen mit Listen nicht zuverlässig — die
+/// Antwort kam als HTTP 200 mit null Bytes zurück.
+/// </summary>
+/// <param name="Total">Alle Controls im Baum, auch namenlose — zeigt, ob überhaupt gelaufen wurde.</param>
+public sealed record ElementList(int Total, IReadOnlyList<string> Named);
 
 /// <summary>Antwort auf <c>GET /state</c>.</summary>
 public sealed record StateSnapshot(
@@ -45,18 +54,17 @@ public sealed class UiActions(bool allowClicks)
                     w.Bounds.Width, w.Bounds.Height, w.IsActive))
                 .ToList() ?? [])).GetTask();
 
-    public Task<IReadOnlyList<string>> ListElementsAsync(string? window) =>
+    public Task<ElementList> ListElementsAsync(string? window) =>
         Dispatcher.UIThread.InvokeAsync(() =>
         {
             var w = ResolveWindow(window);
-            IReadOnlyList<string> names = w is null
-                ? []
-                : [.. w.GetVisualDescendants().OfType<Control>()
-                        .Select(c => c.Name)
-                        .OfType<string>()
-                        .Distinct()
-                        .OrderBy(n => n, StringComparer.Ordinal)];
-            return names;
+            if (w is null) return new ElementList(0, []);
+
+            var all = w.GetVisualDescendants().OfType<Control>().ToList();
+            return new ElementList(
+                all.Count,
+                [.. all.Select(c => c.Name).OfType<string>().Distinct()
+                       .OrderBy(n => n, StringComparer.Ordinal)]);
         }).GetTask();
 
     public Task SetLanguageAsync(string code) =>
@@ -115,6 +123,18 @@ public sealed class UiActions(bool allowClicks)
                 default:
                     return ClickResult.NotClickable;
             }
+        }).GetTask();
+
+    /// <summary>
+    /// Setzt den Tastaturfokus auf ein Control. Rein visuell — ohne das lässt sich der
+    /// Fokus-Ring nicht abnehmen, und genau der ist in Avalonia die Stelle, an der ein
+    /// falscher Template-Selektor still wirkungslos bleibt.
+    /// </summary>
+    public Task<bool> FocusAsync(string elementId) =>
+        Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (FindControl(elementId) is not InputElement el) return false;
+            return el.Focus();
         }).GetTask();
 
     public Task<byte[]> ScreenshotAsync(string? target) =>
