@@ -83,6 +83,15 @@
   Newtonsoft.Json ist als Dependency raus.
 - **Datenschutz:** Fremde Krank-/Urlaubsgründe erscheinen nur als „Abwesend" (Maskierung pro Betrachter),
   im Plan, PDF und Mail-Versand (je Empfänger aus dessen Sicht).
+- **Single-Instance-Guard (nur Desktop):** `SingleInstanceGuard` in `Program.Main`, **vor**
+  Avalonia. Ein Zweitstart holt die laufende Instanz nach vorn und beendet sich. Nötig wegen
+  Tray-Icon und weil im lokalen Modus zwei Prozesse dieselben JSON-Dateien überschreiben.
+  **Die Erkennung MUSS über einen Verbindungsversuch laufen, nicht über die `IOException` des
+  `NamedPipeServerStream`-Konstruktors:** unter Linux/macOS bildet .NET Named Pipes auf
+  Unix-Domain-Sockets ab und bindet die Datei einfach neu — der Zweitstart bekommt dort seinen
+  Server und hält sich für die erste Instanz. In-Process-Tests fangen das nicht (dort wirft der
+  Konstruktor); nach Änderungen an `TryClaim` mit zwei echten Prozessen aus einem
+  `dotnet publish`-Output gegenprüfen.
 - **System-Tray (nur Desktop):** Minimieren legt ins Tray, Schließen beendet regulär — kein
   `ShutdownMode`-Umbau nötig, weil nur `Hide()` läuft. `TrayController` MUSS als Feld in `App`
   gehalten werden (sonst sammelt der GC das Icon ein), Restore läuft über den UI-Dispatcher mit

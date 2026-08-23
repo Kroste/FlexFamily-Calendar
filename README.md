@@ -140,6 +140,9 @@ wird bewusst ersetzt, damit die App auf Windows und Linux identisch aussieht):
   **✕** Schließen.
 - Alle Fenster (Hauptfenster und Dialoge) sind über die Ecken frei skalierbar.
 
+Die App läuft nur einmal: startest du sie ein zweites Mal, holt sich das
+bestehende Fenster nach vorn, statt eine zweite Kopie zu öffnen.
+
 **Minimieren legt die App ins System-Tray.** Sie läuft dann im Hintergrund
 weiter und ist über das Kalender-Symbol neben der Uhr wieder erreichbar:
 Linksklick holt das Fenster zurück, Rechtsklick öffnet ein kleines Menü mit

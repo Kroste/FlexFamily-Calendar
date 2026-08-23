@@ -11,7 +11,7 @@ internal sealed class Program
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
     [STAThread]
-    public static void Main(string[] args)
+    public static int Main(string[] args)
     {
         // Master-CLAUDE.md: stiller Absturz → NLog Fatal. Handler stehen ganz oben, damit auch
         // Fehler in der Avalonia-Konfigurationsphase noch geloggt werden.
@@ -23,7 +23,20 @@ internal sealed class Program
             e.SetObserved();
         };
 
-        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        // Single-Instance-Guard VOR Avalonia: ein zweiter Prozess würde ein zweites Tray-Icon
+        // aufhängen und im lokalen Speicher-Modus parallel in dieselben JSON-Dateien schreiben.
+        // Läuft schon eine Instanz, holen wir die nach vorn und beenden uns, ohne die UI
+        // überhaupt hochzufahren.
+        var guard = new SingleInstanceGuard();
+        if (!guard.TryClaim())
+        {
+            guard.NotifyPrimary();
+            guard.Dispose();
+            return 0;
+        }
+
+        App.PendingGuard = guard;
+        return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.

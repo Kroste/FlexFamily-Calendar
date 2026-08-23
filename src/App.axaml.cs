@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using FlexFamilyCalendar.Services;
 using FlexFamilyCalendar.Services.AI;
 using FlexFamilyCalendar.Services.Api;
@@ -30,6 +31,12 @@ public partial class App : Application
     /// sammelt der GC das TrayIcon ein und es verschwindet nach einiger Laufzeit.
     /// </summary>
     private TrayController? _trayController;
+
+    /// <summary>
+    /// Vom Desktop-Head in <c>Program.Main</c> gesetzt, bevor Avalonia startet. Die App übernimmt
+    /// den Guard hier und gibt ihn beim Beenden wieder frei.
+    /// </summary>
+    public static SingleInstanceGuard? PendingGuard { get; set; }
 
     public override void Initialize()
     {
@@ -181,6 +188,21 @@ public partial class App : Application
 
         // Nach der Fenster-Erzeugung: Minimieren legt ins Tray, Schließen beendet regulär.
         _trayController = new TrayController(this, mainWindow);
+
+        // Zweitstart holt dieses Fenster nach vorn. Das Event kommt vom Threadpool, der Restore
+        // muss also auf den UI-Thread; TrayController.Restore dispatcht bereits selbst.
+        if (PendingGuard is { } guard)
+        {
+            guard.ActivationRequested += () => Dispatcher.UIThread.Post(() =>
+            {
+                if (_trayController is { } tray) tray.Restore();
+                else { mainWindow.Show(); mainWindow.Activate(); }
+            });
+
+            // Pipe beim Beenden freigeben, sonst blockiert sie den nächsten Start bis zum
+            // Prozessende des OS-Aufräumens.
+            desktop.Exit += (_, _) => guard.Dispose();
+        }
     }
 
     private void InitializeBrowser(ISingleViewApplicationLifetime singleView)
