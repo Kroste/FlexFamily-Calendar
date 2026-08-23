@@ -34,7 +34,13 @@ fi
 
 # --- Aktuelle Version ermitteln ---------------------------------------------
 
-last_tag="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || echo 'v0.0.0')"
+# NICHT `git describe --abbrev=0` verwenden: das liefert den nach Commit-Distanz
+# NÄCHSTGELEGENEN erreichbaren Tag, nicht den höchsten. In diesem Repo kommt dabei
+# v0.1.45 heraus, obwohl längst v0.11.x aktuell ist — der nächste Release wäre
+# hinter dem Stand zurückgefallen. `--sort=-v:refname` sortiert semantisch korrekt
+# (v0.11.2 > v0.1.45) und `--merged HEAD` beschränkt auf erreichbare Tags.
+last_tag="$(git tag --list 'v*' --merged HEAD --sort=-v:refname | head -1)"
+[[ -n "$last_tag" ]] || last_tag='v0.0.0'
 version="${last_tag#v}"
 IFS='.' read -r major minor patch <<< "$version"
 

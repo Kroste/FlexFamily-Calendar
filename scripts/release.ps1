@@ -37,7 +37,12 @@ if ($unpushed) {
 
 # --- Aktuelle Version ermitteln ---------------------------------------------
 
-$lastTag = (git describe --tags --abbrev=0 --match 'v*' 2>$null)
+# NICHT `git describe --abbrev=0` verwenden: das liefert den nach Commit-Distanz
+# NÄCHSTGELEGENEN erreichbaren Tag, nicht den höchsten. In diesem Repo kommt dabei
+# v0.1.45 heraus, obwohl längst v0.11.x aktuell ist — der nächste Release wäre
+# hinter dem Stand zurückgefallen. `--sort=-v:refname` sortiert semantisch korrekt
+# (v0.11.2 > v0.1.45), `--merged HEAD` beschränkt auf erreichbare Tags.
+$lastTag = (git tag --list 'v*' --merged HEAD --sort=-v:refname | Select-Object -First 1)
 if (-not $lastTag) { $lastTag = 'v0.0.0' }
 
 $parts = $lastTag.TrimStart('v').Split('.')
