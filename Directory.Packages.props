@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Client">
-    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.1" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageVersion Include="NLog" Version="6.2.0" />
   </ItemGroup>
 
