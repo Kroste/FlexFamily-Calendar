@@ -15,6 +15,52 @@
     alle referenzierten gegen alle definierten Keys ab.
   -->
 
+  <!-- ── Oberflächen-Rollen (theme-abhängig) ───────────────────────────────── -->
+  <!--
+    Der Kroste-Card-Look gibt die Rollen vor (Card, Border, Muted, Accent …), seine Farbwerte
+    sind aber fix dunkel. FlexFamily lässt den Benutzer zwischen Hell, Dunkel und System
+    wählen, deshalb liegen diese Rollen in ThemeDictionaries statt als feste Werte — sonst
+    wäre der Hell-Modus unbrauchbar. Die Statusfarben weiter unten bleiben theme-neutral:
+    Rot heißt in beiden Varianten dasselbe.
+  -->
+  <ResourceDictionary.ThemeDictionaries>
+
+    <ResourceDictionary x:Key="Light">
+      <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="CardBorderBrush" Color="#E2E5EA" />
+      <SolidColorBrush x:Key="CardBorderStrongBrush" Color="#C3C9D2" />
+      <SolidColorBrush x:Key="FieldBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="MutedTextBrush" Color="#6B7280" />
+      <SolidColorBrush x:Key="SecondaryTextBrush" Color="#4B5563" />
+      <SolidColorBrush x:Key="HeadingBrush" Color="#1A237E" />
+      <SolidColorBrush x:Key="AccentBrush" Color="#1A237E" />
+      <SolidColorBrush x:Key="AccentHoverBrush" Color="#283593" />
+      <SolidColorBrush x:Key="AccentSoftBrush" Color="#1A1A237E" />
+      <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="GhostHoverBrush" Color="#14000000" />
+      <SolidColorBrush x:Key="DangerHoverBrush" Color="#1AC0392B" />
+      <SolidColorBrush x:Key="DividerBrush" Color="#E2E5EA" />
+    </ResourceDictionary>
+
+    <ResourceDictionary x:Key="Dark">
+      <SolidColorBrush x:Key="CardBrush" Color="#22262C" />
+      <SolidColorBrush x:Key="CardBorderBrush" Color="#333941" />
+      <SolidColorBrush x:Key="CardBorderStrongBrush" Color="#4A525C" />
+      <SolidColorBrush x:Key="FieldBrush" Color="#1A1D21" />
+      <SolidColorBrush x:Key="MutedTextBrush" Color="#8B929C" />
+      <SolidColorBrush x:Key="SecondaryTextBrush" Color="#B4BAC3" />
+      <SolidColorBrush x:Key="HeadingBrush" Color="#8C9EFF" />
+      <SolidColorBrush x:Key="AccentBrush" Color="#3949AB" />
+      <SolidColorBrush x:Key="AccentHoverBrush" Color="#5C6BC0" />
+      <SolidColorBrush x:Key="AccentSoftBrush" Color="#333949AB" />
+      <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="GhostHoverBrush" Color="#1AFFFFFF" />
+      <SolidColorBrush x:Key="DangerHoverBrush" Color="#33C0392B" />
+      <SolidColorBrush x:Key="DividerBrush" Color="#333941" />
+    </ResourceDictionary>
+
+  </ResourceDictionary.ThemeDictionaries>
+
   <!-- ── Statusfarben ──────────────────────────────────────────────────────── -->
 
   <!-- Danger/Abwesenheit: Krank, Löschen, Ablehnen. -->

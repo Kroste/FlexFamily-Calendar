@@ -73,6 +73,20 @@
   `{DynamicResource …}`-Verweise scheitern in Avalonia **still** — das Element rendert einfach
   falsch. `ResourceKeyTests` gleicht referenzierte gegen definierte Keys ab und schlägt bei
   neuen Literalen an; Fluent-Keys sind am `System`-Präfix erkennbar und ausgenommen.
+  **Oberflächen-Rollen liegen in `ThemeDictionaries` (Light/Dark)**, weil die App Hell/Dunkel/
+  System anbietet — der Kroste-Look ist fix dunkel und wäre hier unbrauchbar. Eine Rolle, die
+  nur in einem der beiden Themes steht, fällt im anderen still aus; ein Test hält deshalb fest,
+  dass Light und Dark denselben Satz definieren. Statusfarben (Rot, Grün, Orange) bleiben
+  theme-neutral.
+- **Style-Bibliothek statt Inline-Optik:** `src/Styles/AppStyles.axaml` bringt Button-Default
+  plus `.accent`/`.ghost`/`.danger`, `Border.card`/`.card-flat`,
+  `TextBlock.h1`/`.h2`/`.section-label`/`.muted`/`.secondary`, dünne ProgressBar und
+  `Rectangle.divider-h`/`-v`. Neue Views nutzen diese Klassen; bestehende werden **beiläufig**
+  nachgezogen, wenn sie ohnehin angefasst werden — der Kroste-Standard verlangt ausdrücklich
+  keinen separaten Refactor-Ritt, sonst driftet der Look während des Umbaus auseinander.
+  Selektoren auf Template-Interna (`/template/ Border#PART_…`) nur mit sichtbarer App
+  einbauen: falsche PART-Namen scheitern still, und die Fluent-Templates liegen als
+  kompiliertes XAML vor, sind also nicht nachschlagbar. Deshalb fehlt der Fokus-Ring noch.
 - **Sprachwechsel über `LocalizedString`**, nicht über Indexer-Binding. Ein
   `PropertyChanged("Item[]")` ist die WPF-Konvention und wird von Avalonia 12 nur unzuverlässig
   verarbeitet: Fenster ohne Fokus bleiben stale. Die Wrapper liegen in einem **statischen**

@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace FlexFamilyCalendar.Tests;
 
@@ -85,18 +86,69 @@ public class ResourceKeyTests
     }
 
     [Fact]
-    public void Palette_definiert_jeden_Key_nur_einmal()
+    public void Palette_definiert_in_keinem_Dictionary_einen_Key_doppelt()
     {
-        var palette = Path.Combine(RepoRoot(), "src", "Styles", "Palette.axaml");
-        var keys = DefinitionRx.Matches(File.ReadAllText(palette)).Select(m => m.Groups[1].Value).ToList();
+        // Pro Dictionary geprüft, nicht über die ganze Datei: Light und Dark MÜSSEN dieselben
+        // Rollen-Namen tragen, das ist der Sinn von ThemeDictionaries. Ein doppelter Key
+        // innerhalb eines Dictionaries wirft dagegen erst zur Laufzeit beim Laden.
+        foreach (var (name, dict) in PaletteDictionaries())
+        {
+            var keys = dict.Elements()
+                .Select(e => e.Attribute(X + "Key")?.Value)
+                .OfType<string>()
+                .ToList();
 
-        // Ein doppelter x:Key im selben Dictionary wirft erst zur Laufzeit beim Laden.
-        var duplicates = keys.GroupBy(k => k, StringComparer.Ordinal)
-            .Where(g => g.Count() > 1)
-            .Select(g => g.Key)
-            .ToList();
+            var duplicates = keys
+                .GroupBy(v => v, StringComparer.Ordinal)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
 
-        Assert.True(duplicates.Count == 0, "Doppelte Keys in der Palette: " + string.Join(", ", duplicates));
-        Assert.NotEmpty(keys);
+            Assert.True(duplicates.Count == 0,
+                $"Doppelte Keys in '{name}': {string.Join(", ", duplicates)}");
+            Assert.NotEmpty(keys);
+        }
+    }
+
+    [Fact]
+    public void Hell_und_Dunkel_definieren_dieselben_Rollen()
+    {
+        // Eine Rolle, die nur in einem der beiden Themes existiert, fällt im anderen still aus:
+        // die Bindung findet den Key nicht und das Element rendert mit Default-Farbe. Genau die
+        // Art Fehler, die man erst bemerkt, wenn jemand das Theme umschaltet.
+        var byName = PaletteDictionaries().ToDictionary(d => d.Name, d => d.Element);
+
+        Assert.True(byName.ContainsKey("Light"), "Light-ThemeDictionary fehlt");
+        Assert.True(byName.ContainsKey("Dark"), "Dark-ThemeDictionary fehlt");
+
+        var light = KeysOf(byName["Light"]);
+        var dark = KeysOf(byName["Dark"]);
+
+        Assert.True(light.SetEquals(dark),
+            "Nur in Light: " + string.Join(", ", light.Except(dark)) +
+            " | Nur in Dark: " + string.Join(", ", dark.Except(light)));
+        Assert.NotEmpty(light);
+    }
+
+    private static readonly XNamespace X = "http://schemas.microsoft.com/winfx/2006/xaml";
+
+    private static HashSet<string> KeysOf(XElement dict) =>
+    [
+        .. dict.Elements()
+            .Select(e => e.Attribute(X + "Key")?.Value)
+            .OfType<string>()
+    ];
+
+    /// <summary>Alle ResourceDictionaries der Palette: das Wurzel-Dictionary plus die Theme-Varianten.</summary>
+    private static List<(string Name, XElement Element)> PaletteDictionaries()
+    {
+        var doc = XDocument.Load(Path.Combine(RepoRoot(), "src", "Styles", "Palette.axaml"));
+        var result = new List<(string, XElement)> { ("root", doc.Root!) };
+
+        result.AddRange(doc.Descendants()
+            .Where(e => e.Name.LocalName == "ResourceDictionary" && e.Attribute(X + "Key") is not null)
+            .Select(e => (e.Attribute(X + "Key")!.Value, e)));
+
+        return result;
     }
 }

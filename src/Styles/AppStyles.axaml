@@ -1,7 +1,19 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-  <!-- Scrollbalken schlank & automatisch ausblendend -->
+  <!--
+    Style-Bibliothek der App (Kroste-Card-Look). Views setzen Klassen statt eigener
+    Farben und Ränder — kein nackter Fluent-Button, keine #RRGGBB-Literale.
+
+    Abweichung vom Skill-Vorbild mit Begründung: dort ist der Look fix dunkel und der
+    Fokus-Ring gold. FlexFamily lässt Hell/Dunkel/System wählen, deshalb kommen alle
+    Farben aus theme-abhängigen Rollen (Styles/Palette.axaml), und der Fokus-Ring nimmt
+    den Marken-Akzent statt Gold — Gold gehört zum Kroste-Werkzeug-Look, nicht zu einem
+    Familienplaner.
+  -->
+
+  <!-- ── Scrollbalken ──────────────────────────────────────────────────────── -->
+
   <Style Selector="ScrollViewer">
     <Setter Property="AllowAutoHide" Value="True" />
   </Style>
@@ -9,15 +21,149 @@
     <Setter Property="AllowAutoHide" Value="True" />
   </Style>
 
-  <!-- Moderne, einheitliche Rundungen -->
+  <!-- ── Buttons ───────────────────────────────────────────────────────────── -->
+
+  <!-- Default: gehört optisch zur Karte, in der er steht — nicht zum Fluent-Grau. -->
   <Style Selector="Button">
     <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="12,7" />
+    <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
   </Style>
+  <Style Selector="Button:pointerover /template/ ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource CardBorderStrongBrush}" />
+  </Style>
+
+  <!-- Primäre Aktion. Pro Fenster höchstens eine. -->
+  <Style Selector="Button.accent">
+    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="Button.accent /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+  </Style>
+  <Style Selector="Button.accent:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentHoverBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+  </Style>
+
+  <!-- Sekundär: rein textlich, erst beim Hover eine Fläche. -->
+  <Style Selector="Button.ghost">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="Button.ghost /template/ ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Button.ghost:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource GhostHoverBrush}" />
+  </Style>
+
+  <!-- Verwerfen/Löschen: rote Schrift, roter Hover. Sonst wie Default. -->
+  <Style Selector="Button.danger">
+    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+  </Style>
+  <Style Selector="Button.danger /template/ ContentPresenter">
+    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+  </Style>
+  <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource DangerHoverBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+  </Style>
+
+  <!-- ── Karten ────────────────────────────────────────────────────────────── -->
+
+  <Style Selector="Border.card">
+    <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="14" />
+  </Style>
+
+  <!-- Gleiche Optik ohne inneres Padding — für Inhalte, die selbst bis an den Rand
+       rendern (Kalendergitter, Listen). ClipToBounds am Element nicht vergessen,
+       sonst schneidet der Inhalt die Rundung ab. -->
+  <Style Selector="Border.card-flat">
+    <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+
+  <!-- ── Textrollen ────────────────────────────────────────────────────────── -->
+
+  <Style Selector="TextBlock.h1">
+    <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="TextBlock.h2">
+    <Setter Property="Foreground" Value="{DynamicResource HeadingBrush}" />
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="TextBlock.section-label">
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+    <Setter Property="FontSize" Value="10.5" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="TextBlock.muted">
+    <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+  </Style>
+  <Style Selector="TextBlock.secondary">
+    <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+  </Style>
+
+  <!-- ── Formularfelder ────────────────────────────────────────────────────── -->
+
   <Style Selector="TextBox">
     <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="10,7" />
   </Style>
+
   <Style Selector="ComboBox">
     <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="10,7" />
+  </Style>
+
+  <!--
+    OFFEN: Fokus-Ring in der Markenfarbe statt Fluent-Blau.
+    Der naheliegende Weg wäre ein Selektor auf die Template-Interna
+    (`TextBox:focus /template/ Border#PART_BorderElement`). Genau solche Selektoren
+    scheitern in Avalonia aber STILL, wenn der Name im Template anders lautet — kein
+    Compile-Fehler, das Feld sieht nur aus wie vorher. Die Fluent-Templates liegen als
+    kompiliertes XAML im Paket, die Namen sind also nicht nachschlagbar, und ohne
+    laufende UI ist die Wirkung nicht belegbar. Deshalb hier bewusst nichts, statt eines
+    Styles, von dem niemand weiß, ob er greift. Beim nächsten Mal, wenn ohnehin jemand
+    mit sichtbarer App an einem Formular arbeitet: Ring einbauen und ansehen.
+  -->
+
+  <!-- ── Fortschritt und Trenner ───────────────────────────────────────────── -->
+
+  <Style Selector="ProgressBar">
+    <Setter Property="MinHeight" Value="6" />
+    <Setter Property="CornerRadius" Value="3" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+  </Style>
+
+  <!-- Dünne Linien statt Full-Width-Border: ein Rechteck wirkt weniger prominent. -->
+  <Style Selector="Rectangle.divider-h">
+    <Setter Property="Height" Value="1" />
+    <Setter Property="Fill" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="Margin" Value="0,6" />
+  </Style>
+  <Style Selector="Rectangle.divider-v">
+    <Setter Property="Width" Value="1" />
+    <Setter Property="Fill" Value="{DynamicResource DividerBrush}" />
+    <Setter Property="Margin" Value="6,4" />
   </Style>
 
 </Styles>
