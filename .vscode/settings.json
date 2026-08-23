@@ -1,3 +1,10 @@
 {
-    "claudeCodeChat.permissions.yoloMode": true
+    "claudeCodeChat.permissions.yoloMode": true,
+
+    // Ohne diesen Eintrag generiert sich das C# Dev Kit beim ersten Öffnen eine eigene .sln im
+    // Workspace-Cache und hält daran fest. Die hier erzeugte enthielt nur src/ — kein einziges
+    // Testprojekt. Folge: der Test-Explorer lief mit veralteten Einträgen ohne
+    // TestingPlatform-UID ins Leere ("Test Run Aborted", 0 Tests), während dotnet test auf der
+    // Kommandozeile alle Tests fand.
+    "dotnet.defaultSolution": "FlexFamilyCalendar.slnx"
 }

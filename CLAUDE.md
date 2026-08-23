@@ -201,6 +201,15 @@ docs/      Screenshots, Logo
 - Server-Integration-Tests via `WebApplicationFactory<Program>` + `EntityFrameworkCore.InMemory`.
   Das Api-Testprojekt referenziert `Microsoft.EntityFrameworkCore.Relational` **explizit** —
   über den Web-SDK-ProjectReference landet die DLL nicht im Test-Output.
+- **`.vscode/settings.json` MUSS `dotnet.defaultSolution` auf die `.slnx` setzen.** Ohne den
+  Eintrag generiert sich das C# Dev Kit beim ersten Öffnen eine eigene `.sln` im
+  Workspace-Cache und hält daran fest — die hier erzeugte enthielt nur `src/`, kein einziges
+  Testprojekt. Der Test-Explorer bricht dann mit „Test Run Aborted" und 0 Tests ab
+  (`Test Case Record lacks a TestingPlatform UID`), während `dotnet test` auf der
+  Kommandozeile alle findet. Diagnose läuft über
+  `~/.config/Code/logs/<datum>/window1/exthost/ms-dotnettools.csdevkit/C# Dev Kit - Test Explorer.log`;
+  die generierte Solution liegt unter
+  `~/.config/Code/User/workspaceStorage/<hash>/ms-dotnettools.csdevkit/`.
 - **Tests laufen auf xunit.v3 / Microsoft.Testing.Platform.** Dafür braucht es alle drei
   Teile: den `test`-Runner-Block in der `global.json`, `<OutputType>Exe</OutputType>` in
   beiden Testprojekten und **kein** `Microsoft.NET.Test.Sdk` / `xunit.runner.visualstudio`.
