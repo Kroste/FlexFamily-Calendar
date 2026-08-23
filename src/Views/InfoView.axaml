@@ -35,7 +35,19 @@
               Command="{Binding OpenCoffeeCommand}"
               HorizontalAlignment="Stretch"
               HorizontalContentAlignment="Left"
-              Background="#FFDD00" Foreground="Black" />
+              Background="{DynamicResource CoffeeBrush}"
+              Foreground="{DynamicResource CoffeeForegroundBrush}" />
+
+      <!-- Nur auf Heads mit Self-Update sichtbar (Desktop). Im Browser aktualisiert der Reload. -->
+      <Button Content="{loc:Tr Info_CheckUpdates}"
+              Command="{Binding CheckForUpdatesCommand}"
+              IsVisible="{Binding CanCheckForUpdates}"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Left" />
+
+      <ProgressBar IsIndeterminate="True"
+                   IsVisible="{Binding IsCheckingForUpdates}"
+                   Height="3" />
     </StackPanel>
 
     <Button Content="{loc:Tr Common_Close}"

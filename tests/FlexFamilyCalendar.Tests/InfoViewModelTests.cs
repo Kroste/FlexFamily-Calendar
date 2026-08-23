@@ -54,4 +54,56 @@ public class InfoViewModelTests
         var vm = new InfoViewModel();
         Assert.False(string.IsNullOrWhiteSpace(vm.Description));
     }
+
+    [Fact]
+    public void Ohne_Update_Runner_bleibt_der_Update_Button_verborgen()
+    {
+        // Browser-Head: kein Self-Update, also auch kein toter Button.
+        var vm = new InfoViewModel();
+
+        Assert.False(vm.CanCheckForUpdates);
+        Assert.False(vm.CheckForUpdatesCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void Mit_Update_Runner_ist_der_Button_aktiv()
+    {
+        var vm = new InfoViewModel(_ => Task.CompletedTask);
+
+        Assert.True(vm.CanCheckForUpdates);
+        Assert.True(vm.CheckForUpdatesCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Update_Pruefung_erzwingt_den_Check()
+    {
+        // force: true — die Intervall-Sperre des Auto-Checks darf nicht greifen, wenn der
+        // Nutzer selbst auf den Knopf drückt.
+        bool? forced = null;
+        var vm = new InfoViewModel(f => { forced = f; return Task.CompletedTask; });
+
+        await vm.CheckForUpdatesCommand.ExecuteAsync(null);
+
+        Assert.True(forced);
+    }
+
+    [Fact]
+    public async Task Waehrend_der_Pruefung_ist_der_Button_gesperrt()
+    {
+        // Ohne NotifyCanExecuteChangedFor am IsCheckingForUpdates-Flag bliebe der Button
+        // aktiv und der Nutzer könnte den Check mehrfach parallel starten.
+        var gate = new TaskCompletionSource();
+        var vm = new InfoViewModel(_ => gate.Task);
+
+        var running = vm.CheckForUpdatesCommand.ExecuteAsync(null);
+
+        Assert.True(vm.IsCheckingForUpdates);
+        Assert.False(vm.CheckForUpdatesCommand.CanExecute(null));
+
+        gate.SetResult();
+        await running;
+
+        Assert.False(vm.IsCheckingForUpdates);
+        Assert.True(vm.CheckForUpdatesCommand.CanExecute(null));
+    }
 }

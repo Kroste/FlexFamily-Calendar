@@ -295,7 +295,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private void OpenInfo() => InfoRequested?.Invoke();
 
-    public InfoViewModel CreateInfo() => new();
+    // Der Update-Check wird durchgereicht, damit der About-Dialog ihn anbieten kann — die
+    // Einstellungen sind für Nicht-Admins nicht erreichbar.
+    public InfoViewModel CreateInfo() => new(force => CheckForUpdatesIfDueAsync(force));
 
     public OnboardingViewModel CreateOnboarding() => new();
 

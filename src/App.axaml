@@ -18,6 +18,9 @@
             <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
             <!-- Feste Markenfarbe für den Header (nicht benutzerabhängig) -->
             <SolidColorBrush x:Key="AppHeaderBrush" Color="#1A237E" />
+            <!-- Buy-me-a-coffee: die Farben gehören der Marke, nicht dem Theme — deshalb fest. -->
+            <SolidColorBrush x:Key="CoffeeBrush" Color="#FFDD00" />
+            <SolidColorBrush x:Key="CoffeeForegroundBrush" Color="#000000" />
         </ResourceDictionary>
     </Application.Resources>
 
