@@ -252,10 +252,17 @@
         </ItemsControl>
       </Grid>
 
-      <!-- Personenzeilen — füllen die verbleibende Fensterhöhe (gleichmäßig) -->
+      <!-- Personenzeilen.
+           Vorher lagen sie in einem UniformGrid, das allen Zeilen dieselbe Höhe gab und den
+           Überhang per ClipToBounds abschnitt: wer an einem Tag zwei Termine hatte, sah den
+           zweiten nur zur Hälfte — ohne jeden Hinweis, dass da noch etwas ist. Jetzt wächst
+           jede Zeile mit ihrem Inhalt, und der Block scrollt, wenn er nicht mehr ins Fenster
+           passt. Spaltenkopf und Hinweiszeile bleiben stehen, weil sie außerhalb des
+           ScrollViewers angedockt sind. -->
+      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
       <ItemsControl ItemsSource="{Binding Rows}">
         <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate><UniformGrid Columns="1" /></ItemsPanelTemplate>
+          <ItemsPanelTemplate><StackPanel Orientation="Vertical" /></ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
@@ -375,7 +382,8 @@
               </Grid>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
-        </ItemsControl>
+      </ItemsControl>
+      </ScrollViewer>
 
     </DockPanel>
 

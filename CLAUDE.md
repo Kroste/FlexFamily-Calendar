@@ -63,6 +63,12 @@
   liegt der API-Key serverseitig in ENV (`ApiAiProvider`), lokal über die Einstellungen.
 - **PDF-Export:** eigener abhängigkeitsfreier PDF-Writer (reines Managed). **Keine native
   PDF-/Skia-Lib hinzufügen** — QuestPDF kollidiert in-process mit Avalonias SkiaSharp.
+  Der Writer erzeugt **mehrere Seiten**: `SplitIntoPages` verteilt die Personenzeilen, jede
+  Folgeseite wiederholt den Spaltenkopf, die Hinweiszeile steht nur auf der letzten. Die
+  Objektnummern in `Assemble` hängen an der Seitenzahl — beim Erweitern mitzählen, sonst
+  passen `xref`-Anzahl und `trailer/Size` nicht mehr und strenge Betrachter verweigern die
+  Datei. Vorher gab es genau eine Seite, und Personen, die nicht mehr draufpassten, fehlten
+  ersatzlos.
 - **Lokale JSON-Ablage läuft ausschließlich über `JsonFileStore`:** atomar schreiben
   (`.tmp` + `File.Move(overwrite)`) und defekte Dateien nach `.broken` sichern statt sie beim
   nächsten Save zu überschreiben. Quarantäne **nur** bei `JsonException`, nicht bei

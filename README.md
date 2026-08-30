@@ -356,6 +356,10 @@ Der Button **PDF** exportiert die aktuelle Woche als **A4-quer-PDF** mit sieben
 Tagesspalten. Das PDF zeigt die Woche **aus deiner Sicht** — Fremde
 Krank/Urlaub sind auch im Export als „Abwesend" ohne Grund maskiert.
 
+Passt die Woche nicht auf eine Seite — viele Personen oder viele Termine pro
+Tag —, bricht das PDF um. Jede Folgeseite wiederholt die Wochentag-Spalten und
+trägt die Seitenzahl im Kopf; die Hinweiszeile steht am Ende der letzten Seite.
+
 Datenschutz bleibt also erhalten: du kannst dein PDF unbesorgt weiterreichen.
 
 ## Wochenplan per E-Mail versenden
