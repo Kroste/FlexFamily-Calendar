@@ -83,6 +83,22 @@ public sealed class ApiTestFactory : WebApplicationFactory<Program>
         }
     }
 
+    /// <summary>
+    /// Legt Testdaten direkt über den DbContext an.
+    ///
+    /// <para>Nötig, weil die Listen-Endpunkte zum Speichern <c>ExecuteDeleteAsync</c> benutzen
+    /// („ganze Liste ersetzen") und der InMemory-Provider das nicht unterstützt — ein PUT
+    /// darauf endet im Test mit 500. Die Lesepfade lassen sich so trotzdem prüfen.</para>
+    /// </summary>
+    public void Seed(Action<AppDbContext> fill)
+    {
+        SeedIfNeeded();
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        fill(db);
+        db.SaveChanges();
+    }
+
     public HttpClient CreateSeededClient()
     {
         // Client erst erzeugen (startet den Test-Server), DANN seeden — vorher hat Services

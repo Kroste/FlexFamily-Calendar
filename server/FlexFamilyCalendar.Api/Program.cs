@@ -157,9 +157,15 @@ static Guid? CurrentUserId(ClaimsPrincipal p)
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
 
+// Zu AsNoTracking in den GET-Endpunkten: EF legt sonst für jede gelesene Zeile einen
+// Eintrag im ChangeTracker an, obwohl niemand sie ändert. Beim Wochenwechsel liest der
+// Client Einträge, Aktivitätstypen und Serientermine — das summiert sich pro Aufruf.
+// Bewusst NICHT gesetzt ist es dort, wo nach dem Lesen geschrieben wird
+// (/api/users/order ändert PlanOrder, das Löschen entfernt Entries): dort braucht EF das
+// Tracking, um die Änderungen überhaupt zu bemerken.
 app.MapPost("/api/auth/login", async (LoginRequest req, AppDbContext db, TokenService tokens) =>
 {
-    var user = await db.Users.FirstOrDefaultAsync(u => u.Username == req.Username);
+    var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Username == req.Username);
     // Leerer Hash = Konto ohne Anmeldung (z.B. Kind) → nie anmeldbar (und BCrypt.Verify würfe sonst).
     if (user is null || string.IsNullOrEmpty(user.PasswordHash)
         || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
@@ -228,7 +234,7 @@ app.MapPost("/api/auth/me/password", async (SetPasswordRequest req, AppDbContext
 // ohne Personalstammdaten preiszugeben.
 app.MapGet("/api/users", async (AppDbContext db, ClaimsPrincipal principal) =>
 {
-    var users = await db.Users
+    var users = await db.Users.AsNoTracking()
         .OrderBy(u => u.PlanOrder).ThenBy(u => u.DisplayName)
         .ToListAsync();
     if (principal.IsInRole("Admin"))
@@ -376,7 +382,7 @@ app.MapGet("/api/entries", async (DateOnly from, DateOnly to, AppDbContext db, C
     if (requester is null) return Results.Unauthorized();
     var isAdmin = principal.IsInRole("Admin");
 
-    var raw = await db.Entries
+    var raw = await db.Entries.AsNoTracking()
         .Where(e => e.Date <= to && (e.EndDate ?? e.Date) >= from)
         .ToListAsync();
 
@@ -399,7 +405,7 @@ app.MapGet("/api/entries", async (DateOnly from, DateOnly to, AppDbContext db, C
 // Offene Urlaubswünsche (Genehmigungs-Warteschlange) – nur Admin.
 app.MapGet("/api/entries/pending", async (AppDbContext db) =>
 {
-    var list = await db.Entries.Where(e => e.Status == EntryStatus.Pending)
+    var list = await db.Entries.AsNoTracking().Where(e => e.Status == EntryStatus.Pending)
         .OrderBy(e => e.Date).ToListAsync();
     return Results.Ok(list.Select(EntryDto.Full));
 })
@@ -564,7 +570,7 @@ app.MapPost("/api/entries/{id:guid}/reject", async (Guid id, AppDbContext db) =>
 
 // Liste: alle angemeldeten Benutzer (zum Anzeigen von Kategoriename/-farbe im Plan).
 app.MapGet("/api/activity-types", async (AppDbContext db) =>
-    (await db.ActivityTypes.OrderBy(a => a.Name).ToListAsync()).Select(ActivityTypeDto.From))
+    (await db.ActivityTypes.AsNoTracking().OrderBy(a => a.Name).ToListAsync()).Select(ActivityTypeDto.From))
     .RequireAuthorization();
 
 // Komplett ersetzen (Admin): passt zum „ganze Liste speichern" des Clients. Letzter-Schreiber-gewinnt.
@@ -588,7 +594,7 @@ app.MapPut("/api/activity-types", async (List<ActivityTypeDto> items, AppDbConte
 
 // Liste: alle Angemeldeten (das Overlay wird in jedem Plan projiziert).
 app.MapGet("/api/recurring-activities", async (AppDbContext db) =>
-    (await db.RecurringActivities.Include(r => r.Skips).ToListAsync()).Select(RecurringActivityDto.From))
+    (await db.RecurringActivities.AsNoTracking().Include(r => r.Skips).ToListAsync()).Select(RecurringActivityDto.From))
     .RequireAuthorization();
 
 // Komplett ersetzen (Admin) — passt zum „ganze Liste speichern" des Clients.
@@ -630,7 +636,7 @@ app.MapPut("/api/recurring-activities", async (List<RecurringActivityDto> items,
 // Komplettes Ersetzen passt zum Client (verwaltet die Liste lokal); Admin-only.
 
 app.MapGet("/api/planner-notes", async (AppDbContext db) =>
-    (await db.PlannerNotes.OrderBy(n => n.CreatedAtUtc).ToListAsync())
+    (await db.PlannerNotes.AsNoTracking().OrderBy(n => n.CreatedAtUtc).ToListAsync())
         .Select(n => new PlannerNoteDto(n.Id, n.Text, n.CreatedAtUtc)))
     .RequireAuthorization("Admin");
 
@@ -659,7 +665,7 @@ app.MapGet("/api/chat-history", async (AppDbContext db, ClaimsPrincipal principa
 {
     var userId = CurrentUserId(principal);
     if (userId is null) return Results.Unauthorized();
-    var list = await db.ChatHistory.Where(c => c.UserId == userId.Value)
+    var list = await db.ChatHistory.AsNoTracking().Where(c => c.UserId == userId.Value)
         .OrderBy(c => c.CreatedAtUtc).ToListAsync();
     return Results.Ok(list.Select(c => new ChatHistoryDto(c.Id, c.Role, c.Text, c.CreatedAtUtc)));
 })
@@ -693,7 +699,7 @@ app.MapPut("/api/chat-history", async (List<ChatHistoryDto> items, AppDbContext 
 // granulare Tausch-API (anlegen/annehmen/ablehnen mit Rechteprüfung) ist eine spätere Verfeinerung.
 
 app.MapGet("/api/swap-requests", async (AppDbContext db) =>
-    (await db.SwapRequests.ToListAsync()).Select(ShiftSwapRequestDto.From))
+    (await db.SwapRequests.AsNoTracking().ToListAsync()).Select(ShiftSwapRequestDto.From))
     .RequireAuthorization();
 
 app.MapPut("/api/swap-requests", async (List<ShiftSwapRequestDto> items, AppDbContext db) =>
@@ -727,7 +733,7 @@ app.MapPut("/api/swap-requests", async (List<ShiftSwapRequestDto> items, AppDbCo
 // (letzter-Schreiber-gewinnt; Filterung nach Empfänger macht weiterhin der Client).
 
 app.MapGet("/api/notifications", async (AppDbContext db) =>
-    (await db.Notifications.ToListAsync()).Select(NotificationDto.From))
+    (await db.Notifications.AsNoTracking().ToListAsync()).Select(NotificationDto.From))
     .RequireAuthorization();
 
 app.MapPut("/api/notifications", async (List<NotificationDto> items, AppDbContext db) =>

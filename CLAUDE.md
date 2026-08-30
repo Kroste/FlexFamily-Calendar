@@ -208,6 +208,12 @@ docs/      Screenshots, Logo
 - Server: **ASP.NET Core Minimal API**, **EF Core** + **Npgsql/PostgreSQL**, JWT-Auth, BCrypt-Passwörter,
   `AddProblemDetails()` + `UseExceptionHandler()` als globaler Netz.
 - Server-Integration-Tests via `WebApplicationFactory<Program>` + `EntityFrameworkCore.InMemory`.
+  **Die PUT-Endpunkte der Listen (`activity-types`, `recurring-activities`, `planner-notes`,
+  `chat-history`, `swap-requests`, `notifications`) sind damit NICHT testbar:** sie ersetzen
+  die ganze Liste per `ExecuteDeleteAsync`, das der InMemory-Provider nicht unterstützt — der
+  Aufruf endet im Test mit 500. Für die Lesepfade Daten über `ApiTestFactory.Seed(...)` direkt
+  in den DbContext legen. Wer die Schreibpfade testen will, braucht einen relationalen
+  Provider (SQLite in-memory) statt EF-InMemory.
   Das Api-Testprojekt referenziert `Microsoft.EntityFrameworkCore.Relational` **explizit** —
   über den Web-SDK-ProjectReference landet die DLL nicht im Test-Output.
 - **`.vscode/settings.json` MUSS `dotnet.defaultSolution` auf die `.slnx` setzen.** Ohne den
