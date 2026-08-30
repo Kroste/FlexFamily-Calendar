@@ -108,9 +108,16 @@ public class ApiStorageService : IStorageService
     public async Task<CalendarDay> LoadDayAsync(DateOnly date)
     {
         var day = new CalendarDay { DateString = date.ToString("yyyy-MM-dd") };
-        var dtos = await _api.GetEntriesAsync(date, date);
+
+        // Beide Anfragen zusammen statt nacheinander — sie hängen nicht voneinander ab,
+        // und pro Tag zwei Round-Trips summieren sich über eine Woche spürbar.
+        var entriesTask = _api.GetEntriesAsync(date, date);
+        var noteTask = _api.GetDayNoteAsync(date);
+        await Task.WhenAll(entriesTask, noteTask);
+
+        var dtos = await entriesTask;
         day.Entries = dtos.Select(d => EntryMapping.ToDesktop(d, date)).ToList();
-        var note = await _api.GetDayNoteAsync(date);
+        var note = await noteTask;
         day.Note = note.Note ?? "";
         day.NoteUserId = note.NoteUserId;
         day.IsFinalized = note.IsFinalized;

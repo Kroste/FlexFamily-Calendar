@@ -216,6 +216,15 @@ public partial class App : Application
             desktop.Exit += (_, _) => guard.Dispose();
         }
 
+        // Tray-Icon und der WindowState-Listener werden beim Beenden freigegeben. Am Prozessende
+        // räumt das Betriebssystem ohnehin auf; sauber abgemeldet wird trotzdem, damit der
+        // Controller nicht als IDisposable dasteht, den nie jemand aufruft.
+        desktop.Exit += (_, _) =>
+        {
+            _trayController?.Dispose();
+            _trayController = null;
+        };
+
         // Zuletzt: die Design-Test-API braucht ein fertiges Hauptfenster, sonst liefert der
         // erste Screenshot ein leeres Bild. Bleibt aus, wenn --api-port fehlt.
         if (DesignApiStarter is { } start && PendingApiArgs is { } apiArgs) start(apiArgs);

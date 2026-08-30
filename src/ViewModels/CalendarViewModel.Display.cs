@@ -153,18 +153,33 @@ public partial class CalendarViewModel
     private async Task LoadWeekAsync(bool silent = false)
     {
         if (!silent) LogService.Info("Lade Kalenderwoche {0}", WeekLabel);
-        _swapRequests = await _storage.LoadSwapRequestsAsync();
-        _activityTypes = await _storage.LoadActivityTypesAsync();
-        _recurringActivities = await _storage.LoadRecurringActivitiesAsync();
+
+        // Parallel statt nacheinander. Im Server-Modus ist jeder dieser Aufrufe ein
+        // HTTP-Round-Trip: sequenziell summierten sich Stammdaten und sieben Tage auf 17
+        // Anfragen hintereinander, und bei der Latenz zum Server hing der Wochenwechsel
+        // spürbar. Die Aufrufe hängen nicht voneinander ab, also laufen sie zusammen.
+        var swapsTask = _storage.LoadSwapRequestsAsync();
+        var typesTask = _storage.LoadActivityTypesAsync();
+        var recurringTask = _storage.LoadRecurringActivitiesAsync();
+        var dayTasks = new Task<CalendarDay>[7];
+        for (int i = 0; i < 7; i++) dayTasks[i] = _storage.LoadDayAsync(WeekStart.AddDays(i));
+
+        await Task.WhenAll([swapsTask, typesTask, recurringTask, .. dayTasks.Cast<Task>()]);
+
+        _swapRequests = await swapsTask;
+        _activityTypes = await typesTask;
+        _recurringActivities = await recurringTask;
         _weekHolidays = HolidayCalculator.ForRange(WeekStart, WeekStart.AddDays(6), _holidayState);
 
         // (Vortag wurde früher für die Nacht-Fortsetzungs-Anzeige geladen — die Tabellen-Sicht
         // braucht das nicht mehr; die Nacht-Schicht steht jetzt nur am Starttag.)
 
+        // Die Auswertung bleibt sequenziell: sie schreibt in Days[] und _swapRequests und
+        // gehört auf den UI-Thread, auf dem diese Methode ohnehin läuft.
         for (int i = 0; i < 7; i++)
         {
             var date = WeekStart.AddDays(i);
-            var day = await _storage.LoadDayAsync(date);
+            var day = await dayTasks[i];
             ApplyEntryDisplay(day);
             var entries = EntriesVisibleUnderImpersonation(day);
             var (timeline, absences) = BuildDisplay(date, entries);
