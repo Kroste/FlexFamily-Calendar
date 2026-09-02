@@ -1,6 +1,8 @@
 # Build outputs
 bin/
 obj/
+# Legt der SDK-Resolver neben die csproj, wenn eine Workload fehlt (NETSDK1147).
+*.SdkResolver.*.Backup.tmp
 
 # NuGet packages
 *.nupkg
