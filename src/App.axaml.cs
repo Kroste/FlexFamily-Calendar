@@ -128,15 +128,16 @@ public partial class App : Application
 
         var mainVm = new MainWindowViewModel(auth, storage, notifications, aiService, mailSender, loginVm);
 
-        if (hasUsers)
-        {
-            var remembered = Task.Run(() => auth.GetRememberedUserAsync()).GetAwaiter().GetResult();
-            if (remembered != null) mainVm.AutoLogin(remembered);
-        }
-
+        // View SOFORT setzen, Auto-Login danach asynchron — wie im Browser-Head.
+        // GetRememberedUserAsync ruft im Server-Modus /api/auth/me auf. Blockierend abgewartet
+        // hing hier der UI-Thread am Netz: ohne Empfang bis zum HTTP-Timeout, und Android killt
+        // eine App, die keine 5 Sekunden auf Eingaben reagiert (ANR). Auf dem Handy ist genau
+        // das der Normalfall — U-Bahn, Funkloch, Flugmodus.
         var mobileVm = new MobileMainViewModel(mainVm, storage, auth, notifications);
         singleView.MainView = new MobileMainView { DataContext = mobileVm };
         LogService.Info("Android-Head gestartet.");
+
+        if (hasUsers) _ = AutoLoginAsync(auth, mainVm);
     }
 
     private void InitializeDesktop(IClassicDesktopStyleApplicationLifetime desktop)
@@ -274,10 +275,13 @@ public partial class App : Application
 
         LogService.Info("Speicher-Modus: Server (Browser, {0})", serverUrl);
 
-        _ = AutoLoginBrowserAsync(auth, mainVm);
+        _ = AutoLoginAsync(auth, mainVm);
     }
 
-    private static async Task AutoLoginBrowserAsync(AuthService auth, MainWindowViewModel mainVm)
+    /// <summary>Gemerkten Benutzer nachträglich anmelden. Läuft bewusst neben dem Aufbau der
+    /// Oberfläche: der Aufruf geht im Server-Modus übers Netz und darf den UI-Thread nicht
+    /// aufhalten. Fehler sind hier folgenlos — dann erscheint eben der Login-Screen.</summary>
+    private static async Task AutoLoginAsync(AuthService auth, MainWindowViewModel mainVm)
     {
         try
         {
@@ -286,7 +290,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            LogService.Warn("Auto-Login (Browser) fehlgeschlagen: {0}", ex.Message);
+            LogService.Warn("Auto-Login fehlgeschlagen: {0}", ex.Message);
         }
     }
 }

@@ -50,3 +50,21 @@ public class ApiStorageServiceSettingsTests
         Assert.Equal(3, reloaded.OvernightHoursPerDay);
     }
 }
+
+/// <summary>
+/// Zeitlimit der API-Aufrufe. Ohne gesetzten Wert gilt der HttpClient-Default von 100 Sekunden —
+/// so lange friert auf einer schlechten Mobilverbindung jede Aktion ein, und auf Android reicht
+/// das für ein „App reagiert nicht" um ein Vielfaches.
+/// </summary>
+public class ApiClientTimeoutTests
+{
+    [Fact]
+    public void Client_Has_A_Bounded_Timeout()
+    {
+        var client = new FlexFamilyCalendar.Services.Api.ApiClient("https://example.invalid");
+
+        Assert.Equal(FlexFamilyCalendar.Services.Api.ApiClient.RequestTimeout, client.Timeout);
+        Assert.True(client.Timeout <= TimeSpan.FromSeconds(60), $"Zeitlimit zu großzügig: {client.Timeout}");
+        Assert.True(client.Timeout >= TimeSpan.FromSeconds(10), $"Zeitlimit zu knapp: {client.Timeout}");
+    }
+}

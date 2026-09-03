@@ -59,6 +59,14 @@
   Antragsteller im Kalender grau/durchscheinend mit „(Wunsch, wartet auf Bestätigung)"
   markiert. Der Server erzeugt bei jedem Admin eine Benachrichtigung; im Notifications-Dialog
   gibt es grün „Genehmigen"/rot „Ablehnen" direkt an der Zeile.
+- **Kein blockierendes Warten auf Netz im Start-Pfad der SingleView-Heads.** Browser und Android
+  setzen die MainView sofort und melden den gemerkten Benutzer danach über `AutoLoginAsync` an.
+  `GetRememberedUserAsync` ruft im Server-Modus `/api/auth/me` auf; blockierend abgewartet hing der
+  UI-Thread am Netz, und Android beendet eine App, die keine 5 Sekunden auf Eingaben reagiert (ANR)
+  — auf dem Handy ist Funkloch der Normalfall, nicht die Ausnahme. Der Desktop darf blockieren
+  (eigener Prozess, kein Watchdog), WASM kann es gar nicht (Single-Thread).
+- **`ApiClient` setzt ein Zeitlimit von 30 s** (`RequestTimeout`). Der `HttpClient`-Default sind
+  100 Sekunden — so lange bleibt bei stummem Server jede Aktion hängen, ohne erkennbaren Grund.
 - **KI ist additiv, nie im kritischen Pfad** — die App funktioniert ohne KI voll. Im Server-Modus
   liegt der API-Key serverseitig in ENV (`ApiAiProvider`), lokal über die Einstellungen.
 - **PDF-Export:** eigener abhängigkeitsfreier PDF-Writer (reines Managed). **Keine native

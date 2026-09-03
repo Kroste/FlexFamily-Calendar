@@ -15,10 +15,25 @@ public class ApiClient
     public bool CurrentUserIsAdmin => string.Equals(CurrentUser?.Role, "Admin", StringComparison.OrdinalIgnoreCase);
     public bool CurrentUserIsParent => string.Equals(CurrentUser?.Category, "Parent", StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Zeitlimit je Anfrage. Der Default von <see cref="HttpClient"/> sind 100 Sekunden — so
+    /// lange bleibt bei einem stummen Server oder auf einer schlechten Mobilverbindung jede
+    /// Aktion hängen, ohne dass der Nutzer erfährt warum. 30 Sekunden sind großzügig für den
+    /// PDF-/Mail-Versand und trotzdem kurz genug, dass man den Ausfall als Ausfall erlebt.
+    /// </summary>
+    public static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(30);
+
+    /// <summary>Tatsächlich gesetztes Zeitlimit (für Tests und Diagnose).</summary>
+    public TimeSpan Timeout => _http.Timeout;
+
     public ApiClient(string baseUrl)
     {
         var handler = new ApiLoggingHandler(new HttpClientHandler());
-        _http = new HttpClient(handler) { BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/") };
+        _http = new HttpClient(handler)
+        {
+            BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/"),
+            Timeout = RequestTimeout
+        };
     }
 
     /// <summary>Meldet an und merkt das Token für alle weiteren Aufrufe. Null = Anmeldung fehlgeschlagen.</summary>
