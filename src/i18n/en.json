@@ -4,7 +4,6 @@
   "Common_Save": "Save",
   "Common_Delete": "Delete",
   "Common_Language": "Language",
-
   "Login_FirstRunSubtitle": "Initial setup",
   "Login_DisplayName": "Display name",
   "Login_DisplayNamePlaceholder": "e.g. Lars Krügel",
@@ -16,7 +15,6 @@
   "Login_ErrorEmptyFields": "Please enter username and password.",
   "Login_ErrorInvalid": "Invalid username or password.",
   "Login_ErrorCreateFailed": "Failed to create the account.",
-
   "Main_Logout": "Sign out",
   "Main_Profile": "Profile",
   "Main_UserManagement": "User management",
@@ -38,7 +36,6 @@
   "HoursAccount_Diff": "Difference",
   "HoursAccount_Note": "Note: sick and vacation count as worked hours.",
   "Status_Ready": "Ready",
-
   "User_New": "New user",
   "User_Edit": "Edit user",
   "User_Username": "Username",
@@ -63,7 +60,6 @@
   "User_AiStyleHintPlaceholder": "e.g. 'Talk to me like a buddy, feel free to be witty' or 'Please address me formally.'",
   "User_AiStyleHintHint": "Sent to the AI planner as a tone hint. Empty = neutral default.",
   "User_ShowHints": "Show hover hints",
-
   "Hint_Main_Notifications": "Your notifications — sick reports, shift swaps, vacation requests.",
   "Hint_Main_Admin": "Admin area: users, categories, recurring activities, settings, AI.",
   "Hint_Main_MonthOverview": "Monthly overview: actual / target / delta per person for the whole month.",
@@ -104,7 +100,6 @@
   "Hint_Profile_ThemeVariant": "Light / Dark / System — switches live.",
   "Hint_Profile_Color": "Your calendar color. Chips, bars and cells use this color.",
   "Hint_Profile_AiStyleHint": "Free-form hint to the AI on tone (e.g. 'formal', 'casual').",
-
   "Onboarding_Title": "Welcome to FlexFamily Calendar",
   "Onboarding_Skip": "Show later",
   "Onboarding_Back": "◀ Back",
@@ -118,7 +113,6 @@
   "Onboarding_Slide3_Body": "The header buttons take you to your hours account, the monthly overview (actual/target/delta), your profile and — as admin — the admin area with users and settings. \"PDF\" exports the current week, \"Mail\" sends it to everyone with an email address.",
   "Onboarding_Slide4_Title": "Hints on/off",
   "Onboarding_Slide4_Body": "Hover the buttons — the little hover hints explain each element. If you no longer want to see them, you can turn them off in your profile under \"Show hover hints\". Click \"Got it\" to start.",
-
   "Mobile_Tab_Plan": "Plan",
   "Mobile_Tab_Sick": "Sick",
   "Mobile_Tab_Vacation": "Vacation",
@@ -134,12 +128,10 @@
   "Mobile_Absence_Saved": "Saved.",
   "Mobile_Swap_ComingSoon": "Shift swap coming soon",
   "Mobile_Swap_Note": "Until then you can request a swap on the web view at flexfamily.cloud.",
-
   "Entry_PendingSuffix": "(request, awaiting approval)",
   "Notif_VacationRequested": "{0} requests vacation from {1} to {2}.",
   "Notif_ApproveButton": "Approve",
   "Notif_RejectButton": "Reject",
-
   "Mobile_Swap_Incoming": "Requests to me",
   "Mobile_Swap_Outgoing": "My open requests",
   "Mobile_Swap_NewTitle": "New request",
@@ -158,23 +150,20 @@
   "Mobile_Swap_Withdraw": "Withdraw",
   "User_OpeningBalance": "Opening balance (hours)",
   "User_AccountStart": "Account start",
-
   "ThemeVariant_System": "System",
   "ThemeVariant_Light": "Light",
   "ThemeVariant_Dark": "Dark",
-
   "PersonCategory_Parent": "Parents",
   "PersonCategory_Child": "Child",
   "PersonCategory_Employee": "Employee",
   "PersonCategory_AuPair": "Au-Pair",
-
   "Cal_Week": "Week",
   "Cal_PreviousWeek": "◀  Previous week",
   "Cal_Today": "Today",
   "Cal_NextWeek": "Next week  ▶",
   "Cal_TodayBadge": "Today",
   "Cal_FinalBadge": "✓ Final",
-  "Cal_AddEntry": "+ Entry",
+  "Cal_AddEntry": "Add another entry",
   "Cal_RequestAbsence": "+ Sick/Vacation",
   "Cal_CopyWeek": "Copy week →",
   "Cal_FinalizeWeek": "Finalize week",
@@ -201,7 +190,6 @@
   "Connection_LabelLocal": "Connection: local (JSON) — change",
   "Connection_LabelServer": "Connection: {0} — change",
   "Connection_Tooltip": "Change server URL or work locally",
-  "Cal_AddEntry": "Add another entry",
   "Cal_ViewAsBanner": "You are currently viewing as {0}.",
   "Cal_ExitViewAs": "Back to admin view",
   "Cal_ReorderPersonHint": "Drag to change the person order",
@@ -231,7 +219,6 @@
   "Cal_Hints": "Notes",
   "Pdf_Title": "Weekly plan",
   "Pdf_Generated": "Generated on {0}",
-
   "Swap_Title": "Swap shift",
   "Swap_IncomingTitle": "Swap request",
   "Swap_WithdrawTitle": "Withdraw swap request",
@@ -255,7 +242,6 @@
   "Swap_ErrorStale": "The shift no longer exists.",
   "Swap_ErrorFinalized": "The week is finalized – swap not possible.",
   "Swap_ErrorOverlap": "Time overlap at the colleague – swap not possible.",
-
   "Notif_Title": "Notifications",
   "Notif_MarkAllRead": "Mark all read",
   "Notif_Empty": "No notifications.",
@@ -268,7 +254,6 @@
   "Notif_SickReported": "{0} reported sick for {1}.",
   "Notif_WeekFinalized": "Week {0}/{1} has been finalized.",
   "Notif_ShiftAssigned": "A shift on {0} was assigned to you (sick cover).",
-
   "Replan_Title": "Sick leave",
   "Replan_MarkHealthy": "Mark as recovered",
   "Replan_NoSick": "No sick leave on this day.",
@@ -278,7 +263,6 @@
   "Replan_NoCandidates": "No available colleague found for this shift.",
   "Replan_TakeOver": "Take over",
   "Replan_NoShift": "No work shift to reassign on this day.",
-
   "Holiday_Region": "Federal state",
   "Settings_OvernightHours": "Credit per overnight (hrs/day)",
   "Settings_Saved": "✓ Saved",
@@ -328,14 +312,12 @@
   "Holiday_WomensDay": "International Women's Day",
   "Holiday_Christmas1": "Christmas Day",
   "Holiday_Christmas2": "Boxing Day",
-
   "ActType_Title": "Categories",
   "ActType_Name": "Name",
   "ActType_Color": "Color",
   "ActType_Roles": "For which roles",
   "ActType_New": "+ New category",
   "ActType_ErrorNoName": "Please enter a name.",
-
   "Recur_Title": "Recurring activities",
   "Recur_New": "+ New activity",
   "Recur_Weekdays": "Weekdays",
@@ -353,7 +335,6 @@
   "Day_Fri": "Fri",
   "Day_Sat": "Sat",
   "Day_Sun": "Sun",
-
   "Ai_Title": "AI settings",
   "Ai_Provider": "Provider",
   "Ai_ApiKey": "API key",
@@ -365,7 +346,6 @@
   "Ai_Testing": "Testing connection …",
   "Ai_TestOk": "✓ Connection successful",
   "Ai_TestFailed": "✗ Connection failed (check key/model)",
-
   "Entry_New": "New entry",
   "Entry_Edit": "Edit entry",
   "Entry_User": "User",
@@ -376,6 +356,9 @@
   "Entry_DateTo": "To (date)",
   "Entry_ActivityType": "Category",
   "Entry_ActivityNone": "(none)",
+  "Entry_ColorLabel": "Tile colour",
+  "Entry_ColorPreview": "Preview",
+  "Entry_ColorCustom": "Custom colour for this entry",
   "Entry_TitleLabel": "Label (optional)",
   "Entry_TitlePlaceholder": "e.g. language course, school trip, ...",
   "Entry_NotesLabel": "Notes (optional)",
@@ -388,7 +371,6 @@
   "Entry_ErrorSameTime": "Start and end time must not be identical.",
   "Entry_ErrorNoDate": "Please select a date range (from–to).",
   "Entry_OvernightNote": "Overnight (on call): shown across the whole span, but only credited as a flat rate to the hours account (set in Admin → Settings).",
-
   "EntryType_Work": "Work",
   "EntryType_Vacation": "Vacation",
   "EntryType_SickLeave": "Sick",
@@ -396,14 +378,11 @@
   "EntryType_Absence": "Absent",
   "EntryType_Overnight": "Overnight",
   "EntryType_Custom": "Appointment",
-
   "MoveCopy_Title": "Move or copy entry?",
   "MoveCopy_Move": "Move",
   "MoveCopy_Copy": "Copy",
   "MoveCopy_Description": "{0} to {1}",
-
   "Ai_ServerConfigured": "The API key is configured on the server (Ai__<Provider>__Key). Only pick the provider and an optional model here.",
-
   "Update_Title": "Update available",
   "Update_Description": "New version available: {0} → {1}.",
   "Update_NoAsset": "No direct update package for your platform — open the release page to download manually.",
@@ -413,7 +392,6 @@
   "Update_Skip": "Skip",
   "Update_Downloading": "Downloading update …",
   "Update_Installing": "Installing update …",
-
   "Settings_Updates": "Updates",
   "Settings_UpdateEnabled": "Check for new versions automatically",
   "Settings_UpdateInterval": "Check interval (hours, 0 = manual only)",
@@ -425,7 +403,6 @@
   "Settings_AboutVersion": "Version",
   "Settings_AboutGithub": "GitHub repository",
   "Settings_AboutCoffee": "☕ Buy me a coffee",
-
   "Info_Title": "About FlexFamily Calendar",
   "Info_GitHub": "Open GitHub repository",
   "Info_Coffee": "☕ Buy me a coffee",

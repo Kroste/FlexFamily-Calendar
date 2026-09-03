@@ -441,6 +441,7 @@ app.MapPost("/api/entries", async (CreateEntryRequest req, AppDbContext db, Clai
         CategoryLabel = string.IsNullOrWhiteSpace(req.CategoryLabel) ? null : req.CategoryLabel!.Trim(),
         ActivityTypeId = string.IsNullOrWhiteSpace(req.ActivityTypeId) ? null : req.ActivityTypeId!.Trim(),
         Note = string.IsNullOrWhiteSpace(req.Note) ? null : req.Note!.Trim(),
+        Color = EntryWriteRules.NormalizeColor(req.Color),
         Status = EntryWriteRules.InitialStatus(req.Type, isAdmin),
         CreatedBy = requester.Value,
         CreatedAtUtc = DateTime.UtcNow
@@ -518,6 +519,7 @@ app.MapPut("/api/entries/{id:guid}", async (Guid id, UpdateEntryRequest req, App
     entry.CategoryLabel = string.IsNullOrWhiteSpace(req.CategoryLabel) ? null : req.CategoryLabel!.Trim();
     entry.ActivityTypeId = string.IsNullOrWhiteSpace(req.ActivityTypeId) ? null : req.ActivityTypeId!.Trim();
     entry.Note = string.IsNullOrWhiteSpace(req.Note) ? null : req.Note!.Trim();
+    entry.Color = EntryWriteRules.NormalizeColor(req.Color);
 
     if (!isAdmin && entry.Type == EntryTypes.Vacation)
         entry.Status = EntryStatus.Pending;

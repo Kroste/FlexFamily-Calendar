@@ -16,7 +16,8 @@ public record ServerEntryDto(
     string? Note,
     string Status,
     bool Masked,
-    string? ActivityTypeId = null);
+    string? ActivityTypeId = null,
+    string? Color = null);
 
 public record ServerUserDto(
     string Id,
@@ -150,7 +151,8 @@ public record CreateEntryBody(
     bool EndsNextDay,
     string? CategoryLabel,
     string? Note,
-    string? ActivityTypeId = null);
+    string? ActivityTypeId = null,
+    string? Color = null);
 
 public record UpdateEntryBody(
     DateOnly Date,
@@ -161,7 +163,8 @@ public record UpdateEntryBody(
     string? CategoryLabel,
     string? Note,
     string? Type = null,
-    string? ActivityTypeId = null);
+    string? ActivityTypeId = null,
+    string? Color = null);
 
 public record ServerMailRecipientDto(string Email, string PdfBase64);
 

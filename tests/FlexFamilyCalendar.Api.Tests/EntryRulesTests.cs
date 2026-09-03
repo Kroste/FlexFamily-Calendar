@@ -12,6 +12,7 @@ public class EntryVisibilityTests
         Date = new DateOnly(2026, 5, 25),
         EndDate = new DateOnly(2026, 5, 27),
         Note = "Grippe",
+        Color = "#123456",
         Status = status
     };
 
@@ -24,6 +25,28 @@ public class EntryVisibilityTests
         EndTime = new TimeOnly(16, 0),
         Status = EntryStatus.Approved
     };
+
+    [Fact]
+    public void Masked_entry_loses_its_custom_colour()
+    {
+        // Eine frei gewählte Kachelfarbe darf die Maskierung nicht unterlaufen: sonst wäre die
+        // Krankmeldung für Fremde an ihrer Sonderfarbe von einer echten Abwesenheit zu
+        // unterscheiden, obwohl Typ, Grund und Uhrzeit entfernt sind.
+        var dto = EntryVisibility.Project(Sick(Guid.NewGuid()), requesterId: Guid.NewGuid(), isAdmin: false, isDayFinalized: true);
+
+        Assert.NotNull(dto);
+        Assert.True(dto!.Masked);
+        Assert.Null(dto.Color);
+    }
+
+    [Fact]
+    public void Owner_keeps_the_custom_colour()
+    {
+        var owner = Guid.NewGuid();
+        var dto = EntryVisibility.Project(Sick(owner), requesterId: owner, isAdmin: false, isDayFinalized: true);
+
+        Assert.Equal("#123456", dto!.Color);
+    }
 
     [Fact]
     public void Admin_sees_full_private_entry()
@@ -223,4 +246,29 @@ public class EntryWriteRulesTests
     [Fact]
     public void Valid_vacation_range_passes()
         => Assert.Null(EntryWriteRules.Validate(EntryTypes.Vacation, new DateOnly(2026, 5, 25), new DateOnly(2026, 5, 27), null, null, null));
+}
+
+/// <summary>Säuberung der frei gewählten Kachelfarbe. Der Wert landet ungeprüft in der
+/// Oberfläche jedes Betrachters, deshalb kommt nur echtes Hex durch.</summary>
+public class EntryColorNormalizationTests
+{
+    [Theory]
+    [InlineData("#F39C12", "#F39C12")]
+    [InlineData("#f39c12", "#F39C12")]
+    [InlineData("#abc", "#ABC")]
+    [InlineData("  #F39C12  ", "#F39C12")]
+    public void Accepts_hex_and_normalizes_case(string input, string expected)
+        => Assert.Equal(expected, EntryWriteRules.NormalizeColor(input));
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("orange")]
+    [InlineData("F39C12")]
+    [InlineData("#GGGGGG")]
+    [InlineData("#F39C123")]
+    [InlineData("javascript:alert(1)")]
+    public void Drops_everything_else(string? input)
+        => Assert.Null(EntryWriteRules.NormalizeColor(input));
 }

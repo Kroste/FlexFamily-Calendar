@@ -4,7 +4,6 @@
   "Common_Save": "Speichern",
   "Common_Delete": "Löschen",
   "Common_Language": "Sprache",
-
   "Login_FirstRunSubtitle": "Erstkonfiguration",
   "Login_DisplayName": "Anzeigename",
   "Login_DisplayNamePlaceholder": "z.B. Lars Krügel",
@@ -16,7 +15,6 @@
   "Login_ErrorEmptyFields": "Bitte Benutzername und Kennwort eingeben.",
   "Login_ErrorInvalid": "Ungültiger Benutzername oder Kennwort.",
   "Login_ErrorCreateFailed": "Fehler beim Anlegen des Kontos.",
-
   "Main_Logout": "Abmelden",
   "Main_Profile": "Profil",
   "Main_UserManagement": "Benutzerverwaltung",
@@ -38,7 +36,6 @@
   "HoursAccount_Diff": "Differenz",
   "HoursAccount_Note": "Hinweis: Krank und Urlaub werden als geleistete Stunden angerechnet.",
   "Status_Ready": "Bereit",
-
   "User_New": "Neuer Benutzer",
   "User_Edit": "Benutzer bearbeiten",
   "User_Username": "Benutzername",
@@ -63,7 +60,6 @@
   "User_AiStyleHintPlaceholder": "z.B. 'Sprich mit mir wie mein bester Kumpel, mach gerne Witze' oder 'Bitte siezen Sie mich.'",
   "User_AiStyleHintHint": "Wird im KI-Plan als Anrede-/Tonfall-Wunsch mitgegeben. Bleibt leer = neutraler Default.",
   "User_ShowHints": "Hinweistexte einblenden (Hover-Hilfe)",
-
   "Hint_Main_Notifications": "Deine Benachrichtigungen — Krankmeldungen, Schichttausch, Urlaubswünsche.",
   "Hint_Main_Admin": "Admin-Bereich: Benutzer, Kategorien, wiederkehrende Aktivitäten, Einstellungen, KI.",
   "Hint_Main_MonthOverview": "Monatsübersicht: Ist / Soll / Differenz pro Person über den ganzen Monat.",
@@ -104,7 +100,6 @@
   "Hint_Profile_ThemeVariant": "Hell / Dunkel / System — schaltet direkt live um.",
   "Hint_Profile_Color": "Deine Kalender-Farbe. Chips, Balken und Zellen erscheinen mit dieser Farbe.",
   "Hint_Profile_AiStyleHint": "Freitext-Hinweis an die KI zum Tonfall (z.B. 'siez mich', 'sei locker').",
-
   "Onboarding_Title": "Willkommen bei FlexFamily Calendar",
   "Onboarding_Skip": "Später zeigen",
   "Onboarding_Back": "◀ Zurück",
@@ -118,7 +113,6 @@
   "Onboarding_Slide3_Body": "Über die Header-Buttons erreichst du dein Stundenkonto, die Monatsübersicht (Ist/Soll/Differenz), dein Profil und — als Admin — den Admin-Bereich mit Benutzern und Einstellungen. Mit \"PDF\" exportierst du die aktuelle Woche, mit \"Mail\" verschickst du sie an alle mit E-Mail-Adresse.",
   "Onboarding_Slide4_Title": "Hinweise ein/aus",
   "Onboarding_Slide4_Body": "Bewege den Mauszeiger über die Schaltflächen — die kleinen Hover-Hinweise erklären dir jedes Element. Wenn du keine Hinweise mehr sehen willst, kannst du sie im Profil unter \"Hinweistexte einblenden\" abschalten. Klick auf \"Verstanden\", um zu starten.",
-
   "Mobile_Tab_Plan": "Plan",
   "Mobile_Tab_Sick": "Krank",
   "Mobile_Tab_Vacation": "Urlaub",
@@ -134,12 +128,10 @@
   "Mobile_Absence_Saved": "Gespeichert.",
   "Mobile_Swap_ComingSoon": "Schichttausch kommt in Kürze",
   "Mobile_Swap_Note": "Bis dahin kannst du eine Tausch-Anfrage über die Web-Ansicht auf flexfamily.cloud stellen.",
-
   "Entry_PendingSuffix": "(Wunsch, wartet auf Bestätigung)",
   "Notif_VacationRequested": "{0} wünscht Urlaub vom {1} bis {2}.",
   "Notif_ApproveButton": "Genehmigen",
   "Notif_RejectButton": "Ablehnen",
-
   "Mobile_Swap_Incoming": "An mich gerichtete Anfragen",
   "Mobile_Swap_Outgoing": "Meine offenen Anfragen",
   "Mobile_Swap_NewTitle": "Neue Anfrage",
@@ -158,23 +150,20 @@
   "Mobile_Swap_Withdraw": "Zurückziehen",
   "User_OpeningBalance": "Anfangssaldo (Stunden)",
   "User_AccountStart": "Konto-Start",
-
   "ThemeVariant_System": "System",
   "ThemeVariant_Light": "Hell",
   "ThemeVariant_Dark": "Dunkel",
-
   "PersonCategory_Parent": "Eltern",
   "PersonCategory_Child": "Kind",
   "PersonCategory_Employee": "Angestellte/r",
   "PersonCategory_AuPair": "Au-Pair",
-
   "Cal_Week": "KW",
   "Cal_PreviousWeek": "◀  Vorherige Woche",
   "Cal_Today": "Heute",
   "Cal_NextWeek": "Nächste Woche  ▶",
   "Cal_TodayBadge": "Heute",
   "Cal_FinalBadge": "✓ Final",
-  "Cal_AddEntry": "+ Eintrag",
+  "Cal_AddEntry": "Weiteren Eintrag anlegen",
   "Cal_RequestAbsence": "+ Krank/Urlaub",
   "Cal_CopyWeek": "Woche kopieren →",
   "Cal_FinalizeWeek": "Woche finalisieren",
@@ -201,7 +190,6 @@
   "Connection_LabelLocal": "Verbindung: lokal (JSON) — ändern",
   "Connection_LabelServer": "Verbindung: {0} — ändern",
   "Connection_Tooltip": "Server-URL ändern oder lokal arbeiten",
-  "Cal_AddEntry": "Weiteren Eintrag anlegen",
   "Cal_ViewAsBanner": "Du siehst gerade aus der Sicht von {0}.",
   "Cal_ExitViewAs": "Zurück zur Admin-Sicht",
   "Cal_ReorderPersonHint": "Ziehen, um die Personen-Reihenfolge zu ändern",
@@ -231,7 +219,6 @@
   "Cal_Hints": "Hinweise",
   "Pdf_Title": "Wochenplan",
   "Pdf_Generated": "Erstellt am {0}",
-
   "Swap_Title": "Schicht tauschen",
   "Swap_IncomingTitle": "Tausch-Anfrage",
   "Swap_WithdrawTitle": "Tausch-Anfrage zurückziehen",
@@ -255,7 +242,6 @@
   "Swap_ErrorStale": "Die Schicht existiert nicht mehr.",
   "Swap_ErrorFinalized": "Die Woche ist finalisiert – Tausch nicht möglich.",
   "Swap_ErrorOverlap": "Zeitliche Überschneidung beim Kollegen – Tausch nicht möglich.",
-
   "Notif_Title": "Benachrichtigungen",
   "Notif_MarkAllRead": "Alle als gelesen",
   "Notif_Empty": "Keine Benachrichtigungen.",
@@ -268,7 +254,6 @@
   "Notif_SickReported": "{0} hat sich für den {1} krank gemeldet.",
   "Notif_WeekFinalized": "Die Woche {0}/{1} wurde finalisiert.",
   "Notif_ShiftAssigned": "Dir wurde eine Schicht am {0} zugewiesen (Krankheitsvertretung).",
-
   "Replan_Title": "Krankmeldung",
   "Replan_MarkHealthy": "Gesund melden",
   "Replan_NoSick": "Keine Krankmeldung an diesem Tag.",
@@ -278,7 +263,6 @@
   "Replan_NoCandidates": "Kein/e verfügbare/r Kollege/in für diese Schicht gefunden.",
   "Replan_TakeOver": "Übernehmen",
   "Replan_NoShift": "Keine Arbeitsschicht zum Umplanen an diesem Tag.",
-
   "Holiday_Region": "Bundesland",
   "Settings_OvernightHours": "Gutschrift je Übernachtung (Std./Tag)",
   "Settings_Saved": "✓ Gespeichert",
@@ -328,14 +312,12 @@
   "Holiday_WomensDay": "Internationaler Frauentag",
   "Holiday_Christmas1": "1. Weihnachtstag",
   "Holiday_Christmas2": "2. Weihnachtstag",
-
   "ActType_Title": "Kategorien",
   "ActType_Name": "Bezeichnung",
   "ActType_Color": "Farbe",
   "ActType_Roles": "Für welche Rollen",
   "ActType_New": "+ Neue Kategorie",
   "ActType_ErrorNoName": "Bitte eine Bezeichnung eingeben.",
-
   "Recur_Title": "Wiederkehrende Aktivitäten",
   "Recur_New": "+ Neue Aktivität",
   "Recur_Weekdays": "Wochentage",
@@ -353,7 +335,6 @@
   "Day_Fri": "Fr",
   "Day_Sat": "Sa",
   "Day_Sun": "So",
-
   "Ai_Title": "KI-Einstellungen",
   "Ai_Provider": "Anbieter",
   "Ai_ApiKey": "API-Schlüssel",
@@ -365,7 +346,6 @@
   "Ai_Testing": "Teste Verbindung …",
   "Ai_TestOk": "✓ Verbindung erfolgreich",
   "Ai_TestFailed": "✗ Verbindung fehlgeschlagen (Schlüssel/Modell prüfen)",
-
   "Entry_New": "Neuer Eintrag",
   "Entry_Edit": "Eintrag bearbeiten",
   "Entry_User": "Benutzer",
@@ -376,6 +356,9 @@
   "Entry_DateTo": "Bis (Datum)",
   "Entry_ActivityType": "Kategorie",
   "Entry_ActivityNone": "(keine)",
+  "Entry_ColorLabel": "Kachelfarbe",
+  "Entry_ColorPreview": "Vorschau",
+  "Entry_ColorCustom": "Eigene Farbe für diesen Eintrag",
   "Entry_TitleLabel": "Bezeichnung (optional)",
   "Entry_TitlePlaceholder": "z.B. Sprachkurs, Schulausflug, ...",
   "Entry_NotesLabel": "Notizen (optional)",
@@ -388,7 +371,6 @@
   "Entry_ErrorSameTime": "Start- und Endzeit dürfen nicht identisch sein.",
   "Entry_ErrorNoDate": "Bitte einen Zeitraum (von–bis) auswählen.",
   "Entry_OvernightNote": "Übernachtung (auf Abruf): wird über den ganzen Zeitraum angezeigt, zählt aber nur pauschal aufs Stundenkonto (Wert im Admin-Bereich → Einstellungen).",
-
   "EntryType_Work": "Arbeit",
   "EntryType_Vacation": "Urlaub",
   "EntryType_SickLeave": "Krank",
@@ -396,14 +378,11 @@
   "EntryType_Absence": "Abwesend",
   "EntryType_Overnight": "Übernachtung",
   "EntryType_Custom": "Termin",
-
   "MoveCopy_Title": "Eintrag verschieben oder kopieren?",
   "MoveCopy_Move": "Verschieben",
   "MoveCopy_Copy": "Kopieren",
   "MoveCopy_Description": "{0} nach {1}",
-
   "Ai_ServerConfigured": "Der API-Schlüssel ist serverseitig konfiguriert (Ai__<Provider>__Key). Hier nur Anbieter und optional Modell wählen.",
-
   "Update_Title": "Update verfügbar",
   "Update_Description": "Neue Version verfügbar: {0} → {1}.",
   "Update_NoAsset": "Für deine Plattform gibt es kein direktes Update-Paket — du kannst die Release-Seite öffnen und manuell herunterladen.",
@@ -413,7 +392,6 @@
   "Update_Skip": "Überspringen",
   "Update_Downloading": "Lade Update herunter …",
   "Update_Installing": "Update wird installiert …",
-
   "Settings_Updates": "Updates",
   "Settings_UpdateEnabled": "Automatisch auf neue Versionen prüfen",
   "Settings_UpdateInterval": "Prüfintervall (Stunden, 0 = nur manuell)",
@@ -425,7 +403,6 @@
   "Settings_AboutVersion": "Version",
   "Settings_AboutGithub": "GitHub-Repository",
   "Settings_AboutCoffee": "☕ Buy me a coffee",
-
   "Info_Title": "Über FlexFamily Calendar",
   "Info_GitHub": "GitHub-Repository öffnen",
   "Info_Coffee": "☕ Buy me a coffee",

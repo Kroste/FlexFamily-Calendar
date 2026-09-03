@@ -45,7 +45,11 @@ public static class PlanExportBuilder
         // Farbe nach Art des Eintrags, nicht nach Person — und auf dem hier je Empfänger neu
         // berechneten displayType, damit die Maskierung nicht über die Farbe unterlaufen wird:
         // eine fremde Krankmeldung erscheint als „Abwesend" und muss auch grau aussehen.
-        return new PlanCellEntry(EntryColors.Tile(displayType, e.HasActivity ? e.ActivityColor : null), time, label);
+        // Die frei gewählte Farbe zählt nur, wenn für diesen Empfänger nichts maskiert wurde —
+        // sonst wäre eine fremde Krankmeldung an ihrer Sonderfarbe zu erkennen.
+        var ownColor = displayType == e.Type ? e.Color : null;
+        return new PlanCellEntry(
+            EntryColors.Tile(displayType, e.HasActivity ? e.ActivityColor : null, ownColor), time, label);
     }
 
     /// <summary>

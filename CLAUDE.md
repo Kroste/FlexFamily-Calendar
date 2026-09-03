@@ -128,13 +128,28 @@
   Der Zustand wird zudem **vor** dem `await` zurückgesetzt: der Handler läuft pro Release
   zweimal (Tunnel und Bubble), sonst liefe der Reorder doppelt.
 - **Die Plan-Kachel färbt sich nach der Art des Eintrags, nicht nach der Person**
-  (`EntryColors.Tile`: Kategorie schlägt Typ, `CalendarEntry.TileColor`). Die Plansicht ist eine
+  (`EntryColors.Tile`: eigene Farbe schlägt Kategorie schlägt Typ, `CalendarEntry.TileColor`). Die Plansicht ist eine
   Leitungssicht — gefragt ist, wer arbeitet, wer frei hat und wer unterwegs und damit nicht
   verfügbar ist; wem die Zeile gehört, steht links daneben. `OwnerColor` bleibt für den
   Personen-Punkt in der Namensspalte und das View-as-Banner. **Gerechnet wird auf `DisplayType`,
   nie auf `Type`** — sonst verriete das Rot einer Krankmeldung den Grund, den die Maskierung
   gerade als „Abwesend" verbirgt; `PlanExport.CellEntry` leitet seinen `displayType` je Empfänger
   selbst ab und färbt danach.
+- **Die frei gewählte Kachelfarbe (`CalendarEntry.Color`) ist maskierungspflichtig — an ZWEI
+  Stellen.** Serverseitig räumt `EntryDto.Mask` sie weg (wie Typ, Notiz und Uhrzeit); clientseitig
+  zählt sie in `TileColor` nur, solange `DisplayType == Type`, und `PlanExport.CellEntry` prüft
+  dasselbe gegen den je Empfänger neu abgeleiteten Typ. Ohne das wäre eine fremde Krankmeldung
+  trotz „Abwesend"-Label an ihrer Sonderfarbe von einer echten Abwesenheit zu unterscheiden — die
+  Maskierung wäre über die Optik unterlaufen. Der lokale Modus hat keinen Server, der maskiert,
+  deshalb reicht die Server-Seite allein nicht.
+- **`CalendarEntry.DisplayType` fällt ohne gesetzten Wert auf `Type` zurück** (nullable Backing-Feld).
+  `EntryType.Work` ist der Enum-Wert 0 und wäre sonst die stille Vorgabe für jeden Eintrag, der
+  noch nicht durch `ApplyEntryDisplay` gelaufen ist — Farbe und Label einer Schicht für etwas,
+  das keine ist.
+- **`EntryWriteRules.NormalizeColor` säubert die Farbe serverseitig** (`#RGB`/`#RRGGBB`, sonst null).
+  Ungültiges wird verworfen statt den Request abzulehnen: ein Farbwert ist nebensächlich, ein
+  deswegen verlorener Eintrag nicht. Gefiltert wird, weil der Wert ungeprüft in die Oberfläche
+  jedes Betrachters wandert.
 - **Schriftfarbe auf der Kachel wird gerechnet, nicht gesetzt** (`EntryColors.OnTile`: WCAG-Kontrast
   gegen Schwarz und Weiß, der bessere gewinnt). Sobald der Admin eigene Kategoriefarben vergibt,
   ist jede feste Helligkeitsschwelle irgendwann die falsche. `PdfExportService.TextColor`

@@ -13,6 +13,7 @@ public class CalendarEntry
     public bool EndsNextDay { get; set; }             // Übernachtung über Mitternacht
     public string? CategoryLabel { get; set; }        // Freitext-Titel (Desktop: Title)
     public string? ActivityTypeId { get; set; }       // Referenz auf eine Aktivitäts-Kategorie (Client-String-Id)
+    public string? Color { get; set; }                // frei gewählte Kachelfarbe (#RRGGBB), null = aus Kategorie/Typ
     public string? Note { get; set; }
     public string Status { get; set; } = EntryStatus.Approved;
     public Guid CreatedBy { get; set; }               // Wer den Eintrag angelegt hat (Audit)

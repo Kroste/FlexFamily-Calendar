@@ -83,4 +83,20 @@ public static class EntryWriteRules
             return "Freie Termine brauchen einen Titel.";
         return null;
     }
+
+    /// <summary>
+    /// Frei gewählte Kachelfarbe säubern: nur <c>#RGB</c> und <c>#RRGGBB</c> kommen durch, alles
+    /// andere wird zu null (= Farbe aus Kategorie/Typ). Bewusst wegwerfen statt den Request
+    /// abzulehnen — ein Farbwert ist nebensächlich, ein deswegen verlorener Eintrag nicht.
+    /// Gefiltert wird, weil der Wert ungeprüft in die Oberfläche jedes Betrachters wandert.
+    /// </summary>
+    public static string? NormalizeColor(string? color)
+    {
+        if (string.IsNullOrWhiteSpace(color)) return null;
+        var s = color.Trim();
+        if (s.Length is not (4 or 7) || s[0] != '#') return null;
+        for (var i = 1; i < s.Length; i++)
+            if (!Uri.IsHexDigit(s[i])) return null;
+        return s.ToUpperInvariant();
+    }
 }

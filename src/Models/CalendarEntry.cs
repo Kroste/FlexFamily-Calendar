@@ -32,6 +32,12 @@ public class CalendarEntry
     public string Notes { get; set; } = "";
     public string? ActivityTypeId { get; set; }   // optionale Kategorie bei Typ Activity
 
+    /// <summary>
+    /// Frei gewählte Kachelfarbe dieses einen Eintrags (leer = automatisch aus Kategorie/Typ).
+    /// Persistiert, weil sie zur Planung gehört und nicht zur Ansicht des Betrachters.
+    /// </summary>
+    public string Color { get; set; } = "";
+
     // Abwesenheiten (Urlaub/Krank/Abwesend) als Zeitraum: je Tag ein Eintrag, über GroupId verbunden.
     public string? AbsenceGroupId { get; set; }    // verbindet die Tage einer Abwesenheit (null = keine)
     public DateOnly? AbsenceStart { get; set; }    // erster Tag des Zeitraums
@@ -90,16 +96,35 @@ public class CalendarEntry
     /// Grund, den die Maskierung gerade als „Abwesend" verbirgt.
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public string TileColor => EntryColors.Tile(DisplayType, HasActivity ? ActivityColor : null);
+    public string TileColor => EntryColors.Tile(DisplayType, HasActivity ? ActivityColor : null, VisibleColor);
+
+    /// <summary>
+    /// Die eigene Farbe zählt nur, solange am Eintrag nichts maskiert wurde. Sonst wäre eine
+    /// fremde Krankmeldung an ihrer Sonderfarbe erkennbar, obwohl sie als „Abwesend" erscheint —
+    /// die Maskierung wäre über die Farbe unterlaufen. Im Server-Modus räumt <c>EntryDto.Mask</c>
+    /// die Farbe ohnehin weg; diese Prüfung deckt den lokalen Modus ab, der ohne Server maskiert.
+    /// </summary>
+    private string? VisibleColor => DisplayType == Type ? Color : null;
 
     /// <summary>Schriftfarbe auf der Kachel — berechnet, damit die Uhrzeit auf jeder vom Admin
     /// vergebenen Farbe lesbar bleibt.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public string TileForeground => EntryColors.OnTile(TileColor);
 
-    /// <summary>Datenschutz-maskierter Anzeigetyp (Laufzeit; Default = echter Typ).</summary>
+    /// <summary>
+    /// Datenschutz-maskierter Anzeigetyp (Laufzeit). Ohne gesetzten Wert gilt der echte Typ:
+    /// <see cref="EntryType.Work"/> ist der Enum-Wert 0 und wäre sonst die stille Vorgabe für
+    /// jeden Eintrag, der noch nicht durch die Anzeige-Auflösung gelaufen ist — der bekäme
+    /// damit Farbe und Label einer Schicht.
+    /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public EntryType DisplayType { get; set; }
+    public EntryType DisplayType
+    {
+        get => _displayType ?? Type;
+        set => _displayType = value;
+    }
+
+    private EntryType? _displayType;
 
     /// <summary>Datenschutz-maskierter Titel (Laufzeit; leer = verborgen).</summary>
     [System.Text.Json.Serialization.JsonIgnore]

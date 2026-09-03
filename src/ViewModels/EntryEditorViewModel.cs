@@ -39,7 +39,22 @@ public partial class EntryEditorViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(ShowDateRange))]
     [NotifyPropertyChangedFor(nameof(ShowTimes))]
     [NotifyPropertyChangedFor(nameof(ShowOvernightNote))]
+    [NotifyPropertyChangedFor(nameof(AutoColor))]
+    [NotifyPropertyChangedFor(nameof(PreviewColor))]
+    [NotifyPropertyChangedFor(nameof(PreviewForeground))]
     private EntryTypeOption? _selectedType;
+
+    /// <summary>Frei gewählte Kachelfarbe (leer = automatisch aus Kategorie/Typ).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PreviewColor))]
+    [NotifyPropertyChangedFor(nameof(PreviewForeground))]
+    private string _color = "";
+
+    /// <summary>Schalter „eigene Farbe" — aus heißt: der Eintrag folgt Kategorie bzw. Typ.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PreviewColor))]
+    [NotifyPropertyChangedFor(nameof(PreviewForeground))]
+    private bool _useCustomColor;
 
     // Bewusst ohne Vorbelegung: ein neuer Eintrag startet mit leeren Zeitfeldern, damit die
     // Uhrzeit direkt getippt werden kann. Eine Vorgabe (früher 08:00–16:00) traf ohnehin selten
@@ -73,6 +88,15 @@ public partial class EntryEditorViewModel : ViewModelBase
     /// sonst verlangte ein Urlaubsantrag eine Uhrzeit, die nirgends eine Bedeutung hat.
     /// </summary>
     public bool ShowTimes => !ShowDateRange;
+
+    /// <summary>Farbe, die der Eintrag ohne eigene Wahl bekäme (Kategorie, sonst Typ).</summary>
+    public string AutoColor => EntryColors.Tile(SelectedType?.Type ?? EntryType.Work, SelectedType?.Activity?.Color);
+
+    /// <summary>Farbe, die die Kachel am Ende trägt — für die Vorschau im Dialog.</summary>
+    public string PreviewColor => UseCustomColor && EntryColors.IsValidHex(Color) ? Color : AutoColor;
+
+    /// <summary>Schriftfarbe auf der Vorschau, nach derselben Regel wie im Plan.</summary>
+    public string PreviewForeground => EntryColors.OnTile(PreviewColor);
 
     /// <summary>Hinweis auf die pauschale Stunden-Gutschrift bei Typ „Übernachtung".</summary>
     public bool ShowOvernightNote => SelectedType?.Type == EntryType.Overnight;
@@ -135,6 +159,8 @@ public partial class EntryEditorViewModel : ViewModelBase
         EndTime = existing.EndTime;
         Title = existing.Title;
         Notes = existing.Notes;
+        UseCustomColor = EntryColors.IsValidHex(existing.Color);
+        Color = UseCustomColor ? existing.Color : "";
 
         _origGroupId = existing.AbsenceGroupId;
         _origStart = existing.AbsenceStart;
@@ -144,6 +170,14 @@ public partial class EntryEditorViewModel : ViewModelBase
     }
 
     partial void OnSelectedUserChanged(User? value) => RebuildTypeOptions();
+
+    partial void OnUseCustomColorChanged(bool value)
+    {
+        // Beim Einschalten mit der Farbe starten, die der Eintrag ohnehin hätte — so verschiebt
+        // man von einem sinnvollen Wert aus, statt bei Schwarz zu beginnen.
+        if (value && !EntryColors.IsValidHex(Color)) Color = AutoColor;
+        else if (!value) Color = "";
+    }
 
     /// <summary>
     /// Baut das Typ-Dropdown: erst die festen Typen, dann die Kategorien der gewählten Person.
@@ -228,6 +262,9 @@ public partial class EntryEditorViewModel : ViewModelBase
             Title = effectiveTitle,
             Notes = Notes.Trim(),
             ActivityTypeId = SelectedType.Activity?.Id,
+            // Nur eine wirklich gewählte, lesbare Farbe wird festgeschrieben — sonst bleibt der
+            // Eintrag an Kategorie/Typ gebunden und folgt deren späteren Änderungen.
+            Color = UseCustomColor && EntryColors.IsValidHex(Color) ? Color : "",
             // bestehende Abwesenheits-Gruppe mitführen, damit sie beim Speichern aufgeräumt werden kann
             AbsenceGroupId = _origGroupId,
             AbsenceStart = _origStart,

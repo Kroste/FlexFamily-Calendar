@@ -9,6 +9,7 @@
 
   <UserControl.Resources>
     <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
+    <cv:HexToColorConverter x:Key="HexToColorConverter" />
   </UserControl.Resources>
 
   <Grid Margin="24,20,24,20" RowDefinitions="Auto,*,Auto" MinWidth="432">
@@ -87,6 +88,31 @@
                                HorizontalAlignment="Stretch" />
           </StackPanel>
         </Grid>
+
+        <!-- Kachelfarbe. Vorschau zeigt Grund UND Schrift so, wie die Kachel später im Plan
+             aussieht — die Schriftfarbe wird gerechnet, nicht gewählt (EntryColors.OnTile). -->
+        <StackPanel Spacing="6">
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <TextBlock Grid.Column="0" Text="{loc:Tr Entry_ColorLabel}" FontSize="12" Opacity="0.7"
+                       VerticalAlignment="Center" />
+            <Border Grid.Column="2" CornerRadius="4" Padding="8,3" MinWidth="86"
+                    Background="{Binding PreviewColor, Converter={StaticResource ColorStringToBrushConverter}}">
+              <TextBlock Text="{loc:Tr Entry_ColorPreview}" FontSize="11" FontWeight="Bold"
+                         HorizontalAlignment="Center"
+                         Foreground="{Binding PreviewForeground, Converter={StaticResource ColorStringToBrushConverter}}" />
+            </Border>
+          </Grid>
+
+          <CheckBox IsChecked="{Binding UseCustomColor}" Content="{loc:Tr Entry_ColorCustom}" />
+
+          <ColorView IsVisible="{Binding UseCustomColor}"
+                     Color="{Binding Color, Converter={StaticResource HexToColorConverter}, Mode=TwoWay}"
+                     HorizontalAlignment="Stretch"
+                     IsAlphaEnabled="False"
+                     IsColorPaletteVisible="True"
+                     IsColorPreviewVisible="False"
+                     IsColorComponentsVisible="True" />
+        </StackPanel>
 
         <Border IsVisible="{Binding ShowOvernightNote}"
                 Background="{DynamicResource SelectionFillBrush}" CornerRadius="6" Padding="10,8">

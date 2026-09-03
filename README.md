@@ -170,9 +170,13 @@ Jede Zelle zeigt, was diese Person an diesem Tag macht — Schichten, Aktivität
 **Die Farbe einer Kachel sagt, worum es geht** — nicht, wer es ist. Wer es ist,
 steht ja als Zeile daneben. So siehst du beim Überfliegen sofort, wer arbeitet,
 wer frei hat und wer zwar unterwegs, aber nicht verfügbar ist (Sprachschule,
-Termin, Schule). Die Farben der festen Typen sind eingebaut; für alles andere
-legst du dir eigene **Kategorien mit eigener Farbe** an
-(siehe [Admin-Bereich](#admin-bereich-nur-eltern)).
+Termin, Schule).
+
+Woher die Farbe kommt, in dieser Reihenfolge:
+
+1. die **Farbe, die du beim Anlegen des Eintrags selbst gewählt** hast
+2. sonst die Farbe der **Kategorie** (Sprachschule, Remise, Frei …)
+3. sonst die eingebaute Farbe des **Typs** (Arbeit, Urlaub, Krank …)
 
 Die **Uhrzeit steht fett zuoberst** in jeder Kachel. Die Schrift darauf wird je
 nach Farbe automatisch schwarz oder weiß gesetzt, damit sie auf jedem Farbton
@@ -218,7 +222,15 @@ Zelle — damit legst du einen **zweiten Eintrag** für dieselbe Person am selbe
 Tag an, ohne den vorhandenen anzufassen.
 
 Alle Einträge haben eine **Zeit** (von–bis), einen **Typ** und optional einen
-**Kommentar**. Die Zeitfelder starten **leer**: Klick rein und tipp die Uhrzeit
+**Kommentar**.
+
+**Kachelfarbe:** Standardmäßig richtet sie sich nach Kategorie bzw. Typ. Setz den
+Haken bei *Eigene Farbe für diesen Eintrag*, dann wählst du sie frei — der
+Farbwähler startet bei der Farbe, die der Eintrag ohnehin hätte. Die Vorschau
+daneben zeigt die fertige Kachel; die Schrift darauf wird automatisch schwarz
+oder weiß, je nachdem was besser lesbar ist. Haken wieder raus = zurück zur
+automatischen Farbe. Bei mehrtägigem Urlaub oder Krankmeldung gilt die Farbe für
+den ganzen Zeitraum. Die Zeitfelder starten **leer**: Klick rein und tipp die Uhrzeit
 direkt los. Die App versteht dabei mehrere Schreibweisen — `8`, `830`, `8:30`
 und `08:30` ergeben alle dasselbe. Bei Krank, Urlaub und Abwesend fallen die
 Zeitfelder ganz weg, dort zählt nur der Datumsbereich.
