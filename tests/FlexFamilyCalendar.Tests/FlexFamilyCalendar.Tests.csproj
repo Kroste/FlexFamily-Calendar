@@ -10,6 +10,10 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
+    <!-- Headless-Backend: rendert echte Views ohne Fenstersystem. Nötig für die
+         Input-Tests (Klick auf den „+"-Knopf), die auf VM-Ebene nicht abbildbar sind. -->
+    <PackageReference Include="Avalonia.Headless" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
   </ItemGroup>
 
   <ItemGroup>

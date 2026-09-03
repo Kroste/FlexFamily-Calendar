@@ -165,7 +165,9 @@ Die Zeilen sind gruppiert:
 4. **Au-Pairs**
 
 Jede Zelle zeigt, was diese Person an diesem Tag macht — Schichten, Aktivitäten,
-Übernachtungen, Abwesenheiten. Farben identifizieren Personen.
+Übernachtungen, Abwesenheiten. Farben identifizieren Personen. Die **Uhrzeit
+steht fett zuoberst** in jeder Kachel, damit du sie im vollen Plan sofort
+findest.
 
 Über der Tabelle findest du die Wochen-Steuerung:
 
@@ -202,8 +204,15 @@ aufheben** um.
 
 Klick auf eine leere Zelle → **Eintrag-Editor** öffnet sich.
 
+Steht in der Zelle schon etwas, klick auf das kleine **+** unten rechts in der
+Zelle — damit legst du einen **zweiten Eintrag** für dieselbe Person am selben
+Tag an, ohne den vorhandenen anzufassen.
+
 Alle Einträge haben eine **Zeit** (von–bis), einen **Typ** und optional einen
-**Kommentar**.
+**Kommentar**. Die Zeitfelder starten **leer**: Klick rein und tipp die Uhrzeit
+direkt los. Die App versteht dabei mehrere Schreibweisen — `8`, `830`, `8:30`
+und `08:30` ergeben alle dasselbe. Bei Krank, Urlaub und Abwesend fallen die
+Zeitfelder ganz weg, dort zählt nur der Datumsbereich.
 
 ### Arbeit / Schicht
 
@@ -237,8 +246,9 @@ Wochen- und Ruhezeit-Grenzen, überschneidet sich also nicht mit ihnen.
 
 ### Krank, Urlaub oder Abwesend
 
-Krank- und Urlaubsmeldungen laufen **als Zeitbereich** (von–bis). Im
-Eintrag-Editor Typ auswählen, Startdatum und Enddatum setzen — die App legt für
+Krank- und Urlaubsmeldungen laufen **als Zeitbereich** (von–bis) über ganze
+Tage — Uhrzeiten gibt es hier nicht, die Felder sind für diese Typen
+ausgeblendet. Im Eintrag-Editor Typ auswählen, Startdatum und Enddatum setzen — die App legt für
 jeden betroffenen Tag einen Eintrag an und verknüpft sie miteinander.
 
 - **Krankmeldung**: gilt sofort. Der Admin bekommt eine Benachrichtigung; wenn

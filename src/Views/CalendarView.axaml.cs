@@ -400,28 +400,37 @@ public partial class CalendarView : UserControl
         e.Pointer.Capture(_pendingRowDragCtrl);
     }
 
+    /// <summary>
+    /// Ohne echten Drag wird hier NICHTS angefasst — insbesondere nicht das Pointer-Capture.
+    /// Dieser Handler hängt an der Zeile und läuft wegen <see cref="RoutingStrategies.Tunnel"/>
+    /// VOR den Controls darunter. Ein <c>Capture(null)</c> an dieser Stelle schickt jedem
+    /// Button in der Zeile ein <c>PointerCaptureLost</c>; Avalonias Button setzt darauf intern
+    /// <c>IsPressed=false</c> und lässt beim Release seinen Click ausfallen. Genau daran ist
+    /// der „+"-Knopf in der Tageszelle gestorben: Tapped greift bei ihm nicht (OnCellTapped
+    /// blendet Buttons bewusst aus), Click kam nie an — der Dialog blieb zu.
+    /// </summary>
     private async void OnRowPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (!_rowDragStarted) return;
+
+        // Zustand einsammeln und sofort zurücksetzen: der Handler ist für Tunnel UND Bubble
+        // registriert, läuft pro Release also zweimal. Das await unten gibt zwischendurch die
+        // Kontrolle ab — ohne das Zurücksetzen VOR dem await würde der zweite Durchlauf
+        // denselben Reorder ein weiteres Mal auslösen.
+        var draggedRow = _pendingRowDragRow;
+        ClearPendingRowDrag();
+        e.Pointer.Capture(null);
+
+        var targetRow = FindRowViewModelAt(e.GetPosition(this));
+        if (targetRow is null || _vm is null || draggedRow is null) return;
+
         try
         {
-            e.Pointer.Capture(null);
-            if (!_rowDragStarted) return;
-
-            var targetRow = FindRowViewModelAt(e.GetPosition(this));
-            if (targetRow is null || _vm is null || _pendingRowDragRow is null) return;
-
-            try
-            {
-                await _vm.ReorderPersonAsync(_pendingRowDragRow.UserId, targetRow.UserId);
-            }
-            catch (Exception ex)
-            {
-                LogService.Error("Personen-Reihenfolge speichern fehlgeschlagen", ex);
-            }
+            await _vm.ReorderPersonAsync(draggedRow.UserId, targetRow.UserId);
         }
-        finally
+        catch (Exception ex)
         {
-            ClearPendingRowDrag();
+            LogService.Error("Personen-Reihenfolge speichern fehlgeschlagen", ex);
         }
     }
 

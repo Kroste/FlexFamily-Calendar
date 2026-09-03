@@ -323,7 +323,10 @@
                                         Background="{Binding OwnerColor, Converter={StaticResource ColorStringToBrushConverter}}">
                                   <Grid>
                                     <StackPanel Spacing="0">
-                                      <TextBlock Text="{Binding TimeRange}" FontSize="9.5" Foreground="White" Opacity="0.85"
+                                      <!-- Die Uhrzeit ist die Information, nach der im Plan zuerst
+                                           gesucht wird — sie steht deshalb voll deckend und fett
+                                           über dem Typ-Label, nicht mehr als blasse Kopfzeile. -->
+                                      <TextBlock Text="{Binding TimeRange}" FontSize="12" FontWeight="Bold" Foreground="White"
                                                  IsVisible="{Binding ShowsTime}" />
                                       <TextBlock Text="{Binding DisplayType, Converter={x:Static cv:EntryTypeLabelConverter.Instance}}"
                                                  FontSize="11" FontWeight="SemiBold" Foreground="White"

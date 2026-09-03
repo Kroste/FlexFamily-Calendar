@@ -27,12 +27,17 @@ public partial class EntryEditorViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowActivityType))]
     [NotifyPropertyChangedFor(nameof(ShowDateRange))]
+    [NotifyPropertyChangedFor(nameof(ShowTimes))]
     [NotifyPropertyChangedFor(nameof(ShowOvernightNote))]
     private EntryTypeOption? _selectedType;
 
     [ObservableProperty] private ActivityType? _selectedActivityType;
-    [ObservableProperty] private TimeSpan? _startTime = TimeSpan.FromHours(8);
-    [ObservableProperty] private TimeSpan? _endTime = TimeSpan.FromHours(16);
+    // Bewusst ohne Vorbelegung: ein neuer Eintrag startet mit leeren Zeitfeldern, damit die
+    // Uhrzeit direkt getippt werden kann. Eine Vorgabe (früher 08:00–16:00) traf ohnehin selten
+    // zu und musste vor jeder Eingabe erst markiert und überschrieben werden. Save fängt die
+    // leeren Felder über Entry_ErrorNoStart/-NoEnd ab.
+    [ObservableProperty] private TimeSpan? _startTime;
+    [ObservableProperty] private TimeSpan? _endTime;
     [ObservableProperty] private DateTimeOffset? _absenceFrom;
     [ObservableProperty] private DateTimeOffset? _absenceTo;
     [ObservableProperty] private string _title = "";
@@ -54,6 +59,14 @@ public partial class EntryEditorViewModel : ViewModelBase
 
     /// <summary>Datumsbereich (von–bis) nur bei Abwesenheiten (Urlaub/Krank/Abwesend).</summary>
     public bool ShowDateRange => SelectedType != null && EntryTypeInfo.IsAbsence(SelectedType.Type);
+
+    /// <summary>
+    /// Uhrzeiten nur bei Nicht-Abwesenheiten. Eine Abwesenheit spannt ganze Tage — der Kalender
+    /// blendet ihre Zeiten ohnehin aus (<see cref="CalendarEntry.ShowsTime"/>) und die
+    /// Stundenrechnung überspringt sie. Seit die Felder leer starten, müssen sie hier weg:
+    /// sonst verlangte ein Urlaubsantrag eine Uhrzeit, die nirgends eine Bedeutung hat.
+    /// </summary>
+    public bool ShowTimes => !ShowDateRange;
 
     /// <summary>Hinweis auf die pauschale Stunden-Gutschrift bei Typ „Übernachtung".</summary>
     public bool ShowOvernightNote => SelectedType?.Type == EntryType.Overnight;
@@ -135,10 +148,13 @@ public partial class EntryEditorViewModel : ViewModelBase
         ErrorMessage = "";
         if (SelectedUser == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoUser"]; return; }
         if (SelectedType == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoType"]; return; }
-        if (StartTime == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoStart"]; return; }
-        if (EndTime == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoEnd"]; return; }
-        // EndTime < StartTime ist erlaubt (Schicht über Mitternacht); nur identische Zeiten sind ungültig.
-        if (EndTime == StartTime) { ErrorMessage = Localizer.Instance["Entry_ErrorSameTime"]; return; }
+        if (ShowTimes)
+        {
+            if (StartTime == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoStart"]; return; }
+            if (EndTime == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoEnd"]; return; }
+            // EndTime < StartTime ist erlaubt (Schicht über Mitternacht); nur identische Zeiten sind ungültig.
+            if (EndTime == StartTime) { ErrorMessage = Localizer.Instance["Entry_ErrorSameTime"]; return; }
+        }
         // Custom-Termine brauchen einen Titel — der Eintrag wäre sonst im Plan namenlos.
         if (SelectedType.Type == EntryType.Custom && string.IsNullOrWhiteSpace(Title))
         { ErrorMessage = Localizer.Instance["Entry_ErrorNoTitle"]; return; }
@@ -173,8 +189,10 @@ public partial class EntryEditorViewModel : ViewModelBase
             UserId = SelectedUser.Id,
             UserDisplayName = string.IsNullOrEmpty(SelectedUser.DisplayName) ? SelectedUser.Username : SelectedUser.DisplayName,
             Type = SelectedType.Type,
-            StartTime = StartTime.Value,
-            EndTime = EndTime.Value,
+            // Bei Abwesenheiten sind die Felder ausgeblendet und damit leer — beim Bearbeiten
+            // eines Altbestands stehen dort noch Werte, die bleiben erhalten.
+            StartTime = StartTime ?? TimeSpan.Zero,
+            EndTime = EndTime ?? TimeSpan.Zero,
             Title = effectiveTitle,
             Notes = Notes.Trim(),
             ActivityTypeId = ShowActivityType ? SelectedActivityType?.Id : null,

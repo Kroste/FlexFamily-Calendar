@@ -80,15 +80,21 @@
           </ComboBox>
         </StackPanel>
 
-        <Grid ColumnDefinitions="*,16,*">
+        <!-- Uhrzeiten: das Kernstück des Dialogs, deshalb größer und fetter gesetzt als der Rest
+             des Formulars. Bei Abwesenheiten ganz ausgeblendet (siehe ShowTimes). -->
+        <Grid ColumnDefinitions="*,16,*" IsVisible="{Binding ShowTimes}">
           <StackPanel Grid.Column="0" Spacing="4">
-            <TextBlock Text="{loc:Tr Entry_StartTime}" FontSize="12" Opacity="0.7" />
+            <TextBlock Text="{loc:Tr Entry_StartTime}" FontSize="12" FontWeight="SemiBold" Opacity="0.85" />
             <ctrl:TimeEntryBox Time="{Binding StartTime, Mode=TwoWay}"
+                               FontSize="19" FontWeight="SemiBold"
+                               Width="110" Padding="10,7"
                                HorizontalAlignment="Stretch" />
           </StackPanel>
           <StackPanel Grid.Column="2" Spacing="4">
-            <TextBlock Text="{loc:Tr Entry_EndTime}" FontSize="12" Opacity="0.7" />
+            <TextBlock Text="{loc:Tr Entry_EndTime}" FontSize="12" FontWeight="SemiBold" Opacity="0.85" />
             <ctrl:TimeEntryBox Time="{Binding EndTime, Mode=TwoWay}"
+                               FontSize="19" FontWeight="SemiBold"
+                               Width="110" Padding="10,7"
                                HorizontalAlignment="Stretch" />
           </StackPanel>
         </Grid>

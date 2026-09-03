@@ -14,6 +14,9 @@
     <PackageVersion Include="Avalonia.Controls.ColorPicker" Version="12.1.1" />
     <PackageVersion Include="Avalonia.Desktop" Version="12.1.1" />
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.1" />
+    <!-- Nur im Testprojekt: rendert Views ohne Fenstersystem, damit sich Klicks und
+         Event-Routing (Tapped/Click/Pointer-Capture) automatisiert prüfen lassen. -->
+    <PackageVersion Include="Avalonia.Headless" Version="12.1.1" />
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.1" />
     <!-- Folgt NICHT der Avalonia-Versionierung (eigene 2.x-Reihe). -->
     <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />

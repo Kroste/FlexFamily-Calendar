@@ -117,6 +117,21 @@
   `ExtendClientAreaTitleBarHeightHint` steht bewusst auf `32` statt dem im Skill genannten `-1`:
   der Wert passt exakt zur Höhe der gerenderten Leiste, und das Symptom „tote Titelleiste",
   gegen das `-1` hilft, liegt hier nicht vor.
+- **Pointer-Capture in der Plantabelle NIE ohne laufenden Drag zurücknehmen.** `OnRowLoaded`
+  hängt die Drag-Handler mit `Tunnel | Bubble` und `handledEventsToo` an die Personenzeile —
+  sie laufen damit **vor** allem, was darunter liegt. Ein `e.Pointer.Capture(null)` im
+  Release-Handler schickt jedem Button in der Zeile ein `PointerCaptureLost`; Avalonias Button
+  setzt darauf `IsPressed=false` und verwirft seinen Click. Genau daran waren der „+"-Knopf
+  der Tageszelle und der Impersonate-Knopf tot: `OnCellTapped` blendet Buttons bewusst aus
+  (sonst doppelter Dialog), der Click kam nie an, und es passierte schlicht gar nichts —
+  ohne Fehlermeldung. `OnRowPointerReleased` steigt deshalb bei `!_rowDragStarted` sofort aus.
+  Der Zustand wird zudem **vor** dem `await` zurückgesetzt: der Handler läuft pro Release
+  zweimal (Tunnel und Bubble), sonst liefe der Reorder doppelt.
+- **Zeitfelder im Eintrag-Dialog starten leer** (`TimeSpan?` ohne Vorbelegung). Abwesenheiten
+  spannen ganze Tage und haben deshalb gar keine Uhrzeit: `ShowTimes` blendet die Felder aus
+  und `Save` überspringt die Zeitprüfung — ohne diese Ausnahme ließe sich seit den leeren
+  Feldern kein Urlaubsantrag mehr absenden. Beim Bearbeiten bleiben vorhandene Werte erhalten
+  (`StartTime ?? TimeSpan.Zero`), damit Altbestände nicht auf 00:00 fallen.
 - **Design-Test-API (`desktop/DesignApi/`, nur Desktop):** lokale REST-Schnittstelle, mit der
   sich UI-Änderungen prüfen lassen — Zustand lesen, Theme und Sprache umschalten, Fenster
   öffnen, Screenshot per `RenderTargetBitmap`. Fernsteuerung von außen
@@ -232,6 +247,20 @@ docs/      Screenshots, Logo
   Test-Exe durch, die sie nicht kennt, und der Lauf endet mit „Es wurden keine Tests
   ausgeführt". Tests gegen globale Singletons (`Localizer`, `SecretService`) gehören in eine
   nicht-parallele Collection: xunit.v3 fixiert die Reihenfolge innerhalb einer Klasse nicht.
+- **UI-Input-Tests laufen headless** (`Avalonia.Headless`, `HeadlessTestApp` +
+  `HeadlessAppFixture` im Client-Testprojekt). Zwei Fallen, beide kosten sonst Stunden:
+  1. Die Test-App MUSS `Palette.axaml`/`Icons.axaml`/`AppStyles.axaml` mitladen. Ein Control,
+     dessen Hintergrund an einem toten `DynamicResource` hängt, hat **keinen** Hintergrund und
+     ist damit **nicht hit-testbar** — der Klick fällt durch es hindurch auf das Element
+     darunter, und der Test prüft klaglos den falschen Pfad (er wird grün, obwohl der Fehler
+     drin ist).
+  2. `HeadlessUnitTestSession.Dispose()` NICHT aufrufen: es wartet per `_dispatchTask.Wait()`
+     auf das Ende der Dispatcher-Schleife, die hier nicht zurückkommt. Der Testprozess läuft
+     dann endlos weiter, obwohl alle Tests längst grün sind — sichtbar nur als Lauf ohne
+     Zusammenfassung. Die Session sitzt auf einem Thread-Pool-Thread und hält den Prozess
+     beim Beenden ohnehin nicht auf.
+  Jeder neue Input-Test gehört gegen den kaputten Stand gegengeprüft: läuft er auch ohne den
+  Fix grün, misst er etwas anderes als gedacht.
 - Versionierung via **MinVer** (Git-Tag `vX.Y.Z`), GitHub-Account **Kroste** (`lars-oste@gmx.de`).
 
 ---
