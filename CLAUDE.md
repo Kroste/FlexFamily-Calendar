@@ -312,6 +312,11 @@ docs/      Screenshots, Logo
   Test-Exe durch, die sie nicht kennt, und der Lauf endet mit „Es wurden keine Tests
   ausgeführt". Tests gegen globale Singletons (`Localizer`, `SecretService`) gehören in eine
   nicht-parallele Collection: xunit.v3 fixiert die Reihenfolge innerhalb einer Klasse nicht.
+  **Dasselbe gilt für die geteilte DB der `ApiTestFactory`:** ein `IClassFixture` hält EINE
+  Datenbank für alle Tests der Klasse. Jeder Test braucht deshalb eigene Daten (eigene Woche,
+  eigene Ids) statt gemeinsamer Konstanten — sonst finalisiert ein Test den Tag, den der nächste
+  unfinalisiert braucht. Lokal fällt das nicht auf, weil die Reihenfolge dort zufällig passt;
+  auf dem CI-Runner kippt sie (v0.17.0, Run 33741179155).
 - **UI-Input-Tests laufen headless** (`Avalonia.Headless`, `HeadlessTestApp` +
   `HeadlessAppFixture` im Client-Testprojekt). Zwei Fallen, beide kosten sonst Stunden:
   1. Die Test-App MUSS `Palette.axaml`/`Icons.axaml`/`AppStyles.axaml` mitladen. Ein Control,
