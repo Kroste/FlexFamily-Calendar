@@ -4,7 +4,11 @@ using System.Text.Json;
 
 namespace FlexFamilyCalendar.Localization;
 
-public record LanguageOption(string Code, string DisplayName);
+public record LanguageOption(string Code, string DisplayName)
+{
+    /// <summary>Kürzel für das Abzeichen in der Auswahlliste („DE", „EN").</summary>
+    public string Badge => Code.ToUpperInvariant();
+}
 
 /// <summary>
 /// Lädt UI-Sprachen aus eingebetteten Ressourcen (web-tauglich, ohne Dateisystem).
@@ -29,13 +33,17 @@ public sealed class Localizer
     public string CurrentLanguage { get; private set; } = BaseLanguage;
 
     /// <summary>
-    /// Auswahlliste für die Sprach-ComboBox. Die Länderflagge als Emoji ist Kroste-Standard;
-    /// Englisch bekommt die UK-Flagge als international neutrales Symbol.
+    /// Auswahlliste für die Sprach-ComboBox. Bewusst OHNE Flaggen-Emoji: Browser und Android
+    /// bringen keinen Emoji-Font mit, den Avalonia erreicht — in der Web-Ansicht standen dort
+    /// Ersatzkästchen statt 🇩🇪. Der Desktop hat den Fallback zwar (Noto Color Emoji), aber ein
+    /// Symbol, das auf zwei von drei Heads kaputt ist, taugt nicht als Erkennungsmerkmal.
+    /// Stattdessen zeigt die Liste ein Sprachkürzel als Abzeichen (<see cref="LanguageOption.Badge"/>),
+    /// das überall gleich rendert.
     /// </summary>
     public IReadOnlyList<LanguageOption> AvailableLanguages { get; } =
     [
-        new("de", "🇩🇪 Deutsch"),
-        new("en", "🇬🇧 English"),
+        new("de", "Deutsch"),
+        new("en", "English"),
     ];
 
     /// <summary>Für ViewModels, die bei Sprachwechsel selbst gebaute Texte neu erzeugen müssen.</summary>

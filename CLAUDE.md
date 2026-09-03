@@ -194,10 +194,16 @@
   curl -s --noproxy '*' -H "Authorization: Bearer geheim" \
        -X POST "http://127.0.0.1:8765/screenshot?target=main" -o shot.png
   ```
-- **Emoji-Fallback:** `BuildAvaloniaApp` setzt `FontManagerOptions` mit dem Farb-Emoji-Font des
-  Systems. Inter bringt keine Emoji-Glyphen mit — ohne den Fallback rendern die Länderflaggen
-  in der Sprachauswahl als Ersatzkästchen. Wichtig: `WithInterFont()` setzt die Standardfamilie
-  selbst über dieselben Options, deshalb muss `DefaultFamilyName` dort erneut gesetzt werden.
+- **Emoji-Fallback (nur Desktop):** `BuildAvaloniaApp` setzt `FontManagerOptions` mit dem
+  Farb-Emoji-Font des Systems. Inter bringt keine Emoji-Glyphen mit. Wichtig: `WithInterFont()`
+  setzt die Standardfamilie selbst über dieselben Options, deshalb muss `DefaultFamilyName` dort
+  erneut gesetzt werden.
+  **Emoji taugen trotzdem nicht als UI-Element:** Browser und Android haben diesen Fallback nicht,
+  und in WASM gibt es überhaupt keine Systemschriften, die Avalonia erreichen könnte — eine
+  Emoji-Schrift einzubetten kostet Megabytes. In der Web-Ansicht standen deshalb Ersatzkästchen
+  statt der Länderflaggen. Die Sprachauswahl zeigt jetzt ein Kürzel-Abzeichen
+  (`LanguageOption.Badge`), das überall gleich rendert. Neue Symbole gehören nach
+  `Styles/Icons.axaml` als Geometrie, nicht als Emoji ins Label.
 - **Icon-Geometrien in `Styles/Icons.axaml` sind Umrisse.** Sie gehören mit `Stroke` +
   `StrokeThickness` gezeichnet, nicht mit `Fill` — sonst füllt Avalonia das äußere Rechteck und
   aus dem Kalender wird ein einfarbiger Klotz.
@@ -244,6 +250,10 @@ docs/      Screenshots, Logo
 - Das **Android-Projekt (`mobile/`) ist NICHT in `FlexFamilyCalendar.slnx`** — damit
   `dotnet build/test` der Solution ohne `android`-Workload durchgeht. Der Android-Build
   läuft im Release-Workflow als eigener Job (`Android APK`, mit `dotnet workload install android`).
+- **Android-VersionCode im Release-Workflow:** `MAJ*1000000 + MIN*1000 + PAT`. Mit dem früheren
+  Faktor 100 kollidierte `0.16.100` mit `0.17.0` — Android merkt das nicht und installiert
+  stillschweigend die falsche Version. Die Formel muss strikt monoton bleiben, auch gegenüber
+  bereits veröffentlichten Codes.
 - **Server-DB-Schema** ändert sich über **EF-Migrationen**
   (`server/FlexFamilyCalendar.Api/Migrations/`). Nach Feldänderungen:
   `dotnet ef migrations add <Name>` — Live-DB wird beim Redeploy per Startup-Migrate

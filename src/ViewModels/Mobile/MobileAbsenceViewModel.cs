@@ -77,7 +77,11 @@ public partial class MobileAbsenceViewModel : ObservableObject
             foreach (var (date, entry) in perDay)
             {
                 var day = await _storage.LoadDayAsync(date);
-                day.Entries.RemoveAll(e => e.UserId == _user.Id && EntryTypeInfo.IsAbsence(e.Type) && e.AbsenceGroupId == groupId);
+                // Vorhandene Meldung DERSELBEN Art für diese Person an diesem Tag ersetzen.
+                // Vorher stand hier ein Vergleich gegen die gerade erst erzeugte groupId — der
+                // traf per Definition nie etwas, und zweimal „Speichern" legte zwei sich
+                // überlappende Krankmeldungen an. Andere Abwesenheitsarten bleiben unangetastet.
+                day.Entries.RemoveAll(e => e.UserId == _user.Id && e.Type == entry.Type);
                 day.Entries.Add(entry);
                 await _storage.SaveDayAsync(day);
             }

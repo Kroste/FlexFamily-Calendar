@@ -128,9 +128,12 @@ jobs:
           VERSION="${RELEASE_TAG#v}"
           NUMERIC="${VERSION%%-*}"
           # ApplicationDisplayVersion (SemVer, User-sichtbar) + ApplicationVersion (VersionCode,
-          # muss strikt aufwärts sein — leiten wir aus dem numeric-Anteil ab: 0.1.18 → 118)
+          # muss strikt aufwärts sein). Je Stelle 1000 statt 100: mit dem alten Faktor kollidierte
+          # 0.16.100 mit 0.17.0, und Android merkt so etwas nicht — es installiert dann einfach
+          # die falsche Version. Bleibt monoton zur alten Formel (0.16.1: 1601 → 16001) und
+          # unter Androids Obergrenze von 2100000000.
           IFS='.' read -r MAJ MIN PAT <<< "$NUMERIC"
-          VERSION_CODE=$(( MAJ * 10000 + MIN * 100 + PAT ))
+          VERSION_CODE=$(( MAJ * 1000000 + MIN * 1000 + PAT ))
           dotnet publish mobile/FlexFamilyCalendar.Android.csproj \
             -c Release \
             -p:ApplicationDisplayVersion="$NUMERIC" \
