@@ -165,9 +165,18 @@ Die Zeilen sind gruppiert:
 4. **Au-Pairs**
 
 Jede Zelle zeigt, was diese Person an diesem Tag macht — Schichten, Aktivitäten,
-Übernachtungen, Abwesenheiten. Farben identifizieren Personen. Die **Uhrzeit
-steht fett zuoberst** in jeder Kachel, damit du sie im vollen Plan sofort
-findest.
+Übernachtungen, Abwesenheiten.
+
+**Die Farbe einer Kachel sagt, worum es geht** — nicht, wer es ist. Wer es ist,
+steht ja als Zeile daneben. So siehst du beim Überfliegen sofort, wer arbeitet,
+wer frei hat und wer zwar unterwegs, aber nicht verfügbar ist (Sprachschule,
+Termin, Schule). Die Farben der festen Typen sind eingebaut; für alles andere
+legst du dir eigene **Kategorien mit eigener Farbe** an
+(siehe [Admin-Bereich](#admin-bereich-nur-eltern)).
+
+Die **Uhrzeit steht fett zuoberst** in jeder Kachel. Die Schrift darauf wird je
+nach Farbe automatisch schwarz oder weiß gesetzt, damit sie auf jedem Farbton
+lesbar bleibt — auch im PDF.
 
 Über der Tabelle findest du die Wochen-Steuerung:
 
@@ -227,11 +236,17 @@ einmal am Starttag.
 
 ### Aktivität
 
-Für alles, was keine Arbeit ist — Schule, Kita, Sport, Sprachkurs, Freizeit.
+Für alles, was keine Arbeit ist — Schule, Kita, Sport, Sprachschule, Remise,
+Frei, Freizeit.
 
-Wähle eine **Kategorie** aus dem Dropdown (die Kategorien pflegt der Admin für
-jede Rolle: Kindern stehen andere Optionen zur Verfügung als Au-Pairs). Die
-Farbe der Kategorie erscheint dann in der Zelle.
+Deine **Kategorien stehen direkt im Typ-Dropdown**, gleichberechtigt neben
+Arbeit, Urlaub und Krank — kein Umweg mehr über „Aktivität" und ein zweites
+Dropdown. Der Punkt vor dem Namen zeigt dir vorab die Farbe, die der Eintrag im
+Plan bekommt.
+
+Welche Kategorien erscheinen, hängt an der Rolle der gewählten Person: Kindern
+stehen andere zur Verfügung als Au-Pairs. Angelegt und eingefärbt werden sie im
+[Admin-Bereich](#admin-bereich-nur-eltern).
 
 ### Übernachtung
 

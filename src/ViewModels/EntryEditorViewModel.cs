@@ -8,7 +8,17 @@ using System.Globalization;
 
 namespace FlexFamilyCalendar.ViewModels;
 
-public record EntryTypeOption(EntryType Type, string Label);
+/// <summary>
+/// Ein Eintrag im Typ-Dropdown. Neben den festen Typen stehen dort die vom Admin gepflegten
+/// Aktivitäts-Kategorien direkt drin (<see cref="Activity"/> gesetzt) — vorher musste man erst
+/// „Aktivität" und dann in einem zweiten Dropdown die Kategorie wählen, was in der täglichen
+/// Planung ein Klick zu viel war und die eigenen Kategorien unsichtbar machte.
+/// </summary>
+public record EntryTypeOption(EntryType Type, string Label, ActivityType? Activity = null)
+{
+    /// <summary>Farbe, die ein Eintrag dieser Art im Plan bekommt — für den Punkt im Dropdown.</summary>
+    public string PreviewColor => EntryColors.Tile(Type, Activity?.Color);
+}
 
 public enum EntryDialogAction { Save, Delete }
 
@@ -18,6 +28,7 @@ public partial class EntryEditorViewModel : ViewModelBase
 {
     private readonly string _entryId;
     private readonly IReadOnlyList<ActivityType> _allActivityTypes;
+    private readonly IReadOnlyList<EntryType> _allowedTypes;
     private string? _origGroupId;     // bestehende Abwesenheits-Gruppe (zum Aufräumen beim Bearbeiten)
     private DateOnly? _origStart;
     private DateOnly? _origEnd;
@@ -25,13 +36,11 @@ public partial class EntryEditorViewModel : ViewModelBase
     [ObservableProperty] private User? _selectedUser;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowActivityType))]
     [NotifyPropertyChangedFor(nameof(ShowDateRange))]
     [NotifyPropertyChangedFor(nameof(ShowTimes))]
     [NotifyPropertyChangedFor(nameof(ShowOvernightNote))]
     private EntryTypeOption? _selectedType;
 
-    [ObservableProperty] private ActivityType? _selectedActivityType;
     // Bewusst ohne Vorbelegung: ein neuer Eintrag startet mit leeren Zeitfeldern, damit die
     // Uhrzeit direkt getippt werden kann. Eine Vorgabe (früher 08:00–16:00) traf ohnehin selten
     // zu und musste vor jeder Eingabe erst markiert und überschrieben werden. Save fängt die
@@ -49,13 +58,10 @@ public partial class EntryEditorViewModel : ViewModelBase
     public bool IsEditMode { get; }
     public string HeaderText => Localizer.Instance[IsEditMode ? "Entry_Edit" : "Entry_New"];
     public IReadOnlyList<User> AvailableUsers { get; }
-    public IReadOnlyList<EntryTypeOption> EntryTypes { get; }
 
-    /// <summary>Konfigurierbare Aktivitäts-Kategorien, gefiltert nach der Rolle der gewählten Person.</summary>
-    public ObservableCollection<ActivityType> AvailableActivityTypes { get; } = new();
-
-    /// <summary>Kategorie-Auswahl nur bei Typ „Aktivität".</summary>
-    public bool ShowActivityType => SelectedType?.Type == EntryType.Activity;
+    /// <summary>Feste Typen plus die für die gewählte Person gültigen Kategorien. Wird neu
+    /// aufgebaut, wenn die Person wechselt — Kinder haben andere Kategorien als Au-Pairs.</summary>
+    public ObservableCollection<EntryTypeOption> EntryTypes { get; } = new();
 
     /// <summary>Datumsbereich (von–bis) nur bei Abwesenheiten (Urlaub/Krank/Abwesend).</summary>
     public bool ShowDateRange => SelectedType != null && EntryTypeInfo.IsAbsence(SelectedType.Type);
@@ -92,14 +98,18 @@ public partial class EntryEditorViewModel : ViewModelBase
         CanPickUser = canPickUser;
         _allActivityTypes = activityTypes ?? Array.Empty<ActivityType>();
 
-        var types = allowedTypes is { Count: > 0 } ? allowedTypes : Enum.GetValues<EntryType>();
-        EntryTypes = types.Select(t => new EntryTypeOption(t, Localizer.Instance[EntryTypeInfo.Key(t)])).ToList();
+        _allowedTypes = allowedTypes is { Count: > 0 } ? allowedTypes : Enum.GetValues<EntryType>();
 
         _entryId = Guid.NewGuid().ToString();
         IsEditMode = false;
-        SelectedUser = users.FirstOrDefault();
-        var defaultType = canPickUser ? EntryType.Work : types[0];
-        SelectedType = EntryTypes.FirstOrDefault(t => t.Type == defaultType) ?? EntryTypes.FirstOrDefault();
+        SelectedUser = users.FirstOrDefault();   // baut über OnSelectedUserChanged die Typenliste
+        // Zweiter Aufruf für den Fall einer leeren Benutzerliste: dort bleibt SelectedUser null,
+        // der Wert ändert sich also nicht und die Partial-Methode feuert nie — das Dropdown
+        // stünde leer da.
+        RebuildTypeOptions();
+        var defaultType = canPickUser ? EntryType.Work : _allowedTypes[0];
+        SelectedType = EntryTypes.FirstOrDefault(t => t.Type == defaultType && t.Activity is null)
+                       ?? EntryTypes.FirstOrDefault();
 
         var dateOffset = new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue));
         AbsenceFrom = dateOffset;
@@ -115,12 +125,16 @@ public partial class EntryEditorViewModel : ViewModelBase
         IsEditMode = true;
         _entryId = existing.Id;
         SelectedUser = users.FirstOrDefault(u => u.Id == existing.UserId) ?? users.FirstOrDefault();
-        SelectedType = EntryTypes.FirstOrDefault(t => t.Type == existing.Type) ?? SelectedType;
+        // Kategorie-Option bevorzugen, sonst der reine Typ — ein Eintrag, dessen Kategorie
+        // inzwischen gelöscht wurde, darf im Dialog nicht ins Leere laufen.
+        SelectedType = EntryTypes.FirstOrDefault(t => t.Type == existing.Type && t.Activity?.Id == existing.ActivityTypeId)
+                       ?? EntryTypes.FirstOrDefault(t => t.Type == existing.Type && t.Activity is null)
+                       ?? EntryTypes.FirstOrDefault(t => t.Type == existing.Type)
+                       ?? SelectedType;
         StartTime = existing.StartTime;
         EndTime = existing.EndTime;
         Title = existing.Title;
         Notes = existing.Notes;
-        SelectedActivityType = AvailableActivityTypes.FirstOrDefault(t => t.Id == existing.ActivityTypeId);
 
         _origGroupId = existing.AbsenceGroupId;
         _origStart = existing.AbsenceStart;
@@ -129,17 +143,36 @@ public partial class EntryEditorViewModel : ViewModelBase
         AbsenceTo = new DateTimeOffset((existing.AbsenceEnd ?? date).ToDateTime(TimeOnly.MinValue));
     }
 
-    partial void OnSelectedUserChanged(User? value) => RefreshActivityTypes();
+    partial void OnSelectedUserChanged(User? value) => RebuildTypeOptions();
 
-    private void RefreshActivityTypes()
+    /// <summary>
+    /// Baut das Typ-Dropdown: erst die festen Typen, dann die Kategorien der gewählten Person.
+    /// Die generische Option „Aktivität" bleibt nur übrig, wenn es für diese Person gar keine
+    /// Kategorie gibt — sonst stünde sie sinnlos neben „Sprachschule" und „Remise".
+    /// </summary>
+    private void RebuildTypeOptions()
     {
-        var prevId = SelectedActivityType?.Id;
-        AvailableActivityTypes.Clear();
-        if (SelectedUser != null)
-            foreach (var t in _allActivityTypes.Where(t => t.AppliesTo(SelectedUser.Category)))
-                AvailableActivityTypes.Add(t);
-        SelectedActivityType = AvailableActivityTypes.FirstOrDefault(t => t.Id == prevId)
-                               ?? AvailableActivityTypes.FirstOrDefault();
+        var prevType = SelectedType?.Type;
+        var prevActivityId = SelectedType?.Activity?.Id;
+
+        var categories = SelectedUser is null
+            ? Array.Empty<ActivityType>()
+            : _allActivityTypes.Where(t => t.AppliesTo(SelectedUser.Category)).ToArray();
+        var activityAllowed = _allowedTypes.Contains(EntryType.Activity);
+
+        EntryTypes.Clear();
+        foreach (var t in _allowedTypes)
+        {
+            if (t == EntryType.Activity && categories.Length > 0 && activityAllowed) continue;
+            EntryTypes.Add(new EntryTypeOption(t, Localizer.Instance[EntryTypeInfo.Key(t)]));
+        }
+        if (activityAllowed)
+            foreach (var c in categories)
+                EntryTypes.Add(new EntryTypeOption(EntryType.Activity, c.Name, c));
+
+        SelectedType = EntryTypes.FirstOrDefault(t => t.Type == prevType && t.Activity?.Id == prevActivityId)
+                       ?? EntryTypes.FirstOrDefault(t => t.Type == prevType)
+                       ?? SelectedType;
     }
 
     [RelayCommand]
@@ -176,9 +209,8 @@ public partial class EntryEditorViewModel : ViewModelBase
         // Title-Freifeld nutzt, automatisch den Kategoriename übernehmen. Sonst wäre der Eintrag im
         // Plan ohne Titel ("Aktivität" als generisches Label) und der Server würde ihn ablehnen,
         // solange seine Pflichtfeldprüfung Title/categoryLabel verlangt.
-        var effectiveTitle = ShowActivityType
-                             && string.IsNullOrWhiteSpace(Title)
-                             && SelectedActivityType is { } cat
+        var effectiveTitle = string.IsNullOrWhiteSpace(Title)
+                             && SelectedType.Activity is { } cat
                              && !string.IsNullOrWhiteSpace(cat.Name)
             ? cat.Name
             : Title.Trim();
@@ -195,7 +227,7 @@ public partial class EntryEditorViewModel : ViewModelBase
             EndTime = EndTime ?? TimeSpan.Zero,
             Title = effectiveTitle,
             Notes = Notes.Trim(),
-            ActivityTypeId = ShowActivityType ? SelectedActivityType?.Id : null,
+            ActivityTypeId = SelectedType.Activity?.Id,
             // bestehende Abwesenheits-Gruppe mitführen, damit sie beim Speichern aufgeräumt werden kann
             AbsenceGroupId = _origGroupId,
             AbsenceStart = _origStart,

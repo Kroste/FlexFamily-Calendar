@@ -42,7 +42,10 @@ public static class PlanExportBuilder
             label += $" · {e.Title}";
 
         var time = EntryTypeInfo.IsAbsence(displayType) ? e.AbsenceSpanLabel : e.TimeRange;
-        return new PlanCellEntry(string.IsNullOrEmpty(e.OwnerColor) ? "#7F8C8D" : e.OwnerColor, time, label);
+        // Farbe nach Art des Eintrags, nicht nach Person — und auf dem hier je Empfänger neu
+        // berechneten displayType, damit die Maskierung nicht über die Farbe unterlaufen wird:
+        // eine fremde Krankmeldung erscheint als „Abwesend" und muss auch grau aussehen.
+        return new PlanCellEntry(EntryColors.Tile(displayType, e.HasActivity ? e.ActivityColor : null), time, label);
     }
 
     /// <summary>

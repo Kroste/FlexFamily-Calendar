@@ -127,6 +127,25 @@
   ohne Fehlermeldung. `OnRowPointerReleased` steigt deshalb bei `!_rowDragStarted` sofort aus.
   Der Zustand wird zudem **vor** dem `await` zurückgesetzt: der Handler läuft pro Release
   zweimal (Tunnel und Bubble), sonst liefe der Reorder doppelt.
+- **Die Plan-Kachel färbt sich nach der Art des Eintrags, nicht nach der Person**
+  (`EntryColors.Tile`: Kategorie schlägt Typ, `CalendarEntry.TileColor`). Die Plansicht ist eine
+  Leitungssicht — gefragt ist, wer arbeitet, wer frei hat und wer unterwegs und damit nicht
+  verfügbar ist; wem die Zeile gehört, steht links daneben. `OwnerColor` bleibt für den
+  Personen-Punkt in der Namensspalte und das View-as-Banner. **Gerechnet wird auf `DisplayType`,
+  nie auf `Type`** — sonst verriete das Rot einer Krankmeldung den Grund, den die Maskierung
+  gerade als „Abwesend" verbirgt; `PlanExport.CellEntry` leitet seinen `displayType` je Empfänger
+  selbst ab und färbt danach.
+- **Schriftfarbe auf der Kachel wird gerechnet, nicht gesetzt** (`EntryColors.OnTile`: WCAG-Kontrast
+  gegen Schwarz und Weiß, der bessere gewinnt). Sobald der Admin eigene Kategoriefarben vergibt,
+  ist jede feste Helligkeitsschwelle irgendwann die falsche. `PdfExportService.TextColor`
+  delegiert an dieselbe Funktion — vorher hatte es eine eigene Schwelle (0.62 auf
+  0.299/0.587/0.114) und wich bei mittleren Farben von der Bildschirmdarstellung ab.
+- **Das Typ-Dropdown ist flach**: feste Typen plus die Kategorien der gewählten Person in einer
+  Liste (`EntryTypeOption.Activity`). Die generische Option „Aktivität" entfällt genau dann,
+  wenn es für diese Person mindestens eine Kategorie gibt — ohne passende Kategorie bleibt sie
+  stehen, sonst ginge die Fähigkeit verloren. Die Liste hängt an der Personenkategorie und wird
+  bei Benutzerwechsel neu gebaut; im Konstruktor zusätzlich einmal explizit, weil bei leerer
+  Benutzerliste `SelectedUser` null bleibt und die Partial-Methode nie feuert.
 - **Zeitfelder im Eintrag-Dialog starten leer** (`TimeSpan?` ohne Vorbelegung). Abwesenheiten
   spannen ganze Tage und haben deshalb gar keine Uhrzeit: `ShowTimes` blendet die Felder aus
   und `Save` überspringt die Zeitprüfung — ohne diese Ausnahme ließe sich seit den leeren

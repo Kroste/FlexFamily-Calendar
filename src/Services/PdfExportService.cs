@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using FlexFamilyCalendar.Models;
 
 namespace FlexFamilyCalendar.Services;
 
@@ -106,7 +107,7 @@ public static class PdfExportService
                     if (cy + ch > y + rowH) break;
                     var (er, eg, eb) = Hex(e.ColorHex);
                     Fill(er, eg, eb); RectFill(cx + 1.5, cy, colW - 3, ch - 1.5);
-                    var (tr, tg, tb) = TextColor(er, eg, eb);
+                    var (tr, tg, tb) = TextColor(e.ColorHex);
                     Fill(tr, tg, tb);
                     var ty = cy + 6.5;
                     if (!string.IsNullOrEmpty(e.Time)) { Text(cx + 4, ty, 6.2, false, Truncate(e.Time, colW - 8, 6.2)); ty += 7.5; }
@@ -250,9 +251,12 @@ public static class PdfExportService
             int.Parse(hex.Substring(4, 2), NumberStyles.HexNumber) / 255.0);
     }
 
-    /// <summary>Lesbare Textfarbe je nach Helligkeit des Hintergrunds (dunkel auf hell, sonst weiß).</summary>
-    private static (double, double, double) TextColor(double r, double g, double b)
-        => 0.299 * r + 0.587 * g + 0.114 * b > 0.62 ? (0.15, 0.15, 0.15) : (1, 1, 1);
+    /// <summary>Lesbare Textfarbe auf der Kachel. Delegiert bewusst an <see cref="EntryColors.OnTile"/>:
+    /// vorher entschied hier eine eigene Helligkeitsschwelle, und seit die Kachelfarbe aus der
+    /// Art des Eintrags kommt, wichen Bildschirm und Ausdruck bei mittleren Farben voneinander
+    /// ab — dieselbe Kachel einmal mit weißer, einmal mit schwarzer Uhrzeit.</summary>
+    private static (double, double, double) TextColor(string colorHex)
+        => EntryColors.OnTile(colorHex) == "#000000" ? (0.15, 0.15, 0.15) : (1, 1, 1);
 
     private static string F(double v) => v.ToString("0.###", CultureInfo.InvariantCulture);
 

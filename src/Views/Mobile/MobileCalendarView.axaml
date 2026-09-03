@@ -62,9 +62,9 @@
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
                       <Border Padding="8,6" Margin="0,3,0,0" CornerRadius="4"
-                              Background="{Binding OwnerColor, Converter={StaticResource ColorStringToBrushConverter}}">
+                              Background="{Binding TileColor, Converter={StaticResource ColorStringToBrushConverter}}">
                         <StackPanel Spacing="2">
-                          <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="White">
+                          <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}">
                             <Run Text="{Binding UserDisplayName}" />
                             <Run Text=" — " />
                             <Run Text="{Binding StartTime, StringFormat=hh\\:mm}" />
@@ -72,7 +72,7 @@
                             <Run Text="{Binding EndTime, StringFormat=hh\\:mm}" />
                           </TextBlock>
                           <TextBlock Text="{Binding DisplayTitle}"
-                                     FontSize="11" Foreground="White" Opacity="0.9"
+                                     FontSize="11" Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}" Opacity="0.9"
                                      IsVisible="{Binding DisplayTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                         </StackPanel>
                       </Border>

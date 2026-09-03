@@ -320,36 +320,32 @@
                                         PointerReleased="OnEntryPointerReleased"
                                         ClipToBounds="True"
                                         Opacity="{Binding DisplayOpacity}"
-                                        Background="{Binding OwnerColor, Converter={StaticResource ColorStringToBrushConverter}}">
+                                        Background="{Binding TileColor, Converter={StaticResource ColorStringToBrushConverter}}">
                                   <Grid>
                                     <StackPanel Spacing="0">
                                       <!-- Die Uhrzeit ist die Information, nach der im Plan zuerst
                                            gesucht wird — sie steht deshalb voll deckend und fett
                                            über dem Typ-Label, nicht mehr als blasse Kopfzeile. -->
-                                      <TextBlock Text="{Binding TimeRange}" FontSize="12" FontWeight="Bold" Foreground="White"
+                                      <TextBlock Text="{Binding TimeRange}" FontSize="12" FontWeight="Bold" Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}"
                                                  IsVisible="{Binding ShowsTime}" />
                                       <TextBlock Text="{Binding DisplayType, Converter={x:Static cv:EntryTypeLabelConverter.Instance}}"
-                                                 FontSize="11" FontWeight="SemiBold" Foreground="White"
+                                                 FontSize="11" FontWeight="SemiBold" Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}"
                                                  TextTrimming="CharacterEllipsis" IsVisible="{Binding ShowsTypeLabel}" />
-                                      <StackPanel Orientation="Horizontal" Spacing="4" IsVisible="{Binding HasActivity}">
-                                        <Border Width="8" Height="8" CornerRadius="4" VerticalAlignment="Center"
-                                                BorderBrush="{DynamicResource OverlayStrongBrush}" BorderThickness="1"
-                                                Background="{Binding ActivityColor, Converter={StaticResource ColorStringToBrushConverter}}" />
-                                        <TextBlock Text="{Binding ActivityName}" FontSize="11" FontWeight="SemiBold"
-                                                   Foreground="White" TextTrimming="CharacterEllipsis" />
-                                      </StackPanel>
-                                      <TextBlock Text="{Binding DisplayTitle}" FontSize="10.5" Foreground="White" Opacity="0.9"
+                                      <TextBlock Text="{Binding ActivityName}" IsVisible="{Binding HasActivity}"
+                                                 FontSize="11" FontWeight="SemiBold"
+                                                 Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}" TextTrimming="CharacterEllipsis" />
+                                      <TextBlock Text="{Binding DisplayTitle}" FontSize="10.5" Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}" Opacity="0.9"
                                                  TextTrimming="CharacterEllipsis"
                                                  IsVisible="{Binding DisplayTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                                      <TextBlock Text="{Binding AbsenceSpanLabel}" FontSize="10" Foreground="White" Opacity="0.85"
+                                      <TextBlock Text="{Binding AbsenceSpanLabel}" FontSize="10" Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}" Opacity="0.85"
                                                  IsVisible="{Binding ShowAbsenceSpan}" />
                                       <TextBlock Text="{loc:Tr Recur_HolidayHint}" IsVisible="{Binding HolidayConflict}"
-                                                 FontSize="9.5" FontStyle="Italic" Foreground="White" Opacity="0.95"
+                                                 FontSize="9.5" FontStyle="Italic" Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}" Opacity="0.95"
                                                  TextWrapping="Wrap" />
                                       <TextBlock Text="{loc:Tr RecurrencePause_PausedSuffix}" IsVisible="{Binding IsPaused}"
-                                                 FontSize="9.5" FontStyle="Italic" Foreground="White" Opacity="0.95" />
+                                                 FontSize="9.5" FontStyle="Italic" Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}" Opacity="0.95" />
                                       <TextBlock Text="{loc:Tr Entry_PendingSuffix}" IsVisible="{Binding IsPending}"
-                                                 FontSize="9.5" FontStyle="Italic" Foreground="White" Opacity="0.95" />
+                                                 FontSize="9.5" FontStyle="Italic" Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}" Opacity="0.95" />
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="2"
                                                 HorizontalAlignment="Right" VerticalAlignment="Top">

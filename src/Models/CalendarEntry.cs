@@ -78,9 +78,24 @@ public class CalendarEntry
     [System.Text.Json.Serialization.JsonIgnore]
     public string TypeLabel => EntryTypeInfo.Label(Type);
 
-    /// <summary>Personenfarbe (zur Laufzeit aus dem Benutzer aufgelöst, nicht persistiert).</summary>
+    /// <summary>Personenfarbe (zur Laufzeit aus dem Benutzer aufgelöst, nicht persistiert).
+    /// Färbt nicht mehr die Plan-Kachel — siehe <see cref="TileColor"/> —, wird aber weiter
+    /// für den Personen-Punkt in der Namensspalte und die Mobile-Tageskarten gebraucht.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public string OwnerColor { get; set; } = "#7F8C8D";
+
+    /// <summary>
+    /// Farbe der Plan-Kachel: Kategorie schlägt Typ. Bewusst auf <see cref="DisplayType"/>
+    /// gerechnet, nicht auf <see cref="Type"/> — sonst verriete das Rot einer Krankmeldung den
+    /// Grund, den die Maskierung gerade als „Abwesend" verbirgt.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string TileColor => EntryColors.Tile(DisplayType, HasActivity ? ActivityColor : null);
+
+    /// <summary>Schriftfarbe auf der Kachel — berechnet, damit die Uhrzeit auf jeder vom Admin
+    /// vergebenen Farbe lesbar bleibt.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string TileForeground => EntryColors.OnTile(TileColor);
 
     /// <summary>Datenschutz-maskierter Anzeigetyp (Laufzeit; Default = echter Typ).</summary>
     [System.Text.Json.Serialization.JsonIgnore]
