@@ -163,3 +163,49 @@ public class EntryMappingTests
         Assert.Equal(new TimeOnly(17, 0), body.EndTime);
     }
 }
+
+/// <summary>
+/// Aufteilung eines Bereichs-Abrufs auf einzelne Tage. Beim tageweisen Laden übernahm das der
+/// Server; seit die Woche in einer Anfrage kommt, macht es der Client — hier darf kein Tag
+/// verlorengehen und keiner zu viel bekommen.
+/// </summary>
+public class EntryCoversDayTests
+{
+    private static readonly DateOnly Monday = new(2026, 6, 1);
+
+    private static ServerEntryDto Range(DateOnly from, DateOnly? to) => new(
+        "e1", "u1", "Vacation", from, to, null, null, false, null, null,
+        EntryStatuses.Approved, false);
+
+    [Fact]
+    public void SingleDayEntry_CoversOnlyThatDay()
+    {
+        var dto = Range(Monday, null);
+
+        Assert.True(EntryMapping.CoversDay(dto, Monday));
+        Assert.False(EntryMapping.CoversDay(dto, Monday.AddDays(1)));
+        Assert.False(EntryMapping.CoversDay(dto, Monday.AddDays(-1)));
+    }
+
+    [Fact]
+    public void RangeEntry_CoversEveryDayInclusive()
+    {
+        var dto = Range(Monday, Monday.AddDays(4));
+
+        for (var i = 0; i <= 4; i++)
+            Assert.True(EntryMapping.CoversDay(dto, Monday.AddDays(i)), $"Tag +{i} fehlt");
+        Assert.False(EntryMapping.CoversDay(dto, Monday.AddDays(-1)));
+        Assert.False(EntryMapping.CoversDay(dto, Monday.AddDays(5)));
+    }
+
+    [Fact]
+    public void RangeStartingBeforeTheWindow_StillCoversTheVisibleDays()
+    {
+        // Urlaub Freitag–Dienstag, angezeigt wird die Woche ab Montag.
+        var dto = Range(Monday.AddDays(-3), Monday.AddDays(1));
+
+        Assert.True(EntryMapping.CoversDay(dto, Monday));
+        Assert.True(EntryMapping.CoversDay(dto, Monday.AddDays(1)));
+        Assert.False(EntryMapping.CoversDay(dto, Monday.AddDays(2)));
+    }
+}

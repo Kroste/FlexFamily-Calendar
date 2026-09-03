@@ -161,11 +161,13 @@ public partial class CalendarViewModel
         var swapsTask = _storage.LoadSwapRequestsAsync();
         var typesTask = _storage.LoadActivityTypesAsync();
         var recurringTask = _storage.LoadRecurringActivitiesAsync();
-        var dayTasks = new Task<CalendarDay>[7];
-        for (int i = 0; i < 7; i++) dayTasks[i] = _storage.LoadDayAsync(WeekStart.AddDays(i));
+        // Die sieben Tage als EIN Bereich: im Server-Modus sind das zwei Anfragen statt
+        // vierzehn. Lokal fällt die Vorgabe der Schnittstelle auf tageweises Laden zurück.
+        var daysTask = _storage.LoadDaysAsync(WeekStart, WeekStart.AddDays(6));
 
-        await Task.WhenAll([swapsTask, typesTask, recurringTask, .. dayTasks.Cast<Task>()]);
+        await Task.WhenAll(swapsTask, typesTask, recurringTask, daysTask);
 
+        var weekDays = await daysTask;
         _swapRequests = await swapsTask;
         _activityTypes = await typesTask;
         _recurringActivities = await recurringTask;
@@ -179,7 +181,7 @@ public partial class CalendarViewModel
         for (int i = 0; i < 7; i++)
         {
             var date = WeekStart.AddDays(i);
-            var day = await dayTasks[i];
+            var day = weekDays[i];
             ApplyEntryDisplay(day);
             var entries = EntriesVisibleUnderImpersonation(day);
             var (timeline, absences) = BuildDisplay(date, entries);

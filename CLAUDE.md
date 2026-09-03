@@ -48,6 +48,19 @@
   **keine** Domänendaten) schalten um. Android startet per Default gegen `flexfamily.cloud`.
   - **Im Server-Modus MUSS alles über die API laufen — kein lokaler Fallback.** Fehlende Server-Flächen
     werden autonom als Endpunkte nachgezogen, nicht aus lokalen Dateien bedient.
+- **Die Wochenansicht lädt über `IStorageService.LoadDaysAsync(from, to)`, nicht sieben Mal
+  `LoadDayAsync`.** Im Server-Modus sind das zwei Anfragen (`/api/entries?from&to` und
+  `/api/day-notes?from&to`) statt vierzehn — auf Mobilfunk dominiert die Latenz, nicht die
+  Datenmenge. Die Schnittstelle bringt eine Default-Implementierung mit, die tageweise parallel
+  lädt; nur `ApiStorageService` überschreibt sie. Abwesenheiten sind serverseitig EIN
+  Bereichs-Eintrag und werden vom Client über `EntryMapping.CoversDay` auf die Tage verteilt.
+  Der Notiz-Bereichsabruf hat einen Fallback auf tageweises Laden: ein Client, der vor dem Server
+  aktualisiert wurde, trifft sonst auf einen Endpunkt, den seine Server-Version nicht kennt.
+- **Die Finalisierungs-Sicht hängt am STARTTAG des Eintrags, nicht am abgefragten Fenster.**
+  `/api/entries` lädt den Finalisierungs-Status deshalb ab `min(from, frühester Starttag)`.
+  Vorher stand dort schlicht `from`: eine Abwesenheit von Montag bis Freitag war für Kollegen nur
+  am Montag zu sehen und verschwand ab Dienstag, weil ihr Starttag beim tageweisen Abruf außerhalb
+  des Fensters lag und damit als „nicht freigegeben" galt.
 - **Server = Single Source of Truth + Sicherheitsgrenze:** Authn/Authz und Privatsphäre-Maskierung
   werden **serverseitig** erzwungen (Client nie vertrauen). JWT-Login, Rollen (Admin/User) und
   Kategorien (Parent/Child/Employee/AuPair).

@@ -224,6 +224,12 @@ public class ApiClient
         => await _http.GetFromJsonAsync<ServerDayNoteDto>($"api/day-notes/{date:yyyy-MM-dd}")
            ?? new ServerDayNoteDto("", false);
 
+    /// <summary>Tagesnotizen eines Zeitraums in EINER Anfrage. Tage ohne Zeile fehlen in der
+    /// Antwort — die sind leer und nicht finalisiert.</summary>
+    public async Task<List<ServerDayNoteRangeDto>> GetDayNotesAsync(DateOnly from, DateOnly to)
+        => await _http.GetFromJsonAsync<List<ServerDayNoteRangeDto>>(
+               $"api/day-notes?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}") ?? new();
+
     public async Task SetDayNoteAsync(DateOnly date, ServerDayNoteDto note)
     {
         var resp = await _http.PutAsJsonAsync($"api/day-notes/{date:yyyy-MM-dd}", note);

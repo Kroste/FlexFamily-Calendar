@@ -26,6 +26,14 @@ public static class EntryMapping
     public static bool IsAbsenceType(EntryType t) =>
         t is EntryType.Vacation or EntryType.SickLeave or EntryType.Absence;
 
+    /// <summary>
+    /// Deckt ein Server-Eintrag diesen Tag ab? Eine Abwesenheit ist EIN Eintrag über einen
+    /// Bereich und gehört an jeden Tag darin — beim Bereichs-Abruf einer Woche muss der Client
+    /// das selbst aufteilen, während der tageweise Abruf es vom Server bekam.
+    /// </summary>
+    public static bool CoversDay(ServerEntryDto dto, DateOnly date)
+        => dto.Date <= date && (dto.EndDate ?? dto.Date) >= date;
+
     /// <summary>Server-Eintrag → Desktop-Eintrag für den angegebenen Tag.</summary>
     public static CalendarEntry ToDesktop(ServerEntryDto dto, DateOnly day)
     {

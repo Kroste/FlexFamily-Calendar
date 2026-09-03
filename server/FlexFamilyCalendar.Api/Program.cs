@@ -389,8 +389,16 @@ app.MapGet("/api/entries", async (DateOnly from, DateOnly to, AppDbContext db, C
     // Finalisierungs-Status pro Tag: für Fremde sind Work-Einträge nur sichtbar, wenn der
     // Admin die Woche freigegeben hat. Verhindert, dass halbfertige Pläne von anderen
     // Familienmitgliedern eingesehen werden können.
+    //
+    // Maßgeblich ist der STARTTAG des Eintrags — bei einer mehrtägigen Abwesenheit also der Tag,
+    // an dem sie freigegeben wurde. Der Status muss deshalb auch für Starttage VOR dem
+    // angefragten Zeitraum geladen werden: sonst hing die Sichtbarkeit daran, welchen Ausschnitt
+    // der Client gerade anfragt. Eine Abwesenheit von Montag bis Freitag war für Kollegen nur am
+    // Montag zu sehen, ab Dienstag verschwand sie — beim tageweisen Abruf lag ihr Starttag
+    // außerhalb des Fensters und galt damit als nicht freigegeben.
+    var metaFrom = raw.Count > 0 && raw.Min(e => e.Date) < from ? raw.Min(e => e.Date) : from;
     var finalizedDays = await db.DayMeta
-        .Where(m => m.Date >= from && m.Date <= to && m.IsFinalized)
+        .Where(m => m.Date >= metaFrom && m.Date <= to && m.IsFinalized)
         .Select(m => m.Date)
         .ToListAsync();
     var finalizedSet = finalizedDays.ToHashSet();
@@ -765,6 +773,27 @@ app.MapGet("/api/day-notes/{date}", async (DateOnly date, AppDbContext db) =>
 {
     var meta = await db.DayMeta.FindAsync(date);
     return Results.Ok(new DayNoteDto(meta?.Note ?? "", meta?.IsFinalized ?? false, meta?.NoteUserId));
+})
+    .RequireAuthorization();
+
+// Bereichs-Abruf: eine Anfrage für die ganze Woche statt sieben. Der Client holte pro Tag
+// Einträge UND Notiz einzeln — 14 Round-Trips je Wochenwechsel, was auf Mobilfunk die Latenz
+// dominiert. Nur Tage MIT Eintrag liefern eine Zeile; fehlende Tage sind leer und nicht
+// finalisiert, das ergänzt der Client.
+app.MapGet("/api/day-notes", async (DateOnly from, DateOnly to, AppDbContext db) =>
+{
+    if (to < from) (from, to) = (to, from);
+    // Obergrenze, damit ein (versehentlich) riesiger Bereich nicht die halbe Tabelle zieht.
+    if (to.DayNumber - from.DayNumber > 400)
+        return Results.BadRequest(new { error = "Zeitraum zu groß (max. 400 Tage)." });
+
+    var metas = await db.DayMeta.AsNoTracking()
+        .Where(m => m.Date >= from && m.Date <= to)
+        .ToListAsync();
+
+    return Results.Ok(metas
+        .Select(m => new DayNoteRangeDto(m.Date, m.Note ?? "", m.IsFinalized, m.NoteUserId))
+        .ToList());
 })
     .RequireAuthorization();
 

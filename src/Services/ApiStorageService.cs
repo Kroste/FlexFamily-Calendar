@@ -124,6 +124,65 @@ public class ApiStorageService : IStorageService
         return day;
     }
 
+    /// <summary>
+    /// Ganze Woche in zwei Anfragen: alle Einträge des Zeitraums und alle Tagesnotizen. Vorher
+    /// lief pro Tag ein eigenes Paar — vierzehn Round-Trips je Wochenwechsel.
+    ///
+    /// Fällt der Bereichs-Abruf der Notizen aus, wird tageweise nachgeladen: ein Client, der
+    /// nach dem Server aktualisiert wurde, trifft sonst auf einen Endpunkt, den seine
+    /// Server-Version noch nicht kennt, und die Woche bliebe leer.
+    /// </summary>
+    public async Task<IReadOnlyList<CalendarDay>> LoadDaysAsync(DateOnly from, DateOnly to)
+    {
+        if (to < from) (from, to) = (to, from);
+
+        var entriesTask = _api.GetEntriesAsync(from, to);
+        var notesTask = LoadNotesAsync(from, to);
+        await Task.WhenAll(entriesTask, notesTask);
+
+        var dtos = await entriesTask;
+        var notes = await notesTask;
+
+        var days = new List<CalendarDay>();
+        for (var date = from; date <= to; date = date.AddDays(1))
+        {
+            var day = new CalendarDay { DateString = date.ToString("yyyy-MM-dd") };
+            // Ein Server-Eintrag deckt bei Abwesenheiten einen Bereich ab und gehört damit an
+            // JEDEN Tag darin — genau wie beim Einzelabruf, der pro Tag anfragt.
+            day.Entries = dtos.Where(d => EntryMapping.CoversDay(d, date))
+                              .Select(d => EntryMapping.ToDesktop(d, date))
+                              .ToList();
+            if (notes.TryGetValue(date, out var note))
+            {
+                day.Note = note.Note ?? "";
+                day.NoteUserId = note.NoteUserId;
+                day.IsFinalized = note.IsFinalized;
+            }
+            days.Add(day);
+        }
+        return days;
+    }
+
+    private async Task<Dictionary<DateOnly, ServerDayNoteRangeDto>> LoadNotesAsync(DateOnly from, DateOnly to)
+    {
+        try
+        {
+            var list = await _api.GetDayNotesAsync(from, to);
+            return list.GroupBy(n => n.Date).ToDictionary(g => g.Key, g => g.First());
+        }
+        catch (Exception ex)
+        {
+            LogService.Warn("Bereichs-Abruf der Tagesnotizen fehlgeschlagen ({0}) — lade tageweise nach.", ex.Message);
+            var result = new Dictionary<DateOnly, ServerDayNoteRangeDto>();
+            for (var d = from; d <= to; d = d.AddDays(1))
+            {
+                var n = await _api.GetDayNoteAsync(d);
+                result[d] = new ServerDayNoteRangeDto(d, n.Note, n.IsFinalized, n.NoteUserId);
+            }
+            return result;
+        }
+    }
+
     public async Task SaveDayAsync(CalendarDay day)
     {
         var date = day.Date;

@@ -137,6 +137,9 @@ public record ServerNotificationDto(
 
 public record ServerDayNoteDto(string Note, bool IsFinalized, string? NoteUserId = null);
 
+/// <summary>Tagesnotiz mit Datum — Antwort des Bereichs-Abrufs.</summary>
+public record ServerDayNoteRangeDto(DateOnly Date, string Note, bool IsFinalized, string? NoteUserId = null);
+
 public record UpdateProfileBody(string? DisplayName, string? Email, string? Language, string? Color,
     string? AiStyleHint = null, string? ThemeVariant = null, bool? ShowHolidays = null,
     bool? ShowHints = null, bool? OnboardingSeen = null);
