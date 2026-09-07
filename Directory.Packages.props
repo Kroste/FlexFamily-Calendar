@@ -8,16 +8,16 @@
   <!-- Avalonia: alle Heads MÜSSEN auf derselben Linie sitzen, sonst driften managed
        und native Assets auseinander (siehe kroste-avalonia → Skia-Falle). -->
   <ItemGroup Label="Avalonia">
-    <PackageVersion Include="Avalonia" Version="12.1.1" />
+    <PackageVersion Include="Avalonia" Version="12.1.2" />
     <PackageVersion Include="Avalonia.Android" Version="12.1.1" />
-    <PackageVersion Include="Avalonia.Browser" Version="12.1.1" />
-    <PackageVersion Include="Avalonia.Controls.ColorPicker" Version="12.1.1" />
-    <PackageVersion Include="Avalonia.Desktop" Version="12.1.1" />
-    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.1" />
+    <PackageVersion Include="Avalonia.Browser" Version="12.1.2" />
+    <PackageVersion Include="Avalonia.Controls.ColorPicker" Version="12.1.2" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.2" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.2" />
     <!-- Nur im Testprojekt: rendert Views ohne Fenstersystem, damit sich Klicks und
          Event-Routing (Tapped/Click/Pointer-Capture) automatisiert prüfen lassen. -->
-    <PackageVersion Include="Avalonia.Headless" Version="12.1.1" />
-    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.1" />
+    <PackageVersion Include="Avalonia.Headless" Version="12.1.2" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.2" />
     <!-- Folgt NICHT der Avalonia-Versionierung (eigene 2.x-Reihe). -->
     <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
     <!-- Der Linux-Tray hängt an DBus. Version transitiv über Avalonia — hier gepinnt, damit
