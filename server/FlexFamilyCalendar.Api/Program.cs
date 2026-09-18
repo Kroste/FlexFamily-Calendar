@@ -593,6 +593,15 @@ app.MapPost("/api/entries/{id:guid}/reject", async (Guid id, AppDbContext db) =>
 })
     .RequireAuthorization("Admin");
 
+// --- Kompatibilität: Kategorien (bis v0.20) --------------------------------
+// Kategorien gibt es seit v0.21 nicht mehr. Clients vor v0.21 laden sie beim Wochenwechsel aber
+// zusammen mit den Einträgen (Task.WhenAll) — ein 404 hier ließe bei ihnen die GANZE Woche leer.
+// Die Handys aktualisieren sich nicht selbst, deshalb bleibt der Abruf als leere Liste stehen.
+// Die Namen stehen durch die Migration DropCategories ohnehin schon in den Einträgen.
+// Entfernen, sobald keine App vor v0.21 mehr im Umlauf ist.
+app.MapGet("/api/activity-types", () => Results.Ok(Array.Empty<object>()))
+    .RequireAuthorization();
+
 // --- Wiederkehrende Aktivitäten ------------------------------------------
 
 // Liste: alle Angemeldeten (das Overlay wird in jedem Plan projiziert).

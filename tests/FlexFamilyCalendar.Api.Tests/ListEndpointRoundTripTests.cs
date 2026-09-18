@@ -188,14 +188,16 @@ public class ListEndpointRoundTripTests
     }
 
     [Fact]
-    public async Task Kategorien_gibt_es_nicht_mehr()
+    public async Task Alter_Kategorien_Abruf_liefert_leere_Liste_statt_404()
     {
-        // Seit v0.21 gibt es keine Kategorien: Einträge und Serien tragen ihren Namen als Freitext.
+        // Clients vor v0.21 laden die Kategorien zusammen mit der Woche. Ein 404 ließe dort den
+        // ganzen Plan leer — die Handys aktualisieren sich nicht selbst.
         using var factory = new ApiTestFactory();
         var client = await factory.CreateAuthenticatedClientAsync(ApiTestFactory.AdminUser, ApiTestFactory.AdminPassword);
 
         var resp = await client.GetAsync("api/activity-types", TestContext.Current.CancellationToken);
 
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, resp.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.OK, resp.StatusCode);
+        Assert.Equal("[]", await resp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 }

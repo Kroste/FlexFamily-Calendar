@@ -8,6 +8,10 @@ Geschrieben für die Menschen, die die App benutzen: was sich für sie ändert, 
 Update-Dialog zeigt den Text ohne Formatierung — also schlichte Aufzählungen, kein Fettdruck,
 keine Links.
 
+## v0.21.1 — 18.09.2026
+
+- Ältere App-Versionen zeigen nach dem Server-Update weiter ihren Plan an, statt einer leeren Woche. Bitte trotzdem bald aktualisieren — vor allem die Handy-App.
+
 ## v0.21.0 — 18.09.2026
 
 - Der Eintrag-Dialog hat keine Typ-Auswahl mehr. Ein Eintrag bekommt eine frei wählbare Bezeichnung, z.B. „Arbeit", „Frei", „Remise" oder „Sprachschule" — sie steht fett als Name auf der Kachel.

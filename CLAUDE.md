@@ -251,6 +251,10 @@
   `DropCategories` überträgt vorher Name → `CategoryLabel` und Farbe → `Color` (nur wo leer, nur
   gültiges Hex), gegen Postgres 17 mit allen Fällen geprüft; lokal macht das
   `LegacyCategoryMigration.ApplyToEntries` tageweise beim ersten Laden eines Tages.
+  **`GET /api/activity-types` bleibt als Stub (leere Liste) stehen:** Clients vor v0.21 laden die
+  Kategorien per `Task.WhenAll` zusammen mit der Woche — ein 404 ließe dort den ganzen Plan leer,
+  und Handys aktualisieren sich nicht selbst. Allgemein: **Endpunkte, die alte Clients im
+  Lade-Pfad abfragen, nie ersatzlos entfernen**, sondern erst als harmlosen Stub stehen lassen.
 - **`Clone`-Methoden kopieren Felder einzeln — neue Felder dort nachtragen.** `WeekCopy` und
   `EntryMoveCopy` hatten `Color` seit v0.16 nicht übernommen: „Woche kopieren" und
   Verschieben/Kopieren einer Schicht verloren still die eigene Kachelfarbe.
