@@ -573,7 +573,7 @@ Kurzstart:
 dotnet run --project desktop/FlexFamilyCalendar.Desktop.csproj
 
 # Tests (Client + Server)
-dotnet test FlexFamilyCalendar.slnx
+dotnet test --solution FlexFamilyCalendar.slnx
 
 # Android-APK lokal (braucht Java 17 + android-Workload)
 dotnet workload install android

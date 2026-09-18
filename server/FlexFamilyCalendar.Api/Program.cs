@@ -769,10 +769,15 @@ app.MapPut("/api/notifications", async (List<NotificationDto> items, AppDbContex
 
 // --- Tagesnotiz / Finalisiert (pro Datum) --------------------------------
 
-app.MapGet("/api/day-notes/{date}", async (DateOnly date, AppDbContext db) =>
+app.MapGet("/api/day-notes/{date}", async (DateOnly date, AppDbContext db, ClaimsPrincipal principal) =>
 {
+    var requester = CurrentUserId(principal);
+    if (requester is null) return Results.Unauthorized();
+
     var meta = await db.DayMeta.FindAsync(date);
-    return Results.Ok(new DayNoteDto(meta?.Note ?? "", meta?.IsFinalized ?? false, meta?.NoteUserId));
+    var (note, noteUserId) = DayNoteVisibility.Project(meta?.Note, meta?.NoteUserId,
+        requester.Value, principal.IsInRole("Admin"));
+    return Results.Ok(new DayNoteDto(note, meta?.IsFinalized ?? false, noteUserId));
 })
     .RequireAuthorization();
 
@@ -780,8 +785,12 @@ app.MapGet("/api/day-notes/{date}", async (DateOnly date, AppDbContext db) =>
 // Einträge UND Notiz einzeln — 14 Round-Trips je Wochenwechsel, was auf Mobilfunk die Latenz
 // dominiert. Nur Tage MIT Eintrag liefern eine Zeile; fehlende Tage sind leer und nicht
 // finalisiert, das ergänzt der Client.
-app.MapGet("/api/day-notes", async (DateOnly from, DateOnly to, AppDbContext db) =>
+app.MapGet("/api/day-notes", async (DateOnly from, DateOnly to, AppDbContext db, ClaimsPrincipal principal) =>
 {
+    var requester = CurrentUserId(principal);
+    if (requester is null) return Results.Unauthorized();
+    var isAdmin = principal.IsInRole("Admin");
+
     if (to < from) (from, to) = (to, from);
     // Obergrenze, damit ein (versehentlich) riesiger Bereich nicht die halbe Tabelle zieht.
     if (to.DayNumber - from.DayNumber > 400)
@@ -792,7 +801,11 @@ app.MapGet("/api/day-notes", async (DateOnly from, DateOnly to, AppDbContext db)
         .ToListAsync();
 
     return Results.Ok(metas
-        .Select(m => new DayNoteRangeDto(m.Date, m.Note ?? "", m.IsFinalized, m.NoteUserId))
+        .Select(m =>
+        {
+            var (note, noteUserId) = DayNoteVisibility.Project(m.Note, m.NoteUserId, requester.Value, isAdmin);
+            return new DayNoteRangeDto(m.Date, note, m.IsFinalized, noteUserId);
+        })
         .ToList());
 })
     .RequireAuthorization();

@@ -125,6 +125,11 @@
 - **JSON:** Ausschließlich `System.Text.Json` mit gemeinsamem `JsonOptions.Pretty`
   (PropertyNamingPolicy=null, damit alte PascalCase-JSON-Files weiter lesbar bleiben);
   Newtonsoft.Json ist als Dependency raus.
+- **Tagesnotizen filtert der Server** (`DayNoteVisibility`): eine adressierte Notiz bekommen nur
+  der Admin und die angesprochene Person; alle anderen erhalten Text UND Adressat leer. Vorher
+  lieferten beide GET-Endpunkte jede Notiz an jeden aus und erst `CanSeeNote` im Client blendete
+  sie aus — in der Web-Ansicht lag eine persönliche Notiz damit im Netzwerk-Tab. Der
+  Client-Filter bleibt für die Impersonate-Sicht.
 - **Datenschutz:** Fremde Krank-/Urlaubsgründe erscheinen nur als „Abwesend" (Maskierung pro Betrachter),
   im Plan, PDF und Mail-Versand (je Empfänger aus dessen Sicht).
 - **Titelleiste:** Die Drag-Fläche trägt `chrome:WindowDecorationProperties.ElementRole="TitleBar"`,
@@ -347,7 +352,8 @@ docs/      Screenshots, Logo
 
 ## Deploy & CI
 
-- **CI-Workflow** (`.github/workflows/ci.yml`): auf jeden Push/PR `dotnet test FlexFamilyCalendar.slnx`
+- **CI-Workflow** (`.github/workflows/ci.yml`): auf jeden Push/PR `dotnet test --solution FlexFamilyCalendar.slnx`
+  (immer mit `--solution` — ältere SDKs brechen die positionale Form unter MTP mit Exitcode 1 ab)
   (installiert vorher `wasm-tools` Workload für den Browser-Head). Zusätzlich der Job
   `Single-Instance (Windows)` auf `windows-latest` — nur die Wächter-Tests, weil Named Pipes
   dort Kernel-Objekte sind und sich grundlegend anders verhalten als unter Linux.

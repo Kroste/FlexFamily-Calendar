@@ -44,7 +44,10 @@ jobs:
       # Keine VSTest-Flags anhängen — die reicht `dotnet test` an die Test-Exe durch, die
       # sie nicht kennt, und der Lauf endet mit "Es wurden keine Tests ausgeführt".
       - name: Build & Test (Solution)
-        run: dotnet test FlexFamilyCalendar.slnx -c Release --verbosity normal
+        # --solution statt positionalem Pfad: mit MTP-Runner (global.json) bricht ältere SDKs
+        # (z.B. das Fedora-RPM 10.0.111) die positionale Form mit Exitcode 1 ab; --solution
+        # läuft auf allen.
+        run: dotnet test --solution FlexFamilyCalendar.slnx -c Release --verbosity normal
 
   # Der Single-Instance-Wächter verhält sich unter Windows grundlegend anders als unter Linux:
   # dort sind Named Pipes echte Kernel-Objekte, hier bildet .NET sie auf Unix-Sockets ab.
