@@ -53,7 +53,7 @@
 
     <!-- Chat-Verlauf -->
     <Border Grid.Row="3" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="6" Padding="4" Margin="0,14,0,0">
-      <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <ScrollViewer Classes="form" VerticalScrollBarVisibility="Auto">
         <ItemsControl ItemsSource="{Binding Messages}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>

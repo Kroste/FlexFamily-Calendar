@@ -20,7 +20,7 @@
                Opacity="0.6" FontSize="13" Margin="0,8,0,0"
                IsVisible="{Binding IsEmpty}" />
 
-    <ScrollViewer>
+    <ScrollViewer Classes="form">
       <ItemsControl ItemsSource="{Binding Items}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>

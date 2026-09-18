@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FlexFamilyCalendar.Controls;
@@ -89,6 +90,39 @@ public class DateRangeLayoutTests : IClassFixture<HeadlessAppFixture>
                 foreach (var p in pickers)
                     Assert.False(p.Intersects(t), $"Datum {p} überlappt Uhrzeit {t}");
             }
+            window.Close();
+            return true;
+        }, CancellationToken.None);
+
+    [Fact]
+    public Task Scrollbar_does_not_cover_the_entry_dialog_fields()
+        => _app.Session.Dispatch(() =>
+        {
+            // Mit AllowAutoHide legt Fluent den Balken über den Inhalt. Ohne Platz rechts
+            // (ScrollViewer.form) lagen die rechten Ränder der Eingabefelder darunter.
+            var vm = new EntryEditorViewModel(new DateOnly(2026, 9, 18),
+                new[] { new User { Id = "u1", Username = "mara", DisplayName = "Mara" } })
+            { UseCustomColor = true };
+
+            // Niedriges Fenster, damit der Inhalt sicher scrollt (wie auf einem kleinen Bildschirm).
+            var window = new Window { Width = 480, Height = 460, Content = new EntryEditorView { DataContext = vm } };
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+
+            Rect InWindow(Control c) => new(c.TranslatePoint(new Point(0, 0), window)!.Value, c.Bounds.Size);
+            var bar = window.GetVisualDescendants().OfType<ScrollBar>()
+                            .Single(b => b.Orientation == Avalonia.Layout.Orientation.Vertical && b.IsEffectivelyVisible);
+            var barRect = InWindow(bar);
+            Assert.True(barRect.Height > 0, "Der Dialog scrollt nicht — der Test misst dann nichts.");
+
+            var fields = window.GetVisualDescendants().OfType<Control>()
+                               .Where(c => c is TextBox or DatePicker or ComboBox or AutoCompleteBox && c.IsEffectivelyVisible)
+                               .Select(InWindow)
+                               .Where(r => r.Bottom > barRect.Top && r.Top < barRect.Bottom)
+                               .ToList();
+            Assert.NotEmpty(fields);
+            foreach (var r in fields)
+                Assert.True(r.Right <= barRect.Left + 0.5, $"Feld {r} ragt unter den Scrollbalken {barRect}");
             window.Close();
             return true;
         }, CancellationToken.None);

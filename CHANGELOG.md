@@ -8,6 +8,11 @@ Geschrieben für die Menschen, die die App benutzen: was sich für sie ändert, 
 Update-Dialog zeigt den Text ohne Formatierung — also schlichte Aufzählungen, kein Fettdruck,
 keine Links.
 
+## v0.23.1 — 18.09.2026
+
+- Der Scrollbalken in Dialogen liegt nicht mehr über den Eingabefeldern — rechts ist jetzt Platz für ihn.
+- Der Scrollbalken passt farblich zum warmen Look, statt als dunkler Strich zu stören.
+
 ## v0.23.0 — 18.09.2026
 
 - Neues Farbkleid in warmen Tönen: Kopf- und Titelleiste in Terrakotta, Creme statt Reinweiß, Knöpfe, Haken und Auswahl passend dazu. Auch der Dunkelmodus ist warm statt blaugrau.

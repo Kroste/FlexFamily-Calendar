@@ -15,7 +15,7 @@
 
     <TextBlock Grid.Row="0" Text="{Binding HeaderText}" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" />
 
-    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="640">
+    <ScrollViewer Classes="form" Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="640">
       <StackPanel Spacing="14">
 
         <StackPanel Spacing="4" IsVisible="{Binding CanEditAdminFields}">

@@ -46,7 +46,7 @@
     </DockPanel>
 
     <!-- Formular rechts -->
-    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+    <ScrollViewer Classes="form" Grid.Column="2" VerticalScrollBarVisibility="Auto">
       <StackPanel Spacing="14">
 
         <StackPanel Spacing="4">

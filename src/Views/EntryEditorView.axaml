@@ -21,7 +21,7 @@
     </StackPanel>
 
     <!-- Formular -->
-    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="600">
+    <ScrollViewer Classes="form" Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="600">
       <StackPanel Spacing="14">
 
         <!-- Eintrag oder Abwesenheit — nur beim Anlegen durch den Admin. Keine Typ-Auswahl mehr:

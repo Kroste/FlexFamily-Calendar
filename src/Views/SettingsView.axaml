@@ -4,7 +4,7 @@
              x:Class="FlexFamilyCalendar.Views.SettingsView"
              x:CompileBindings="False">
 
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
+  <ScrollViewer Classes="form" VerticalScrollBarVisibility="Auto">
   <StackPanel Margin="16" Spacing="14" MaxWidth="440" HorizontalAlignment="Left">
 
     <StackPanel Spacing="4">

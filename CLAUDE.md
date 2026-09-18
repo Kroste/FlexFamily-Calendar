@@ -309,6 +309,14 @@
   - **Arbeitszeit-Regeln, KI-Prüfung und Tausch** arbeiten nur auf `IsShift` (ein Tag, mit
     Uhrzeit) bzw. `!IsMultiDay`; der Server lehnt den Tausch mehrtägiger Einträge in
     `SwapRules.CheckCreate` ab. Die Handy-Meldung (Krank/Urlaub) bleibt ganztägig.
+- **Scrollende Formulare bekommen `Classes="form"` am `ScrollViewer`** (rechts 16 px Padding).
+  Mit `AllowAutoHide` (global in `AppStyles`) legt Fluent den Balken ÜBER den Inhalt; die
+  rechten Ränder der Eingabefelder lagen darunter. Nicht global setzen: DatePicker, ComboBox &
+  Co. haben intern ScrollViewer, und die Plantabelle muss bündig zu ihrem Spaltenkopf bleiben.
+  Die Balkenfarben kommen über Fluents eigene Keys (`ScrollBarPanningThumbBackground` = der
+  eingeklappte Strich, `ScrollBarThumb…`, `ScrollBarTrack…`), überschrieben in den
+  ThemeDictionaries der `Palette.axaml` — die Namen stammen aus den Ressourcen des geladenen
+  FluentTheme (headless ausgelesen), nicht geraten.
 - **Hinweiszeile im Plan liegt im ScrollViewer hinter den Personenzeilen** (StackPanel), nicht
   unten angedockt — sonst klafft bei wenigen Personen eine leere Fläche dazwischen.
 - **Design-Test-API (`desktop/DesignApi/`, nur Desktop):** lokale REST-Schnittstelle, mit der

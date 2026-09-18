@@ -21,6 +21,17 @@
     <Setter Property="AllowAutoHide" Value="True" />
   </Style>
 
+  <!--
+    Formulare in einem ScrollViewer: rechts Platz für den Balken. Mit AllowAutoHide legt Fluent
+    den Balken ÜBER den Inhalt statt daneben — die rechten Ränder von Eingabefeldern stießen an
+    den eingeklappten Strich und verschwanden beim Aufklappen darunter. Bewusst als Klasse und
+    nicht global: auch DatePicker, ComboBox und die Plantabelle haben intern ScrollViewer, die
+    sich sonst verschieben würden (die Plantabelle zusätzlich gegen ihren Spaltenkopf).
+  -->
+  <Style Selector="ScrollViewer.form">
+    <Setter Property="Padding" Value="0,0,16,0" />
+  </Style>
+
   <!-- ── Buttons ───────────────────────────────────────────────────────────── -->
 
   <!-- Default: gehört optisch zur Karte, in der er steht — nicht zum Fluent-Grau. -->

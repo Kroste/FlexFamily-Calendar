@@ -21,7 +21,7 @@
               Command="{Binding NextMonthCommand}" Padding="12,6" CornerRadius="6" />
     </Grid>
 
-    <ScrollViewer>
+    <ScrollViewer Classes="form">
       <ItemsControl ItemsSource="{Binding Rows}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>

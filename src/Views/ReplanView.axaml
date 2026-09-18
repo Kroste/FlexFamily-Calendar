@@ -24,7 +24,7 @@
       </Border>
     </StackPanel>
 
-    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="500">
+    <ScrollViewer Classes="form" Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="500">
       <StackPanel Spacing="12">
 
         <!-- Hinweis, wenn keine offene Arbeitsschicht umzuplanen ist -->

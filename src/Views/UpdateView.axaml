@@ -16,7 +16,7 @@
 
     <Border Grid.Row="2" Margin="0,16,0,0" BorderThickness="1" CornerRadius="6"
             BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-      <ScrollViewer>
+      <ScrollViewer Classes="form">
         <TextBlock Text="{Binding ChangelogMarkdown}" TextWrapping="Wrap" Margin="12,10"
                    FontFamily="Consolas, Menlo, monospace" FontSize="12" />
       </ScrollViewer>

@@ -14,7 +14,7 @@
     <!-- Liste bestehender Pausen -->
     <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="6" Padding="2"
             IsVisible="{Binding ExistingSkips.Count}">
-      <ScrollViewer MaxHeight="160" VerticalScrollBarVisibility="Auto">
+      <ScrollViewer Classes="form" MaxHeight="160" VerticalScrollBarVisibility="Auto">
         <ItemsControl ItemsSource="{Binding ExistingSkips}">
           <ItemsControl.ItemTemplate>
             <DataTemplate>

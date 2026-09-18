@@ -57,6 +57,16 @@
       <SolidColorBrush x:Key="InfoCardBackgroundBrush" Color="#FBEEDD" />
       <SolidColorBrush x:Key="InfoCardBorderBrush" Color="#EBCDA8" />
       <SolidColorBrush x:Key="SuggestionCardBrush" Color="#FFFDF9" />
+      <!-- Scrollbalken: Fluents eigene Keys überschrieben (App-Ressourcen gehen vor die des
+           Themes). Die Namen stammen aus den Ressourcen des geladenen FluentTheme, nicht geraten.
+           PanningThumb ist der dünne Strich im eingeklappten Zustand — vorher fast schwarz. -->
+      <Color x:Key="ScrollBarThumbBackgroundColor">#B8A796</Color>
+      <Color x:Key="ScrollBarPanningThumbBackgroundColor">#B8A796</Color>
+      <SolidColorBrush x:Key="ScrollBarPanningThumbBackground" Color="#B8A796" />
+      <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="#8C7B6B" />
+      <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="#C2572B" />
+      <SolidColorBrush x:Key="ScrollBarTrackFillPointerOver" Color="#F3EBE0" />
+      <SolidColorBrush x:Key="ScrollBarBackgroundPointerOver" Color="#F3EBE0" />
     </ResourceDictionary>
 
     <ResourceDictionary x:Key="Dark">
@@ -82,6 +92,16 @@
       <SolidColorBrush x:Key="InfoCardBackgroundBrush" Color="#3A2A1C" />
       <SolidColorBrush x:Key="InfoCardBorderBrush" Color="#5A3F28" />
       <SolidColorBrush x:Key="SuggestionCardBrush" Color="#241E1A" />
+      <!-- Scrollbalken: Fluents eigene Keys überschrieben (App-Ressourcen gehen vor die des
+           Themes). Die Namen stammen aus den Ressourcen des geladenen FluentTheme, nicht geraten.
+           PanningThumb ist der dünne Strich im eingeklappten Zustand — vorher fast schwarz. -->
+      <Color x:Key="ScrollBarThumbBackgroundColor">#6E6056</Color>
+      <Color x:Key="ScrollBarPanningThumbBackgroundColor">#6E6056</Color>
+      <SolidColorBrush x:Key="ScrollBarPanningThumbBackground" Color="#6E6056" />
+      <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="#A0907F" />
+      <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="#D2693C" />
+      <SolidColorBrush x:Key="ScrollBarTrackFillPointerOver" Color="#2A221D" />
+      <SolidColorBrush x:Key="ScrollBarBackgroundPointerOver" Color="#2A221D" />
     </ResourceDictionary>
 
   </ResourceDictionary.ThemeDictionaries>
