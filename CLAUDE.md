@@ -229,6 +229,16 @@
   Server und hält sich für die erste Instanz. In-Process-Tests fangen das nicht (dort wirft der
   Konstruktor); nach Änderungen an `TryClaim` mit zwei echten Prozessen aus einem
   `dotnet publish`-Output gegenprüfen.
+  **Nach jeder Verbindung `Disconnect()` OHNE `IsConnected`-Vorprüfung.** Die Probe jedes
+  Zweitstarts verbindet sich und legt auf, ohne zu schreiben; unter Windows geht die Server-Pipe
+  dabei in den Zustand `Broken`, in dem `IsConnected` false ist. Mit der Vorprüfung wurde genau
+  dann nicht getrennt, jedes weitere `WaitForConnectionAsync` warf sofort „Pipe is broken", und
+  die Schleife lief im Millisekundentakt samt Log-Eintrag pro Durchlauf — bis die Platte voll
+  war. Zusätzlich: Backoff nach Fehlern, nur der erste Fehler einer Serie wird geloggt, nach
+  fünf in Folge wird die Pipe-Instanz ersetzt. Das Nach-vorn-Holen beim Zweitstart hat unter
+  Windows vorher **nie** funktioniert; die Tests liefen nur auf Linux, wo .NET Named Pipes auf
+  Unix-Sockets abbildet und das Problem nicht existiert. Die CI hat dafür den Job
+  `Single-Instance (Windows)`.
 - **System-Tray (nur Desktop):** Minimieren legt ins Tray, Schließen beendet regulär — kein
   `ShutdownMode`-Umbau nötig, weil nur `Hide()` läuft. `TrayController` MUSS als Feld in `App`
   gehalten werden (sonst sammelt der GC das Icon ein), Restore läuft über den UI-Dispatcher mit
@@ -338,7 +348,15 @@ docs/      Screenshots, Logo
 ## Deploy & CI
 
 - **CI-Workflow** (`.github/workflows/ci.yml`): auf jeden Push/PR `dotnet test FlexFamilyCalendar.slnx`
-  (installiert vorher `wasm-tools` Workload für den Browser-Head).
+  (installiert vorher `wasm-tools` Workload für den Browser-Head). Zusätzlich der Job
+  `Single-Instance (Windows)` auf `windows-latest` — nur die Wächter-Tests, weil Named Pipes
+  dort Kernel-Objekte sind und sich grundlegend anders verhalten als unter Linux.
+  Per `workflow_dispatch` auch manuell startbar, gegen jeden Branch
+  (`gh workflow run CI --ref <branch>`): so lässt sich ein neuer Test gegen den alten Stand
+  laufen lassen, ohne `main` rot zu machen.
+- **Log-Dateien haben einen Größendeckel** (`archiveAboveSize` 10 MB × `maxArchiveFiles` 30,
+  Client und Server). Nur täglich zu rotieren reichte nicht: eine durchdrehende Schleife schrieb
+  die Datei bis zum Tageswechsel voll.
 - **Release-Workflow** (`.github/workflows/release.yml`): getriggert auf jedes Tag `vX.Y.Z` und
   baut parallel:
   - Desktop-linux-x64 (tar.gz), Desktop-win-x64 (zip), Linux-AppImage
