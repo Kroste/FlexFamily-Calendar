@@ -68,7 +68,8 @@ public static class PlannerSuggestionValidator
         // Selbst-Überlappung am gleichen Tag
         foreach (var e in personEntries)
         {
-            if (EntryTypeInfo.IsAbsence(e.Type)) continue;
+            // Ganztägiges hat keine Uhrzeit, gegen die sich etwas überschneiden könnte.
+            if (EntryTypeInfo.IsAbsence(e.Type) || e.IsAllDay) continue;
             if (Overlaps(e.StartTime, e.EndTime, start.Value, end.Value))
             {
                 warnings.Add(new SuggestionWarning(SuggestionWarningKind.SelfOverlap,
@@ -83,7 +84,7 @@ public static class PlannerSuggestionValidator
         {
             var prevDate = s.Date.AddDays(-1);
             var prev = week.FirstOrDefault(d => d.Date == prevDate).Entries ?? Array.Empty<CalendarEntry>();
-            foreach (var e in prev.Where(x => x.UserId == userId && !EntryTypeInfo.IsAbsence(x.Type)))
+            foreach (var e in prev.Where(x => x.UserId == userId && !EntryTypeInfo.IsAbsence(x.Type) && !x.IsAllDay))
             {
                 var endLocal = e.EndTime <= e.StartTime ? e.EndTime + TimeSpan.FromHours(24) : e.EndTime;
                 var prevEndTotal = endLocal.TotalHours;
@@ -96,7 +97,7 @@ public static class PlannerSuggestionValidator
 
             var nextDate = s.Date.AddDays(1);
             var next = week.FirstOrDefault(d => d.Date == nextDate).Entries ?? Array.Empty<CalendarEntry>();
-            foreach (var e in next.Where(x => x.UserId == userId && !EntryTypeInfo.IsAbsence(x.Type)))
+            foreach (var e in next.Where(x => x.UserId == userId && !EntryTypeInfo.IsAbsence(x.Type) && !x.IsAllDay))
             {
                 var thisEndLocal = end.Value <= start.Value ? end.Value + TimeSpan.FromHours(24) : end.Value;
                 var nextStartTotal = 24 + e.StartTime.TotalHours;

@@ -55,13 +55,40 @@ public class WeeklyHoursTests
         var entries = new[]
         {
             Entry("u1", EntryType.Work, 8, 12),       // 4h zählt
-            Entry("u1", EntryType.SickLeave, 8, 12),  // 4h angerechnet
-            Entry("u1", EntryType.Vacation, 8, 12),   // 4h angerechnet
+            Timed(Entry("u1", EntryType.SickLeave, 8, 12)),  // 4h angerechnet (Abwesenheit mit Uhrzeit)
+            Timed(Entry("u1", EntryType.Vacation, 8, 12)),   // 4h angerechnet
             Entry("u1", EntryType.Activity, 13, 15),  // ignoriert
             Entry("u1", EntryType.Absence, 0, 1),     // ignoriert
         };
 
         Assert.Equal(12, WeeklyHoursCalculator.ActualHoursByUser(entries)["u1"]);
+    }
+
+    private static CalendarEntry Timed(CalendarEntry e) { e.AllDay = false; return e; }
+
+    [Fact]
+    public void All_day_absence_counts_nothing_instead_of_24_hours()
+    {
+        // Ganztägige Abwesenheiten stehen mit 00:00–00:00 im Kalender. Das galt als „über
+        // Mitternacht" und buchte je Krank- oder Urlaubstag 24 Stunden aufs Konto. Ganztägig
+        // zählt jetzt nichts, bis das Stundenkonto umgebaut ist.
+        var entries = new[]
+        {
+            Entry("u1", EntryType.SickLeave, 0, 0),
+            Entry("u1", EntryType.Vacation, 0, 0),
+            Entry("u1", EntryType.Work, 8, 12)
+        };
+
+        Assert.Equal(4, WeeklyHoursCalculator.ActualHoursByUser(entries)["u1"]);
+    }
+
+    [Fact]
+    public void All_day_work_entry_counts_nothing()
+    {
+        var free = Entry("u1", EntryType.Work, 0, 0);
+        free.AllDay = true;   // „Frei" als ganzer Tag
+
+        Assert.Equal(0, WeeklyHoursCalculator.ActualHoursByUser(new[] { free })["u1"]);
     }
 
     [Fact]

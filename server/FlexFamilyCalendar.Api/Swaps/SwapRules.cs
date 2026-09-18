@@ -60,8 +60,14 @@ public static class SwapRules
         if (mode == Exchange
             && (toEntry is null || toEntry.UserId.ToString() != toUserId || toEntry.Type != EntryTypes.Work))
             return "Die Gegen-Schicht gibt es so nicht.";
+        // Nur eintägige Schichten: ein mehrtägiger Einsatz ist EIN Eintrag und ließe sich nur als
+        // Ganzes weitergeben — tageweises Tauschen gibt das Modell nicht her.
+        if (IsMultiDay(fromEntry) || (mode == Exchange && IsMultiDay(toEntry!)))
+            return "Nur eintägige Schichten lassen sich tauschen.";
         return null;
     }
+
+    private static bool IsMultiDay(CalendarEntry e) => (e.EndDate ?? e.Date) > e.Date;
 
     /// <summary>
     /// Prüft beim Annehmen, ob der Tausch noch gilt: Schichten noch da und noch bei denselben

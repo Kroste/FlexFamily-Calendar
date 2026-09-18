@@ -204,7 +204,7 @@ public static class PlannerContextBuilder
             foreach (var e in entries.OrderBy(x => x.StartTime))
             {
                 var name = NameFor(e.UserId, users) ?? e.UserDisplayName;
-                var time = $"{e.StartTime:hh\\:mm}–{e.EndTime:hh\\:mm}";
+                var time = e.TimeRange;   // „ganztägig", „ab 14:00" … statt 00:00–00:00
                 var label = e.Type.ToString();
                 var extra = string.IsNullOrEmpty(e.Title) ? "" : $" · {e.Title}";
                 sb.AppendLine($"- {name} · {time} · {label}{extra} · entryId={e.Id}");

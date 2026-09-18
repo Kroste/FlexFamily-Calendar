@@ -257,12 +257,43 @@
   Lade-Pfad abfragen, nie ersatzlos entfernen**, sondern erst als harmlosen Stub stehen lassen.
 - **`Clone`-Methoden kopieren Felder einzeln — neue Felder dort nachtragen.** `WeekCopy` und
   `EntryMoveCopy` hatten `Color` seit v0.16 nicht übernommen: „Woche kopieren" und
-  Verschieben/Kopieren einer Schicht verloren still die eigene Kachelfarbe.
-- **Zeitfelder im Eintrag-Dialog starten leer** (`TimeSpan?` ohne Vorbelegung). Abwesenheiten
-  spannen ganze Tage und haben deshalb gar keine Uhrzeit: `ShowTimes` blendet die Felder aus
-  und `Save` überspringt die Zeitprüfung — ohne diese Ausnahme ließe sich seit den leeren
-  Feldern kein Urlaubsantrag mehr absenden. Beim Bearbeiten bleiben vorhandene Werte erhalten
-  (`StartTime ?? TimeSpan.Zero`), damit Altbestände nicht auf 00:00 fallen.
+  Verschieben/Kopieren einer Schicht verloren still die eigene Kachelfarbe. Dasselbe gilt für
+  `AllDay`: ohne das Feld wird aus einem kopierten „Frei, ganztägig" eine Schicht 00:00–00:00,
+  die 24 Stunden zählt. Mehrtägige Einträge kopieren/ziehen beide gar nicht (`IsMultiDay`).
+- **Zeitfelder im Eintrag-Dialog starten leer** (`TimeSpan?` ohne Vorbelegung). Leere Felder
+  fängt `EntrySpans.Resolve` ab — außer bei „Ganztägig", das keine Uhrzeit braucht.
+- **Start/Ende wie im Google-Kalender (v0.22):** Einträge UND Abwesenheiten haben Start und
+  Ende mit Datum und Uhrzeit plus „Ganztägig". Wie gespeichert wird, entscheidet allein
+  `EntrySpans.Resolve` (rein, getestet):
+  - **Einzeleintrag** (ein Tag, mit Uhrzeit oder ganztägig) wie bisher.
+  - **Nachtschicht** (Ende am Folgetag vor der Startzeit, oder am selben Datum 20:00–06:00
+    getippt) bleibt EIN Eintrag am Starttag mit `EndTime < StartTime` — bewusst nicht als
+    Zeitraum, sonst zerfiele sie in zwei Kacheln, und Tausch/Ruhezeit kennen sie als eine Schicht.
+  - **Zeitraum** (mehrtägig, oder jede Abwesenheit): tageweise über `EntrySpans.Build`, verbunden
+    über `AbsenceGroupId`/`AbsenceStart`/`AbsenceEnd` (Namen historisch, stehen so in den
+    JSON-Dateien). Jeder Tag trägt in `StartTime`/`EndTime` nur **seinen Anteil** (erster Tag
+    bis 24:00 = `EntrySpans.EndOfDay`, Mitte 00:00–24:00, letzter ab 00:00), die Eckzeiten des
+    Ganzen stehen in `SpanStartTime`/`SpanEndTime` — daraus öffnet der Dialog den ganzen
+    Zeitraum von jedem Tag aus, und `EntryMapping.ToCreateBody` schickt sie an den Server.
+    `TimeRange` beschriftet die Anteile („ab 14:00", „ganztägig", „bis 10:00").
+  - **24:00 kennt `TimeOnly` nicht.** Wo ein Tagesanteil zum Server geht, klemmt
+    `ClampToDay` auf 00:00 — ein `TimeOnly.FromTimeSpan(24h)` wirft.
+  - **Ein Zeitraum, der genau um Mitternacht endet, hat am letzten Tag keinen Anteil**
+    (`EntrySpans.IsEmptyLastDay`). `CoversDay` filtert ihn beim Laden UND im Abgleich von
+    `ApiStorageService.SaveDayAsync` weg — fehlt der Filter dort, steht der Server-Eintrag an
+    diesem Tag ohne Gegenstück da und wird beim Speichern des Tages gelöscht, samt aller übrigen
+    Tage (`ApiSpanSyncTests` gegen eine Fake-API).
+  - **Server:** Schema unverändert. Ganztägig = `StartTime`/`EndTime` null (nur paarweise
+    erlaubt, für jeden Typ); Zeitraum = `Date`..`EndDate` mit Uhrzeit am ersten und letzten Tag.
+    `Corresponds` gleicht Zeiträume über Benutzer/Typ/Datum/Eckzeiten ab, nicht über die Id.
+  - **`AllDay` ist nullable:** null = Altbestand, dort galten Abwesenheiten als ganztägig und
+    alles andere als Eintrag mit Uhrzeit (`IsAllDay`).
+  - **Stunden:** ganztägig zählt 0, ein Zeitraum je Tag seinen Anteil (vereinbart bis zum Umbau
+    des Stundenkontos). Vorher zählten ganztägige Krank-/Urlaubstage über `DurationHours` als
+    „00:00–00:00 über Mitternacht" = **24 h je Tag**.
+  - **Arbeitszeit-Regeln, KI-Prüfung und Tausch** arbeiten nur auf `IsShift` (ein Tag, mit
+    Uhrzeit) bzw. `!IsMultiDay`; der Server lehnt den Tausch mehrtägiger Einträge in
+    `SwapRules.CheckCreate` ab. Die Handy-Meldung (Krank/Urlaub) bleibt ganztägig.
 - **Design-Test-API (`desktop/DesignApi/`, nur Desktop):** lokale REST-Schnittstelle, mit der
   sich UI-Änderungen prüfen lassen — Zustand lesen, Theme und Sprache umschalten, Fenster
   öffnen, Screenshot per `RenderTargetBitmap`. Fernsteuerung von außen

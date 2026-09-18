@@ -24,7 +24,7 @@ public partial class MobileSwapViewModel : ObservableObject
 
     public record MyShiftOption(DateOnly Date, CalendarEntry Entry)
     {
-        public string Label => $"{Date:ddd dd.MM.} {Entry.StartTime:hh\\:mm}–{Entry.EndTime:hh\\:mm}";
+        public string Label => $"{Date:ddd dd.MM.} {Entry.TimeRange}";
     }
 
     public ObservableCollection<ShiftSwapRequest> Incoming { get; } = new();
@@ -73,7 +73,7 @@ public partial class MobileSwapViewModel : ObservableObject
                 foreach (var e in day.Entries)
                 {
                     if (e.UserId != _user.Id) continue;
-                    if (e.Type != EntryType.Work) continue;
+                    if (e.Type != EntryType.Work || e.IsMultiDay) continue;   // nur eintägige Schichten
                     MyShifts.Add(new MyShiftOption(day.Date, e));
                 }
 

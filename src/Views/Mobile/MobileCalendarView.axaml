@@ -67,9 +67,9 @@
                           <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}">
                             <Run Text="{Binding UserDisplayName}" />
                             <Run Text=" — " />
-                            <Run Text="{Binding StartTime, StringFormat=hh\\:mm}" />
-                            <Run Text="-" />
-                            <Run Text="{Binding EndTime, StringFormat=hh\\:mm}" />
+                            <!-- TimeRange statt Start/Ende roh: „ganztägig", „ab 14:00", „bis 10:00".
+                                 Vorher stand bei Abwesenheiten hier 00:00-00:00. -->
+                            <Run Text="{Binding TimeRange}" />
                           </TextBlock>
                           <TextBlock Text="{Binding DisplayTitle}"
                                      FontSize="11" Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}" Opacity="0.9"

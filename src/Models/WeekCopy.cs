@@ -10,15 +10,20 @@ public static class WeekCopy
     public static bool IsTemplate(EntryType type)
         => type is EntryType.Work or EntryType.Activity;
 
-    /// <summary>Klont die Vorlage-Einträge (neue Id, sonst identisch).</summary>
+    /// <summary>
+    /// Klont die Vorlage-Einträge (neue Id, sonst identisch). Mehrtägige Einträge bleiben außen
+    /// vor: sie sind einmalige Einsätze, und ihre Tagesanteile („ab 14:00", „ganztägig") ergäben
+    /// ohne den Zeitraum dahinter lauter Einzeleinträge mit 24 Stunden.
+    /// </summary>
     public static List<CalendarEntry> TemplateEntries(IEnumerable<CalendarEntry> source)
-        => source.Where(e => IsTemplate(e.Type)).Select(Clone).ToList();
+        => source.Where(e => IsTemplate(e.Type) && !e.IsMultiDay).Select(Clone).ToList();
 
     private static CalendarEntry Clone(CalendarEntry e) => new()
     {
         UserId = e.UserId,
         UserDisplayName = e.UserDisplayName,
         Type = e.Type,
+        AllDay = e.AllDay,   // sonst würde aus „Frei, ganztägig" eine Schicht 00:00–00:00 mit 24 Stunden
         StartTime = e.StartTime,
         EndTime = e.EndTime,
         Title = e.Title,

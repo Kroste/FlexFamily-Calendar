@@ -70,8 +70,11 @@ public static class EntryWriteRules
     {
         if (endDate is { } ed && ed < date)
             return "Enddatum liegt vor dem Startdatum.";
-        if (EntryTypes.IsTimed(type) && (start is null || end is null))
-            return "Schichten brauchen Start- und Endzeit.";
+        // Uhrzeit nur paarweise: beide gesetzt = mit Uhrzeit, beide leer = ganztägig. Ganztägig
+        // darf seit Start/Ende im Dialog jeder Typ sein („Frei" als ganzer Tag); vorher brauchten
+        // Schichten immer eine Uhrzeit.
+        if ((start is null) != (end is null))
+            return "Start- und Endzeit gehören zusammen — beide angeben oder keine (ganztägig).";
         // Aktivitäten brauchen eine Bezeichnung — seit es keine Kategorien mehr gibt, ist sie der
         // einzige Name, den der Eintrag im Plan hat.
         if (type == EntryTypes.Activity && string.IsNullOrWhiteSpace(categoryLabel))

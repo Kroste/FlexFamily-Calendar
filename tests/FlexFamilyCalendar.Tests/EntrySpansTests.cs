@@ -4,7 +4,7 @@ using Xunit;
 
 namespace FlexFamilyCalendar.Tests;
 
-public class AbsencePlannerTests
+public class EntrySpansBuildTests
 {
     private static CalendarEntry Template() => new()
     {
@@ -18,7 +18,7 @@ public class AbsencePlannerTests
         var from = new DateOnly(2026, 6, 1);
         var to = new DateOnly(2026, 6, 3);
 
-        var planned = AbsencePlanner.Build(Template(), from, to, "grp-1");
+        var planned = EntrySpans.Build(Template(), from, to, "grp-1");
 
         Assert.Equal(3, planned.Count);
         Assert.Equal(new[] { from, from.AddDays(1), to }, planned.Select(p => p.Date));
@@ -28,7 +28,10 @@ public class AbsencePlannerTests
             Assert.Equal(from, p.Entry.AbsenceStart);
             Assert.Equal(to, p.Entry.AbsenceEnd);
             Assert.Equal(EntryType.Vacation, p.Entry.Type);
-            Assert.Equal(TimeSpan.FromHours(8), p.Entry.StartTime);
+            // Abwesenheiten ohne Angabe sind ganztägig — die alten Vorgabezeiten der Vorlage
+            // landen nicht am Tag (sie zählten sonst Stunden).
+            Assert.True(p.Entry.IsAllDay);
+            Assert.Equal(TimeSpan.Zero, p.Entry.StartTime);
         });
     }
 
@@ -36,7 +39,7 @@ public class AbsencePlannerTests
     public void Build_SingleDay_ProducesOneEntry()
     {
         var d = new DateOnly(2026, 6, 1);
-        var planned = AbsencePlanner.Build(Template(), d, d, "g");
+        var planned = EntrySpans.Build(Template(), d, d, "g");
         var one = Assert.Single(planned);
         Assert.Equal(d, one.Date);
     }
@@ -47,7 +50,7 @@ public class AbsencePlannerTests
         var from = new DateOnly(2026, 6, 5);
         var to = new DateOnly(2026, 6, 3);
 
-        var planned = AbsencePlanner.Build(Template(), from, to, "g");
+        var planned = EntrySpans.Build(Template(), from, to, "g");
 
         Assert.Equal(3, planned.Count);
         Assert.Equal(new DateOnly(2026, 6, 3), planned.First().Date);
@@ -57,7 +60,7 @@ public class AbsencePlannerTests
     [Fact]
     public void Build_AssignsDistinctIds()
     {
-        var planned = AbsencePlanner.Build(Template(), new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 4), "g");
+        var planned = EntrySpans.Build(Template(), new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 4), "g");
         Assert.Equal(planned.Count, planned.Select(p => p.Entry.Id).Distinct().Count());
     }
 }

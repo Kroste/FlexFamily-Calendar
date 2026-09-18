@@ -47,17 +47,60 @@ public class CalendarEntry
     /// </summary>
     public string Color { get; set; } = "";
 
-    // Abwesenheiten (Urlaub/Krank/Abwesend) als Zeitraum: je Tag ein Eintrag, über GroupId verbunden.
-    public string? AbsenceGroupId { get; set; }    // verbindet die Tage einer Abwesenheit (null = keine)
+    // Zeitraum-Einträge: je Tag ein Eintrag, über die GroupId verbunden. Die Namen stammen aus der
+    // Zeit, als nur Abwesenheiten mehrere Tage spannen konnten — heute kann das jeder Eintrag
+    // (Start und Ende mit Datum und Uhrzeit). Umbenannt wird nicht: die lokalen JSON-Dateien
+    // tragen genau diese Feldnamen.
+    public string? AbsenceGroupId { get; set; }    // verbindet die Tage eines Zeitraums (null = keiner)
     public DateOnly? AbsenceStart { get; set; }    // erster Tag des Zeitraums
     public DateOnly? AbsenceEnd { get; set; }      // letzter Tag des Zeitraums
 
-    /// <summary>Stunden der Schicht; Schichten über Mitternacht (EndTime ≤ StartTime) zählen den Folgetag-Anteil mit.</summary>
+    /// <summary>
+    /// Uhrzeit am ersten bzw. letzten Tag eines Zeitraums (null = ganztägig oder kein Zeitraum).
+    /// <see cref="StartTime"/>/<see cref="EndTime"/> tragen am einzelnen Tag nur dessen Anteil —
+    /// für die Bearbeitung und den Server braucht es die Eckwerte des ganzen Zeitraums.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public TimeSpan? SpanStartTime { get; set; }
+
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public TimeSpan? SpanEndTime { get; set; }
+
+    /// <summary>
+    /// Ganztägig gesetzt (true), mit Uhrzeit (false) oder Altbestand ohne Angabe (null). Nullable,
+    /// weil ältere Dateien das Feld nicht kennen: dort galten Abwesenheiten immer als ganztägig und
+    /// alles andere als Eintrag mit Uhrzeit — siehe <see cref="IsAllDay"/>.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public bool? AllDay { get; set; }
+
+    /// <summary>Ganztägig — ohne Uhrzeit, zählt keine Stunden.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsAllDay => AllDay ?? EntryTypeInfo.IsAbsence(Type);
+
+    /// <summary>Spannt mehr als einen Tag (Start- und Enddatum verschieden).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsMultiDay => AbsenceStart is { } s && AbsenceEnd is { } e && e > s;
+
+    /// <summary>
+    /// Schicht im engeren Sinn: an einem Tag, mit Uhrzeit. Nur solche Einträge prüfen
+    /// Arbeitszeit-Regeln (Tageslimit, Ruhezeit, Überschneidung) und lassen sich tauschen — der
+    /// Mittelteil eines mehrtägigen Einsatzes hätte sonst 24 Stunden und null Ruhezeit.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsShift => !IsAllDay && !IsMultiDay;
+
+    /// <summary>
+    /// Stunden an diesem Tag. Ganztägige Einträge zählen nichts; am Tag eines Zeitraums zählt
+    /// dessen Anteil (erster Tag bis 24:00, Mitte ganz, letzter Tag ab 00:00). Schichten über
+    /// Mitternacht (EndTime ≤ StartTime) zählen den Folgetag-Anteil mit.
+    /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public double DurationHours
     {
         get
         {
+            if (IsAllDay) return 0;
             var d = (EndTime - StartTime).TotalHours;
             return d > 0 ? d : d + 24;   // EndTime ≤ StartTime ⇒ über Mitternacht
         }
@@ -65,10 +108,32 @@ public class CalendarEntry
 
     /// <summary>Schicht überschreitet die Tagesgrenze (z.B. 20:00–06:00, auch 20:00–00:00).</summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public bool CrossesMidnight => EndTime <= StartTime;
+    public bool CrossesMidnight => !IsAllDay && EndTime <= StartTime;
 
+    /// <summary>
+    /// Uhrzeit, wie sie auf der Kachel steht: „08:00–16:00", am Tag eines Zeitraums nur dessen
+    /// Anteil („ab 14:00", „ganztägig", „bis 10:00").
+    /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public string TimeRange => $"{StartTime:hh\\:mm}–{EndTime:hh\\:mm}";
+    public string TimeRange
+    {
+        get
+        {
+            var loc = Localization.Localizer.Instance;
+            if (IsAllDay) return loc["Entry_AllDayShort"];
+            if (IsMultiDay)
+            {
+                var toMidnight = EndTime >= Services.EntrySpans.EndOfDay;
+                var fromMidnight = StartTime == TimeSpan.Zero;
+                if (toMidnight && fromMidnight) return loc["Entry_AllDayShort"];
+                if (toMidnight) return string.Format(loc["Entry_FromTime"], Hm(StartTime));
+                if (fromMidnight) return string.Format(loc["Entry_UntilTime"], Hm(EndTime));
+            }
+            return $"{Hm(StartTime)}–{Hm(EndTime)}";
+        }
+    }
+
+    private static string Hm(TimeSpan t) => $"{t.Hours:D2}:{t.Minutes:D2}";
 
     /// <summary>Kompakter Zeitraum einer mehrtägigen Abwesenheit (leer, wenn nur ein Tag).</summary>
     [System.Text.Json.Serialization.JsonIgnore]
@@ -79,9 +144,13 @@ public class CalendarEntry
     [System.Text.Json.Serialization.JsonIgnore]
     public bool IsAbsenceDisplay => EntryTypeInfo.IsAbsence(DisplayType);
 
-    /// <summary>Uhrzeit anzeigen (Schichten/Aktivitäten) — nicht bei Abwesenheiten.</summary>
+    /// <summary>
+    /// Uhrzeit anzeigen: bei Einträgen immer (auch „ganztägig"), bei Abwesenheiten nur, wenn sie
+    /// eine Uhrzeit haben und nichts maskiert ist. Der Server räumt die Uhrzeit maskierter
+    /// Einträge weg; im lokalen Modus hält diese Prüfung dieselbe Linie.
+    /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public bool ShowsTime => !IsAbsenceDisplay;
+    public bool ShowsTime => !IsAbsenceDisplay || (!IsAllDay && DisplayType == Type);
 
     /// <summary>Zeitraum einer Abwesenheit in der Zelle anzeigen (nur wenn mehrtägig).</summary>
     [System.Text.Json.Serialization.JsonIgnore]

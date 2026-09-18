@@ -55,7 +55,7 @@ public class EntrySelfAbsenceTests
         vm.IsAbsenceMode = true;
         vm.SelectedAbsenceKind = vm.AbsenceKinds.First(k => k.Type == EntryType.Vacation);
 
-        Assert.True(vm.ShowDateRange);
+        Assert.True(vm.IsAllDay);            // Abwesenheiten starten ganztägig
         Assert.False(vm.ShowTimes);
         Assert.Equal(EntryType.Vacation, vm.EffectiveType);
     }

@@ -203,8 +203,8 @@ public class EntryWriteRulesTests
             new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: "Zahnarzt"));
 
     [Fact]
-    public void Custom_without_times_is_rejected()
-        => Assert.NotNull(EntryWriteRules.Validate(EntryTypes.Custom, new DateOnly(2026, 5, 25), null,
+    public void Custom_without_times_is_an_all_day_appointment()
+        => Assert.Null(EntryWriteRules.Validate(EntryTypes.Custom, new DateOnly(2026, 5, 25), null,
             null, null, categoryLabel: "Zahnarzt"));
 
     [Fact]
@@ -224,8 +224,23 @@ public class EntryWriteRulesTests
         => Assert.Equal(EntryStatus.Approved, EntryWriteRules.InitialStatus(EntryTypes.Vacation, isAdmin: true));
 
     [Fact]
-    public void Timed_entry_requires_times()
-        => Assert.NotNull(EntryWriteRules.Validate(EntryTypes.Work, new DateOnly(2026, 5, 25), null, null, null, null));
+    public void Work_without_times_is_an_all_day_entry()
+        // Seit Start/Ende im Dialog darf auch eine Schicht ganztägig sein („Frei" als ganzer Tag).
+        => Assert.Null(EntryWriteRules.Validate(EntryTypes.Work, new DateOnly(2026, 5, 25), null, null, null, null));
+
+    [Fact]
+    public void Only_one_time_is_rejected()
+        => Assert.NotNull(EntryWriteRules.Validate(EntryTypes.Work, new DateOnly(2026, 5, 25), null, new TimeOnly(8, 0), null, null));
+
+    [Fact]
+    public void Timed_multi_day_entry_is_valid()
+        => Assert.Null(EntryWriteRules.Validate(EntryTypes.Work, new DateOnly(2026, 5, 27), new DateOnly(2026, 5, 29),
+            new TimeOnly(14, 0), new TimeOnly(10, 0), null));
+
+    [Fact]
+    public void Timed_absence_is_valid()
+        => Assert.Null(EntryWriteRules.Validate(EntryTypes.SickLeave, new DateOnly(2026, 5, 27), new DateOnly(2026, 5, 27),
+            new TimeOnly(9, 0), new TimeOnly(11, 0), null));
 
     [Fact]
     public void Activity_without_a_name_is_rejected()

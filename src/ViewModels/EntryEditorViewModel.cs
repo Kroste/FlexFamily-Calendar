@@ -12,7 +12,11 @@ public record EntryTypeOption(EntryType Type, string Label);
 
 public enum EntryDialogAction { Save, Delete }
 
-public record EntryDialogResult(EntryDialogAction Action, CalendarEntry Entry, DateOnly RangeStart, DateOnly RangeEnd);
+public record EntryDialogResult(EntryDialogAction Action, CalendarEntry Entry, DateOnly RangeStart, DateOnly RangeEnd)
+{
+    /// <summary>Als Zeitraum speichern: Abwesenheiten immer, alles andere, sobald es mehr als einen Tag spannt.</summary>
+    public bool IsSpan => EntryTypeInfo.IsAbsence(Entry.Type) || RangeEnd > RangeStart;
+}
 
 /// <summary>
 /// Dialog für einen Kalendereintrag, in zwei Modi:
@@ -21,9 +25,12 @@ public record EntryDialogResult(EntryDialogAction Action, CalendarEntry Entry, D
 /// Kachelfarbe, Notizen. Keine Typ-Auswahl mehr — sie war zu starr, die Bezeichnung ist der Name
 /// im Plan. Neue Einträge zählen intern als Arbeit, damit Stundenkonto, Tausch und Freigabe-Regel
 /// unverändert weiterlaufen, bis das Stundenkonto umgebaut ist; bestehende behalten ihren Typ.</item>
-/// <item><b>Abwesenheit</b>: Urlaub/Krank/Abwesend über einen Datumsbereich, ohne Uhrzeit. Hier
-/// hängen Genehmigung, Krankmeldung und Datenschutz-Maskierung dran, deshalb bleibt die Art wählbar.</item>
+/// <item><b>Abwesenheit</b>: Urlaub/Krank/Abwesend. Hier hängen Genehmigung, Krankmeldung und
+/// Datenschutz-Maskierung dran, deshalb bleibt die Art wählbar.</item>
 /// </list>
+/// Beide Modi haben Start und Ende mit Datum und Uhrzeit wie im Google-Kalender, dazu
+/// „Ganztägig" (bei Abwesenheiten vorbelegt). Verschiebt man den Start, wandert das Ende mit und
+/// die Dauer bleibt. Wie daraus gespeichert wird, entscheidet <see cref="EntrySpans.Resolve"/>.
 /// Den Modus wählt der Admin beim Anlegen oben im Dialog; ein Klick in die Zelle verrät nicht,
 /// was er vorhat. Mitarbeiter, die sich selbst krank oder in Urlaub melden, landen direkt in der
 /// Abwesenheit. Beim Bearbeiten steht der Modus durch den Eintrag fest.
@@ -41,7 +48,6 @@ public partial class EntryEditorViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEntryMode))]
-    [NotifyPropertyChangedFor(nameof(ShowDateRange))]
     [NotifyPropertyChangedFor(nameof(ShowTimes))]
     [NotifyPropertyChangedFor(nameof(ShowOvernightNote))]
     [NotifyPropertyChangedFor(nameof(TitleLabel))]
@@ -73,8 +79,15 @@ public partial class EntryEditorViewModel : ViewModelBase
     // Uhrzeit direkt getippt werden kann. Save fängt leere Felder über Entry_ErrorNoStart/-NoEnd ab.
     [ObservableProperty] private TimeSpan? _startTime;
     [ObservableProperty] private TimeSpan? _endTime;
-    [ObservableProperty] private DateTimeOffset? _absenceFrom;
-    [ObservableProperty] private DateTimeOffset? _absenceTo;
+    [ObservableProperty] private DateTimeOffset? _startDate;
+    [ObservableProperty] private DateTimeOffset? _endDate;
+
+    /// <summary>Ganztägig: keine Uhrzeit, zählt keine Stunden. Bei Abwesenheiten vorbelegt.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowTimes))]
+    private bool _isAllDay;
+
+    private bool _syncing;   // unterdrückt das Mitwandern des Endes, solange der Dialog selbst setzt
     [ObservableProperty] private string _title = "";
     [ObservableProperty] private string _notes = "";
     [ObservableProperty] private string _errorMessage = "";
@@ -101,10 +114,8 @@ public partial class EntryEditorViewModel : ViewModelBase
     /// <summary>Umschalter nur beim Anlegen und nur, wenn beides erlaubt ist.</summary>
     public bool CanSwitchMode { get; }
 
-    public bool ShowDateRange => IsAbsenceMode;
-
-    /// <summary>Uhrzeiten nur im Eintrags-Modus — eine Abwesenheit spannt ganze Tage.</summary>
-    public bool ShowTimes => !IsAbsenceMode;
+    /// <summary>Uhrzeitfelder neben den Datumsfeldern — nicht bei ganztägig.</summary>
+    public bool ShowTimes => !IsAllDay;
 
     /// <summary>Der Typ, den der Eintrag beim Speichern bekommt.</summary>
     public EntryType EffectiveType => IsAbsenceMode
@@ -159,11 +170,16 @@ public partial class EntryEditorViewModel : ViewModelBase
         SelectedUser = users.FirstOrDefault();
         SelectedAbsenceKind = AbsenceKinds.FirstOrDefault();
         IsAbsenceMode = !canEntries;
+        IsAllDay = IsAbsenceMode;
 
-        var dateOffset = new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue));
-        AbsenceFrom = dateOffset;
-        AbsenceTo = dateOffset;
+        _syncing = true;
+        StartDate = ToOffset(date);
+        EndDate = ToOffset(date);
+        _syncing = false;
     }
+
+    private static DateTimeOffset ToOffset(DateOnly d) => new(d.ToDateTime(TimeOnly.MinValue));
+    private static DateOnly ToDate(DateTimeOffset d) => DateOnly.FromDateTime(d.Date);
 
     /// <summary>Bestehenden Eintrag bearbeiten. Der Modus steht durch den Eintrag fest.</summary>
     public EntryEditorViewModel(DateOnly date, IReadOnlyList<User> users, CalendarEntry existing,
@@ -189,8 +205,31 @@ public partial class EntryEditorViewModel : ViewModelBase
             _entryType = existing.Type;
         }
 
-        StartTime = existing.StartTime;
-        EndTime = existing.EndTime;
+        _syncing = true;
+        IsAllDay = existing.IsAllDay;
+        if (existing.IsAllDay)
+        {
+            StartTime = null;
+            EndTime = null;
+        }
+        else if (existing.AbsenceGroupId != null)
+        {
+            // Zeitraum: die Eckzeiten des Ganzen, nicht der Anteil des geklickten Tages.
+            StartTime = existing.SpanStartTime ?? existing.StartTime;
+            EndTime = existing.SpanEndTime ?? existing.EndTime;
+        }
+        else
+        {
+            StartTime = existing.StartTime;
+            EndTime = existing.EndTime;
+        }
+
+        var start = existing.AbsenceStart ?? date;
+        // Nachtschicht: steht als ein Eintrag am Starttag, endet aber am Folgetag.
+        var end = existing.AbsenceEnd ?? (existing.CrossesMidnight ? date.AddDays(1) : date);
+        StartDate = ToOffset(start);
+        EndDate = ToOffset(end);
+        _syncing = false;
         // Alt-Einträge ohne Bezeichnung zeigten im Plan ihren Typ („Arbeit"). Den übernehmen, damit
         // die Kachel nach dem Speichern gleich aussieht und das Pflichtfeld nicht leer dasteht.
         Title = !isAbsence && string.IsNullOrWhiteSpace(existing.Title)
@@ -203,8 +242,6 @@ public partial class EntryEditorViewModel : ViewModelBase
         _origGroupId = existing.AbsenceGroupId;
         _origStart = existing.AbsenceStart;
         _origEnd = existing.AbsenceEnd;
-        AbsenceFrom = new DateTimeOffset((existing.AbsenceStart ?? date).ToDateTime(TimeOnly.MinValue));
-        AbsenceTo = new DateTimeOffset((existing.AbsenceEnd ?? date).ToDateTime(TimeOnly.MinValue));
     }
 
     partial void OnUseCustomColorChanged(bool value)
@@ -215,7 +252,45 @@ public partial class EntryEditorViewModel : ViewModelBase
         else if (!value) Color = "";
     }
 
-    partial void OnIsAbsenceModeChanged(bool value) => ErrorMessage = "";
+    partial void OnIsAbsenceModeChanged(bool value)
+    {
+        ErrorMessage = "";
+        // Umschalten beim Anlegen: Abwesenheiten sind meist ganztägig, Einträge haben eine Uhrzeit.
+        if (!IsEditMode) IsAllDay = value;
+    }
+
+    // Start verschieben → Ende wandert mit, die Dauer bleibt (wie im Google-Kalender). Gerechnet
+    // wird auf Datum + Uhrzeit, damit ein Start über Mitternacht auch das Enddatum mitnimmt.
+    partial void OnStartDateChanged(DateTimeOffset? oldValue, DateTimeOffset? newValue)
+    {
+        if (_syncing || oldValue is not { } o || newValue is not { } n || EndDate is not { } e) return;
+        ShiftEnd(ToDate(o), StartTime, ToDate(n), StartTime, ToDate(e));
+    }
+
+    partial void OnStartTimeChanged(TimeSpan? oldValue, TimeSpan? newValue)
+    {
+        if (_syncing || oldValue is null || newValue is null || StartDate is not { } sd || EndDate is not { } ed) return;
+        ShiftEnd(ToDate(sd), oldValue, ToDate(sd), newValue, ToDate(ed));
+    }
+
+    private void ShiftEnd(DateOnly oldDate, TimeSpan? oldTime, DateOnly newDate, TimeSpan? newTime, DateOnly endDate)
+    {
+        // Ganztägig oder noch ohne Uhrzeit: nur das Datum wandert mit.
+        var timed = !IsAllDay && oldTime is not null && newTime is not null && EndTime is not null;
+        var oldStart = oldDate.ToDateTime(TimeOnly.MinValue) + (timed ? oldTime!.Value : TimeSpan.Zero);
+        var newStart = newDate.ToDateTime(TimeOnly.MinValue) + (timed ? newTime!.Value : TimeSpan.Zero);
+        var oldEnd = endDate.ToDateTime(TimeOnly.MinValue) + (timed ? EndTime!.Value : TimeSpan.Zero);
+        // Nachtschicht mit gleichem Datum eingetippt (20:00–06:00): endet in Wahrheit am Folgetag.
+        // Diese Schreibweise bleibt beim Verschieben erhalten, sonst sprünge das Enddatum.
+        var overnightSameDate = timed && endDate == oldDate && oldEnd <= oldStart;
+        if (overnightSameDate) oldEnd = oldEnd.AddDays(1);
+        var newEnd = newStart + (oldEnd - oldStart);
+
+        _syncing = true;
+        EndDate = ToOffset(overnightSameDate ? newDate : DateOnly.FromDateTime(newEnd));
+        if (timed) EndTime = newEnd.TimeOfDay;
+        _syncing = false;
+    }
 
     [RelayCommand]
     private void Save()
@@ -223,25 +298,14 @@ public partial class EntryEditorViewModel : ViewModelBase
         ErrorMessage = "";
         if (SelectedUser == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoUser"]; return; }
 
-        DateOnly rangeStart, rangeEnd;
-        if (IsAbsenceMode)
-        {
-            if (SelectedAbsenceKind == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoType"]; return; }
-            if (AbsenceFrom == null || AbsenceTo == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoDate"]; return; }
-            rangeStart = DateOnly.FromDateTime(AbsenceFrom.Value.Date);
-            rangeEnd = DateOnly.FromDateTime(AbsenceTo.Value.Date);
-            if (rangeEnd < rangeStart) (rangeStart, rangeEnd) = (rangeEnd, rangeStart);
-        }
-        else
-        {
-            // Die Bezeichnung ist der Name im Plan — ohne sie stünde die Kachel namenlos da.
-            if (string.IsNullOrWhiteSpace(Title)) { ErrorMessage = Localizer.Instance["Entry_ErrorNoName"]; return; }
-            if (StartTime == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoStart"]; return; }
-            if (EndTime == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoEnd"]; return; }
-            // EndTime < StartTime ist erlaubt (Schicht über Mitternacht); nur identische Zeiten sind ungültig.
-            if (EndTime == StartTime) { ErrorMessage = Localizer.Instance["Entry_ErrorSameTime"]; return; }
-            rangeStart = rangeEnd = Date;
-        }
+        if (IsAbsenceMode && SelectedAbsenceKind == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoType"]; return; }
+        // Die Bezeichnung ist der Name im Plan — ohne sie stünde die Kachel namenlos da.
+        if (!IsAbsenceMode && string.IsNullOrWhiteSpace(Title)) { ErrorMessage = Localizer.Instance["Entry_ErrorNoName"]; return; }
+        if (StartDate == null || EndDate == null) { ErrorMessage = Localizer.Instance["Entry_ErrorNoDate"]; return; }
+
+        var (plan, error) = EntrySpans.Resolve(ToDate(StartDate.Value), StartTime,
+            ToDate(EndDate.Value), EndTime, IsAllDay, IsAbsenceMode);
+        if (plan is null) { ErrorMessage = Localizer.Instance[error!]; return; }
 
         var entry = new CalendarEntry
         {
@@ -249,22 +313,25 @@ public partial class EntryEditorViewModel : ViewModelBase
             UserId = SelectedUser.Id,
             UserDisplayName = string.IsNullOrEmpty(SelectedUser.DisplayName) ? SelectedUser.Username : SelectedUser.DisplayName,
             Type = EffectiveType,
-            // Bei Abwesenheiten sind die Felder ausgeblendet und damit leer — beim Bearbeiten
-            // eines Altbestands stehen dort noch Werte, die bleiben erhalten.
-            StartTime = StartTime ?? TimeSpan.Zero,
-            EndTime = EndTime ?? TimeSpan.Zero,
+            AllDay = plan.AllDay,
+            // Einzeleintrag: die Uhrzeiten des Tages. Zeitraum: die Eckzeiten, den Anteil je Tag
+            // rechnet EntrySpans.Build.
+            StartTime = plan.AllDay ? TimeSpan.Zero : plan.StartTime!.Value,
+            EndTime = plan.AllDay ? TimeSpan.Zero : plan.EndTime!.Value,
+            SpanStartTime = plan.IsSpan ? plan.StartTime : null,
+            SpanEndTime = plan.IsSpan ? plan.EndTime : null,
             Title = Title.Trim(),
             Notes = Notes.Trim(),
             // Nur eine wirklich gewählte, lesbare Farbe wird festgeschrieben — sonst folgt der
             // Eintrag der Farbe seines Typs.
             Color = UseCustomColor && EntryColors.IsValidHex(Color) ? Color : "",
-            // bestehende Abwesenheits-Gruppe mitführen, damit sie beim Speichern aufgeräumt werden kann
+            // bestehende Zeitraum-Gruppe mitführen, damit sie beim Speichern aufgeräumt werden kann
             AbsenceGroupId = _origGroupId,
             AbsenceStart = _origStart,
             AbsenceEnd = _origEnd
         };
         LogService.Debug("Eintrag-Dialog: Speichern ({0}, {1})", entry.TypeLabel, entry.UserDisplayName);
-        Closed?.Invoke(new EntryDialogResult(EntryDialogAction.Save, entry, rangeStart, rangeEnd));
+        Closed?.Invoke(new EntryDialogResult(EntryDialogAction.Save, entry, plan.From, plan.To));
     }
 
     [RelayCommand]

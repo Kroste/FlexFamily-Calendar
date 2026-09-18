@@ -8,6 +8,16 @@ Geschrieben für die Menschen, die die App benutzen: was sich für sie ändert, 
 Update-Dialog zeigt den Text ohne Formatierung — also schlichte Aufzählungen, kein Fettdruck,
 keine Links.
 
+## v0.22.0 — 18.09.2026
+
+- Einträge und Abwesenheiten haben jetzt Start und Ende mit Datum und Uhrzeit, wie im Google-Kalender. Verschiebst du den Start, wandert das Ende mit.
+- Neuer Haken „Ganztägig": dann ohne Uhrzeit, z.B. für „Frei" als ganzen Tag. Bei Abwesenheiten ist er vorbelegt, lässt sich aber abwählen — etwa für einen Arzttermin von 9 bis 11 Uhr.
+- Einträge über mehrere Tage: Mittwoch 14:00 bis Freitag 10:00 steht im Plan als „ab 14:00", „ganztägig" und „bis 10:00". Ein Klick auf einen der Tage bearbeitet den ganzen Zeitraum.
+- Eine Nachtschicht (z.B. 20:00 bis 06:00 am Folgetag) bleibt ein Eintrag am Starttag, wie bisher.
+- Tauschen lassen sich nur Schichten an einem einzelnen Tag.
+- Stundenkonto: Ganztägige Krank- und Urlaubstage wurden bisher versehentlich mit 24 Stunden je Tag angerechnet. Ganztägiges zählt jetzt vorerst gar nicht, bis die Berechnung überarbeitet ist.
+- Handy-App: auf den Tageskarten steht „ganztägig" statt „00:00-00:00". Die Krank-/Urlaubsmeldung bleibt bei ganzen Tagen.
+
 ## v0.21.1 — 18.09.2026
 
 - Ältere App-Versionen zeigen nach dem Server-Update weiter ihren Plan an, statt einer leeren Woche. Bitte trotzdem bald aktualisieren — vor allem die Handy-App.

@@ -4,7 +4,10 @@ namespace FlexFamilyCalendar.Services;
 
 /// <summary>
 /// Reine Prüfung der Arbeitszeit-Grenzen je Tag (Tages-Höchstarbeitszeit, Ruhezeit zwischen Tagen).
-/// UI-unabhängig und testbar; nur Arbeitseinträge zählen (Krank/Urlaub sind keine Arbeitszeit).
+/// UI-unabhängig und testbar; nur Arbeitseinträge zählen (Krank/Urlaub sind keine Arbeitszeit),
+/// und von denen nur echte Schichten (<see cref="CalendarEntry.IsShift"/>): ein ganztägiger Eintrag
+/// hat keine Uhrzeit, und der Mittelteil eines mehrtägigen Einsatzes hätte 24 Stunden und null
+/// Ruhezeit — beides würde als Verstoß gemeldet, ohne einer zu sein.
 /// </summary>
 public static class WorkTimeRules
 {
@@ -17,7 +20,7 @@ public static class WorkTimeRules
     /// <summary>Fasst die Arbeitseinträge eines Tages zusammen.</summary>
     public static DaySummary Summarize(DateOnly date, IEnumerable<CalendarEntry> entries)
     {
-        var work = entries.Where(e => EntryTypeInfo.CountsAsWork(e.Type)).ToList();
+        var work = entries.Where(e => EntryTypeInfo.CountsAsWork(e.Type) && e.IsShift).ToList();
         if (work.Count == 0)
             return new DaySummary(date, 0, null, null);
         return new DaySummary(
@@ -63,7 +66,7 @@ public static class WorkTimeRules
     /// </summary>
     public static IReadOnlyList<(CalendarEntry First, CalendarEntry Second)> WorkOverlaps(IEnumerable<CalendarEntry> entries)
     {
-        var work = entries.Where(e => EntryTypeInfo.CountsAsWork(e.Type))
+        var work = entries.Where(e => EntryTypeInfo.CountsAsWork(e.Type) && e.IsShift)
                           .OrderBy(e => e.StartTime).ToList();
         var pairs = new List<(CalendarEntry, CalendarEntry)>();
         for (var i = 0; i < work.Count; i++)

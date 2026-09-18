@@ -48,8 +48,10 @@ public partial class CalendarViewModel
             ? (_allUsers.Count > 0 ? _allUsers : new List<User> { CurrentUser })
             : new List<User> { CurrentUser };
         var allowed = adminEdit ? AllTypes : AbsenceTypes(finalized);
-        // Abwesenheit: Editor auf den Beginn des Zeitraums öffnen (für die von-bis-Bearbeitung).
-        var editDate = EntryTypeInfo.IsAbsence(entry.Type) && entry.AbsenceStart is { } s ? s : date;
+        // Zeitraum (Abwesenheit oder mehrtägig): Editor auf den Beginn öffnen — von dort aus wird
+        // er als Ganzes bearbeitet, egal an welchem Tag man geklickt hat.
+        var editDate = (EntryTypeInfo.IsAbsence(entry.Type) || entry.AbsenceGroupId != null)
+                       && entry.AbsenceStart is { } s ? s : date;
         EntryDialogRequested?.Invoke(editDate, entry, users.AsReadOnly(), adminEdit, allowed, TitleSuggestions());
     }
 
@@ -70,26 +72,38 @@ public partial class CalendarViewModel
                .OrderBy(s => s, StringComparer.CurrentCultureIgnoreCase)
                .ToList();
 
-    /// <summary>Speichert/löscht das Dialog-Ergebnis: ein Pfad für Neu, Edit und Delete.</summary>
+    /// <summary>Speichert/löscht das Dialog-Ergebnis: ein Pfad für Neu, Edit und Delete.
+    /// <paramref name="date"/> ist der Tag, an dem der Eintrag bisher stand (bei Zeiträumen deren Beginn).</summary>
     public async Task ApplyEntryResultAsync(DateOnly date, EntryDialogResult result)
     {
-        // Abwesenheiten (Urlaub/Krank/Abwesend) werden als Datumsbereich behandelt.
-        if (EntryTypeInfo.IsAbsence(result.Entry.Type))
+        // Abwesenheiten und mehrtägige Einträge werden als Zeitraum behandelt.
+        if (result.IsSpan)
         {
-            await ApplyAbsenceResultAsync(date, result);
+            await ApplySpanResultAsync(date, result);
             return;
         }
 
-        // Umwandlung Abwesenheit → Arbeit/Aktivität: alte Abwesenheits-Gruppe aufräumen.
+        // Umwandlung Zeitraum → Einzeleintrag: alte Gruppe aufräumen.
         if (!string.IsNullOrEmpty(result.Entry.AbsenceGroupId)
             && result.Entry.AbsenceStart is { } os && result.Entry.AbsenceEnd is { } oe)
             await RemoveAbsenceGroupAsync(result.Entry.AbsenceGroupId!, os, oe);
         result.Entry.AbsenceGroupId = null;
         result.Entry.AbsenceStart = null;
         result.Entry.AbsenceEnd = null;
+        result.Entry.SpanStartTime = null;
+        result.Entry.SpanEndTime = null;
 
-        var day = await _storage.LoadDayAsync(date);
-        day.Entries.RemoveAll(e => e.Id == result.Entry.Id);
+        // Der Starttag ist im Dialog änderbar — dann wandert der Eintrag an den neuen Tag.
+        var target = result.Action == EntryDialogAction.Save ? result.RangeStart : date;
+        var origDay = await _storage.LoadDayAsync(date);
+        var removed = origDay.Entries.RemoveAll(e => e.Id == result.Entry.Id) > 0;
+        var day = origDay;
+        if (target != date)
+        {
+            if (removed) await _storage.SaveDayAsync(origDay);
+            day = await _storage.LoadDayAsync(target);
+            day.Entries.RemoveAll(e => e.Id == result.Entry.Id);
+        }
         if (result.Action == EntryDialogAction.Save)
             day.Entries.Add(result.Entry);
         day.Entries.Sort((a, b) => a.StartTime.CompareTo(b.StartTime));
@@ -97,18 +111,20 @@ public partial class CalendarViewModel
 
         var verb = result.Action == EntryDialogAction.Save ? "gespeichert" : "gelöscht";
         LogService.UserAction(CurrentUser.Username,
-            $"Eintrag {verb}: {result.Entry.TypeLabel} für {result.Entry.UserDisplayName} am {date:dd.MM.yyyy}");
+            $"Eintrag {verb}: {result.Entry.TypeLabel} für {result.Entry.UserDisplayName} am {target:dd.MM.yyyy}");
 
         await LoadWeekAsync();
-        await NotifyEntryChangeAsync(date, result);
+        await NotifyEntryChangeAsync(target, result);
     }
 
-    /// <summary>Speichert/löscht eine Abwesenheit als Datumsbereich: je Tag ein Eintrag, verbunden über die GroupId.</summary>
-    private async Task ApplyAbsenceResultAsync(DateOnly originalDate, EntryDialogResult result)
+    /// <summary>Speichert/löscht einen Zeitraum: je Tag ein Eintrag mit dem Anteil dieses Tages,
+    /// verbunden über die GroupId.</summary>
+    private async Task ApplySpanResultAsync(DateOnly originalDate, EntryDialogResult result)
     {
         var e = result.Entry;
+        var isAbsence = EntryTypeInfo.IsAbsence(e.Type);
 
-        // 1. Ursprünglichen Einzeleintrag entfernen (Ein-Tages-Bearbeitung oder Umwandlung Arbeit→Abwesenheit).
+        // 1. Ursprünglichen Einzeleintrag entfernen (Umwandlung Einzeleintrag → Zeitraum).
         var origDay = await _storage.LoadDayAsync(originalDate);
         if (origDay.Entries.RemoveAll(x => x.Id == e.Id) > 0)
             await _storage.SaveDayAsync(origDay);
@@ -120,7 +136,7 @@ public partial class CalendarViewModel
         if (result.Action == EntryDialogAction.Save)
         {
             var groupId = string.IsNullOrEmpty(e.AbsenceGroupId) ? Guid.NewGuid().ToString() : e.AbsenceGroupId!;
-            foreach (var (d, entry) in AbsencePlanner.Build(e, result.RangeStart, result.RangeEnd, groupId))
+            foreach (var (d, entry) in EntrySpans.Build(e, result.RangeStart, result.RangeEnd, groupId))
             {
                 var day = await _storage.LoadDayAsync(d);
                 if (day.IsFinalized && entry.Type == EntryType.Vacation) continue;  // Urlaub nicht in finalisierte Tage
@@ -129,7 +145,7 @@ public partial class CalendarViewModel
                 await _storage.SaveDayAsync(day);
             }
             LogService.UserAction(CurrentUser.Username,
-                $"Abwesenheit ({e.TypeLabel}) für {e.UserDisplayName}: {result.RangeStart:dd.MM.}–{result.RangeEnd:dd.MM.}");
+                $"Zeitraum ({e.TypeLabel}) für {e.UserDisplayName}: {result.RangeStart:dd.MM.}–{result.RangeEnd:dd.MM.}");
 
             // Selbst-Krankmeldung → Admins benachrichtigen (einmal, mit Umplanungs-Einstieg am Startdatum).
             if (!IsAdmin && e.Type == EntryType.SickLeave)
@@ -142,13 +158,15 @@ public partial class CalendarViewModel
         }
         else
         {
-            LogService.UserAction(CurrentUser.Username, $"Abwesenheit gelöscht: {e.TypeLabel} für {e.UserDisplayName}");
+            LogService.UserAction(CurrentUser.Username, $"Zeitraum gelöscht: {e.TypeLabel} für {e.UserDisplayName}");
         }
 
         await LoadWeekAsync();
+        // Mehrtägige Einsätze melden wie Schichten; Abwesenheiten haben ihren eigenen Weg oben.
+        if (!isAbsence) await NotifyEntryChangeAsync(result.RangeStart, result);
     }
 
-    /// <summary>Entfernt alle Tageseinträge einer Abwesenheits-Gruppe über ihren (inklusiven) Zeitraum.</summary>
+    /// <summary>Entfernt alle Tageseinträge einer Zeitraum-Gruppe über ihren (inklusiven) Zeitraum.</summary>
     private async Task RemoveAbsenceGroupAsync(string groupId, DateOnly from, DateOnly to)
     {
         if (to < from) (from, to) = (to, from);
@@ -215,7 +233,9 @@ public partial class CalendarViewModel
         }
 
         var finalized = Days.FirstOrDefault(d => d.Date == date)?.IsFinalized ?? false;
-        if (!IsAdmin && entry.UserId == CurrentUser.Id && entry.Type == EntryType.Work && !finalized)
+        // Tauschen lassen sich nur eintägige Schichten; einen mehrtägigen Einsatz müsste man
+        // tageweise aufteilen, und der Server lehnt ihn ab.
+        if (!IsAdmin && entry.UserId == CurrentUser.Id && entry.Type == EntryType.Work && !entry.IsMultiDay && !finalized)
         {
             RequestInitiateSwap(date, entry);
             return;

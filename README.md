@@ -227,27 +227,43 @@ Ein Eintrag hat:
   „Sprachschule". Sie ist der Name, der im Plan fett auf der Kachel steht. Beim
   Tippen schlägt die App vor, was in der Woche oder bei den wiederkehrenden
   Aktivitäten schon vorkommt; du kannst aber jederzeit etwas Neues schreiben.
-- **Startzeit** und **Endzeit**. Die Felder starten leer: Klick rein und tipp die
-  Uhrzeit direkt los. Die App versteht mehrere Schreibweisen — `8`, `830`,
-  `8:30` und `08:30` ergeben alle dasselbe. Über Mitternacht (z.B. 20:00–06:00)
-  geht auch.
+- **Start** und **Ende**, jeweils mit Datum und Uhrzeit — wie im Google-Kalender.
+  Das Datum steht auf dem Tag, in den du geklickt hast; die Uhrzeitfelder starten
+  leer: Klick rein und tipp die Uhrzeit direkt los. Die App versteht mehrere
+  Schreibweisen — `8`, `830`, `8:30` und `08:30` ergeben alle dasselbe.
+  Verschiebst du den Start, wandert das Ende mit und die Dauer bleibt gleich.
+- **Ganztägig**: Haken setzen, und die Uhrzeiten verschwinden — z.B. für „Frei"
+  als ganzen Tag. Im Plan steht dann „ganztägig" statt einer Uhrzeit.
 - eine **Kachelfarbe** (optional): Setz den Haken bei *Eigene Farbe für diesen
   Eintrag*, dann wählst du sie frei — der Farbwähler startet bei der Standard-
   farbe. Die Vorschau daneben zeigt die fertige Kachel; die Schrift darauf wird
   automatisch schwarz oder weiß, je nachdem was besser lesbar ist.
 - **Notizen** (optional).
 
+**Über mehrere Tage**: Stell das Ende einfach auf einen späteren Tag, z.B. Mittwoch
+14:00 bis Freitag 10:00. Im Plan steht der Eintrag dann an jedem Tag mit dem Teil,
+der auf diesen Tag fällt: Mittwoch „ab 14:00", Donnerstag „ganztägig", Freitag
+„bis 10:00". Klickst du auf einen dieser Tage, bearbeitest du den ganzen Zeitraum.
+
+**Nachtschicht**: Mittwoch 20:00 bis Donnerstag 06:00 bleibt *ein* Eintrag am
+Mittwoch, der über Mitternacht läuft — so wie bisher. Du kannst das Ende auch am
+selben Datum lassen und einfach 20:00–06:00 tippen.
+
 Eine Auswahl von Typen oder Kategorien gibt es nicht mehr — was ein Eintrag ist,
 sagt seine Bezeichnung. Neue Einträge zählen vorerst auf das
-[Stundenkonto](#stundenkonto); dessen Berechnung wird noch überarbeitet.
+[Stundenkonto](#stundenkonto); dessen Berechnung wird noch überarbeitet. Bis dahin
+gilt: ganztägige Einträge zählen keine Stunden, ein mehrtägiger Eintrag zählt je
+Tag den Teil, der auf den Tag fällt. Tauschen lassen sich nur Schichten an einem
+einzelnen Tag.
 
 ### Abwesenheit: Krank, Urlaub oder Abwesend
 
 Wähl oben **Abwesenheit (Urlaub/Krank)**, dann die Art (Urlaub, Krank oder
-Abwesend) und den Zeitraum mit **Von** und **Bis**. Uhrzeiten gibt es hier nicht,
-eine Abwesenheit gilt für ganze Tage — die App legt für jeden betroffenen Tag
-einen Eintrag an und verknüpft sie miteinander. Die Kachelfarbe gilt für den
-ganzen Zeitraum.
+Abwesend) und den Zeitraum mit **Start** und **Ende**. Eine Abwesenheit ist von
+sich aus **ganztägig**; nimmst du den Haken raus, gibst du Uhrzeiten an — etwa für
+einen Arzttermin von 9 bis 11 Uhr. Die App legt für jeden betroffenen Tag einen
+Eintrag an und verknüpft sie miteinander. Die Kachelfarbe gilt für den ganzen
+Zeitraum. In der Handy-App bleibt die Krank-/Urlaubsmeldung bei ganzen Tagen.
 
 - **Krankmeldung**: gilt sofort. Der Admin bekommt eine Benachrichtigung; wenn
   die Woche schon finalisiert war, kann er einen KI-Umplanungsvorschlag anfordern.
@@ -361,7 +377,10 @@ Der Button **Stunden** im Header öffnet dein Stundenkonto:
   seit Konto-Start.
 - **Wochenübersicht**: pro Woche die geleisteten und geplanten Stunden mit
   Differenz.
-- **Hinweis**: Krank und Urlaub werden als geleistete Stunden angerechnet.
+- **Hinweis**: Krank und Urlaub werden nur angerechnet, wenn sie eine Uhrzeit
+  haben. Ganztägige Abwesenheiten zählen vorerst keine Stunden — bis Version
+  0.21 wurden sie versehentlich mit 24 Stunden je Tag gebucht. Die Berechnung
+  des Stundenkontos wird noch überarbeitet.
 
 Als Angestellte(r) siehst du nur dein eigenes Konto. Admins sehen alle Konten
 und können die Konto-Startzeit + einen Anfangs-Saldo pro Benutzer setzen

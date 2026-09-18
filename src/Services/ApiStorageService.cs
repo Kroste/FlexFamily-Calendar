@@ -116,7 +116,8 @@ public class ApiStorageService : IStorageService
         await Task.WhenAll(entriesTask, noteTask);
 
         var dtos = await entriesTask;
-        day.Entries = dtos.Select(d => EntryMapping.ToDesktop(d, date)).ToList();
+        day.Entries = dtos.Where(d => EntryMapping.CoversDay(d, date))
+                          .Select(d => EntryMapping.ToDesktop(d, date)).ToList();
         var note = await noteTask;
         day.Note = note.Note ?? "";
         day.NoteUserId = note.NoteUserId;
@@ -186,7 +187,10 @@ public class ApiStorageService : IStorageService
     public async Task SaveDayAsync(CalendarDay day)
     {
         var date = day.Date;
-        var server = await _api.GetEntriesAsync(date, date);
+        // Gleiche Sicht wie beim Laden: ein Zeitraum, der genau um Mitternacht endet, gehört nicht
+        // zu seinem letzten Tag. Ohne den Filter stünde er hier ohne Gegenstück da und würde beim
+        // Speichern dieses Tages gelöscht — samt aller übrigen Tage.
+        var server = (await _api.GetEntriesAsync(date, date)).Where(s => EntryMapping.CoversDay(s, date)).ToList();
 
         // Nur persistente Einträge; Recurring-Overlay-Projektionen nicht speichern.
         var desired = day.Entries.Where(e => !e.IsRecurring).ToList();
@@ -204,9 +208,9 @@ public class ApiStorageService : IStorageService
             var match = server.FirstOrDefault(s => Corresponds(s, e, date));
             if (match is null)
                 await _api.CreateEntryAsync(EntryMapping.ToCreateBody(e, date));
-            else if (!EntryMapping.IsAbsenceType(e.Type))
+            else if (!EntryMapping.IsRange(e))
                 await _api.UpdateEntryAsync(match.Id, EntryMapping.ToUpdateBody(e, date));
-            // Abwesenheit per Zeitraum schon vorhanden → nichts zu tun.
+            // Zeitraum schon vorhanden (an einem früheren Tag angelegt) → nichts zu tun.
         }
 
         // Tagesnotiz/Finalisiert: Admin oder Eltern. Im Client setzen wir's einfach immer und
@@ -216,19 +220,22 @@ public class ApiStorageService : IStorageService
     }
 
     /// <summary>
-    /// Ordnet einen Server-Eintrag einem Desktop-Eintrag zu: Schichten über die Id, Abwesenheiten
-    /// über (Benutzer, Typ, Zeitraum) — so wird ein mehrtägiger Bereich nicht je Tag dupliziert.
+    /// Ordnet einen Server-Eintrag einem Desktop-Eintrag zu: Schichten über die Id, Zeiträume über
+    /// (Benutzer, Typ, Zeitraum, Eckzeiten) — so wird ein mehrtägiger Bereich nicht je Tag
+    /// dupliziert. Die Id taugt dort nicht: neu zerlegte Tage tragen eigene Ids, der Server kennt
+    /// nur die eine des Bereichs.
     /// </summary>
     private static bool Corresponds(ServerEntryDto s, CalendarEntry e, DateOnly date)
     {
-        if (EntryMapping.IsAbsenceType(e.Type))
+        if (EntryMapping.IsRange(e))
         {
-            var start = e.AbsenceStart ?? date;
-            var end = e.AbsenceEnd ?? start;
-            return s.Type == EntryMapping.TypeToServer(e.Type)
+            var body = EntryMapping.ToCreateBody(e, date);
+            return s.Type == body.Type
                 && s.UserId == e.UserId
-                && s.Date == start
-                && (s.EndDate ?? s.Date) == end;
+                && s.Date == body.Date
+                && (s.EndDate ?? s.Date) == body.EndDate
+                && s.StartTime == body.StartTime
+                && s.EndTime == body.EndTime;
         }
         return s.Id == e.Id;
     }

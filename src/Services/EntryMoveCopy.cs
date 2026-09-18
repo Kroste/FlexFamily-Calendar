@@ -28,6 +28,8 @@ public static class EntryMoveCopy
     {
         if (entry.IsRecurring) return false;
         if (EntryTypeInfo.IsAbsence(entry.Type)) return false;
+        // Mehrtägige Einträge ebenso: der Tag, an dem man zieht, ist nur ein Anteil des Ganzen.
+        if (entry.IsMultiDay) return false;
         return true;
     }
 
@@ -67,6 +69,7 @@ public static class EntryMoveCopy
         UserId = e.UserId,
         UserDisplayName = e.UserDisplayName,
         Type = e.Type,
+        AllDay = e.AllDay,   // ganztägig bleibt ganztägig — sonst 00:00–00:00 mit 24 Stunden
         StartTime = e.StartTime,
         EndTime = e.EndTime,
         Title = e.Title,

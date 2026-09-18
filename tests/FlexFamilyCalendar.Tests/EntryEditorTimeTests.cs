@@ -105,11 +105,11 @@ public class EntryEditorTimeTests
     }
 
     [Fact]
-    public void EditMode_Absence_KeepsOldTimes_InsteadOfZeroing()
+    public void EditMode_OldAbsence_OpensAllDay()
     {
-        // Altbestand: eine Abwesenheit, die noch mit den früheren Vorgabezeiten gespeichert wurde.
-        // Die Felder sind jetzt ausgeblendet — beim erneuten Speichern dürfen die Werte trotzdem
-        // nicht auf 00:00 zurückfallen.
+        // Altbestand: eine Abwesenheit, die noch mit den früheren Vorgabezeiten (08–16) gespeichert
+        // wurde. Abwesenheiten ohne Ganztägig-Angabe galten immer als ganze Tage — so öffnen sie
+        // auch jetzt, statt plötzlich mit Uhrzeit dazustehen.
         var existing = new CalendarEntry
         {
             Id = "e1",
@@ -120,10 +120,10 @@ public class EntryEditorTimeTests
         };
 
         var vm = new EntryEditorViewModel(Day, new[] { Person() }, existing);
-        var result = Save(vm);
+        Assert.True(vm.IsAllDay);
 
+        var result = Save(vm);
         Assert.NotNull(result);
-        Assert.Equal(new TimeSpan(8, 0, 0), result!.Entry.StartTime);
-        Assert.Equal(new TimeSpan(16, 0, 0), result.Entry.EndTime);
+        Assert.True(result!.Entry.IsAllDay);
     }
 }

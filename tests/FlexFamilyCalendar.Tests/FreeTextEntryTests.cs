@@ -224,6 +224,43 @@ public class CopyKeepsColourTests
     }
 }
 
+/// <summary>Kopieren behält „ganztägig" und lässt mehrtägige Einsätze stehen.</summary>
+public class CopyKeepsAllDayTests
+{
+    private static CalendarEntry FreeDay() => new()
+    { Id = "f", UserId = "u1", Type = EntryType.Work, Title = "Frei", AllDay = true };
+
+    [Fact]
+    public void Week_copy_keeps_all_day()
+    {
+        var copy = WeekCopy.TemplateEntries(new[] { FreeDay() }).Single();
+
+        Assert.True(copy.IsAllDay);
+        Assert.Equal(0, copy.DurationHours);
+    }
+
+    [Fact]
+    public void Move_keeps_all_day()
+    {
+        var plan = EntryMoveCopy.Plan(FreeDay(), new DateOnly(2026, 9, 21), new DateOnly(2026, 9, 22), "u1", "Mara", MoveCopyAction.Move);
+
+        Assert.True(plan!.Save.IsAllDay);
+    }
+
+    [Fact]
+    public void Multi_day_entries_are_neither_copied_nor_dragged()
+    {
+        var day = EntrySpans.Build(new CalendarEntry
+        {
+            UserId = "u1", Type = EntryType.Work, Title = "Messe", AllDay = false,
+            SpanStartTime = TimeSpan.FromHours(14), SpanEndTime = TimeSpan.FromHours(10)
+        }, new DateOnly(2026, 9, 23), new DateOnly(2026, 9, 25), "g")[1].Entry;
+
+        Assert.Empty(WeekCopy.TemplateEntries(new[] { day }));
+        Assert.False(EntryMoveCopy.CanDrag(day));
+    }
+}
+
 /// <summary>Vorschläge fürs Tippen der Bezeichnung.</summary>
 [Collection("Localizer")]
 public class TitleSuggestionTests

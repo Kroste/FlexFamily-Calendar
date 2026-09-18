@@ -27,7 +27,7 @@ public partial class CalendarViewModel
         if (!hasSick) { LogService.Warn(Localizer.Instance["Replan_NoSick"]); return; }
 
         var absentShift = dayVm!.Entries
-            .Where(e => e.UserId == absentUserId && e.Type == EntryType.Work)
+            .Where(e => e.UserId == absentUserId && e.Type == EntryType.Work && e.IsShift)
             .OrderBy(e => e.StartTime)
             .FirstOrDefault();
 
@@ -86,7 +86,8 @@ public partial class CalendarViewModel
         var shifts = new List<SwapShiftOption>();
         foreach (var d in Days.Where(d => !d.IsFinalized))
             foreach (var e in d.Entries)
-                if (e.Type == EntryType.Work && e.Id != entry.Id && colleagueIds.Contains(e.UserId))
+                // Nur eintägige Schichten — ein mehrtägiger Einsatz lässt sich nicht tageweise tauschen.
+                if (e.Type == EntryType.Work && !e.IsMultiDay && e.Id != entry.Id && colleagueIds.Contains(e.UserId))
                     shifts.Add(new SwapShiftOption(e.Id, d.Date.ToString("yyyy-MM-dd"), e.UserId,
                         $"{d.Date.ToString("ddd dd.MM.", CultureInfo.CurrentCulture)} {e.TimeRange}"));
 

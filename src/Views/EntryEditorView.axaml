@@ -61,24 +61,6 @@
                            HorizontalAlignment="Stretch" />
         </StackPanel>
 
-        <!-- Uhrzeiten: größer und fetter gesetzt als der Rest des Formulars. -->
-        <Grid ColumnDefinitions="*,16,*" IsVisible="{Binding ShowTimes}">
-          <StackPanel Grid.Column="0" Spacing="4">
-            <TextBlock Text="{loc:Tr Entry_StartTime}" FontSize="12" FontWeight="SemiBold" Opacity="0.85" />
-            <ctrl:TimeEntryBox Time="{Binding StartTime, Mode=TwoWay}"
-                               FontSize="19" FontWeight="SemiBold"
-                               Width="110" Padding="10,7"
-                               HorizontalAlignment="Stretch" />
-          </StackPanel>
-          <StackPanel Grid.Column="2" Spacing="4">
-            <TextBlock Text="{loc:Tr Entry_EndTime}" FontSize="12" FontWeight="SemiBold" Opacity="0.85" />
-            <ctrl:TimeEntryBox Time="{Binding EndTime, Mode=TwoWay}"
-                               FontSize="19" FontWeight="SemiBold"
-                               Width="110" Padding="10,7"
-                               HorizontalAlignment="Stretch" />
-          </StackPanel>
-        </Grid>
-
         <!-- ─── Abwesenheit ─── -->
 
         <StackPanel Spacing="4" IsVisible="{Binding IsAbsenceMode}">
@@ -94,17 +76,36 @@
           </ComboBox>
         </StackPanel>
 
-        <!-- Von/Bis UNTEREINANDER: der Fluent-DatePicker ist mindestens ~296 px breit (Tag, Monat,
-             Jahr). Nebeneinander passten zwei davon in keinen Dialog und schoben sich übereinander. -->
-        <StackPanel Spacing="8" IsVisible="{Binding ShowDateRange}">
+        <!-- ─── Beides: Start und Ende ─── -->
+
+        <!-- Start und Ende UNTEREINANDER, je Datum + Uhrzeit (wie im Google-Kalender). Der
+             Fluent-DatePicker ist mindestens ~296 px breit (Tag, Monat, Jahr) — nebeneinander
+             passten zwei davon in keinen Dialog und schoben sich übereinander. Die Uhrzeit steht
+             rechts daneben, größer und fetter als der Rest des Formulars. -->
+        <StackPanel Spacing="10">
           <StackPanel Spacing="4">
-            <TextBlock Text="{loc:Tr Entry_DateFrom}" FontSize="12" Opacity="0.7" />
-            <DatePicker SelectedDate="{Binding AbsenceFrom}" HorizontalAlignment="Stretch" />
+            <TextBlock Text="{loc:Tr Entry_Start}" FontSize="12" FontWeight="SemiBold" Opacity="0.85" />
+            <Grid ColumnDefinitions="*,Auto">
+              <DatePicker Grid.Column="0" SelectedDate="{Binding StartDate}" HorizontalAlignment="Stretch" />
+              <ctrl:TimeEntryBox Grid.Column="1" Margin="10,0,0,0"
+                                 IsVisible="{Binding ShowTimes}"
+                                 Time="{Binding StartTime, Mode=TwoWay}"
+                                 FontSize="19" FontWeight="SemiBold"
+                                 Width="96" Padding="10,7" />
+            </Grid>
           </StackPanel>
           <StackPanel Spacing="4">
-            <TextBlock Text="{loc:Tr Entry_DateTo}" FontSize="12" Opacity="0.7" />
-            <DatePicker SelectedDate="{Binding AbsenceTo}" HorizontalAlignment="Stretch" />
+            <TextBlock Text="{loc:Tr Entry_End}" FontSize="12" FontWeight="SemiBold" Opacity="0.85" />
+            <Grid ColumnDefinitions="*,Auto">
+              <DatePicker Grid.Column="0" SelectedDate="{Binding EndDate}" HorizontalAlignment="Stretch" />
+              <ctrl:TimeEntryBox Grid.Column="1" Margin="10,0,0,0"
+                                 IsVisible="{Binding ShowTimes}"
+                                 Time="{Binding EndTime, Mode=TwoWay}"
+                                 FontSize="19" FontWeight="SemiBold"
+                                 Width="96" Padding="10,7" />
+            </Grid>
           </StackPanel>
+          <CheckBox IsChecked="{Binding IsAllDay}" Content="{loc:Tr Entry_AllDay}" />
         </StackPanel>
 
         <!-- Vermerk zur Abwesenheit (optional) — sehen nur die Person selbst und die Admins. -->

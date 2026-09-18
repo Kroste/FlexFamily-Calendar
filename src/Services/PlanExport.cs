@@ -44,7 +44,11 @@ public static class PlanExportBuilder
             ? typeLabel(displayType) + (showTitle ? $" · {e.Title}" : "")
             : showTitle ? e.Title : typeLabel(displayType);
 
-        var time = EntryTypeInfo.IsAbsence(displayType) ? e.AbsenceSpanLabel : e.TimeRange;
+        // Abwesenheiten zeigen ihren Zeitraum; eine Uhrzeit nur, wenn sie eine haben und für diesen
+        // Empfänger nichts maskiert ist — wie auf der Kachel (CalendarEntry.ShowsTime).
+        var time = EntryTypeInfo.IsAbsence(displayType) && (e.IsAllDay || displayType != e.Type)
+            ? e.AbsenceSpanLabel
+            : e.TimeRange;
         // Farbe nach Art des Eintrags, nicht nach Person — und auf dem hier je Empfänger neu
         // berechneten displayType, damit die Maskierung nicht über die Farbe unterlaufen wird:
         // eine fremde Krankmeldung erscheint als „Abwesend" und muss auch grau aussehen.

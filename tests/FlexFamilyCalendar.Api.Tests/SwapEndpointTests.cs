@@ -109,6 +109,27 @@ public class SwapEndpointTests : IClassFixture<ApiTestFactory>
     }
 
     [Fact]
+    public async Task Multi_day_assignment_cannot_be_offered()
+    {
+        // Ein mehrtägiger Einsatz ist EIN Eintrag — tageweise tauschen gibt das Modell nicht her.
+        var (anna, annaClient) = await NewUserAsync();
+        var (bert, _) = await NewUserAsync();
+        var day = FreshDay();
+        var id = Guid.NewGuid();
+        _factory.Seed(db => db.Entries.Add(new CalendarEntry
+        {
+            Id = id, UserId = anna, Type = EntryTypes.Work, Date = day, EndDate = day.AddDays(2),
+            StartTime = new TimeOnly(14, 0), EndTime = new TimeOnly(10, 0),
+            Status = EntryStatus.Approved, CreatedBy = anna
+        }));
+
+        var resp = await annaClient.PostAsJsonAsync("api/swap-requests",
+            new CreateSwapRequest(SwapRules.GiveAway, anna.ToString(), id.ToString(), bert.ToString(), null, null), Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
     public async Task Nobody_can_offer_someone_elses_shift()
     {
         var (anna, _) = await NewUserAsync();

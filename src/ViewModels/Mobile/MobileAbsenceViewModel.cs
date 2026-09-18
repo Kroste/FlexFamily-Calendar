@@ -8,7 +8,7 @@ using FlexFamilyCalendar.Services;
 namespace FlexFamilyCalendar.ViewModels.Mobile;
 
 /// <summary>
-/// Mobile-Formular für Krank-/Urlaubsmeldung. Erzeugt über <see cref="AbsencePlanner"/> für jeden
+/// Mobile-Formular für Krank-/Urlaubsmeldung. Erzeugt über <see cref="EntrySpans"/> für jeden
 /// Tag im Bereich einen Eintrag mit gemeinsamer AbsenceGroupId und speichert sie tageweise.
 /// Nutzt bewusst nur die Datumsbereich- und Typ-Auswahl — keine Uhrzeit, keine Kategorie, kein
 /// User-Picker (der angemeldete User meldet für sich selbst).
@@ -72,7 +72,7 @@ public partial class MobileAbsenceViewModel : ObservableObject
                 Notes = (Reason ?? "").Trim()
             };
             var groupId = Guid.NewGuid().ToString();
-            var perDay = AbsencePlanner.Build(template, from, to, groupId);
+            var perDay = EntrySpans.Build(template, from, to, groupId);
 
             foreach (var (date, entry) in perDay)
             {

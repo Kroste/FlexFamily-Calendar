@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using FlexFamilyCalendar.Controls;
 using FlexFamilyCalendar.Models;
 using FlexFamilyCalendar.ViewModels;
 using FlexFamilyCalendar.Views;
@@ -57,6 +58,37 @@ public class DateRangeLayoutTests : IClassFixture<HeadlessAppFixture>
             Dispatcher.UIThread.RunJobs();
 
             AssertNoOverlapAndInside(window, DatePickerBoundsIn(window));
+            window.Close();
+            return true;
+        }, CancellationToken.None);
+
+    [Fact]
+    public Task Entry_dialog_date_and_time_fields_do_not_overlap()
+        => _app.Session.Dispatch(() =>
+        {
+            // Start und Ende tragen je Datum UND Uhrzeit nebeneinander. Der DatePicker hat eine
+            // Mindestbreite — reicht der Platz nicht, schiebt er sich unter das Uhrzeitfeld.
+            var vm = new EntryEditorViewModel(new DateOnly(2026, 9, 18),
+                new[] { new User { Id = "u1", Username = "mara", DisplayName = "Mara" } });
+            Assert.True(vm.ShowTimes);
+
+            var window = new Window { Width = 480, Height = 900, Content = new EntryEditorView { DataContext = vm } };
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+
+            var pickers = DatePickerBoundsIn(window);
+            AssertNoOverlapAndInside(window, pickers);
+            var times = window.GetVisualDescendants().OfType<TimeEntryBox>()
+                              .Where(t => t.IsEffectivelyVisible)
+                              .Select(t => new Rect(t.TranslatePoint(new Point(0, 0), window)!.Value, t.Bounds.Size))
+                              .ToList();
+            Assert.Equal(2, times.Count);
+            foreach (var t in times)
+            {
+                Assert.True(t.Right <= window.Bounds.Width + 0.5, $"Uhrzeitfeld ragt aus dem Fenster: {t}");
+                foreach (var p in pickers)
+                    Assert.False(p.Intersects(t), $"Datum {p} überlappt Uhrzeit {t}");
+            }
             window.Close();
             return true;
         }, CancellationToken.None);

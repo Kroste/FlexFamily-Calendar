@@ -26,9 +26,12 @@ public class ApiClient
     /// <summary>Tatsächlich gesetztes Zeitlimit (für Tests und Diagnose).</summary>
     public TimeSpan Timeout => _http.Timeout;
 
-    public ApiClient(string baseUrl)
+    public ApiClient(string baseUrl) : this(baseUrl, new HttpClientHandler()) { }
+
+    /// <summary>Mit eigenem Transport — für Tests, die eine Fake-API dahinterhängen.</summary>
+    internal ApiClient(string baseUrl, HttpMessageHandler transport)
     {
-        var handler = new ApiLoggingHandler(new HttpClientHandler());
+        var handler = new ApiLoggingHandler(transport);
         _http = new HttpClient(handler)
         {
             BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/"),

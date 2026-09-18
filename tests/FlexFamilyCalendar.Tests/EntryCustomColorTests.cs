@@ -189,7 +189,7 @@ public class EntryCustomColorTests
         var template = new CalendarEntry
         { Id = "e1", UserId = "emp", Type = EntryType.Vacation, Color = "#27AE60" };
 
-        var days = AbsencePlanner.Build(template, Day, Day.AddDays(3), "g1");
+        var days = EntrySpans.Build(template, Day, Day.AddDays(3), "g1");
 
         Assert.Equal(4, days.Count);
         Assert.All(days, d => Assert.Equal("#27AE60", d.Entry.Color));
