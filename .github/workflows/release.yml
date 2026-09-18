@@ -1,7 +1,7 @@
 name: Release
 
-# Auf jedes Tag `vX.Y.Z` (typischerweise via `gh release create vX.Y.Z --generate-notes`).
-# Wenn das Release noch nicht existiert, legt softprops/action-gh-release es an.
+# Auf jedes Tag `vX.Y.Z`. Den Release-Text liefert CHANGELOG.md (Abschnitt `## vX.Y.Z`), siehe
+# Job `release-notes` — er erscheint in der App im Update-Dialog unter „Was ist neu".
 on:
   push:
     tags:
@@ -46,9 +46,36 @@ jobs:
             echo "::warning::DOCKERHUB_USERNAME/DOCKERHUB_TOKEN nicht gesetzt — Docker-Push übersprungen."
           fi
 
+  # ─────────── Release-Text aus CHANGELOG.md ───────────
+  # Läuft VOR den Artefakt-Jobs und legt das Release mit Text an. Vorher wurden nur Tags gepusht,
+  # und softprops/action-gh-release legte das Release mit leerem Text an — in der App stand im
+  # Update-Dialog unter „Was ist neu" nichts. Fehlt der Abschnitt zum Tag, bricht das Release hier
+  # ab, statt wieder leer zu erscheinen. Die Artefakt-Jobs hängen per `needs` daran: liefen sie
+  # parallel, könnte softprops den gerade gesetzten Text mit seinem veralteten Stand überschreiben.
+  release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Release mit Text anlegen oder aktualisieren
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! .github/scripts/release-notes.sh "$RELEASE_TAG" CHANGELOG.md > notes.md; then
+            echo "::error::CHANGELOG.md hat keinen Abschnitt '## $RELEASE_TAG' — bitte ergänzen und das Release neu starten."
+            exit 1
+          fi
+          cat notes.md
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --notes-file notes.md
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --title "$RELEASE_TAG" --notes-file notes.md
+          fi
+
   # ─────────── Desktop: Linux + Windows als self-contained Single-File ───────────
   desktop:
     name: Desktop ${{ matrix.rid }}
+    needs: release-notes
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -106,6 +133,7 @@ jobs:
   # Play-Store-Distribution wäre eine spätere Stufe (Release-Keystore in Secrets, .aab statt .apk).
   android-apk:
     name: Android APK
+    needs: release-notes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -154,6 +182,7 @@ jobs:
   # ─────────── Linux AppImage ───────────
   appimage:
     name: Linux AppImage
+    needs: release-notes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

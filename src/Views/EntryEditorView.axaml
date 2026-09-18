@@ -58,17 +58,19 @@
           </ComboBox>
         </StackPanel>
 
-        <!-- Datumsbereich (nur bei Abwesenheit: Urlaub/Krank/Abwesend) -->
-        <Grid ColumnDefinitions="*,16,*" IsVisible="{Binding ShowDateRange}">
-          <StackPanel Grid.Column="0" Spacing="4">
+        <!-- Datumsbereich (nur bei Abwesenheit: Urlaub/Krank/Abwesend).
+             Von/Bis UNTEREINANDER: der Fluent-DatePicker ist mindestens ~296 px breit (Tag, Monat,
+             Jahr). Nebeneinander passten zwei davon in keinen Dialog und schoben sich übereinander. -->
+        <StackPanel Spacing="8" IsVisible="{Binding ShowDateRange}">
+          <StackPanel Spacing="4">
             <TextBlock Text="{loc:Tr Entry_DateFrom}" FontSize="12" Opacity="0.7" />
             <DatePicker SelectedDate="{Binding AbsenceFrom}" HorizontalAlignment="Stretch" />
           </StackPanel>
-          <StackPanel Grid.Column="2" Spacing="4">
+          <StackPanel Spacing="4">
             <TextBlock Text="{loc:Tr Entry_DateTo}" FontSize="12" Opacity="0.7" />
             <DatePicker SelectedDate="{Binding AbsenceTo}" HorizontalAlignment="Stretch" />
           </StackPanel>
-        </Grid>
+        </StackPanel>
 
         <!-- Uhrzeiten: das Kernstück des Dialogs, deshalb größer und fetter gesetzt als der Rest
              des Formulars. Bei Abwesenheiten ganz ausgeblendet (siehe ShowTimes). -->

@@ -37,16 +37,18 @@
     <!-- Neue Pause -->
     <StackPanel Grid.Row="2" Spacing="8" Margin="0,16,0,0">
       <TextBlock Text="{loc:Tr RecurrencePause_NewHeader}" FontSize="13" FontWeight="SemiBold" />
-      <Grid ColumnDefinitions="*,12,*">
-        <StackPanel Grid.Column="0" Spacing="4">
+      <!-- Von/Bis UNTEREINANDER: der Fluent-DatePicker ist mindestens ~296 px breit (Tag, Monat,
+           Jahr). Nebeneinander passten zwei davon in keinen Dialog und schoben sich übereinander. -->
+      <StackPanel Spacing="8">
+        <StackPanel Spacing="4">
           <TextBlock Text="{loc:Tr Entry_DateFrom}" FontSize="12" Opacity="0.7" />
           <DatePicker SelectedDate="{Binding NewFrom, Mode=TwoWay}" HorizontalAlignment="Stretch" />
         </StackPanel>
-        <StackPanel Grid.Column="2" Spacing="4">
+        <StackPanel Spacing="4">
           <TextBlock Text="{loc:Tr Entry_DateTo}" FontSize="12" Opacity="0.7" />
           <DatePicker SelectedDate="{Binding NewTo, Mode=TwoWay}" HorizontalAlignment="Stretch" />
         </StackPanel>
-      </Grid>
+      </StackPanel>
       <StackPanel Spacing="4">
         <TextBlock Text="{loc:Tr RecurrencePause_Reason}" FontSize="12" Opacity="0.7" />
         <TextBox Text="{Binding NewReason}" CornerRadius="6"

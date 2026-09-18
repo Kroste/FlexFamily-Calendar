@@ -279,6 +279,10 @@
   statt der Länderflaggen. Die Sprachauswahl zeigt jetzt ein Kürzel-Abzeichen
   (`LanguageOption.Badge`), das überall gleich rendert. Neue Symbole gehören nach
   `Styles/Icons.axaml` als Geometrie, nicht als Emoji ins Label.
+- **Zwei `DatePicker` nie nebeneinander.** Der Fluent-DatePicker ist mindestens ~296 px breit
+  (Tag, Monat, Jahr als drei Felder); in keinem der Dialoge passen zwei davon in eine Zeile, sie
+  schieben sich still übereinander. Von/Bis stehen deshalb untereinander. `DateRangeLayoutTests`
+  misst das am gerenderten Layout (headless) in der Breite des jeweiligen Dialogfensters.
 - **Icon-Geometrien in `Styles/Icons.axaml` sind Umrisse.** Sie gehören mit `Stroke` +
   `StrokeThickness` gezeichnet, nicht mit `Fill` — sonst füllt Avalonia das äußere Rechteck und
   aus dem Kalender wird ein einfarbiger Klotz.
@@ -420,6 +424,15 @@ docs/      Screenshots, Logo
 - **Log-Dateien haben einen Größendeckel** (`archiveAboveSize` 10 MB × `maxArchiveFiles` 30,
   Client und Server). Nur täglich zu rotieren reichte nicht: eine durchdrehende Schleife schrieb
   die Datei bis zum Tageswechsel voll.
+- **Jedes Tag braucht einen Abschnitt `## vX.Y.Z` in `CHANGELOG.md` — VOR dem Tag, im selben Push.**
+  Der Job `release-notes` holt ihn über `.github/scripts/release-notes.sh` und legt damit das
+  Release an; fehlt er, bricht das Release ab (die Artefakt-Jobs hängen per `needs` daran). Der
+  Text erscheint in der App im Update-Dialog unter „Was ist neu" (`UpdateService` liest den
+  Release-Body). Vorher wurden nur Tags gepusht, softprops legte die Releases mit leerem Text an,
+  und der Update-Dialog zeigte ein leeres Feld. Geschrieben für Nutzer: was sich für sie ändert.
+  Der Dialog zeigt den Text roh — schlichte `- `-Aufzählungen, kein Fettdruck, keine Links.
+  Überschrift-Abgleich ist exakt (`v0.2.0` trifft nicht `v0.20.0`); das Skript lässt sich lokal
+  testen: `.github/scripts/release-notes.sh v0.20.1`.
 - **Release-Workflow** (`.github/workflows/release.yml`): getriggert auf jedes Tag `vX.Y.Z` und
   baut parallel:
   - Desktop-linux-x64 (tar.gz), Desktop-win-x64 (zip), Linux-AppImage
@@ -469,4 +482,5 @@ docs/      Screenshots, Logo
 - [ ] Keine Farbliterale im XAML; neue Farben als Rollen-Key in `Styles/Palette.axaml`
 - [ ] Neue Paketversion nur in `Directory.Packages.props`; nach Avalonia-Bump Skia-Linie geprüft
 - [ ] README (Nutzersicht) und CLAUDE.md (Entwicklersicht) im selben Commit mitgezogen
+- [ ] `CHANGELOG.md`-Abschnitt für das Tag geschrieben (sonst bricht das Release ab)
 - [ ] Nach Tag+Push: `gh run list` prüfen; Failures sofort im nächsten Tag reparieren
