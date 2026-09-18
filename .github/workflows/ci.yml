@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Manuell startbar, auch gegen einen anderen Branch (`gh workflow run CI --ref <branch>`).
+  # Gedacht für Gegenproben: neuen Test gegen den alten Stand laufen lassen, ohne main rot
+  # zu machen — vor allem für Fehler, die nur auf einem Runner-OS auftreten.
+  workflow_dispatch:
 
 env:
   DOTNET_VERSION: '10.0.x'
