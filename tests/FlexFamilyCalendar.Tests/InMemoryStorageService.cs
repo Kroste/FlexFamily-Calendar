@@ -46,20 +46,48 @@ public class InMemoryStorageService : IStorageService
     public Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync()
         => Task.FromResult(_swapRequests.Select(Clone).ToList());
 
-    public Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests)
+    // Tausch und Benachrichtigungen laufen über denselben Helfer wie der lokale JSON-Speicher —
+    // die Tests prüfen damit dessen Verhalten mit, statt eine eigene Nachbildung.
+
+    public Task<ShiftSwapRequest> CreateSwapRequestAsync(ShiftSwapRequest request)
+        => Task.FromResult(Clone(ListBackedCollaboration.Create(_swapRequests, Clone(request))));
+
+    public Task<string?> AcceptSwapRequestAsync(ShiftSwapRequest request)
+        => ListBackedCollaboration.AcceptAsync(_swapRequests, request, LoadDayAsync, SaveDayAsync);
+
+    public Task RejectSwapRequestAsync(string id)
     {
-        _swapRequests = requests.Select(Clone).ToList();
+        ListBackedCollaboration.Close(_swapRequests, id, SwapStatus.Rejected);
         return Task.CompletedTask;
     }
 
-    public Task<List<Notification>> LoadNotificationsAsync()
-        => Task.FromResult(_notifications.Select(Clone).ToList());
-
-    public Task SaveNotificationsAsync(List<Notification> notifications)
+    public Task WithdrawSwapRequestAsync(string id)
     {
-        _notifications = notifications.Select(Clone).ToList();
+        ListBackedCollaboration.Close(_swapRequests, id, SwapStatus.Cancelled);
         return Task.CompletedTask;
     }
+
+    /// <summary>Für Tests, die einen Ausgangsbestand brauchen.</summary>
+    public void SeedSwapRequests(IEnumerable<ShiftSwapRequest> requests)
+        => _swapRequests = requests.Select(Clone).ToList();
+
+    public Task<List<Notification>> LoadNotificationsAsync(string userId)
+        => Task.FromResult(ListBackedCollaboration.ForUser(_notifications, userId).Select(Clone).ToList());
+
+    public Task AddNotificationsAsync(IReadOnlyList<Notification> notifications)
+    {
+        _notifications.AddRange(notifications.Select(Clone));
+        return Task.CompletedTask;
+    }
+
+    public Task MarkNotificationsReadAsync(string userId, IReadOnlyCollection<string>? ids)
+    {
+        ListBackedCollaboration.MarkRead(_notifications, userId, ids);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>Kompletter Bestand quer über alle Empfänger — nur für Prüfungen in Tests.</summary>
+    public IReadOnlyList<Notification> AllNotifications => _notifications.Select(Clone).ToList();
 
     public Task<List<ActivityType>> LoadActivityTypesAsync()
         => Task.FromResult(_activityTypes.Select(Clone).ToList());

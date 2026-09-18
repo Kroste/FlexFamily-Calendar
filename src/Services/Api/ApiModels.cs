@@ -108,6 +108,15 @@ public record ServerRecurringActivityDto(
     bool SkipOnHolidays,
     List<ServerRecurrenceSkipDto>? Skips);
 
+/// <summary>Neuer Tauschvorschlag. Namen und Datum setzt der Server aus der Datenbank.</summary>
+public record ServerCreateSwapBody(int Mode, string? FromUserId, string FromEntryId, string ToUserId, string? ToEntryId, string? Message);
+
+/// <summary>Neue Benachrichtigung. Id, Zeitstempel und Gelesen-Status setzt der Server.</summary>
+public record ServerCreateNotificationBody(string UserId, string MessageKey, List<string>? Args,
+    string? RelatedDate, string? Action, string? RelatedUserId);
+
+public record ServerMarkReadBody(List<Guid>? Ids);
+
 public record ServerSwapRequestDto(
     string Id,
     string CreatedAt,

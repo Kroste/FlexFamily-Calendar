@@ -2,7 +2,7 @@ using FlexFamilyCalendar.Api.Models;
 
 namespace FlexFamilyCalendar.Api.Swaps;
 
-/// <summary>Schichttausch-Vorschlag für Lesen und Ersetzen (PUT).</summary>
+/// <summary>Schichttausch-Vorschlag, wie der Server ihn ausliefert.</summary>
 public record ShiftSwapRequestDto(
     Guid Id,
     string CreatedAt,

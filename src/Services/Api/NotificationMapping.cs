@@ -19,13 +19,15 @@ public static class NotificationMapping
         RelatedUserId = d.RelatedUserId
     };
 
-    public static ServerNotificationDto ToServer(Notification n) => new(
-        n.Id, n.UserId,
-        n.CreatedAt.ToString("o", CultureInfo.InvariantCulture),
-        n.IsRead, n.MessageKey,
-        n.Args ?? new(), n.RelatedDate, n.Action, n.RelatedUserId);
+    /// <summary>Nur was der Absender bestimmt — Id, Zeitstempel und Gelesen-Status setzt der Server.</summary>
+    public static ServerCreateNotificationBody ToCreateBody(Notification n) => new(
+        n.UserId, n.MessageKey, n.Args ?? new(), n.RelatedDate, n.Action, n.RelatedUserId);
 
+    /// <summary>Der Server stempelt in UTC (…Z); angezeigt wird Ortszeit. Ältere, vom Client
+    /// geschriebene Werte tragen ihren Offset selbst und bleiben unverändert.</summary>
     private static DateTime? ParseDate(string? s) =>
         !string.IsNullOrWhiteSpace(s) && DateTime.TryParse(s, CultureInfo.InvariantCulture,
-            DateTimeStyles.RoundtripKind, out var d) ? d : null;
+            DateTimeStyles.RoundtripKind, out var d)
+            ? (d.Kind == DateTimeKind.Utc ? d.ToLocalTime() : d)
+            : null;
 }

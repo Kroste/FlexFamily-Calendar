@@ -40,9 +40,13 @@ public class BrowserSettingsStorage : IStorageService
     public Task<CalendarDay> LoadDayAsync(DateOnly date) => throw new NotSupportedException();
     public Task SaveDayAsync(CalendarDay day) => throw new NotSupportedException();
     public Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync() => throw new NotSupportedException();
-    public Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests) => throw new NotSupportedException();
-    public Task<List<Notification>> LoadNotificationsAsync() => throw new NotSupportedException();
-    public Task SaveNotificationsAsync(List<Notification> notifications) => throw new NotSupportedException();
+    public Task<ShiftSwapRequest> CreateSwapRequestAsync(ShiftSwapRequest request) => throw new NotSupportedException();
+    public Task<string?> AcceptSwapRequestAsync(ShiftSwapRequest request) => throw new NotSupportedException();
+    public Task RejectSwapRequestAsync(string id) => throw new NotSupportedException();
+    public Task WithdrawSwapRequestAsync(string id) => throw new NotSupportedException();
+    public Task<List<Notification>> LoadNotificationsAsync(string userId) => throw new NotSupportedException();
+    public Task AddNotificationsAsync(IReadOnlyList<Notification> notifications) => throw new NotSupportedException();
+    public Task MarkNotificationsReadAsync(string userId, IReadOnlyCollection<string>? ids) => throw new NotSupportedException();
     public Task<List<ActivityType>> LoadActivityTypesAsync() => throw new NotSupportedException();
     public Task SaveActivityTypesAsync(List<ActivityType> types) => throw new NotSupportedException();
     public Task<List<RecurringActivity>> LoadRecurringActivitiesAsync() => throw new NotSupportedException();

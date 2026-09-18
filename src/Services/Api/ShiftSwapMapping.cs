@@ -24,16 +24,20 @@ public static class ShiftSwapMapping
         Message = d.Message ?? ""
     };
 
-    public static ServerSwapRequestDto ToServer(ShiftSwapRequest a) => new(
-        a.Id,
-        a.CreatedAt.ToString("o", CultureInfo.InvariantCulture),
-        a.RespondedAt?.ToString("o", CultureInfo.InvariantCulture),
-        (int)a.Status,
+    /// <summary>Nur die Absicht — Namen und Datum leitet der Server aus den Einträgen ab.</summary>
+    public static ServerCreateSwapBody ToCreateBody(ShiftSwapRequest a) => new(
         (int)a.Mode,
-        a.FromUserId, a.FromUserName, a.FromDate, a.FromEntryId,
-        a.ToUserId, a.ToUserName, a.ToDate, a.ToEntryId, a.Message ?? "");
+        string.IsNullOrEmpty(a.FromUserId) ? null : a.FromUserId,
+        a.FromEntryId,
+        a.ToUserId,
+        string.IsNullOrEmpty(a.ToEntryId) ? null : a.ToEntryId,
+        string.IsNullOrWhiteSpace(a.Message) ? null : a.Message);
 
+    /// <summary>Der Server stempelt in UTC (…Z); angezeigt wird Ortszeit. Ältere, vom Client
+    /// geschriebene Werte tragen ihren Offset selbst und bleiben unverändert.</summary>
     private static DateTime? ParseDate(string? s) =>
         !string.IsNullOrWhiteSpace(s) && DateTime.TryParse(s, CultureInfo.InvariantCulture,
-            DateTimeStyles.RoundtripKind, out var d) ? d : null;
+            DateTimeStyles.RoundtripKind, out var d)
+            ? (d.Kind == DateTimeKind.Utc ? d.ToLocalTime() : d)
+            : null;
 }

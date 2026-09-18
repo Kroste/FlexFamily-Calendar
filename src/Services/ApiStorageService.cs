@@ -285,15 +285,34 @@ public class ApiStorageService : IStorageService
         return dtos.Select(ShiftSwapMapping.ToDesktop).ToList();
     }
 
-    public Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests)
-        => _api.ReplaceSwapRequestsAsync(requests.Select(ShiftSwapMapping.ToServer).ToList());
+    public async Task<ShiftSwapRequest> CreateSwapRequestAsync(ShiftSwapRequest request)
+        => ShiftSwapMapping.ToDesktop(await _api.CreateSwapRequestAsync(ShiftSwapMapping.ToCreateBody(request)));
 
-    public async Task<List<Notification>> LoadNotificationsAsync()
+    /// <summary>Annehmen macht der Server: er prüft, bucht beide Schichten in einer Transaktion um und
+    /// setzt den Status. Der Client könnte das gar nicht — das Eintrags-Update trägt keine UserId.</summary>
+    public Task<string?> AcceptSwapRequestAsync(ShiftSwapRequest request) => _api.SwapActionAsync(request.Id, "accept");
+
+    public Task RejectSwapRequestAsync(string id) => CloseSwapAsync(id, "reject");
+    public Task WithdrawSwapRequestAsync(string id) => CloseSwapAsync(id, "withdraw");
+
+    private async Task CloseSwapAsync(string id, string action)
+    {
+        if (await _api.SwapActionAsync(id, action) is { } key)
+            throw new InvalidOperationException(Localization.Localizer.Instance[key]);
+    }
+
+    /// <summary>Der Server liefert ohnehin nur die des angemeldeten Benutzers aus.</summary>
+    public async Task<List<Notification>> LoadNotificationsAsync(string userId)
     {
         var dtos = await _api.GetNotificationsAsync();
         return dtos.Select(NotificationMapping.ToDesktop).ToList();
     }
 
-    public Task SaveNotificationsAsync(List<Notification> notifications)
-        => _api.ReplaceNotificationsAsync(notifications.Select(NotificationMapping.ToServer).ToList());
+    public Task AddNotificationsAsync(IReadOnlyList<Notification> notifications)
+        => _api.CreateNotificationsAsync(notifications.Select(NotificationMapping.ToCreateBody).ToList());
+
+    public Task MarkNotificationsReadAsync(string userId, IReadOnlyCollection<string>? ids)
+        => _api.MarkNotificationsReadAsync(ids is null || ids.Count == 0
+            ? null
+            : ids.Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty).Where(g => g != Guid.Empty).ToList());
 }

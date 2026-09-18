@@ -65,19 +65,17 @@ public partial class MobileSwapViewModel : ObservableObject
             OnPropertyChanged(nameof(HasOutgoing));
 
             // Meine kommenden Schichten der nächsten 21 Tage (nur zukünftige Arbeit).
+            // Als ein Bereich: im Server-Modus zwei Anfragen statt 42 nacheinander — auf dem Handy
+            // war das Öffnen des Tausch-Tabs sonst eine Geduldsprobe.
             MyShifts.Clear();
             var today = DateOnly.FromDateTime(DateTime.Today);
-            for (var i = 0; i < 21; i++)
-            {
-                var d = today.AddDays(i);
-                var day = await _storage.LoadDayAsync(d);
+            foreach (var day in await _storage.LoadDaysAsync(today, today.AddDays(20)))
                 foreach (var e in day.Entries)
                 {
                     if (e.UserId != _user.Id) continue;
                     if (e.Type != EntryType.Work) continue;
-                    MyShifts.Add(new MyShiftOption(d, e));
+                    MyShifts.Add(new MyShiftOption(day.Date, e));
                 }
-            }
 
             Targets.Clear();
             foreach (var u in _allUsers.Where(u => u.Id != _user.Id).OrderBy(u => u.DisplayName))
@@ -119,8 +117,7 @@ public partial class MobileSwapViewModel : ObservableObject
                 ToUserName = string.IsNullOrEmpty(SelectedTarget.DisplayName) ? SelectedTarget.Username : SelectedTarget.DisplayName,
                 Message = (Message ?? "").Trim()
             };
-            _all.Add(req);
-            await _storage.SaveSwapRequestsAsync(_all);
+            req = await _storage.CreateSwapRequestAsync(req);
             await _notifications.AddAsync(req.ToUserId, "Notif_SwapOffered",
                 req.FromDate, req.FromUserName, FmtDate(req.FromDate));
             StatusMessage = Localizer.Instance["Mobile_Swap_Sent"];
@@ -150,30 +147,24 @@ public partial class MobileSwapViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            // Bei Accept die Schicht ownership-mäßig übertragen (analog Desktop-Flow).
-            if (status == SwapStatus.Accepted)
+            // Umbuchen macht der Speicher: im Server-Modus der Server selbst (geprüft, in einer
+            // Transaktion), lokal die ShiftSwapEngine. Vorher schrieb dieser Pfad die UserId
+            // der Schicht um und speicherte den Tag — über die API kam das nie an.
+            switch (status)
             {
-                var day = await _storage.LoadDayAsync(DateOnly.Parse(req.FromDate));
-                CalendarDay? toDay = null;
-                if (req.Mode == SwapMode.Exchange && !string.IsNullOrEmpty(req.ToDate))
-                    toDay = req.ToDate == req.FromDate ? day : await _storage.LoadDayAsync(DateOnly.Parse(req.ToDate));
-                if (ShiftSwapEngine.Validate(req, day, toDay) is { } err)
-                {
-                    StatusMessage = Localizer.Instance[err];
-                    return;
-                }
-                ShiftSwapEngine.Apply(req, day, toDay);
-                await _storage.SaveDayAsync(day);
-                if (toDay != null && !ReferenceEquals(toDay, day))
-                    await _storage.SaveDayAsync(toDay);
-            }
-
-            var stored = _all.FirstOrDefault(r => r.Id == req.Id);
-            if (stored != null)
-            {
-                stored.Status = status;
-                stored.RespondedAt = DateTime.Now;
-                await _storage.SaveSwapRequestsAsync(_all);
+                case SwapStatus.Accepted:
+                    if (await _storage.AcceptSwapRequestAsync(req) is { } err)
+                    {
+                        StatusMessage = Localizer.Instance[err];
+                        return;
+                    }
+                    break;
+                case SwapStatus.Rejected:
+                    await _storage.RejectSwapRequestAsync(req.Id);
+                    break;
+                case SwapStatus.Cancelled:
+                    await _storage.WithdrawSwapRequestAsync(req.Id);
+                    break;
             }
 
             // Benachrichtigung an die jeweils andere Seite.

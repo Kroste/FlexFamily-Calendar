@@ -47,18 +47,59 @@ public class StorageService : IStorageService
         return await JsonFileStore.LoadAsync<List<ShiftSwapRequest>>(SwapRequestsFile, static () => new());
     }
 
-    public async Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests)
+    public async Task<ShiftSwapRequest> CreateSwapRequestAsync(ShiftSwapRequest request)
+    {
+        var all = await LoadSwapRequestsAsync();
+        var created = ListBackedCollaboration.Create(all, request);
+        await SaveSwapRequestsAsync(all);
+        return created;
+    }
+
+    public async Task<string?> AcceptSwapRequestAsync(ShiftSwapRequest request)
+    {
+        var all = await LoadSwapRequestsAsync();
+        var error = await ListBackedCollaboration.AcceptAsync(all, request, LoadDayAsync, SaveDayAsync);
+        if (error is null) await SaveSwapRequestsAsync(all);
+        return error;
+    }
+
+    public Task RejectSwapRequestAsync(string id) => CloseSwapAsync(id, SwapStatus.Rejected);
+    public Task WithdrawSwapRequestAsync(string id) => CloseSwapAsync(id, SwapStatus.Cancelled);
+
+    private async Task CloseSwapAsync(string id, SwapStatus status)
+    {
+        var all = await LoadSwapRequestsAsync();
+        ListBackedCollaboration.Close(all, id, status);
+        await SaveSwapRequestsAsync(all);
+    }
+
+    private async Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests)
     {
         await JsonFileStore.WriteAtomicAsync(SwapRequestsFile, requests);
         LogService.Debug("Tausch-Anfragen gespeichert ({0})", requests.Count);
     }
 
-    public async Task<List<Notification>> LoadNotificationsAsync()
+    public async Task<List<Notification>> LoadNotificationsAsync(string userId)
+        => ListBackedCollaboration.ForUser(await LoadAllNotificationsAsync(), userId);
+
+    public async Task AddNotificationsAsync(IReadOnlyList<Notification> notifications)
     {
-        return await JsonFileStore.LoadAsync<List<Notification>>(NotificationsFile, static () => new());
+        if (notifications.Count == 0) return;
+        var all = await LoadAllNotificationsAsync();
+        all.AddRange(notifications);
+        await SaveNotificationsAsync(all);
     }
 
-    public async Task SaveNotificationsAsync(List<Notification> notifications)
+    public async Task MarkNotificationsReadAsync(string userId, IReadOnlyCollection<string>? ids)
+    {
+        var all = await LoadAllNotificationsAsync();
+        if (ListBackedCollaboration.MarkRead(all, userId, ids)) await SaveNotificationsAsync(all);
+    }
+
+    private Task<List<Notification>> LoadAllNotificationsAsync()
+        => JsonFileStore.LoadAsync<List<Notification>>(NotificationsFile, static () => new());
+
+    private async Task SaveNotificationsAsync(List<Notification> notifications)
     {
         await JsonFileStore.WriteAtomicAsync(NotificationsFile, notifications);
         LogService.Debug("Benachrichtigungen gespeichert ({0})", notifications.Count);

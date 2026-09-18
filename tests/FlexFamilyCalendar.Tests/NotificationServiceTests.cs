@@ -48,7 +48,7 @@ public class NotificationServiceTests
         Assert.Equal(2, await svc.UnreadCountAsync("u1"));
 
         var first = (await svc.GetForUserAsync("u1")).Last();
-        await svc.MarkReadAsync(first.Id);
+        await svc.MarkReadAsync("u1", first.Id);
         Assert.Equal(1, await svc.UnreadCountAsync("u1"));
     }
 

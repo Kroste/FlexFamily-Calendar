@@ -147,6 +147,26 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Benutzer-Id des Anfragenden aus dem JWT (robust gegen verschiedene Claim-Namen).
+static async Task<IResult> CloseSwapAsync(Guid id, int status, AppDbContext db, ClaimsPrincipal principal,
+    Func<ShiftSwapRequestEntity, string, bool, bool> allowed, string forbidden)
+{
+    var requester = CurrentUserId(principal);
+    if (requester is null) return Results.Unauthorized();
+    var me = requester.Value.ToString();
+    var isAdmin = principal.IsInRole("Admin");
+
+    var swap = await db.SwapRequests.FindAsync(id);
+    if (swap is null || !SwapRules.CanSee(swap, me, isAdmin)) return Results.NotFound();
+    if (!allowed(swap, me, isAdmin))
+        return Results.Json(new { error = forbidden }, statusCode: StatusCodes.Status403Forbidden);
+    if (swap.Status != SwapRules.Pending) return Results.Conflict(new { error = SwapRules.ErrorNotPending });
+
+    swap.Status = status;
+    swap.RespondedAt = DateTime.UtcNow.ToString("o");
+    await db.SaveChangesAsync();
+    return Results.Ok(ShiftSwapRequestDto.From(swap));
+}
+
 static Guid? CurrentUserId(ClaimsPrincipal p)
 {
     var raw = p.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -703,67 +723,183 @@ app.MapPut("/api/chat-history", async (List<ChatHistoryDto> items, AppDbContext 
 })
     .RequireAuthorization();
 
-// --- Schichttausch -------------------------------------------------------
-// Hinweis: Speichern ersetzt die ganze Liste (passt zum Client). Da jeder Mitarbeiter Tausch
-// anlegt/beantwortet, ist PUT für alle Angemeldeten offen → letzter-Schreiber-gewinnt; eine
-// granulare Tausch-API (anlegen/annehmen/ablehnen mit Rechteprüfung) ist eine spätere Verfeinerung.
+// --- Schichttausch ------------------------------------------------------
+// Einzelne Operationen statt „ganze Liste ersetzen": sehen dürfen die beiden Beteiligten und der
+// Admin, antworten der Angefragte, zurückziehen der Anbietende. Angenommen wird HIER — der Server
+// schreibt die Schichten um. Vorher tat das der Client über das Eintrags-Update, das gar keine
+// UserId trägt: die Schicht wechselte nie den Besitzer (Details in SwapRules).
 
-app.MapGet("/api/swap-requests", async (AppDbContext db) =>
-    (await db.SwapRequests.AsNoTracking().ToListAsync()).Select(ShiftSwapRequestDto.From))
-    .RequireAuthorization();
-
-app.MapPut("/api/swap-requests", async (List<ShiftSwapRequestDto> items, AppDbContext db) =>
+app.MapGet("/api/swap-requests", async (AppDbContext db, ClaimsPrincipal principal) =>
 {
-    await db.SwapRequests.ExecuteDeleteAsync();
-    foreach (var i in items)
-        db.SwapRequests.Add(new ShiftSwapRequestEntity
-        {
-            Id = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id,
-            CreatedAt = i.CreatedAt ?? "",
-            RespondedAt = i.RespondedAt,
-            Status = i.Status,
-            Mode = i.Mode,
-            FromUserId = i.FromUserId ?? "",
-            FromUserName = i.FromUserName ?? "",
-            FromDate = i.FromDate ?? "",
-            FromEntryId = i.FromEntryId ?? "",
-            ToUserId = i.ToUserId ?? "",
-            ToUserName = i.ToUserName ?? "",
-            ToDate = i.ToDate,
-            ToEntryId = i.ToEntryId,
-            Message = i.Message ?? ""
-        });
-    await db.SaveChangesAsync();
-    return Results.Ok((await db.SwapRequests.ToListAsync()).Select(ShiftSwapRequestDto.From));
+    var requester = CurrentUserId(principal);
+    if (requester is null) return Results.Unauthorized();
+    var me = requester.Value.ToString();
+    var isAdmin = principal.IsInRole("Admin");
+
+    var query = db.SwapRequests.AsNoTracking();
+    if (!isAdmin) query = query.Where(r => r.FromUserId == me || r.ToUserId == me);
+    return Results.Ok((await query.ToListAsync()).Select(ShiftSwapRequestDto.From));
 })
     .RequireAuthorization();
 
-// --- Benachrichtigungen --------------------------------------------------
-// Wie Schichttausch: Replace-all (passt zum Client), für alle Angemeldeten. Gleiche Grenze
-// (letzter-Schreiber-gewinnt; Filterung nach Empfänger macht weiterhin der Client).
+app.MapPost("/api/swap-requests", async (CreateSwapRequest req, AppDbContext db, ClaimsPrincipal principal) =>
+{
+    var requester = CurrentUserId(principal);
+    if (requester is null) return Results.Unauthorized();
+    var me = requester.Value.ToString();
+    var isAdmin = principal.IsInRole("Admin");
 
-app.MapGet("/api/notifications", async (AppDbContext db) =>
-    (await db.Notifications.AsNoTracking().ToListAsync()).Select(NotificationDto.From))
+    var fromUserId = string.IsNullOrWhiteSpace(req.FromUserId) ? me : NotificationRules.NormalizeUserId(req.FromUserId);
+    var toUserId = NotificationRules.NormalizeUserId(req.ToUserId ?? "");
+
+    var fromEntry = Guid.TryParse(req.FromEntryId, out var fromId) ? await db.Entries.FindAsync(fromId) : null;
+    var toEntry = Guid.TryParse(req.ToEntryId, out var toId) ? await db.Entries.FindAsync(toId) : null;
+
+    var error = SwapRules.CheckCreate(req.Mode, fromUserId, toUserId, me, isAdmin, fromEntry, toEntry);
+    if (error is not null)
+        return error.StartsWith("Du kannst", StringComparison.Ordinal)
+            ? Results.Json(new { error }, statusCode: StatusCodes.Status403Forbidden)
+            : Results.BadRequest(new { error });
+
+    if (!Guid.TryParse(toUserId, out var toGuid) || !Guid.TryParse(fromUserId, out var fromGuid))
+        return Results.BadRequest(new { error = "Ungültige Benutzer-Id." });
+    var names = (await db.Users.AsNoTracking()
+            .Where(u => u.Id == fromGuid || u.Id == toGuid)
+            .ToListAsync())
+        .ToDictionary(u => u.Id.ToString(), u => string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName);
+    if (!names.ContainsKey(toUserId)) return Results.BadRequest(new { error = "Kollege existiert nicht." });
+
+    var entity = new ShiftSwapRequestEntity
+    {
+        CreatedAt = DateTime.UtcNow.ToString("o"),
+        Status = SwapRules.Pending,
+        Mode = req.Mode,
+        FromUserId = fromUserId,
+        FromUserName = names.GetValueOrDefault(fromUserId, ""),
+        FromDate = fromEntry!.Date.ToString("yyyy-MM-dd"),
+        FromEntryId = fromEntry.Id.ToString(),
+        ToUserId = toUserId,
+        ToUserName = names[toUserId],
+        ToDate = req.Mode == SwapRules.Exchange ? toEntry!.Date.ToString("yyyy-MM-dd") : null,
+        ToEntryId = req.Mode == SwapRules.Exchange ? toEntry!.Id.ToString() : null,
+        Message = (req.Message ?? "").Trim()
+    };
+    db.SwapRequests.Add(entity);
+    await db.SaveChangesAsync();
+    return Results.Ok(ShiftSwapRequestDto.From(entity));
+})
     .RequireAuthorization();
 
-app.MapPut("/api/notifications", async (List<NotificationDto> items, AppDbContext db) =>
+app.MapPost("/api/swap-requests/{id:guid}/accept", async (Guid id, AppDbContext db, ClaimsPrincipal principal) =>
 {
-    await db.Notifications.ExecuteDeleteAsync();
-    foreach (var i in items)
+    var requester = CurrentUserId(principal);
+    if (requester is null) return Results.Unauthorized();
+    var me = requester.Value.ToString();
+    var isAdmin = principal.IsInRole("Admin");
+
+    var swap = await db.SwapRequests.FindAsync(id);
+    if (swap is null || !SwapRules.CanSee(swap, me, isAdmin)) return Results.NotFound();
+    if (!SwapRules.CanRespond(swap, me, isAdmin))
+        return Results.Json(new { error = "Nur der angefragte Kollege kann annehmen." }, statusCode: StatusCodes.Status403Forbidden);
+
+    var fromEntry = Guid.TryParse(swap.FromEntryId, out var fromId) ? await db.Entries.FindAsync(fromId) : null;
+    var toEntry = Guid.TryParse(swap.ToEntryId, out var toId) ? await db.Entries.FindAsync(toId) : null;
+
+    var days = new[] { fromEntry?.Date, toEntry?.Date }.OfType<DateOnly>().Distinct().ToList();
+    var fromUser = Guid.TryParse(swap.FromUserId, out var fu) ? fu : Guid.Empty;
+    var toUser = Guid.TryParse(swap.ToUserId, out var tu) ? tu : Guid.Empty;
+    var work = await db.Entries
+        .Where(e => days.Contains(e.Date) && e.Type == EntryTypes.Work
+                    && (e.UserId == fromUser || e.UserId == toUser))
+        .ToListAsync();
+    var finalized = (await db.DayMeta.AsNoTracking()
+        .Where(m => days.Contains(m.Date) && m.IsFinalized).Select(m => m.Date).ToListAsync()).ToHashSet();
+
+    var error = SwapRules.ValidateAccept(swap, fromEntry, toEntry, work, finalized);
+    if (error is not null) return Results.Conflict(new { error });
+
+    // Alles in EINEM SaveChanges — eine Transaktion: entweder wechseln beide Schichten und der
+    // Status, oder nichts davon.
+    fromEntry!.UserId = toUser;
+    if (swap.Mode == SwapRules.Exchange) toEntry!.UserId = fromUser;
+    swap.Status = SwapRules.Accepted;
+    swap.RespondedAt = DateTime.UtcNow.ToString("o");
+    await db.SaveChangesAsync();
+    return Results.Ok(ShiftSwapRequestDto.From(swap));
+})
+    .RequireAuthorization();
+
+app.MapPost("/api/swap-requests/{id:guid}/reject", async (Guid id, AppDbContext db, ClaimsPrincipal principal) =>
+    await CloseSwapAsync(id, SwapRules.Rejected, db, principal, SwapRules.CanRespond,
+        "Nur der angefragte Kollege kann ablehnen."))
+    .RequireAuthorization();
+
+app.MapPost("/api/swap-requests/{id:guid}/withdraw", async (Guid id, AppDbContext db, ClaimsPrincipal principal) =>
+    await CloseSwapAsync(id, SwapRules.Cancelled, db, principal, SwapRules.CanWithdraw,
+        "Nur wer den Tausch angeboten hat, kann ihn zurückziehen."))
+    .RequireAuthorization();
+
+// --- Benachrichtigungen --------------------------------------------------
+// Lesen: nur die eigenen. Anlegen: auch für andere, aber Nicht-Admins nur die Nachrichten ihrer
+// eigenen Abläufe (NotificationRules). Gelesen markieren: nur eigene. Vorher las jeder alle —
+// samt „X hat sich krank gemeldet" — und jeder Client konnte die ganze Tabelle ersetzen.
+
+app.MapGet("/api/notifications", async (AppDbContext db, ClaimsPrincipal principal) =>
+{
+    var requester = CurrentUserId(principal);
+    if (requester is null) return Results.Unauthorized();
+    var me = requester.Value.ToString();
+    return Results.Ok((await db.Notifications.AsNoTracking().Where(n => n.UserId == me).ToListAsync())
+        .Select(NotificationDto.From));
+})
+    .RequireAuthorization();
+
+app.MapPost("/api/notifications", async (List<CreateNotificationRequest> items, AppDbContext db, ClaimsPrincipal principal) =>
+{
+    var requester = CurrentUserId(principal);
+    if (requester is null) return Results.Unauthorized();
+    var isAdmin = principal.IsInRole("Admin");
+
+    if (items.Count > NotificationRules.MaxPerRequest)
+        return Results.BadRequest(new { error = "Zu viele Benachrichtigungen auf einmal." });
+    foreach (var item in items)
+        if (NotificationRules.CheckCreate(item, isAdmin) is { } error)
+            return Results.Json(new { error }, statusCode: StatusCodes.Status403Forbidden);
+
+    var known = (await db.Users.AsNoTracking().Select(u => u.Id).ToListAsync())
+        .Select(g => g.ToString()).ToHashSet();
+    var now = DateTime.UtcNow.ToString("o");
+    foreach (var item in items)
+    {
+        var userId = NotificationRules.NormalizeUserId(item.UserId);
+        if (!known.Contains(userId)) return Results.BadRequest(new { error = "Empfänger existiert nicht." });
         db.Notifications.Add(new NotificationEntity
         {
-            Id = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id,
-            UserId = i.UserId ?? "",
-            CreatedAt = i.CreatedAt ?? "",
-            IsRead = i.IsRead,
-            MessageKey = i.MessageKey ?? "",
-            Args = i.Args ?? new(),
-            RelatedDate = i.RelatedDate,
-            Action = i.Action,
-            RelatedUserId = i.RelatedUserId
+            UserId = userId,
+            CreatedAt = now,
+            MessageKey = item.MessageKey,
+            Args = item.Args ?? new(),
+            RelatedDate = item.RelatedDate,
+            Action = item.Action,
+            RelatedUserId = item.RelatedUserId
         });
+    }
     await db.SaveChangesAsync();
-    return Results.Ok((await db.Notifications.ToListAsync()).Select(NotificationDto.From));
+    return Results.NoContent();
+})
+    .RequireAuthorization();
+
+app.MapPost("/api/notifications/read", async (MarkNotificationsReadRequest req, AppDbContext db, ClaimsPrincipal principal) =>
+{
+    var requester = CurrentUserId(principal);
+    if (requester is null) return Results.Unauthorized();
+    var me = requester.Value.ToString();
+
+    var query = db.Notifications.Where(n => n.UserId == me && !n.IsRead);
+    if (req.Ids is { Count: > 0 } ids) query = query.Where(n => ids.Contains(n.Id));
+    foreach (var n in await query.ToListAsync()) n.IsRead = true;
+    await db.SaveChangesAsync();
+    return Results.NoContent();
 })
     .RequireAuthorization();
 

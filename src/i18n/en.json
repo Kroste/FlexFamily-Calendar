@@ -242,6 +242,7 @@
   "Swap_ErrorStale": "The shift no longer exists.",
   "Swap_ErrorFinalized": "The week is finalized – swap not possible.",
   "Swap_ErrorOverlap": "Time overlap at the colleague – swap not possible.",
+  "Swap_ErrorNotPending": "This swap has already been settled.",
   "Notif_Title": "Notifications",
   "Notif_MarkAllRead": "Mark all read",
   "Notif_Empty": "No notifications.",

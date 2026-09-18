@@ -27,46 +27,38 @@ public class ShiftSwapMappingTests
     }
 
     [Fact]
-    public void Giveaway_without_counter_shift_keeps_nulls()
+    public void Create_body_carries_the_intent_not_names_or_dates()
     {
-        var r = new ShiftSwapRequest
+        var giveAway = new ShiftSwapRequest
         {
-            Id = "s2",
-            Status = SwapStatus.Pending,
             Mode = SwapMode.GiveAway,
             FromUserId = "u1", FromUserName = "Rike", FromDate = "2026-06-03", FromEntryId = "e3",
-            ToUserId = "u2", ToUserName = "Anna",
-            ToDate = null, ToEntryId = null,
-            Message = ""
+            ToUserId = "u2", ToUserName = "Anna", Message = ""
         };
 
-        var dto = ShiftSwapMapping.ToServer(r);
+        var body = ShiftSwapMapping.ToCreateBody(giveAway);
 
-        Assert.Equal((int)SwapStatus.Pending, dto.Status);
-        Assert.Equal((int)SwapMode.GiveAway, dto.Mode);
-        Assert.Null(dto.ToDate);
-        Assert.Null(dto.ToEntryId);
+        Assert.Equal((int)SwapMode.GiveAway, body.Mode);
+        Assert.Equal("u1", body.FromUserId);
+        Assert.Equal("e3", body.FromEntryId);
+        Assert.Equal("u2", body.ToUserId);
+        Assert.Null(body.ToEntryId);
+        Assert.Null(body.Message);           // leer = nicht mitschicken
     }
 
     [Fact]
-    public void Round_trip_preserves_status_mode_and_timestamps()
+    public void Server_response_keeps_status_mode_and_converts_utc()
     {
-        var created = new DateTime(2026, 5, 29, 12, 0, 0);
-        var responded = new DateTime(2026, 5, 29, 13, 30, 0);
-        var r = new ShiftSwapRequest
-        {
-            Id = "s3", CreatedAt = created, RespondedAt = responded,
-            Status = SwapStatus.Rejected, Mode = SwapMode.Exchange,
-            FromUserId = "u1", FromUserName = "A", FromDate = "2026-06-01", FromEntryId = "e1",
-            ToUserId = "u2", ToUserName = "B", ToDate = "2026-06-02", ToEntryId = "e2",
-            Message = "x"
-        };
+        var created = new DateTime(2026, 5, 29, 12, 0, 0, DateTimeKind.Utc);
+        var dto = new ServerSwapRequestDto("s3", created.ToString("o"), null,
+            (int)SwapStatus.Rejected, (int)SwapMode.Exchange,
+            "u1", "A", "2026-06-01", "e1", "u2", "B", "2026-06-02", "e2", "x");
 
-        var back = ShiftSwapMapping.ToDesktop(ShiftSwapMapping.ToServer(r));
+        var back = ShiftSwapMapping.ToDesktop(dto);
 
         Assert.Equal(SwapStatus.Rejected, back.Status);
         Assert.Equal(SwapMode.Exchange, back.Mode);
-        Assert.Equal(created, back.CreatedAt);
-        Assert.Equal(responded, back.RespondedAt);
+        Assert.Equal(created.ToLocalTime(), back.CreatedAt);
+        Assert.Null(back.RespondedAt);
     }
 }

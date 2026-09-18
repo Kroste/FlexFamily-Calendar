@@ -125,6 +125,30 @@
 - **JSON:** Ausschließlich `System.Text.Json` mit gemeinsamem `JsonOptions.Pretty`
   (PropertyNamingPolicy=null, damit alte PascalCase-JSON-Files weiter lesbar bleiben);
   Newtonsoft.Json ist als Dependency raus.
+- **Benachrichtigungen und Schichttausch sind Einzel-Operationen, kein Replace-all.**
+  `IStorageService` hat dafür `LoadNotificationsAsync(userId)`/`AddNotificationsAsync`/
+  `MarkNotificationsReadAsync` und `CreateSwapRequestAsync`/`AcceptSwapRequestAsync`/
+  `RejectSwapRequestAsync`/`WithdrawSwapRequestAsync`; die alten `Save…Async(List)` sind bewusst
+  weg, damit kein Pfad sie wieder benutzt. Vorher lieferte `GET /api/notifications` ALLE
+  Benachrichtigungen aller Nutzer an jeden (darunter „X hat sich krank gemeldet" — Gesundheitsdaten,
+  genau was die Maskierung verbirgt), und jeder Client konnte beide Tabellen per PUT komplett
+  ersetzen. Jetzt serverseitig:
+  - Benachrichtigungen: Lesen nur eigene. Anlegen auch für andere (das ist der Zweck), aber
+    Nicht-Admins nur die Schlüssel ihrer eigenen Abläufe (`NotificationRules.KeysForEveryone`:
+    Tausch + Krankmeldung) — sonst ließe sich „Deine Schicht wurde entfernt" vortäuschen.
+    Id, Zeitstempel und Gelesen-Status setzt der Server.
+  - Schichttausch: sehen nur Beteiligte + Admin (`SwapRules.CanSee`), Außenstehende bekommen 404.
+    Anbieten nur die eigene Schicht (Admin darf im Namen anderer — KI-Planer); Namen und Datum
+    nimmt der Server aus der DB, nicht vom Client. **Annehmen macht der Server**
+    (`POST /api/swap-requests/{id}/accept`): prüft wie `ShiftSwapEngine.Validate` (stale,
+    finalisiert, Überschneidung) und bucht beide Schichten plus Status in EINEM `SaveChanges` um.
+    Vorher schrieb der Client die `UserId` am Eintrag um und speicherte den Tag — das
+    Eintrags-Update der API trägt aber gar keine `UserId`: der Tausch stand auf „angenommen",
+    die Schicht wechselte nie den Besitzer (Mitarbeiter bekamen gleich 403).
+  - Der lokale Modus und der Test-Fake teilen sich `ListBackedCollaboration`, damit beide gleich
+    reagieren.
+  Kein `BeginTransaction` in den Endpunkten: der EF-InMemory-Provider der Integration-Tests
+  kennt keine Transaktionen, ein einzelnes `SaveChanges` ist auf Postgres ohnehin atomar.
 - **Tagesnotizen filtert der Server** (`DayNoteVisibility`): eine adressierte Notiz bekommen nur
   der Admin und die angesprochene Person; alle anderen erhalten Text UND Adressat leer. Vorher
   lieferten beide GET-Endpunkte jede Notiz an jeden aus und erst `CanSeeNote` im Client blendete

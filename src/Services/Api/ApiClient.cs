@@ -199,11 +199,31 @@ public class ApiClient
         return list;
     }
 
-    public async Task ReplaceSwapRequestsAsync(List<ServerSwapRequestDto> items)
+    public async Task<ServerSwapRequestDto> CreateSwapRequestAsync(ServerCreateSwapBody body)
     {
-        var resp = await _http.PutAsJsonAsync("api/swap-requests", items);
-        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Schichttausch-Anfragen speichern");
-        LogService.Info("API Schichttausch-Anfragen ersetzt: {0}", items.Count);
+        var resp = await _http.PostAsJsonAsync("api/swap-requests", body);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Tausch anbieten");
+        LogService.Info("API Tausch angeboten ({0})", body.Mode == 0 ? "Abgabe" : "Tausch");
+        return (await resp.Content.ReadFromJsonAsync<ServerSwapRequestDto>())!;
+    }
+
+    /// <summary>
+    /// accept / reject / withdraw. Fachliche Ablehnung (409) kommt als i18n-Schlüssel zurück, damit
+    /// der Client sie übersetzt anzeigen kann; alles andere wirft.
+    /// </summary>
+    public async Task<string?> SwapActionAsync(string id, string action)
+    {
+        var resp = await _http.PostAsync($"api/swap-requests/{Uri.EscapeDataString(id)}/{action}", content: null);
+        if (resp.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            ApiErrorBody? body = null;
+            try { body = await resp.Content.ReadFromJsonAsync<ApiErrorBody>(); } catch { /* kein JSON-Body */ }
+            LogService.Info("API Tausch {0} abgelehnt: {1}", action, body?.Error);
+            return string.IsNullOrWhiteSpace(body?.Error) ? "Swap_ErrorStale" : body!.Error;
+        }
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Tausch " + action);
+        LogService.Info("API Tausch {0}", action);
+        return null;
     }
 
     public async Task<List<ServerNotificationDto>> GetNotificationsAsync()
@@ -213,11 +233,18 @@ public class ApiClient
         return list;
     }
 
-    public async Task ReplaceNotificationsAsync(List<ServerNotificationDto> items)
+    public async Task CreateNotificationsAsync(List<ServerCreateNotificationBody> items)
     {
-        var resp = await _http.PutAsJsonAsync("api/notifications", items);
-        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Benachrichtigungen speichern");
-        LogService.Info("API Benachrichtigungen ersetzt: {0}", items.Count);
+        if (items.Count == 0) return;
+        var resp = await _http.PostAsJsonAsync("api/notifications", items);
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Benachrichtigung senden");
+        LogService.Debug("API Benachrichtigungen angelegt: {0}", items.Count);
+    }
+
+    public async Task MarkNotificationsReadAsync(List<Guid>? ids)
+    {
+        var resp = await _http.PostAsJsonAsync("api/notifications/read", new ServerMarkReadBody(ids));
+        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Benachrichtigungen als gelesen markieren");
     }
 
     public async Task<ServerDayNoteDto> GetDayNoteAsync(DateOnly date)

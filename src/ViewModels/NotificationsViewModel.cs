@@ -80,7 +80,7 @@ public partial class NotificationsViewModel : ViewModelBase
         try
         {
             await _api.ApproveEntryAsync(entryId);
-            await _notifications.MarkReadAsync(item.Id);
+            await _notifications.MarkReadAsync(_user.Id, item.Id);
             Items.Remove(item);
         }
         catch (Exception ex) { LogService.Warn("Approve fehlgeschlagen: {0}", ex.Message); }
@@ -93,7 +93,7 @@ public partial class NotificationsViewModel : ViewModelBase
         try
         {
             await _api.RejectEntryAsync(entryId);
-            await _notifications.MarkReadAsync(item.Id);
+            await _notifications.MarkReadAsync(_user.Id, item.Id);
             Items.Remove(item);
         }
         catch (Exception ex) { LogService.Warn("Reject fehlgeschlagen: {0}", ex.Message); }
@@ -122,7 +122,7 @@ public partial class NotificationsViewModel : ViewModelBase
     private async Task Open(NotificationItemViewModel? item)
     {
         if (item == null) return;
-        await _notifications.MarkReadAsync(item.Id);
+        await _notifications.MarkReadAsync(_user.Id, item.Id);
         item.IsRead = true;
         CloseRequested?.Invoke(item.Action == "ReplanSick" && item.RelatedUserId != null
             ? new NotificationResult(item.RelatedDate, item.RelatedUserId, item.RelatedDate)

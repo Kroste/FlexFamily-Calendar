@@ -335,7 +335,12 @@ Wenn du eine Schicht hast, aber jemand anderes einspringen soll:
 2. **Tausch vorschlagen** wählen und die Zielperson auswählen.
 3. Der Vorschlag geht als Benachrichtigung an die andere Person.
 4. Die andere Person bestätigt oder lehnt ab. Bei Bestätigung wechselt die
-   Schicht automatisch.
+   Schicht automatisch — geprüft wird dabei noch einmal, ob die Schicht noch
+   existiert, der Tag nicht schon finalisiert ist und sich beim Kollegen nichts
+   überschneidet.
+
+Einen Tauschvorschlag sehen nur die beiden Beteiligten und die Admins — samt
+der Nachricht, die du dazuschreibst.
 
 Auf dem **Handy** hat der Tausch-Tab ein eigenes Formular: Deine Schichten der
 nächsten 21 Tage im Dropdown, Zielperson auswählen, optional eine Nachricht,
@@ -455,6 +460,11 @@ Privatsphäre der einzelnen Personen:
   jeder Empfänger bekommt seine eigene, maskierte Sicht.
 - **Nicht-Admins sehen fremde Einträge erst nach Freigabe des Tages** — siehe
   [Sicht-Regel](#sicht-regel-was-du-wann-siehst).
+- **Benachrichtigungen** bekommt nur ihr Empfänger — auch über die Schnittstelle
+  lässt sich keine fremde Benachrichtigung abrufen. Eine Krankmeldung an die
+  Admins erreicht also wirklich nur die Admins.
+- **Tagesnotizen an eine einzelne Person** sehen nur diese Person und die Admins.
+- **Schichttausch-Vorschläge** sehen nur die beiden Beteiligten und die Admins.
 - **Passwörter** werden serverseitig mit BCrypt gehasht (nie im Klartext
   gespeichert). Auf dem Desktop und in der Android-App bleibt dein gemerktes
   JWT-Token verschlüsselt im lokalen Speicher.

@@ -30,10 +30,41 @@ public interface IStorageService
         return await Task.WhenAll(tasks);
     }
     Task SaveDayAsync(CalendarDay day);
+
+    // ─── Schichttausch ───
+    // Einzelne Operationen statt „ganze Liste speichern": im Server-Modus sieht jeder nur die
+    // Vorschläge, an denen er beteiligt ist, und angenommen wird serverseitig. Mit der alten
+    // Replace-all-Liste wechselte die Schicht beim Annehmen nie den Besitzer — das
+    // Eintrags-Update der API trägt gar keine UserId.
+
+    /// <summary>Vorschläge, die der aktuelle Benutzer sehen darf (Server: Beteiligte + Admin).</summary>
     Task<List<ShiftSwapRequest>> LoadSwapRequestsAsync();
-    Task SaveSwapRequestsAsync(List<ShiftSwapRequest> requests);
-    Task<List<Notification>> LoadNotificationsAsync();
-    Task SaveNotificationsAsync(List<Notification> notifications);
+
+    /// <summary>Legt einen Vorschlag an und gibt ihn so zurück, wie er gespeichert wurde
+    /// (im Server-Modus mit Id, Namen und Datum aus der Datenbank).</summary>
+    Task<ShiftSwapRequest> CreateSwapRequestAsync(ShiftSwapRequest request);
+
+    /// <summary>Nimmt an und bucht die Schicht(en) um. <c>null</c> = erledigt, sonst ein
+    /// i18n-Fehlerschlüssel (Swap_ErrorStale/-Finalized/-Overlap/-NotPending).</summary>
+    Task<string?> AcceptSwapRequestAsync(ShiftSwapRequest request);
+
+    Task RejectSwapRequestAsync(string id);
+    Task WithdrawSwapRequestAsync(string id);
+
+    // ─── Benachrichtigungen ───
+    // Lesen nur für einen Empfänger. Vorher gab es nur „alle lesen / alle ersetzen", und im
+    // Server-Modus bekam jeder Client alle Benachrichtigungen aller Nutzer — samt
+    // „X hat sich krank gemeldet".
+
+    /// <summary>Benachrichtigungen dieses Empfängers (Server: immer des angemeldeten Benutzers).</summary>
+    Task<List<Notification>> LoadNotificationsAsync(string userId);
+
+    /// <summary>Hängt neue Benachrichtigungen an — auch für andere Empfänger.</summary>
+    Task AddNotificationsAsync(IReadOnlyList<Notification> notifications);
+
+    /// <summary>Markiert eigene als gelesen; <paramref name="ids"/> null = alle eigenen.</summary>
+    Task MarkNotificationsReadAsync(string userId, IReadOnlyCollection<string>? ids);
+
     Task<List<ActivityType>> LoadActivityTypesAsync();
     Task SaveActivityTypesAsync(List<ActivityType> types);
     Task<List<RecurringActivity>> LoadRecurringActivitiesAsync();

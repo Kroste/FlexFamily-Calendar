@@ -122,64 +122,43 @@ public partial class CalendarViewModel
     public async Task ApplySwapResultAsync(SwapDialogResult? result)
     {
         if (result == null) return;
+        var req = result.Request;
         switch (result.Action)
         {
             case SwapDialogAction.Create:
-                _swapRequests.Add(result.Request);
-                await _storage.SaveSwapRequestsAsync(_swapRequests);
-                LogService.UserAction(CurrentUser.Username, $"Tausch angeboten an {result.Request.ToUserName}");
-                await _notifications.AddAsync(result.Request.ToUserId, "Notif_SwapOffered",
-                    result.Request.FromDate, result.Request.FromUserName, FmtDate(result.Request.FromDate));
-                await LoadWeekAsync();
+                // Der gespeicherte Vorschlag zählt, nicht der aus dem Dialog: im Server-Modus setzt
+                // der Server Id, Namen und Datum aus der Datenbank.
+                var created = await _storage.CreateSwapRequestAsync(req);
+                LogService.UserAction(CurrentUser.Username, $"Tausch angeboten an {created.ToUserName}");
+                await _notifications.AddAsync(created.ToUserId, "Notif_SwapOffered",
+                    created.FromDate, created.FromUserName, FmtDate(created.FromDate));
                 break;
             case SwapDialogAction.Accept:
-                await AcceptSwapAsync(result.Request);
+                var error = await _storage.AcceptSwapRequestAsync(req);
+                if (error != null)
+                {
+                    LogService.Warn(Localizer.Instance[error]);
+                    break;
+                }
+                LogService.UserAction(CurrentUser.Username, "Tausch angenommen");
+                await _notifications.AddAsync(req.FromUserId, "Notif_SwapAccepted",
+                    req.FromDate, req.ToUserName, FmtDate(req.FromDate));
                 break;
             case SwapDialogAction.Reject:
-                await SetSwapStatusAsync(result.Request.Id, SwapStatus.Rejected, "Tausch abgelehnt");
-                await _notifications.AddAsync(result.Request.FromUserId, "Notif_SwapRejected",
-                    result.Request.FromDate, result.Request.ToUserName, FmtDate(result.Request.FromDate));
+                await _storage.RejectSwapRequestAsync(req.Id);
+                LogService.UserAction(CurrentUser.Username, "Tausch abgelehnt");
+                await _notifications.AddAsync(req.FromUserId, "Notif_SwapRejected",
+                    req.FromDate, req.ToUserName, FmtDate(req.FromDate));
                 break;
             case SwapDialogAction.Withdraw:
-                await SetSwapStatusAsync(result.Request.Id, SwapStatus.Cancelled, "Tausch zurückgezogen");
-                await _notifications.AddAsync(result.Request.ToUserId, "Notif_SwapWithdrawn",
-                    result.Request.FromDate, result.Request.FromUserName, FmtDate(result.Request.FromDate));
+                await _storage.WithdrawSwapRequestAsync(req.Id);
+                LogService.UserAction(CurrentUser.Username, "Tausch zurückgezogen");
+                await _notifications.AddAsync(req.ToUserId, "Notif_SwapWithdrawn",
+                    req.FromDate, req.FromUserName, FmtDate(req.FromDate));
                 break;
-        }
-    }
-
-    private async Task AcceptSwapAsync(ShiftSwapRequest req)
-    {
-        var fromDay = await _storage.LoadDayAsync(DateOnly.Parse(req.FromDate));
-        CalendarDay? toDay = null;
-        if (req.Mode == SwapMode.Exchange && !string.IsNullOrEmpty(req.ToDate))
-            toDay = req.ToDate == req.FromDate ? fromDay : await _storage.LoadDayAsync(DateOnly.Parse(req.ToDate));
-
-        var error = ShiftSwapEngine.Validate(req, fromDay, toDay);
-        if (error != null) { LogService.Warn(Localizer.Instance[error]); return; }
-
-        ShiftSwapEngine.Apply(req, fromDay, toDay);
-        await _storage.SaveDayAsync(fromDay);
-        if (toDay != null && !ReferenceEquals(toDay, fromDay))
-            await _storage.SaveDayAsync(toDay);
-
-        await SetSwapStatusAsync(req.Id, SwapStatus.Accepted, "Tausch angenommen");
-        await _notifications.AddAsync(req.FromUserId, "Notif_SwapAccepted",
-            req.FromDate, req.ToUserName, FmtDate(req.FromDate));
-    }
-
-    private static string FmtDate(string iso) => DateOnly.Parse(iso).ToString("dd.MM.yyyy");
-
-    private async Task SetSwapStatusAsync(string id, SwapStatus status, string action)
-    {
-        var stored = _swapRequests.FirstOrDefault(r => r.Id == id);
-        if (stored != null)
-        {
-            stored.Status = status;
-            stored.RespondedAt = DateTime.Now;
-            await _storage.SaveSwapRequestsAsync(_swapRequests);
-            LogService.UserAction(CurrentUser.Username, action);
         }
         await LoadWeekAsync();
     }
+
+    private static string FmtDate(string iso) => DateOnly.Parse(iso).ToString("dd.MM.yyyy");
 }

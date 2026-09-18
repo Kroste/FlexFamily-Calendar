@@ -2,7 +2,7 @@ using FlexFamilyCalendar.Api.Models;
 
 namespace FlexFamilyCalendar.Api.Notifications;
 
-/// <summary>Benachrichtigung für Lesen und Ersetzen (PUT).</summary>
+/// <summary>Benachrichtigung, wie der Server sie an ihren Empfänger ausliefert.</summary>
 public record NotificationDto(
     Guid Id,
     string UserId,

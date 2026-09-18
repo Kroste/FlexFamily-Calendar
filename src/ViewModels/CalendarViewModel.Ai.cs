@@ -136,8 +136,7 @@ public partial class CalendarViewModel
             ToEntryId = toEntry?.Id,
             Message = s.Message ?? ""
         };
-        _swapRequests.Add(req);
-        await _storage.SaveSwapRequestsAsync(_swapRequests);
+        req = await _storage.CreateSwapRequestAsync(req);
         await _notifications.AddAsync(req.ToUserId, "Notif_SwapOffered",
             req.FromDate, req.FromUserName, FmtDate(req.FromDate));
         LogService.UserAction("Admin",

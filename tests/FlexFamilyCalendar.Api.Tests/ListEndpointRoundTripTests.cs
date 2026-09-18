@@ -132,9 +132,10 @@ public class ListEndpointRoundTripTests
         var client = await factory.CreateAuthenticatedClientAsync(
             ApiTestFactory.AdminUser, ApiTestFactory.AdminPassword);
 
+        // An den Admin selbst gerichtet: Lesen liefert nur noch die eigenen Benachrichtigungen.
         factory.Seed(db => db.Notifications.Add(new NotificationEntity
         {
-            UserId = "u1",
+            UserId = db.Users.Single(u => u.Username == ApiTestFactory.AdminUser).Id.ToString(),
             CreatedAt = "2026-08-01T10:00:00Z",
             MessageKey = "Notif_VacationRequested",
             Args = ["Anna", "12.08."],
