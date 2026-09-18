@@ -105,7 +105,8 @@ public record ServerRecurringActivityDto(
     TimeOnly EndTime,
     List<int> Weekdays,
     bool SkipOnHolidays,
-    List<ServerRecurrenceSkipDto>? Skips);
+    List<ServerRecurrenceSkipDto>? Skips,
+    string? Color = null);
 
 /// <summary>Neuer Tauschvorschlag. Namen und Datum setzt der Server aus der Datenbank.</summary>
 public record ServerCreateSwapBody(int Mode, string? FromUserId, string FromEntryId, string ToUserId, string? ToEntryId, string? Message);

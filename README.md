@@ -297,7 +297,12 @@ Wochen-Regel** im Admin-Bereich → Wiederkehrend.
 
 Jede Regel bekommt eine **Bezeichnung als freien Text** — du bist dabei an keine
 vorgegebene Liste gebunden. Im Plan steht diese Bezeichnung fett als Name auf der
-Kachel, in der Standardfarbe für Aktivitäten.
+Kachel.
+
+**Kachelfarbe:** Ohne eigene Wahl tragen Serien die Standardfarbe für
+Aktivitäten. Mit dem Haken *Eigene Farbe für diese Serie* wählst du eine eigene —
+genau wie beim einzelnen Eintrag, mit Vorschau. Alle Kacheln der Serie bekommen
+dann diese Farbe, und in der Liste links steht sie als Punkt vor dem Namen.
 
 Wiederkehrende Aktivitäten erscheinen als **Overlay** im Wochenplan — sie sind
 sichtbar, aber nicht als eigenständige Einträge gespeichert, sondern werden aus
@@ -490,7 +495,7 @@ Als Admin öffnet der Button **Admin** einen Dialog mit fünf Tabs:
   Au-Pair, „Home Office" für Eltern.
 - **Wiederkehrend**: Wochen-Regeln pflegen — Person, **Bezeichnung als freier
   Text** (z.B. „Fußball", „Sprachschule"), Wochentage, Startzeit, Endzeit, „an
-  Feiertagen ausfallen" ja/nein.
+  Feiertagen ausfallen" ja/nein, optional eine eigene Kachelfarbe.
 - **Einstellungen**: Bundesland (für Feiertage), Übernachtungs-Pauschale in
   Stunden pro Tag, SMTP-Server (nur wenn lokal — im Server-Modus liegt SMTP
   in ENV), Update-Prüfintervall.

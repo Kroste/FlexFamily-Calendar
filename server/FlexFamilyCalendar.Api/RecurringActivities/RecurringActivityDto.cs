@@ -18,10 +18,11 @@ public record RecurringActivityDto(
     TimeOnly EndTime,
     List<int> Weekdays,
     bool SkipOnHolidays,
-    List<RecurrenceSkipDto> Skips)
+    List<RecurrenceSkipDto> Skips,
+    string? Color = null)
 {
     public static RecurringActivityDto From(RecurringActivityEntity e) => new(
         e.Id, e.UserId, e.UserDisplayName, e.Title,
         e.StartTime, e.EndTime, e.Weekdays, e.SkipOnHolidays,
-        e.Skips.Select(RecurrenceSkipDto.FromEntity).ToList());
+        e.Skips.Select(RecurrenceSkipDto.FromEntity).ToList(), e.Color);
 }

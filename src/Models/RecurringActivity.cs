@@ -15,6 +15,10 @@ public class RecurringActivity
     /// <summary>Freitext-Bezeichnung, der Name im Kalender. Früher kam er aus einer Kategorie.</summary>
     public string Title { get; set; } = "";
 
+    /// <summary>Kachelfarbe der Serie (leer = Standardfarbe für Aktivitäten). Jede projizierte
+    /// Kachel trägt sie wie eine am Einzeleintrag gewählte Farbe.</summary>
+    public string Color { get; set; } = "";
+
     /// <summary>
     /// Nur für die einmalige Übernahme alter lokaler Dateien: dort stand die Kategorie, deren Name
     /// der Titel war. <see cref="Services.RecurringTitleMigration"/> überträgt ihn beim Laden und
@@ -41,6 +45,10 @@ public class RecurringActivity
 
     /// <summary>Liegt das Datum in einem aktiven Aussetzungs-Zeitraum?</summary>
     public bool IsPausedOn(DateOnly date) => Skips.Any(s => s.Contains(date));
+
+    /// <summary>Farbe, die die Kacheln der Serie tragen — für den Punkt in der Verwaltungsliste.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string TileColor => EntryColors.Tile(EntryType.Activity, null, Color);
 
     [System.Text.Json.Serialization.JsonIgnore]
     public string TimeRange => $"{StartTime:hh\\:mm}–{EndTime:hh\\:mm}";

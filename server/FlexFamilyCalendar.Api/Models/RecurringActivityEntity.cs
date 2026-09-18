@@ -7,6 +7,7 @@ public class RecurringActivityEntity
     public string UserId { get; set; } = "";
     public string UserDisplayName { get; set; } = "";
     public string Title { get; set; } = "";          // Freitext-Bezeichnung (früher kam der Name aus einer Kategorie)
+    public string? Color { get; set; }               // Kachelfarbe (#RRGGBB), null = Standardfarbe für Aktivitäten
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public List<int> Weekdays { get; set; } = new();  // DayOfWeek-Werte 0..6 → integer[]

@@ -325,6 +325,7 @@
   "Recur_SkipOnHolidays": "Skip on public holidays",
   "Recur_HolidayHint": "may be cancelled (holiday)",
   "Recur_Name": "Name",
+  "Recur_ColorCustom": "Custom colour for this series",
   "Recur_NamePlaceholder": "e.g. football, language school, music school",
   "Recur_ErrorNoName": "Please enter a name.",
   "Recur_ErrorNoUser": "Please select a user.",

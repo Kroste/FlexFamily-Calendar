@@ -11,6 +11,7 @@ public static class RecurringActivityMapping
         UserId = d.UserId,
         UserDisplayName = d.UserDisplayName ?? "",
         Title = d.Title ?? "",
+        Color = d.Color ?? "",
         StartTime = d.StartTime.ToTimeSpan(),
         EndTime = d.EndTime.ToTimeSpan(),
         Weekdays = (d.Weekdays ?? new()).Select(i => (DayOfWeek)i).ToList(),
@@ -28,5 +29,6 @@ public static class RecurringActivityMapping
         a.Id, a.UserId, a.UserDisplayName, a.Title,
         TimeOnly.FromTimeSpan(a.StartTime), TimeOnly.FromTimeSpan(a.EndTime),
         a.Weekdays.Select(d => (int)d).ToList(), a.SkipOnHolidays,
-        a.Skips.Select(s => new ServerRecurrenceSkipDto(s.Id, s.From, s.To, s.Reason)).ToList());
+        a.Skips.Select(s => new ServerRecurrenceSkipDto(s.Id, s.From, s.To, s.Reason)).ToList(),
+        string.IsNullOrWhiteSpace(a.Color) ? null : a.Color);
 }

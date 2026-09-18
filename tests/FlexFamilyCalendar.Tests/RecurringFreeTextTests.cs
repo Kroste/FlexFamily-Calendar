@@ -203,3 +203,107 @@ public class TitledActivityDisplayTests
         Assert.Equal("Fußball", cell.Label);
     }
 }
+
+/// <summary>Serien haben wie Einzeleinträge eine eigene Kachelfarbe.</summary>
+[Collection("Localizer")]
+public class RecurringColorTests
+{
+    private static async Task<(RecurringActivityManagementViewModel Vm, InMemoryStorageService Storage)> VmAsync()
+    {
+        var storage = new InMemoryStorageService();
+        await storage.SaveUsersAsync(new List<User>
+        {
+            new() { Id = "kid", Username = "tim", DisplayName = "Tim", Category = PersonCategory.Child }
+        });
+        var vm = new RecurringActivityManagementViewModel(storage);
+        await Task.Yield();
+        vm.NewCommand.Execute(null);
+        vm.Thu = true;
+        vm.Title = "Fußball";
+        return (vm, storage);
+    }
+
+    [Fact]
+    public async Task Without_own_colour_the_series_uses_the_activity_default()
+    {
+        var (vm, storage) = await VmAsync();
+
+        await vm.SaveCommand.ExecuteAsync(null);
+
+        var rule = Assert.Single(await storage.LoadRecurringActivitiesAsync());
+        Assert.Equal("", rule.Color);
+        Assert.Equal(EntryColors.ForType(EntryType.Activity), rule.TileColor);
+    }
+
+    [Fact]
+    public async Task Own_colour_is_saved_and_shown_when_selected_again()
+    {
+        var (vm, storage) = await VmAsync();
+        vm.UseCustomColor = true;
+        vm.Color = "#16A085";
+
+        await vm.SaveCommand.ExecuteAsync(null);
+        vm.NewCommand.Execute(null);
+        Assert.False(vm.UseCustomColor);
+        vm.SelectedActivity = vm.Activities.Single();
+
+        Assert.Equal("#16A085", (await storage.LoadRecurringActivitiesAsync()).Single().Color);
+        Assert.True(vm.UseCustomColor);
+        Assert.Equal("#16A085", vm.Color);
+    }
+
+    [Fact]
+    public async Task Turning_it_on_starts_from_the_automatic_colour_and_off_resets()
+    {
+        var (vm, _) = await VmAsync();
+
+        vm.UseCustomColor = true;
+        Assert.Equal(RecurringActivityManagementViewModel.AutoColor, vm.Color);
+
+        vm.Color = "#5B4B8A";
+        Assert.Equal("#FFFFFF", vm.PreviewForeground);
+
+        vm.UseCustomColor = false;
+        Assert.Equal("", vm.Color);
+        Assert.Equal(RecurringActivityManagementViewModel.AutoColor, vm.PreviewColor);
+    }
+
+    [Fact]
+    public void Every_projected_tile_carries_the_series_colour()
+    {
+        var rule = new RecurringActivity
+        {
+            Id = "r1", UserId = "kid", Title = "Fußball", Color = "#16A085",
+            StartTime = new TimeSpan(16, 0, 0), EndTime = new TimeSpan(17, 0, 0),
+            Weekdays = { DayOfWeek.Monday, DayOfWeek.Thursday }
+        };
+        var monday = new DateOnly(2026, 9, 21);
+
+        var tiles = Enumerable.Range(0, 7)
+            .SelectMany(i => RecurrenceEngine.Project(new[] { rule }, monday.AddDays(i), isHoliday: false))
+            .ToList();
+
+        Assert.Equal(2, tiles.Count);
+        Assert.All(tiles, t =>
+        {
+            t.DisplayType = EntryType.Activity;
+            Assert.Equal("#16A085", t.TileColor);
+        });
+    }
+
+    [Fact]
+    public void Colour_survives_the_trip_to_the_server_and_back()
+    {
+        var rule = new RecurringActivity
+        {
+            Id = "r1", UserId = "kid", Title = "Fußball", Color = "#16A085",
+            StartTime = new TimeSpan(16, 0, 0), EndTime = new TimeSpan(17, 0, 0), Weekdays = { DayOfWeek.Monday }
+        };
+
+        var back = FlexFamilyCalendar.Services.Api.RecurringActivityMapping.ToDesktop(
+            FlexFamilyCalendar.Services.Api.RecurringActivityMapping.ToServer(rule));
+
+        Assert.Equal("#16A085", back.Color);
+        Assert.Null(FlexFamilyCalendar.Services.Api.RecurringActivityMapping.ToServer(new RecurringActivity()).Color);
+    }
+}

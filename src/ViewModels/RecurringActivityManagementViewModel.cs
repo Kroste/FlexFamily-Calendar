@@ -21,6 +21,35 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
     [ObservableProperty] private User? _selectedUser;
     /// <summary>Freitext statt Kategorie: „Fußball", „Sprachschule", „Musikschule" — was eben ansteht.</summary>
     [ObservableProperty] private string _title = "";
+
+    /// <summary>Frei gewählte Kachelfarbe der Serie (leer = Standardfarbe für Aktivitäten).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PreviewColor))]
+    [NotifyPropertyChangedFor(nameof(PreviewForeground))]
+    private string _color = "";
+
+    /// <summary>Schalter „eigene Farbe" — aus heißt: Standardfarbe für Aktivitäten.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PreviewColor))]
+    [NotifyPropertyChangedFor(nameof(PreviewForeground))]
+    private bool _useCustomColor;
+
+    /// <summary>Farbe, die die Serie ohne eigene Wahl bekommt.</summary>
+    public static string AutoColor => EntryColors.ForType(EntryType.Activity);
+
+    /// <summary>Farbe, die die Kacheln der Serie am Ende tragen — für die Vorschau.</summary>
+    public string PreviewColor => UseCustomColor && EntryColors.IsValidHex(Color) ? Color : AutoColor;
+
+    /// <summary>Schriftfarbe auf der Vorschau, nach derselben Regel wie im Plan.</summary>
+    public string PreviewForeground => EntryColors.OnTile(PreviewColor);
+
+    partial void OnUseCustomColorChanged(bool value)
+    {
+        // Wie im Eintrag-Dialog: beim Einschalten von der Farbe aus starten, die die Serie
+        // ohnehin hätte, beim Ausschalten zurück zur Automatik.
+        if (value && !EntryColors.IsValidHex(Color)) Color = AutoColor;
+        else if (!value) Color = "";
+    }
     [ObservableProperty] private TimeSpan? _startTime = TimeSpan.FromHours(16);
     [ObservableProperty] private TimeSpan? _endTime = TimeSpan.FromHours(17);
     [ObservableProperty] private bool _mon;
@@ -81,6 +110,8 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
         Sun = value.Weekdays.Contains(DayOfWeek.Sunday);
         SkipOnHolidays = value.SkipOnHolidays;
         Title = value.Title;
+        UseCustomColor = EntryColors.IsValidHex(value.Color);
+        Color = UseCustomColor ? value.Color : "";
     }
 
     private List<DayOfWeek> CollectWeekdays()
@@ -106,6 +137,8 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
         Mon = Tue = Wed = Thu = Fri = Sat = Sun = false;
         SkipOnHolidays = true;
         Title = "";
+        UseCustomColor = false;
+        Color = "";
         ErrorMessage = "";
     }
 
@@ -121,6 +154,7 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
         if (weekdays.Count == 0) { ErrorMessage = Localizer.Instance["Recur_ErrorNoWeekday"]; return; }
 
         var name = string.IsNullOrEmpty(SelectedUser.DisplayName) ? SelectedUser.Username : SelectedUser.DisplayName;
+        var color = UseCustomColor && EntryColors.IsValidHex(Color) ? Color : "";
 
         if (SelectedActivity == null)
         {
@@ -129,6 +163,7 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
                 UserId = SelectedUser.Id,
                 UserDisplayName = name,
                 Title = Title.Trim(),
+                Color = color,
                 StartTime = StartTime.Value,
                 EndTime = EndTime.Value,
                 Weekdays = weekdays,
@@ -140,6 +175,7 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
             SelectedActivity.UserId = SelectedUser.Id;
             SelectedActivity.UserDisplayName = name;
             SelectedActivity.Title = Title.Trim();
+            SelectedActivity.Color = color;
             SelectedActivity.StartTime = StartTime.Value;
             SelectedActivity.EndTime = EndTime.Value;
             SelectedActivity.Weekdays = weekdays;

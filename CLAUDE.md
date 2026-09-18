@@ -227,6 +227,10 @@
   (Schritt 2) muss diese Übernahme weiter laufen können** — sie braucht den Kategorienamen aus
   `activity-types.json`. Auf der Kachel und im PDF ist die Bezeichnung einer Aktivität ohne
   Kategorie der Name (`CalendarEntry.IsTitledActivity`) statt „Aktivität" plus Untertitel.
+  Serien haben wie Einzeleinträge eine freie Kachelfarbe (`RecurringActivity.Color`, Migration
+  `RecurringColor`, serverseitig über `EntryWriteRules.NormalizeColor` gesäubert). Die
+  Projektion schreibt sie in `CalendarEntry.Color` jeder Kachel — damit gilt dieselbe Rangfolge
+  und dieselbe Maskierungsprüfung wie bei einer am Eintrag gewählten Farbe, ohne Sonderweg.
 - **EF-Migrationen, die Daten umschreiben, gehören gegen echtes Postgres geprüft.** Die
   Integrationstests laufen auf EF-InMemory, das keine Migrationen ausführt. Vorgehen: über den
   Host ein Wegwerf-Postgres starten

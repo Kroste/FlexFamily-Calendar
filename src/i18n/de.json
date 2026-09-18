@@ -325,6 +325,7 @@
   "Recur_SkipOnHolidays": "An Feiertagen ausfallen",
   "Recur_HolidayHint": "könnte ausfallen (Feiertag)",
   "Recur_Name": "Bezeichnung",
+  "Recur_ColorCustom": "Eigene Farbe für diese Serie",
   "Recur_NamePlaceholder": "z.B. Fußball, Sprachschule, Musikschule",
   "Recur_ErrorNoName": "Bitte eine Bezeichnung eingeben.",
   "Recur_ErrorNoUser": "Bitte einen Benutzer auswählen.",
