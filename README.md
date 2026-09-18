@@ -337,7 +337,8 @@ Wenn du eine Schicht hast, aber jemand anderes einspringen soll:
 4. Die andere Person bestätigt oder lehnt ab. Bei Bestätigung wechselt die
    Schicht automatisch — geprüft wird dabei noch einmal, ob die Schicht noch
    existiert, der Tag nicht schon finalisiert ist und sich beim Kollegen nichts
-   überschneidet.
+   überschneidet. Klappt etwas davon nicht, bleibt der Dialog offen und sagt dir,
+   woran es liegt.
 
 Einen Tauschvorschlag sehen nur die beiden Beteiligten und die Admins — samt
 der Nachricht, die du dazuschreibst.

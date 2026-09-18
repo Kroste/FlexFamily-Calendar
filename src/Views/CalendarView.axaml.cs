@@ -195,8 +195,8 @@ public partial class CalendarView : UserControl
 
             var result = await App.DialogService.ShowShiftSwapAsync(vm);
 
-            if (result is not null && _vm is not null)
-                await _vm.ApplySwapResultAsync(result);
+            if (_vm is not null)
+                await _vm.OnSwapDialogClosedAsync(result);
         }
         catch (Exception ex)
         {

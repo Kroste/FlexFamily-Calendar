@@ -82,7 +82,9 @@
     </ScrollViewer>
 
     <!-- Buttons je Modus -->
-    <Grid Grid.Row="2" Margin="0,16,0,0">
+    <!-- Während eine Aktion läuft, ist die ganze Knopfleiste gesperrt: sonst ließe sich
+         „Ablehnen" drücken, während „Annehmen" noch beim Server ist. -->
+    <Grid Grid.Row="2" Margin="0,16,0,0" IsEnabled="{Binding !IsBusy}">
       <!-- Initiate -->
       <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right"
                   IsVisible="{Binding IsInitiate}">

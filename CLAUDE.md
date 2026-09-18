@@ -149,6 +149,17 @@
     reagieren.
   Kein `BeginTransaction` in den Endpunkten: der EF-InMemory-Provider der Integration-Tests
   kennt keine Transaktionen, ein einzelnes `SaveChanges` ist auf Postgres ohnehin atomar.
+- **Dialoge, deren Aktion scheitern kann, führen sie aus, SOLANGE sie offen sind** (Muster:
+  `ShiftSwapViewModel` mit `execute`-Callback → `CalendarViewModel.ExecuteSwapAsync`). Fehler
+  kommen als anzeigefertiger Text zurück, der Dialog bleibt offen und zeigt ihn; die Knopfleiste
+  ist währenddessen über `IsBusy` gesperrt. Vorher schloss der Tausch-Dialog zuerst und der
+  Aufrufer führte danach aus — ein gescheitertes Annehmen landete als `LogService.Warn` in der
+  Statuszeile und wurde vom anschließenden `LoadWeekAsync` („Lade Kalenderwoche …" als Info)
+  nach Millisekunden überschrieben. **Die Statuszeile taugt nicht als Fehlermeldung für eine
+  Nutzeraktion**: jede folgende Info überschreibt sie. Benachrichtigungen nach einer gelungenen
+  Aktion laufen gekapselt (`NotifyQuietlyAsync`) — ein Sendefehler dort darf die schon gebuchte
+  Aktion nicht als gescheitert melden, sonst versucht der Nutzer es erneut und bekommt
+  „bereits erledigt".
 - **Tagesnotizen filtert der Server** (`DayNoteVisibility`): eine adressierte Notiz bekommen nur
   der Admin und die angesprochene Person; alle anderen erhalten Text UND Adressat leer. Vorher
   lieferten beide GET-Endpunkte jede Notiz an jeden aus und erst `CanSeeNote` im Client blendete

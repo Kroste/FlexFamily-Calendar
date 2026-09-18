@@ -29,6 +29,16 @@ public partial class ShiftSwapViewModel : ViewModelBase
     private readonly ShiftSwapRequest? _existing;
     private readonly IReadOnlyList<SwapShiftOption> _allColleagueShifts = [];
 
+    /// <summary>
+    /// Führt die gewählte Aktion aus, SOLANGE der Dialog noch offen ist. <c>null</c> heißt erledigt,
+    /// sonst eine anzeigefertige Fehlermeldung — der Dialog bleibt dann offen und zeigt sie.
+    /// Vorher schloss der Dialog zuerst und der Aufrufer führte danach aus: scheiterte das Annehmen
+    /// (Überschneidung, schon finalisiert, schon erledigt), war niemand mehr da, der es hätte
+    /// anzeigen können — die Warnung in der Statuszeile überschrieb das anschließende Neuladen
+    /// der Woche nach Millisekunden. Für den Nutzer passierte schlicht nichts.
+    /// </summary>
+    private readonly Func<SwapDialogResult, Task<string?>>? _execute;
+
     public SwapDialogMode DialogMode { get; }
 
     // --- Initiate ---
@@ -47,6 +57,9 @@ public partial class ShiftSwapViewModel : ViewModelBase
     [ObservableProperty] private string _message = "";
     [ObservableProperty] private string _errorMessage = "";
 
+    /// <summary>Läuft gerade eine Aktion? Sperrt die Knöpfe gegen einen zweiten Klick.</summary>
+    [ObservableProperty] private bool _isBusy;
+
     public bool IsInitiate => DialogMode == SwapDialogMode.Initiate;
     public bool IsRespond => DialogMode == SwapDialogMode.Respond;
     public bool IsWithdraw => DialogMode == SwapDialogMode.Withdraw;
@@ -62,9 +75,11 @@ public partial class ShiftSwapViewModel : ViewModelBase
 
     /// <summary>Initiate: eigene Schicht einem Kollegen anbieten (abgeben oder tauschen).</summary>
     public ShiftSwapViewModel(User me, CalendarEntry myShift, DateOnly myDate,
-        IReadOnlyList<User> colleagues, IReadOnlyList<SwapShiftOption> colleagueShifts)
+        IReadOnlyList<User> colleagues, IReadOnlyList<SwapShiftOption> colleagueShifts,
+        Func<SwapDialogResult, Task<string?>>? execute = null)
     {
         _me = me;
+        _execute = execute;
         _myShift = myShift;
         _myDate = myDate;
         _allColleagueShifts = colleagueShifts;
@@ -84,9 +99,11 @@ public partial class ShiftSwapViewModel : ViewModelBase
     }
 
     /// <summary>Respond/Withdraw: bestehende Anfrage anzeigen. <paramref name="summary"/> wird vom Aufrufer lokalisiert gebaut.</summary>
-    public ShiftSwapViewModel(User me, ShiftSwapRequest existing, SwapDialogMode mode, string summary)
+    public ShiftSwapViewModel(User me, ShiftSwapRequest existing, SwapDialogMode mode, string summary,
+        Func<SwapDialogResult, Task<string?>>? execute = null)
     {
         _me = me;
+        _execute = execute;
         _existing = existing;
         DialogMode = mode;
         Summary = summary;
@@ -109,7 +126,7 @@ public partial class ShiftSwapViewModel : ViewModelBase
         => $"{date.ToString("ddd dd.MM.", CultureInfo.CurrentCulture)} {e.TimeRange}";
 
     [RelayCommand]
-    private void Send()
+    private async Task Send()
     {
         ErrorMessage = "";
         if (SelectedColleague == null) { ErrorMessage = Localizer.Instance["Swap_ErrorNoColleague"]; return; }
@@ -137,17 +154,40 @@ public partial class ShiftSwapViewModel : ViewModelBase
         }
 
         LogService.Debug("Tausch-Dialog: Senden ({0} → {1})", myName, colleagueName);
-        Closed?.Invoke(new SwapDialogResult(SwapDialogAction.Create, req));
+        await FinishAsync(new SwapDialogResult(SwapDialogAction.Create, req));
     }
 
     [RelayCommand]
-    private void Accept() => Closed?.Invoke(new SwapDialogResult(SwapDialogAction.Accept, _existing!));
+    private Task Accept() => FinishAsync(new SwapDialogResult(SwapDialogAction.Accept, _existing!));
 
     [RelayCommand]
-    private void Reject() => Closed?.Invoke(new SwapDialogResult(SwapDialogAction.Reject, _existing!));
+    private Task Reject() => FinishAsync(new SwapDialogResult(SwapDialogAction.Reject, _existing!));
 
     [RelayCommand]
-    private void Withdraw() => Closed?.Invoke(new SwapDialogResult(SwapDialogAction.Withdraw, _existing!));
+    private Task Withdraw() => FinishAsync(new SwapDialogResult(SwapDialogAction.Withdraw, _existing!));
+
+    /// <summary>Ausführen, dann schließen — oder bei Fehler offen bleiben und ihn zeigen.</summary>
+    private async Task FinishAsync(SwapDialogResult result)
+    {
+        ErrorMessage = "";
+        if (_execute is not null)
+        {
+            IsBusy = true;
+            try
+            {
+                if (await _execute(result) is { } error)
+                {
+                    ErrorMessage = error;
+                    return;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+        Closed?.Invoke(result);
+    }
 
     [RelayCommand]
     private void Cancel() => Closed?.Invoke(null);
