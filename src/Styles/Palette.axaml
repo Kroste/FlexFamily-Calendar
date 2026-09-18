@@ -63,7 +63,7 @@
       <Color x:Key="ScrollBarThumbBackgroundColor">#B8A796</Color>
       <Color x:Key="ScrollBarPanningThumbBackgroundColor">#B8A796</Color>
       <SolidColorBrush x:Key="ScrollBarPanningThumbBackground" Color="#B8A796" />
-      <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="#8C7B6B" />
+      <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="#A8927E" />
       <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="#C2572B" />
       <SolidColorBrush x:Key="ScrollBarTrackFillPointerOver" Color="#F3EBE0" />
       <SolidColorBrush x:Key="ScrollBarBackgroundPointerOver" Color="#F3EBE0" />
@@ -98,7 +98,7 @@
       <Color x:Key="ScrollBarThumbBackgroundColor">#6E6056</Color>
       <Color x:Key="ScrollBarPanningThumbBackgroundColor">#6E6056</Color>
       <SolidColorBrush x:Key="ScrollBarPanningThumbBackground" Color="#6E6056" />
-      <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="#A0907F" />
+      <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="#8C7B6B" />
       <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="#D2693C" />
       <SolidColorBrush x:Key="ScrollBarTrackFillPointerOver" Color="#2A221D" />
       <SolidColorBrush x:Key="ScrollBarBackgroundPointerOver" Color="#2A221D" />

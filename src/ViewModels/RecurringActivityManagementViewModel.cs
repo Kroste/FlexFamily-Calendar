@@ -50,6 +50,15 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
         if (value && !EntryColors.IsValidHex(Color)) Color = AutoColor;
         else if (!value) Color = "";
     }
+
+    // Der Farbwähler (ColorView) schreibt beim Aufbau seinen Startwert zurück — Grau, weil der
+    // Konverter für eine leere Farbe Grau liefert. Das landete als „#808080" im ViewModel, obwohl
+    // „eigene Farbe" aus war, und beim Einschalten startete die Vorschau dann grau statt mit der
+    // Standardfarbe. Solange der Schalter aus ist, gibt es keine eigene Farbe.
+    partial void OnColorChanged(string value)
+    {
+        if (!UseCustomColor && value.Length > 0) Color = "";
+    }
     [ObservableProperty] private TimeSpan? _startTime = TimeSpan.FromHours(16);
     [ObservableProperty] private TimeSpan? _endTime = TimeSpan.FromHours(17);
     [ObservableProperty] private bool _mon;

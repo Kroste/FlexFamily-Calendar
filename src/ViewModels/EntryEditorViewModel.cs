@@ -252,6 +252,15 @@ public partial class EntryEditorViewModel : ViewModelBase
         else if (!value) Color = "";
     }
 
+    // Der Farbwähler (ColorView) schreibt beim Aufbau seinen Startwert zurück — Grau, weil der
+    // Konverter für eine leere Farbe Grau liefert. Das landete als „#808080" im ViewModel, obwohl
+    // „eigene Farbe" aus war, und beim Einschalten startete die Vorschau dann grau statt mit der
+    // Standardfarbe. Solange der Schalter aus ist, gibt es keine eigene Farbe.
+    partial void OnColorChanged(string value)
+    {
+        if (!UseCustomColor && value.Length > 0) Color = "";
+    }
+
     partial void OnIsAbsenceModeChanged(bool value)
     {
         ErrorMessage = "";

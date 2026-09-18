@@ -22,6 +22,27 @@
   </Style>
 
   <!--
+    Schlanker Balken statt Fluents 16-px-Leiste mit Pfeilknöpfen und kantigem Griff: 10 px,
+    runder Griff, keine Pfeile, Spur nur als zarte Fläche. Die Teilnamen (PART_LineUpButton,
+    PART_LineDownButton, TrackRect, Thumb) stammen aus dem geladenen Template, headless
+    ausgelesen — falsche Namen scheitern still. ScrollBarTests misst das Ergebnis.
+  -->
+  <Styles.Resources>
+    <x:Double x:Key="ScrollBarSize">10</x:Double>
+  </Styles.Resources>
+  <Style Selector="ScrollBar /template/ RepeatButton#PART_LineUpButton,
+                   ScrollBar /template/ RepeatButton#PART_LineDownButton">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="ScrollBar /template/ Rectangle#TrackRect">
+    <Setter Property="RadiusX" Value="5" />
+    <Setter Property="RadiusY" Value="5" />
+  </Style>
+  <Style Selector="ScrollBar /template/ Thumb">
+    <Setter Property="CornerRadius" Value="5" />
+  </Style>
+
+  <!--
     Formulare in einem ScrollViewer: rechts Platz für den Balken. Mit AllowAutoHide legt Fluent
     den Balken ÜBER den Inhalt statt daneben — die rechten Ränder von Eingabefeldern stießen an
     den eingeklappten Strich und verschwanden beim Aufklappen darunter. Bewusst als Klasse und

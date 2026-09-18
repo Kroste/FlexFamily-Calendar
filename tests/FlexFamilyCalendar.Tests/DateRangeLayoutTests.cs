@@ -128,6 +128,51 @@ public class DateRangeLayoutTests : IClassFixture<HeadlessAppFixture>
         }, CancellationToken.None);
 
     [Fact]
+    public Task Scrollbar_is_slim_rounded_and_without_arrows()
+        => _app.Session.Dispatch(() =>
+        {
+            // Fluents Standard: 16 px, Pfeilknöpfe, kantiger Griff — im Dialog wirkte das klobig.
+            var vm = new EntryEditorViewModel(new DateOnly(2026, 9, 18),
+                new[] { new User { Id = "u1", Username = "mara", DisplayName = "Mara" } })
+            { UseCustomColor = true };
+            var window = new Window { Width = 480, Height = 460, Content = new EntryEditorView { DataContext = vm } };
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+
+            var bar = window.GetVisualDescendants().OfType<ScrollBar>()
+                            .Single(b => b.Orientation == Avalonia.Layout.Orientation.Vertical && b.IsEffectivelyVisible);
+            Assert.True(bar.Bounds.Width <= 10.5, $"Balken ist {bar.Bounds.Width} px breit");
+            Assert.DoesNotContain(bar.GetVisualDescendants().OfType<RepeatButton>(),
+                b => b.Name is "PART_LineUpButton" or "PART_LineDownButton" && b.IsEffectivelyVisible);
+            var thumb = bar.GetVisualDescendants().OfType<Thumb>().Single();
+            Assert.Equal(new CornerRadius(5), thumb.CornerRadius);
+            window.Close();
+            return true;
+        }, CancellationToken.None);
+
+    [Fact]
+    public Task Custom_colour_starts_from_the_default_not_from_grey()
+        => _app.Session.Dispatch(() =>
+        {
+            // Der Farbwähler schrieb beim Aufbau Grau zurück; beim Einschalten von „eigene Farbe"
+            // startete die Vorschau dann grau statt mit der Standardfarbe des Eintrags.
+            var vm = new EntryEditorViewModel(new DateOnly(2026, 9, 18),
+                new[] { new User { Id = "u1", Username = "mara", DisplayName = "Mara" } });
+            var window = new Window { Width = 480, Height = 900, Content = new EntryEditorView { DataContext = vm } };
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+
+            Assert.Equal("", vm.Color);
+            vm.UseCustomColor = true;
+            Dispatcher.UIThread.RunJobs();
+
+            Assert.Equal(vm.AutoColor, vm.Color);
+            Assert.Equal(vm.AutoColor, vm.PreviewColor);
+            window.Close();
+            return true;
+        }, CancellationToken.None);
+
+    [Fact]
     public Task Entry_dialog_absence_range_does_not_overlap()
         => _app.Session.Dispatch(() =>
         {

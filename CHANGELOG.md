@@ -8,6 +8,11 @@ Geschrieben für die Menschen, die die App benutzen: was sich für sie ändert, 
 Update-Dialog zeigt den Text ohne Formatierung — also schlichte Aufzählungen, kein Fettdruck,
 keine Links.
 
+## v0.23.2 — 18.09.2026
+
+- Der Scrollbalken ist schmaler und hat einen runden Griff, ohne Pfeilknöpfe.
+- „Eigene Farbe" startet wieder mit der Standardfarbe des Eintrags statt mit Grau — im Eintrag- und im Serien-Dialog.
+
 ## v0.23.1 — 18.09.2026
 
 - Der Scrollbalken in Dialogen liegt nicht mehr über den Eingabefeldern — rechts ist jetzt Platz für ihn.

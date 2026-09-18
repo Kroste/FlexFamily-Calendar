@@ -316,7 +316,15 @@
   Die Balkenfarben kommen über Fluents eigene Keys (`ScrollBarPanningThumbBackground` = der
   eingeklappte Strich, `ScrollBarThumb…`, `ScrollBarTrack…`), überschrieben in den
   ThemeDictionaries der `Palette.axaml` — die Namen stammen aus den Ressourcen des geladenen
-  FluentTheme (headless ausgelesen), nicht geraten.
+  FluentTheme (headless ausgelesen), nicht geraten. Der Balken ist schlank gestylt
+  (`ScrollBarSize` 10 in `AppStyles`, Pfeilknöpfe `PART_LineUpButton`/`PART_LineDownButton`
+  ausgeblendet, runder `Thumb`) — Fluents 16-px-Leiste mit Pfeilen wirkte im Dialog klobig.
+- **`ColorView` schreibt beim Aufbau seinen Startwert zurück** (TwoWay): für eine leere Farbe
+  liefert `HexToColorConverter` Grau, und das landete als `#808080` im ViewModel, obwohl
+  „eigene Farbe" aus war — beim Einschalten startete die Vorschau grau statt mit der
+  Standardfarbe. Eintrag- und Serien-Dialog verwerfen Farb-Schreibvorgänge deshalb in
+  `OnColorChanged`, solange `UseCustomColor` aus ist. Der Schalter muss beim Laden VOR der
+  Farbe gesetzt werden, sonst wirft der Guard die gespeicherte Farbe weg.
 - **Hinweiszeile im Plan liegt im ScrollViewer hinter den Personenzeilen** (StackPanel), nicht
   unten angedockt — sonst klafft bei wenigen Personen eine leere Fläche dazwischen.
 - **Design-Test-API (`desktop/DesignApi/`, nur Desktop):** lokale REST-Schnittstelle, mit der
