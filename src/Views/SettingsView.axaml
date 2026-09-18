@@ -76,7 +76,7 @@
     <StackPanel Orientation="Horizontal" Spacing="12">
       <Button Content="{loc:Tr Common_Save}" Command="{Binding SaveCommand}"
               Padding="16,8" CornerRadius="6"
-              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+              Classes="accent" />
       <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center"
                  Foreground="{DynamicResource SuccessBrush}" FontSize="13" />
     </StackPanel>

@@ -75,7 +75,9 @@ public class ResourceKeyTests
         var offenders = new List<string>();
         foreach (var file in XamlFiles())
         {
-            if (Path.GetFileName(file) == "Palette.axaml") continue;
+            // Palette.axaml trägt die Rollen, FluentPalette.axaml die Fluent-Grundfarben — beides
+            // Farbdefinitionen, keine Views.
+            if (Path.GetFileName(file) is "Palette.axaml" or "FluentPalette.axaml") continue;
 
             foreach (Match m in ColorLiteralRx.Matches(File.ReadAllText(file)))
                 offenders.Add($"{Path.GetFileName(file)}: {m.Groups[1].Value}");

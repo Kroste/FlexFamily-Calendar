@@ -1,0 +1,46 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!--
+    FluentTheme mit warmer Grundpalette (Akzent Terrakotta, Creme statt Weiß, Braun statt
+    Blaugrau). Diese Werte speisen SystemAccentColor und die SystemControl…-Pinsel, mit denen
+    Fluent Haken, Radiobuttons, Datumsauswahl, Listen-Hover und den Kalender-Kopf zeichnet.
+    Neben Palette.axaml die einzige Datei mit Farbliteralen — Gegenstück zu den Rollen dort,
+    beide zusammen ändern. Die Palette ersetzt App.axamls früheres nacktes <FluentTheme />.
+  -->
+  <FluentTheme>
+      <FluentTheme.Palettes>
+          <ColorPaletteResources x:Key="Light"
+                                 Accent="#C2572B"
+                                 RegionColor="#F7F1E8"
+                                 AltHigh="#FFFDF9"
+                                 ChromeLow="#F3EBE0"
+                                 ChromeMediumLow="#EFE5D8"
+                                 ChromeMedium="#E8DCCB"
+                                 ChromeHigh="#D6C6B2"
+                                 BaseHigh="#2D241E"
+                                 BaseMediumHigh="#4A3C32"
+                                 BaseMedium="#7D6B5D"
+                                 BaseMediumLow="#A89888"
+                                 BaseLow="#DDD0C1"
+                                 ListLow="#F0E6DA"
+                                 ListMedium="#E6D8C7" />
+          <ColorPaletteResources x:Key="Dark"
+                                 Accent="#D2693C"
+                                 RegionColor="#171310"
+                                 AltHigh="#1C1714"
+                                 ChromeLow="#2A221D"
+                                 ChromeMediumLow="#2F2620"
+                                 ChromeMedium="#352B24"
+                                 ChromeHigh="#4A3E35"
+                                 BaseHigh="#F3E9DF"
+                                 BaseMediumHigh="#DCCFC2"
+                                 BaseMedium="#B8A99B"
+                                 BaseMediumLow="#7E6F63"
+                                 BaseLow="#3E342C"
+                                 ListLow="#2E2621"
+                                 ListMedium="#3A3029" />
+      </FluentTheme.Palettes>
+  </FluentTheme>
+
+</Styles>

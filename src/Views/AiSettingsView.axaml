@@ -44,7 +44,7 @@
     <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,16,0,0">
       <Button Content="{loc:Tr Ai_Test}" Command="{Binding TestCommand}" Padding="16,8" CornerRadius="6" />
       <Button Content="{loc:Tr Common_Save}" Command="{Binding SaveCommand}" Padding="16,8" CornerRadius="6"
-              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+              Classes="accent" />
     </StackPanel>
 
   </Grid>

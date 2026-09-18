@@ -100,7 +100,7 @@ public sealed class UiActions(bool allowClicks)
         }).GetTask();
 
     /// <summary>Namen der Fenster, die <c>/open</c> bauen kann — für die 404-Antwort.</summary>
-    public static IReadOnlyList<string> OpenableWindows => ["info", "onboarding"];
+    public static IReadOnlyList<string> OpenableWindows => ["info", "onboarding", "entry", "absence"];
 
     public Task<ClickResult> ClickAsync(string elementId) =>
         Dispatcher.UIThread.InvokeAsync(() =>
@@ -214,6 +214,13 @@ public sealed class UiActions(bool allowClicks)
         {
             "info" or "about" => new InfoDialog { DataContext = main.CreateInfo() },
             "onboarding" => new OnboardingDialog { DataContext = main.CreateOnboarding() },
+            // Eintrag-Dialog als Layout-Vorschau: niemand wartet auf sein Ergebnis, Speichern
+            // schließt nur das Fenster und schreibt nichts.
+            "entry" or "absence" when main.CalendarVm?.CurrentUser is { } me => new EntryEditorDialog
+            {
+                DataContext = new EntryEditorViewModel(DateOnly.FromDateTime(DateTime.Today), [me])
+                { IsAbsenceMode = name.Equals("absence", StringComparison.OrdinalIgnoreCase) }
+            },
             _ => null,
         };
     }

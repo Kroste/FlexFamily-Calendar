@@ -30,12 +30,12 @@
                             Command="{Binding $parent[ItemsControl].DataContext.AcceptCommand}"
                             CommandParameter="{Binding}"
                             Padding="12,6" CornerRadius="6"
-                            Background="{DynamicResource SuccessBrush}" Foreground="White" />
+                            Classes="success-solid" />
                     <Button Content="{loc:Tr Mobile_Swap_Reject}"
                             Command="{Binding $parent[ItemsControl].DataContext.RejectCommand}"
                             CommandParameter="{Binding}"
                             Padding="12,6" CornerRadius="6"
-                            Background="{DynamicResource DangerBrush}" Foreground="White" />
+                            Classes="danger-solid" />
                   </StackPanel>
                 </StackPanel>
               </Border>
@@ -116,7 +116,7 @@
                 IsEnabled="{Binding !IsBusy}"
                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                 Padding="0,14" CornerRadius="6"
-                Background="{DynamicResource SystemAccentColor}" Foreground="White"
+                Classes="accent"
                 FontSize="14" FontWeight="SemiBold" />
 
         <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"

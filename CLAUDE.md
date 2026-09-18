@@ -96,7 +96,22 @@
   `IOException` — bei gesperrter Datei ist der Inhalt intakt, ein Verschieben würde gute Daten
   wegräumen.
 - **Keine Farbliterale im XAML.** Alle Farben liegen als Rollen-Keys in
-  `src/Styles/Palette.axaml` (`DangerBrush`, `SuccessBrush`, `ScrimBrush`, …). Tote
+  `src/Styles/Palette.axaml` (`DangerBrush`, `SuccessBrush`, `ScrimBrush`, …) — einzige
+  Ausnahme ist `src/Styles/FluentPalette.axaml`, das den `FluentTheme` mit warmer
+  `ColorPaletteResources` (Light/Dark) trägt: `Accent`, `RegionColor`, `AltHigh`, `Chrome*`,
+  `Base*`, `List*` speisen `SystemAccentColor` und die `SystemControl…`-Pinsel, mit denen Fluent
+  Haken, Radios, Datumsauswahl und den Kalender-Kopf zeichnet. Rollen und Fluent-Palette
+  gehören zusammen geändert. **Warm seit v0.23:** Akzent Terrakotta, Creme statt Weiß, Braun
+  statt Blaugrau, Kopf als Verlauf (`AppHeaderBrush` ist ein `LinearGradientBrush`), Typfarben
+  der Kacheln in `EntryTypeInfo.Color` (Ocker, Oliv, Ziegelrot …).
+- **Farbe NIE als `Background`/`Foreground` direkt an einen `Button` hängen, sondern über eine
+  Klasse** (`.accent`, `.danger-solid`, `.success-solid`, `.ghost`). Fluent setzt beim Hover
+  Hintergrund UND Schrift am `ContentPresenter#PART_ContentPresenter` im Template und schlägt
+  damit alles am Button selbst: aus „weiß auf Blau" wurde beim Darüberfahren „schwarz auf Grau",
+  und das Schließen-Kreuz der Titelleiste wurde schwarz. Die Klassen setzen die Farbe deshalb
+  auch auf `/template/ ContentPresenter` für `:pointerover`/`:pressed`; die Titelleiste
+  genauso in `ChromeWindow.axaml`. `TitleBarHoverTests` bewegt headless die Maus über die Knöpfe
+  und misst die Farben (gegen den alten Style rot). Tote
   `{DynamicResource …}`-Verweise scheitern in Avalonia **still** — das Element rendert einfach
   falsch. `ResourceKeyTests` gleicht referenzierte gegen definierte Keys ab und schlägt bei
   neuen Literalen an; Fluent-Keys sind am `System`-Präfix erkennbar und ausgenommen.
@@ -294,6 +309,8 @@
   - **Arbeitszeit-Regeln, KI-Prüfung und Tausch** arbeiten nur auf `IsShift` (ein Tag, mit
     Uhrzeit) bzw. `!IsMultiDay`; der Server lehnt den Tausch mehrtägiger Einträge in
     `SwapRules.CheckCreate` ab. Die Handy-Meldung (Krank/Urlaub) bleibt ganztägig.
+- **Hinweiszeile im Plan liegt im ScrollViewer hinter den Personenzeilen** (StackPanel), nicht
+  unten angedockt — sonst klafft bei wenigen Personen eine leere Fläche dazwischen.
 - **Design-Test-API (`desktop/DesignApi/`, nur Desktop):** lokale REST-Schnittstelle, mit der
   sich UI-Änderungen prüfen lassen — Zustand lesen, Theme und Sprache umschalten, Fenster
   öffnen, Screenshot per `RenderTargetBitmap`. Fernsteuerung von außen
@@ -304,7 +321,15 @@
   `DestructiveGuard` lässt **nur ausdrücklich als unbedenklich gelistete Namen** durch —
   umgekehrt zum Skill-Vorbild, weil die App im Server-Modus an der Live-DB hängt und Mails
   verschickt. Ein Test erzwingt, dass jeder Command des MainWindowViewModel in genau einer
-  der beiden Listen steht.
+  der beiden Listen steht. `/open?window=` kennt `info`, `onboarding`, `entry`, `absence`
+  (Eintrag-Dialog als reine Layout-Vorschau, Speichern schreibt nichts).
+  **Neben einer laufenden echten Instanz testen:** der Single-Instance-Guard würde die
+  Testinstanz sofort beenden (und die echte nach vorn holen). Eigenes `TMPDIR` trennt den
+  Socket — aber kurz halten, Unix-Sockets vertragen höchstens 108 Zeichen Pfad (der
+  Scratchpad-Pfad ist zu lang, `$XDG_RUNTIME_DIR/ffc-shot` passt). Daten isoliert über
+  `XDG_DATA_HOME` auf einen Wegwerf-Ordner mit `settings.json` (`RememberedUsername`) und
+  `users.json` — dann meldet sich die App lokal selbst an. Beenden per PID, **nie** per
+  `pkill -f <Muster>`: das Muster steht in der eigenen Befehlszeile und killt die Shell.
 
   ```bash
   FlexFamilyCalendar.Desktop --api-port 8765 --api-token geheim --auto-shutdown-after 10m

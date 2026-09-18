@@ -30,15 +30,20 @@ public static class EntryTypeInfo
         _ => type.ToString()
     };
 
+    /// <summary>
+    /// Standard-Kachelfarbe je Typ — warm abgestimmt (v0.23): Ocker für Arbeit statt Blau, dazu
+    /// Oliv, Ziegelrot, Altrosa, Taupe, Pflaume, Petrol. Die Töne bleiben untereinander klar
+    /// unterscheidbar; die Schrift darauf rechnet <see cref="EntryColors.OnTile"/>.
+    /// </summary>
     public static string Color(EntryType type) => type switch
     {
-        EntryType.Work => "#2E86C1",
-        EntryType.Vacation => "#27AE60",
-        EntryType.SickLeave => "#C0392B",
-        EntryType.Activity => "#E67E22",
-        EntryType.Absence => "#7F8C8D",
-        EntryType.Overnight => "#5B4B8A",
-        EntryType.Custom => "#16A085",
-        _ => "#2E86C1"
+        EntryType.Work => "#D4933A",
+        EntryType.Vacation => "#6B9A4B",
+        EntryType.SickLeave => "#B23A2E",
+        EntryType.Activity => "#B8698F",
+        EntryType.Absence => "#8D7F72",
+        EntryType.Overnight => "#6D4C73",
+        EntryType.Custom => "#3E8A80",
+        _ => "#D4933A"
     };
 }

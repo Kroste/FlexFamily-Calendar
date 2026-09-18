@@ -14,7 +14,7 @@ namespace FlexFamilyCalendar.Models;
 public static class EntryColors
 {
     /// <summary>Fällt jede Auflösung aus, bleibt neutrales Grau.</summary>
-    public const string Fallback = "#7F8C8D";
+    public const string Fallback = "#8D7F72";
 
     /// <summary>Farbe für einen Eintragstyp.</summary>
     public static string ForType(EntryType type) => EntryTypeInfo.Color(type);

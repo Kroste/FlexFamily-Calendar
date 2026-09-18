@@ -30,11 +30,11 @@
       <Button Content="{loc:Tr Onboarding_Next}" Command="{Binding NextCommand}"
               IsVisible="{Binding CanGoForward}"
               Padding="14,7" CornerRadius="6"
-              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+              Classes="accent" />
       <Button Content="{loc:Tr Onboarding_Finish}" Command="{Binding FinishCommand}"
               IsVisible="{Binding IsLastSlide}"
               Padding="14,7" CornerRadius="6"
-              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+              Classes="accent" />
     </StackPanel>
 
   </Grid>

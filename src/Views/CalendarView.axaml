@@ -214,52 +214,15 @@
         </ItemsControl>
       </Grid>
 
-      <!-- Hinweiszeile unten: Feiertag-Notizen, sitzt direkt unter den (das Fenster füllenden) Zeilen -->
-      <Grid DockPanel.Dock="Bottom" ColumnDefinitions="160,*"
-            Background="{DynamicResource SystemControlBackgroundChromeLowBrush}">
-        <Border Grid.Column="0" BorderThickness="0,1,1,1" Padding="8,4"
-                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-          <TextBlock Text="{loc:Tr Cal_Hints}" FontSize="11" FontWeight="SemiBold" Opacity="0.7"
-                     VerticalAlignment="Center" />
-        </Border>
-        <ItemsControl Grid.Column="1" ItemsSource="{Binding Days}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate><UniformGrid Columns="7" /></ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Border BorderThickness="1,1,0,1" Padding="3,3" MinHeight="48"
-                      BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-                <Grid>
-                  <!-- Hinweistext als gelber Sticky-Note-Block, deutlich abgehoben -->
-                  <Border IsVisible="{Binding HasNote}"
-                          Background="{DynamicResource HolidayBackgroundBrush}" BorderBrush="{DynamicResource HolidayBorderBrush}" BorderThickness="1"
-                          CornerRadius="4" Padding="8,6">
-                    <TextBlock Text="{Binding DayNote}"
-                               TextAlignment="Center" TextWrapping="Wrap"
-                               FontSize="15" FontWeight="Bold" Foreground="{DynamicResource HolidayForegroundBrush}"
-                               VerticalAlignment="Center" />
-                  </Border>
-                  <Button Content="✎" Command="{Binding EditNoteCommand}" IsVisible="{Binding CanEditNote}"
-                          FontSize="11" Padding="4,0" CornerRadius="3"
-                          Background="Transparent" Opacity="0.5"
-                          HorizontalAlignment="Right" VerticalAlignment="Top"
-                          ToolTip.Tip="{loc:Tr DayNote_Title}" />
-                </Grid>
-              </Border>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </Grid>
-
       <!-- Personenzeilen.
            Vorher lagen sie in einem UniformGrid, das allen Zeilen dieselbe Höhe gab und den
            Überhang per ClipToBounds abschnitt: wer an einem Tag zwei Termine hatte, sah den
            zweiten nur zur Hälfte — ohne jeden Hinweis, dass da noch etwas ist. Jetzt wächst
            jede Zeile mit ihrem Inhalt, und der Block scrollt, wenn er nicht mehr ins Fenster
-           passt. Spaltenkopf und Hinweiszeile bleiben stehen, weil sie außerhalb des
-           ScrollViewers angedockt sind. -->
+           passt. Der Spaltenkopf bleibt stehen, weil er außerhalb des ScrollViewers angedockt
+           ist; die Hinweiszeile folgt direkt auf die letzte Person. -->
       <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Orientation="Vertical">
       <ItemsControl ItemsSource="{Binding Rows}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate><StackPanel Orientation="Vertical" /></ItemsPanelTemplate>
@@ -306,7 +269,7 @@
                               Tapped="OnCellTapped" Background="Transparent" ClipToBounds="True"
                               BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
                         <Grid>
-                          <Border IsVisible="{Binding IsToday}" Background="{DynamicResource InfoSubtleBrush}" />
+                          <Border IsVisible="{Binding IsToday}" Background="{DynamicResource TodayFillBrush}" />
                           <TextBlock Text="+" IsVisible="{Binding ShowAddHint}" Opacity="0.22" FontSize="16"
                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
 
@@ -385,6 +348,49 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
       </ItemsControl>
+
+        <!-- Hinweiszeile: direkt unter der letzten Person, nicht am unteren Fensterrand. Vorher
+             war sie unten angedockt — bei wenigen Personen lag zwischen letzter Zeile und
+             Hinweisen eine große leere Fläche. Sie scrollt deshalb mit den Zeilen mit. -->
+        <Grid ColumnDefinitions="160,*"
+              Background="{DynamicResource SystemControlBackgroundChromeLowBrush}">
+          <Border Grid.Column="0" BorderThickness="0,1,1,1" Padding="8,4"
+                  BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+            <TextBlock Text="{loc:Tr Cal_Hints}" FontSize="11" FontWeight="SemiBold" Opacity="0.7"
+                       VerticalAlignment="Center" />
+          </Border>
+          <ItemsControl Grid.Column="1" ItemsSource="{Binding Days}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><UniformGrid Columns="7" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border BorderThickness="1,1,0,1" Padding="3,3" MinHeight="48"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                  <Grid>
+                    <!-- Hinweistext als gelber Sticky-Note-Block, deutlich abgehoben -->
+                    <Border IsVisible="{Binding HasNote}"
+                            Background="{DynamicResource HolidayBackgroundBrush}" BorderBrush="{DynamicResource HolidayBorderBrush}" BorderThickness="1"
+                            CornerRadius="4" Padding="8,6">
+                      <TextBlock Text="{Binding DayNote}"
+                                 TextAlignment="Center" TextWrapping="Wrap"
+                                 FontSize="15" FontWeight="Bold" Foreground="{DynamicResource HolidayForegroundBrush}"
+                                 VerticalAlignment="Center" />
+                    </Border>
+                    <!-- ghost: kein Kasten. Schrift gedämpft statt Theme-Weiß — auf dem gelben
+                         Hinweis-Zettel war das Stift-Symbol im Dunkelmodus sonst unsichtbar. -->
+                    <Button Content="✎" Command="{Binding EditNoteCommand}" IsVisible="{Binding CanEditNote}"
+                            Classes="ghost" FontSize="11" Padding="4,0" CornerRadius="3"
+                            Foreground="{DynamicResource MutedTextBrush}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top"
+                            ToolTip.Tip="{loc:Tr DayNote_Title}" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Grid>
+      </StackPanel>
       </ScrollViewer>
 
     </DockPanel>

@@ -75,7 +75,7 @@
                               HorizontalAlignment="Left" MaxWidth="480">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                      <Border Background="{DynamicResource SurfaceOnDarkBrush}" BorderBrush="{DynamicResource InfoCardBorderBrush}" BorderThickness="1"
+                      <Border Background="{DynamicResource SuggestionCardBrush}" BorderBrush="{DynamicResource InfoCardBorderBrush}" BorderThickness="1"
                               CornerRadius="8" Padding="10,8" Margin="0,2,0,0">
                         <StackPanel Spacing="6">
                           <Grid ColumnDefinitions="*,Auto">
@@ -100,7 +100,7 @@
                             <Button Grid.Column="1" Content="{loc:Tr AiPlanner_ApplySuggestion}"
                                     Command="{Binding ApplyCommand}" IsEnabled="{Binding CanApply}"
                                     Padding="12,6" CornerRadius="6" VerticalAlignment="Center"
-                                    Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+                                    Classes="accent" />
                           </Grid>
                           <!-- Konflikt-Warnungen — Klick auf eine Zeile springt im Kalender
                                zum betroffenen Tag (und schließt den Dialog). -->
@@ -145,7 +145,7 @@
                VerticalContentAlignment="Top" FontSize="13" />
       <Button Grid.Column="1" Content="{loc:Tr AiPlanner_Send}" Command="{Binding SendCommand}"
               Padding="14,7" CornerRadius="6" Margin="8,0,0,0"
-              Background="{DynamicResource SystemAccentColor}" Foreground="White"
+              Classes="accent"
               VerticalAlignment="Bottom"
               IsEnabled="{Binding !IsBusy}" />
       <Button Grid.Column="2" Content="{loc:Tr Common_Close}" Command="{Binding CloseCommand}"

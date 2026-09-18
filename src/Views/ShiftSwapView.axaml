@@ -92,7 +92,7 @@
                 Padding="16,8" CornerRadius="6" />
         <Button Content="{loc:Tr Swap_Send}" Command="{Binding SendCommand}"
                 Padding="16,8" CornerRadius="6"
-                Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+                Classes="accent" />
       </StackPanel>
 
       <!-- Respond -->
@@ -101,9 +101,9 @@
         <Button Content="{loc:Tr Common_Cancel}" Command="{Binding CancelCommand}"
                 Padding="16,8" CornerRadius="6" />
         <Button Content="{loc:Tr Swap_Reject}" Command="{Binding RejectCommand}"
-                Padding="16,8" CornerRadius="6" Background="{DynamicResource DangerBrush}" Foreground="White" />
+                Padding="16,8" CornerRadius="6" Classes="danger-solid" />
         <Button Content="{loc:Tr Swap_Accept}" Command="{Binding AcceptCommand}"
-                Padding="16,8" CornerRadius="6" Background="{DynamicResource SuccessBrush}" Foreground="White" />
+                Padding="16,8" CornerRadius="6" Classes="success-solid" />
       </StackPanel>
 
       <!-- Withdraw -->
@@ -112,7 +112,7 @@
         <Button Content="{loc:Tr Common_Cancel}" Command="{Binding CancelCommand}"
                 Padding="16,8" CornerRadius="6" />
         <Button Content="{loc:Tr Swap_Withdraw}" Command="{Binding WithdrawCommand}"
-                Padding="16,8" CornerRadius="6" Background="{DynamicResource DangerBrush}" Foreground="White" />
+                Padding="16,8" CornerRadius="6" Classes="danger-solid" />
       </StackPanel>
     </Grid>
 

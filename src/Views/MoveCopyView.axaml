@@ -23,7 +23,7 @@
       <Button Content="{loc:Tr MoveCopy_Move}"
               Command="{Binding MoveCommand}"
               Padding="16,8" CornerRadius="6"
-              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+              Classes="accent" />
     </StackPanel>
 
   </Grid>

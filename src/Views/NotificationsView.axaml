@@ -47,12 +47,12 @@
                             Command="{Binding $parent[ItemsControl].DataContext.ApproveVacationCommand}"
                             CommandParameter="{Binding}"
                             Padding="10,5" CornerRadius="6"
-                            Background="{DynamicResource SuccessBrush}" Foreground="White" />
+                            Classes="success-solid" />
                     <Button Content="{loc:Tr Notif_RejectButton}"
                             Command="{Binding $parent[ItemsControl].DataContext.RejectVacationCommand}"
                             CommandParameter="{Binding}"
                             Padding="10,5" CornerRadius="6"
-                            Background="{DynamicResource DangerBrush}" Foreground="White" />
+                            Classes="danger-solid" />
                   </StackPanel>
                 </StackPanel>
               </Border>

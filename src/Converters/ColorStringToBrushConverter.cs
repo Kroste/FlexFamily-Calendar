@@ -12,7 +12,7 @@ public class ColorStringToBrushConverter : IValueConverter
     {
         if (value is string colorStr && !string.IsNullOrEmpty(colorStr))
             return new SolidColorBrush(Color.Parse(colorStr));
-        return new SolidColorBrush(Color.Parse("#2E86C1"));
+        return new SolidColorBrush(Color.Parse(Models.EntryColors.Fallback));
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

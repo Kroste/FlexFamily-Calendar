@@ -23,40 +23,65 @@
     wäre der Hell-Modus unbrauchbar. Die Statusfarben weiter unten bleiben theme-neutral:
     Rot heißt in beiden Varianten dasselbe.
   -->
+  <!--
+    Warme Palette (v0.23): Terrakotta als Akzent, Creme statt Reinweiß, Braun- statt
+    Blaugrau für Ränder und Nebentexte. Vorher Indigo auf Weiß — kühl, und das Blau des
+    Akzents biss sich mit den Kachelfarben. Die Fluent-Grundfarben (Haken, Auswahl,
+    Kalender-Kopf) ziehen über die Palettes in App.axaml mit; beides zusammen ändern.
+  -->
   <ResourceDictionary.ThemeDictionaries>
 
     <ResourceDictionary x:Key="Light">
-      <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
-      <SolidColorBrush x:Key="CardBorderBrush" Color="#E2E5EA" />
-      <SolidColorBrush x:Key="CardBorderStrongBrush" Color="#C3C9D2" />
-      <SolidColorBrush x:Key="FieldBrush" Color="#FFFFFF" />
-      <SolidColorBrush x:Key="MutedTextBrush" Color="#6B7280" />
-      <SolidColorBrush x:Key="SecondaryTextBrush" Color="#4B5563" />
-      <SolidColorBrush x:Key="HeadingBrush" Color="#1A237E" />
-      <SolidColorBrush x:Key="AccentBrush" Color="#1A237E" />
-      <SolidColorBrush x:Key="AccentHoverBrush" Color="#283593" />
-      <SolidColorBrush x:Key="AccentSoftBrush" Color="#1A1A237E" />
+      <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F7F1E8" />
+      <SolidColorBrush x:Key="CardBrush" Color="#FFFDF9" />
+      <SolidColorBrush x:Key="CardBorderBrush" Color="#E8DDD0" />
+      <SolidColorBrush x:Key="CardBorderStrongBrush" Color="#D2C3B1" />
+      <SolidColorBrush x:Key="FieldBrush" Color="#FFFDF9" />
+      <SolidColorBrush x:Key="MutedTextBrush" Color="#7D6B5D" />
+      <SolidColorBrush x:Key="SecondaryTextBrush" Color="#5A4A3F" />
+      <SolidColorBrush x:Key="HeadingBrush" Color="#8A3A1E" />
+      <SolidColorBrush x:Key="AccentBrush" Color="#C2572B" />
+      <SolidColorBrush x:Key="AccentHoverBrush" Color="#A8471F" />
+      <SolidColorBrush x:Key="AccentPressedBrush" Color="#8F3C1A" />
+      <SolidColorBrush x:Key="AccentSoftBrush" Color="#1AC2572B" />
       <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF" />
-      <SolidColorBrush x:Key="GhostHoverBrush" Color="#14000000" />
-      <SolidColorBrush x:Key="DangerHoverBrush" Color="#1AC0392B" />
-      <SolidColorBrush x:Key="DividerBrush" Color="#E2E5EA" />
+      <SolidColorBrush x:Key="GhostHoverBrush" Color="#143A2410" />
+      <SolidColorBrush x:Key="DangerHoverBrush" Color="#1AB23A2E" />
+      <SolidColorBrush x:Key="DividerBrush" Color="#E8DDD0" />
+      <!-- Heutiger Tag im Plan: zarte Akzent-Tönung statt des früheren Blaus. -->
+      <SolidColorBrush x:Key="TodayFillBrush" Color="#16C2572B" />
+      <!-- Abgesetzte Flächen in Dialogen (Einstellungen, KI-Planer, Pausen). -->
+      <SolidColorBrush x:Key="SurfaceBrush" Color="#F3EBE0" />
+      <SolidColorBrush x:Key="SurfaceAltBrush" Color="#F8F2EA" />
+      <!-- KI-Planer: Antwort-Blase und Vorschlagskarten. -->
+      <SolidColorBrush x:Key="InfoCardBackgroundBrush" Color="#FBEEDD" />
+      <SolidColorBrush x:Key="InfoCardBorderBrush" Color="#EBCDA8" />
+      <SolidColorBrush x:Key="SuggestionCardBrush" Color="#FFFDF9" />
     </ResourceDictionary>
 
     <ResourceDictionary x:Key="Dark">
-      <SolidColorBrush x:Key="CardBrush" Color="#22262C" />
-      <SolidColorBrush x:Key="CardBorderBrush" Color="#333941" />
-      <SolidColorBrush x:Key="CardBorderStrongBrush" Color="#4A525C" />
-      <SolidColorBrush x:Key="FieldBrush" Color="#1A1D21" />
-      <SolidColorBrush x:Key="MutedTextBrush" Color="#8B929C" />
-      <SolidColorBrush x:Key="SecondaryTextBrush" Color="#B4BAC3" />
-      <SolidColorBrush x:Key="HeadingBrush" Color="#8C9EFF" />
-      <SolidColorBrush x:Key="AccentBrush" Color="#3949AB" />
-      <SolidColorBrush x:Key="AccentHoverBrush" Color="#5C6BC0" />
-      <SolidColorBrush x:Key="AccentSoftBrush" Color="#333949AB" />
+      <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#171310" />
+      <SolidColorBrush x:Key="CardBrush" Color="#241E1A" />
+      <SolidColorBrush x:Key="CardBorderBrush" Color="#3A302A" />
+      <SolidColorBrush x:Key="CardBorderStrongBrush" Color="#54463C" />
+      <SolidColorBrush x:Key="FieldBrush" Color="#1C1714" />
+      <SolidColorBrush x:Key="MutedTextBrush" Color="#A0907F" />
+      <SolidColorBrush x:Key="SecondaryTextBrush" Color="#CDBBAA" />
+      <SolidColorBrush x:Key="HeadingBrush" Color="#F0A36B" />
+      <SolidColorBrush x:Key="AccentBrush" Color="#D2693C" />
+      <SolidColorBrush x:Key="AccentHoverBrush" Color="#E07B4F" />
+      <SolidColorBrush x:Key="AccentPressedBrush" Color="#B8562D" />
+      <SolidColorBrush x:Key="AccentSoftBrush" Color="#33D2693C" />
       <SolidColorBrush x:Key="AccentForegroundBrush" Color="#FFFFFF" />
       <SolidColorBrush x:Key="GhostHoverBrush" Color="#1AFFFFFF" />
-      <SolidColorBrush x:Key="DangerHoverBrush" Color="#33C0392B" />
-      <SolidColorBrush x:Key="DividerBrush" Color="#333941" />
+      <SolidColorBrush x:Key="DangerHoverBrush" Color="#33B23A2E" />
+      <SolidColorBrush x:Key="DividerBrush" Color="#3A302A" />
+      <SolidColorBrush x:Key="TodayFillBrush" Color="#22D2693C" />
+      <SolidColorBrush x:Key="SurfaceBrush" Color="#2A221D" />
+      <SolidColorBrush x:Key="SurfaceAltBrush" Color="#211B17" />
+      <SolidColorBrush x:Key="InfoCardBackgroundBrush" Color="#3A2A1C" />
+      <SolidColorBrush x:Key="InfoCardBorderBrush" Color="#5A3F28" />
+      <SolidColorBrush x:Key="SuggestionCardBrush" Color="#241E1A" />
     </ResourceDictionary>
 
   </ResourceDictionary.ThemeDictionaries>
@@ -64,27 +89,32 @@
   <!-- ── Statusfarben ──────────────────────────────────────────────────────── -->
 
   <!-- Danger/Abwesenheit: Krank, Löschen, Ablehnen. -->
-  <SolidColorBrush x:Key="DangerBrush" Color="#C0392B" />
+  <SolidColorBrush x:Key="DangerBrush" Color="#B23A2E" />
   <!-- Flächige Danger-Hinterlegung (Zellen, Badges) — bewusst durchscheinend, damit die
        Personenfarbe darunter erkennbar bleibt. -->
-  <SolidColorBrush x:Key="DangerFillBrush" Color="#33C0392B" />
+  <SolidColorBrush x:Key="DangerFillBrush" Color="#33B23A2E" />
   <!-- Sehr dezente Danger-Tönung für ganze Zeilen. -->
-  <SolidColorBrush x:Key="DangerSubtleBrush" Color="#1AC0392B" />
-  <!-- Kräftigeres Rot für den Schließen-Hover der Titelleiste (Windows-Konvention). -->
-  <SolidColorBrush x:Key="DangerStrongBrush" Color="#E74C3C" />
-  <Color x:Key="TitleBarCloseHoverColor">#E81123</Color>
+  <SolidColorBrush x:Key="DangerSubtleBrush" Color="#1AB23A2E" />
+  <SolidColorBrush x:Key="DangerStrongBrush" Color="#D9483B" />
+  <!-- Schließen-Hover der Titelleiste (Windows-Konvention: kräftiges Rot, weißes Kreuz). -->
+  <SolidColorBrush x:Key="TitleBarCloseHoverBrush" Color="#D93A2B" />
+  <SolidColorBrush x:Key="TitleBarClosePressedBrush" Color="#B02E22" />
 
   <!-- Erfolg/Zusage: Genehmigen, bestätigter Tausch. -->
-  <SolidColorBrush x:Key="SuccessBrush" Color="#27AE60" />
+  <SolidColorBrush x:Key="SuccessBrush" Color="#5E8E3E" />
+  <SolidColorBrush x:Key="SuccessHoverBrush" Color="#4F7A33" />
 
   <!-- Warnung/Wartend: Urlaubswunsch ohne Entscheidung, Konflikthinweise. -->
-  <SolidColorBrush x:Key="WarningBrush" Color="#E67E22" />
+  <SolidColorBrush x:Key="WarningBrush" Color="#D98A1F" />
 
-  <!-- Information/Hinweis. -->
-  <SolidColorBrush x:Key="InfoBrush" Color="#3498DB" />
-  <SolidColorBrush x:Key="InfoStrongBrush" Color="#2E86C1" />
-  <SolidColorBrush x:Key="InfoFillBrush" Color="#1A2E86C1" />
-  <SolidColorBrush x:Key="InfoSubtleBrush" Color="#142E86C1" />
+  <!-- Danger-Hover für flächige Lösch-Buttons. -->
+  <SolidColorBrush x:Key="DangerPressedBrush" Color="#8F2E24" />
+
+  <!-- Information/Hinweis: gedecktes Petrol statt Blau — hebt sich von Warnung (Orange) und
+       Akzent (Terrakotta) ab, ohne kühl zu wirken. -->
+  <SolidColorBrush x:Key="InfoBrush" Color="#2E8A80" />
+  <SolidColorBrush x:Key="InfoStrongBrush" Color="#23736A" />
+  <SolidColorBrush x:Key="InfoFillBrush" Color="#1A2E8A80" />
 
   <!-- ── Hinweiskarten (helle Flächen mit dunkler Schrift) ─────────────────── -->
 
@@ -95,15 +125,8 @@
   <SolidColorBrush x:Key="HolidayBackgroundBrush" Color="#FFF1A8" />
   <SolidColorBrush x:Key="HolidayBorderBrush" Color="#D4A300" />
   <SolidColorBrush x:Key="HolidayForegroundBrush" Color="#4A3A00" />
-  <!-- Blaue Info-Karte (KI-Planer). -->
-  <SolidColorBrush x:Key="InfoCardBackgroundBrush" Color="#E8F0FE" />
-  <SolidColorBrush x:Key="InfoCardBorderBrush" Color="#B8D2F8" />
-
   <!-- ── Neutrale Flächen ──────────────────────────────────────────────────── -->
 
-  <SolidColorBrush x:Key="SurfaceBrush" Color="#F8F8F8" />
-  <SolidColorBrush x:Key="SurfaceAltBrush" Color="#FAFAFA" />
-  <SolidColorBrush x:Key="SurfaceOnDarkBrush" Color="#FFFFFF" />
   <!-- Auswahl-Hinterlegung im Eintrags-Editor. -->
   <SolidColorBrush x:Key="SelectionFillBrush" Color="#225B4B8A" />
   <!-- Neutrale Abtönung für deaktivierte Bereiche. -->
@@ -124,8 +147,12 @@
 
   <!-- ── Marke ─────────────────────────────────────────────────────────────── -->
 
-  <!-- Feste Markenfarbe für den Header (nicht benutzerabhängig). -->
-  <SolidColorBrush x:Key="AppHeaderBrush" Color="#1A237E" />
+  <!-- Feste Markenfarbe für Kopf- und Titelleiste (nicht benutzerabhängig): ein Verlauf von
+       dunkler Terrakotta zu Kupfer. Weiße Schrift bleibt auf beiden Enden lesbar. -->
+  <LinearGradientBrush x:Key="AppHeaderBrush" StartPoint="0%,0%" EndPoint="100%,0%">
+    <GradientStop Offset="0" Color="#7A2E1C" />
+    <GradientStop Offset="1" Color="#B4532A" />
+  </LinearGradientBrush>
   <!-- Buy me a coffee: Farben gehören der Marke, nicht dem Theme. -->
   <SolidColorBrush x:Key="CoffeeBrush" Color="#FFDD00" />
   <SolidColorBrush x:Key="CoffeeForegroundBrush" Color="#0D0C22" />

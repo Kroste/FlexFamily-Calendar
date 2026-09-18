@@ -8,6 +8,15 @@ Geschrieben für die Menschen, die die App benutzen: was sich für sie ändert, 
 Update-Dialog zeigt den Text ohne Formatierung — also schlichte Aufzählungen, kein Fettdruck,
 keine Links.
 
+## v0.23.0 — 18.09.2026
+
+- Neues Farbkleid in warmen Tönen: Kopf- und Titelleiste in Terrakotta, Creme statt Reinweiß, Knöpfe, Haken und Auswahl passend dazu. Auch der Dunkelmodus ist warm statt blaugrau.
+- Die Standardfarben der Kacheln sind wärmer: Ocker für Einträge, Olivgrün für Urlaub, Ziegelrot für Krank. Selbst gewählte Farben bleiben, wie sie sind.
+- Das Schließen-Kreuz oben rechts bleibt beim Darüberfahren weiß auf Rot, statt schwarz zu werden.
+- Speichern-, Löschen- und Genehmigen-Knöpfe behalten beim Darüberfahren ihre Farbe, statt grau zu werden.
+- Die Hinweis-Zeile steht jetzt direkt unter der letzten Person, nicht mehr ganz unten am Fensterrand.
+- Im KI-Planer ist die Schrift im Dunkelmodus wieder lesbar.
+
 ## v0.22.0 — 18.09.2026
 
 - Einträge und Abwesenheiten haben jetzt Start und Ende mit Datum und Uhrzeit, wie im Google-Kalender. Verschiebst du den Start, wandert das Ende mit.

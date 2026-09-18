@@ -171,7 +171,7 @@
               Command="{Binding DeleteCommand}"
               IsVisible="{Binding IsEditMode}"
               Padding="16,8" CornerRadius="6"
-              Background="{DynamicResource DangerBrush}" Foreground="White" />
+              Classes="danger-solid" />
       <Button Grid.Column="2"
               Content="{loc:Tr Common_Cancel}"
               Command="{Binding CancelCommand}"
@@ -180,7 +180,7 @@
               Content="{loc:Tr Common_Save}"
               Command="{Binding SaveCommand}"
               Padding="16,8" CornerRadius="6"
-              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+              Classes="accent" />
     </Grid>
 
   </Grid>

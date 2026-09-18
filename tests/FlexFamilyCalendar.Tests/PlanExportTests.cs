@@ -22,7 +22,8 @@ public class PlanExportTests
 
         Assert.Equal("08:00–16:00", c.Time);
         Assert.Equal("Work", c.Label);
-        Assert.Equal("#2E86C1", c.ColorHex);
+        // Farbe nach Art, nicht nach Person (OwnerColor oben ist bewusst eine andere).
+        Assert.Equal(EntryColors.ForType(EntryType.Work), c.ColorHex);
     }
 
     [Fact]

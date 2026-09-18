@@ -32,9 +32,14 @@ public class HeadlessTestApp : Application
         Resources.MergedDictionaries.Add(new ResourceInclude(self)
         { Source = new Uri("avares://FlexFamilyCalendar/Styles/Palette.axaml") });
 
-        Styles.Add(new FluentTheme());
+        // Wie App.axaml: FluentTheme mit der warmen Palette, dazu die eigenen Styles und das
+        // Fenster-Template (Titelleiste) — sonst prüft ein Test ein anderes Aussehen als die App.
+        Styles.Add(new StyleInclude(self)
+        { Source = new Uri("avares://FlexFamilyCalendar/Styles/FluentPalette.axaml") });
         Styles.Add(new StyleInclude(self)
         { Source = new Uri("avares://FlexFamilyCalendar/Styles/AppStyles.axaml") });
+        Styles.Add(new StyleInclude(self)
+        { Source = new Uri("avares://FlexFamilyCalendar/Views/ChromeWindow.axaml") });
     }
 }
 

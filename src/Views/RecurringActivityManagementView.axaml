@@ -19,7 +19,7 @@
               Command="{Binding NewCommand}" Margin="0,8,0,0"
               HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
               Padding="12,7" CornerRadius="6"
-              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+              Classes="accent" />
       <Border BorderThickness="1" CornerRadius="6"
               BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
         <ListBox ItemsSource="{Binding Activities}" SelectedItem="{Binding SelectedActivity}"
@@ -126,10 +126,10 @@
         <StackPanel Orientation="Horizontal" Spacing="12">
           <Button Content="{loc:Tr Common_Save}" Command="{Binding SaveCommand}"
                   Padding="16,8" CornerRadius="6"
-                  Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+                  Classes="accent" />
           <Button Content="{loc:Tr Common_Delete}" Command="{Binding DeleteCommand}"
                   IsEnabled="{Binding SelectedActivity, Converter={x:Static ObjectConverters.IsNotNull}}"
-                  Padding="16,8" CornerRadius="6" Background="{DynamicResource DangerBrush}" Foreground="White" />
+                  Padding="16,8" CornerRadius="6" Classes="danger-solid" />
         </StackPanel>
 
       </StackPanel>

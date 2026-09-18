@@ -19,7 +19,7 @@
           <Button Grid.Column="1" Content="{loc:Tr Replan_MarkHealthy}"
                   Command="{Binding MarkHealthyCommand}"
                   Padding="12,6" CornerRadius="6"
-                  Background="{DynamicResource SuccessBrush}" Foreground="White" VerticalAlignment="Center" />
+                  Classes="success-solid" VerticalAlignment="Center" />
         </Grid>
       </Border>
     </StackPanel>
@@ -71,7 +71,7 @@
                             Command="{Binding $parent[ItemsControl].DataContext.TakeOverCommand}"
                             CommandParameter="{Binding}"
                             Padding="12,6" CornerRadius="6"
-                            Background="{DynamicResource SystemAccentColor}" Foreground="White"
+                            Classes="accent"
                             VerticalAlignment="Center" />
                   </Grid>
                 </Border>

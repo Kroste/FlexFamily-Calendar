@@ -42,7 +42,7 @@
               IsEnabled="{Binding !IsSaving}"
               HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
               Padding="0,14" CornerRadius="6"
-              Background="{DynamicResource SystemAccentColor}" Foreground="White"
+              Classes="accent"
               FontSize="14" FontWeight="SemiBold" />
 
       <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"

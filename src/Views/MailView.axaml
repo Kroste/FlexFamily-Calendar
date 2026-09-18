@@ -35,7 +35,7 @@
               Padding="16,8" CornerRadius="6" />
       <Button Content="{loc:Tr Mail_Send}" Command="{Binding SendCommand}"
               Padding="16,8" CornerRadius="6"
-              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+              Classes="accent" />
     </StackPanel>
 
   </Grid>

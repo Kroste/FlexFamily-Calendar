@@ -172,12 +172,19 @@ Termin, Schule).
 Woher die Farbe kommt, in dieser Reihenfolge:
 
 1. die **Farbe, die du beim Anlegen des Eintrags selbst gewählt** hast
-2. sonst die eingebaute Standardfarbe (Einträge, Urlaub, Krank, Abwesend haben
-   jeweils ihre eigene)
+2. sonst die eingebaute Standardfarbe: **Ocker** für Einträge, **Olivgrün** für
+   Urlaub, **Ziegelrot** für Krank, **Taupe** für Abwesend
 
 Die **Uhrzeit steht fett zuoberst** in jeder Kachel. Die Schrift darauf wird je
 nach Farbe automatisch schwarz oder weiß gesetzt, damit sie auf jedem Farbton
 lesbar bleibt — auch im PDF.
+
+Unter der letzten Person steht die Zeile **Hinweise** mit den Tages-Hinweisen
+(gelbe Zettel). Sie folgt direkt auf die Personen, auch wenn nur wenige im Plan
+stehen; bei vielen Personen scrollst du mit den Zeilen zu ihr hinunter.
+
+Die App kommt in warmen Farben — Terrakotta-Kopfleiste, Creme statt Reinweiß —,
+im hellen wie im dunklen Modus.
 
 Über der Tabelle findest du die Wochen-Steuerung:
 

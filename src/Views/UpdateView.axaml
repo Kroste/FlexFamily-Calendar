@@ -33,7 +33,7 @@
       <Button Grid.Column="6" Content="{loc:Tr Update_Install}"
               Command="{Binding InstallCommand}" IsVisible="{Binding HasAsset}"
               Padding="14,8" CornerRadius="6"
-              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+              Classes="accent" />
     </Grid>
 
   </Grid>

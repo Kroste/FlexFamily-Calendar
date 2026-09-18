@@ -52,6 +52,43 @@
     <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
   </Style>
 
+  <Style Selector="Button.accent:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentPressedBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+  </Style>
+
+  <!--
+    Flächige Status-Buttons (Löschen, Ablehnen, Genehmigen). Wie bei .accent sitzt die Farbe
+    auch auf dem ContentPresenter: ein Background direkt am Button überschreibt Fluent beim
+    Hover mit Grau und schwarzer Schrift — vorher bei jedem dieser Knöpfe so.
+  -->
+  <Style Selector="Button.danger-solid, Button.success-solid">
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="Button.danger-solid /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+    <Setter Property="Foreground" Value="White" />
+  </Style>
+  <Style Selector="Button.danger-solid:pointerover /template/ ContentPresenter,
+                   Button.danger-solid:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource DangerPressedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DangerPressedBrush}" />
+    <Setter Property="Foreground" Value="White" />
+  </Style>
+  <Style Selector="Button.success-solid /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SuccessBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
+    <Setter Property="Foreground" Value="White" />
+  </Style>
+  <Style Selector="Button.success-solid:pointerover /template/ ContentPresenter,
+                   Button.success-solid:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SuccessHoverBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource SuccessHoverBrush}" />
+    <Setter Property="Foreground" Value="White" />
+  </Style>
+
   <!-- Sekundär: rein textlich, erst beim Hover eine Fläche. -->
   <Style Selector="Button.ghost">
     <Setter Property="Background" Value="Transparent" />

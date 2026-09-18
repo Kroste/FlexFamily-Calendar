@@ -32,7 +32,7 @@
               Padding="16,8" CornerRadius="6" />
       <Button Content="{loc:Tr Common_Save}" Command="{Binding SaveCommand}"
               Padding="16,8" CornerRadius="6"
-              Background="{DynamicResource SystemAccentColor}" Foreground="White" />
+              Classes="accent" />
     </StackPanel>
 
   </Grid>
