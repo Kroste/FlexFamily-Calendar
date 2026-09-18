@@ -216,7 +216,6 @@ public partial class CalendarViewModel
             Today: DateOnly.FromDateTime(DateTime.Today),
             WeekStart: WeekStart,
             Users: _allUsers,
-            ActivityTypes: _activityTypes,
             RecurringActivities: _recurringActivities,
             Week: weekTuples,
             Notes: Array.Empty<Models.PlannerNote>(),

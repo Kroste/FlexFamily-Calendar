@@ -76,18 +76,6 @@ public partial class CalendarViewModel
             e.DisplayTitle = EntryPrivacy.ShowReason(e.Type, canSeeReason) ? e.Title : "";
 
             e.SwapMark = ResolveSwapMark(day.DateString, e.Id);
-
-            // Aktivitäts-Kategorie auflösen (Name + Farbe), nur für sichtbare Aktivitäten
-            e.ActivityName = "";
-            if (e.DisplayType == EntryType.Activity && !string.IsNullOrEmpty(e.ActivityTypeId))
-            {
-                var type = _activityTypes.FirstOrDefault(t => t.Id == e.ActivityTypeId);
-                if (type != null)
-                {
-                    e.ActivityName = type.Name;
-                    e.ActivityColor = string.IsNullOrEmpty(type.Color) ? "#7F8C8D" : type.Color;
-                }
-            }
         }
     }
 
@@ -116,22 +104,12 @@ public partial class CalendarViewModel
         return projected;
     }
 
-    /// <summary>Laufzeit-Anzeige einer projizierten Aktivität (Personenfarbe, Deckkraft, Kategorie). Aktivitäten sind öffentlich.</summary>
+    /// <summary>Laufzeit-Anzeige einer projizierten Aktivität (Personenfarbe, Anzeigetyp, Titel). Aktivitäten sind öffentlich.</summary>
     private void ApplyRecurringDisplay(CalendarEntry e)
     {
         e.OwnerColor = _userColors.GetValueOrDefault(e.UserId, "#7F8C8D");
         e.DisplayType = EntryType.Activity;
         e.DisplayTitle = e.Title;
-
-        if (!string.IsNullOrEmpty(e.ActivityTypeId))
-        {
-            var type = _activityTypes.FirstOrDefault(t => t.Id == e.ActivityTypeId);
-            if (type != null)
-            {
-                e.ActivityName = type.Name;
-                e.ActivityColor = string.IsNullOrEmpty(type.Color) ? "#7F8C8D" : type.Color;
-            }
-        }
     }
 
     /// <summary>Markiert eine Schicht, wenn eine offene Tausch-Anfrage sie betrifft (eingehend hat Vorrang).</summary>
@@ -159,17 +137,15 @@ public partial class CalendarViewModel
         // Anfragen hintereinander, und bei der Latenz zum Server hing der Wochenwechsel
         // spürbar. Die Aufrufe hängen nicht voneinander ab, also laufen sie zusammen.
         var swapsTask = _storage.LoadSwapRequestsAsync();
-        var typesTask = _storage.LoadActivityTypesAsync();
         var recurringTask = _storage.LoadRecurringActivitiesAsync();
         // Die sieben Tage als EIN Bereich: im Server-Modus sind das zwei Anfragen statt
         // vierzehn. Lokal fällt die Vorgabe der Schnittstelle auf tageweises Laden zurück.
         var daysTask = _storage.LoadDaysAsync(WeekStart, WeekStart.AddDays(6));
 
-        await Task.WhenAll(swapsTask, typesTask, recurringTask, daysTask);
+        await Task.WhenAll(swapsTask, recurringTask, daysTask);
 
         var weekDays = await daysTask;
         _swapRequests = await swapsTask;
-        _activityTypes = await typesTask;
         _recurringActivities = await recurringTask;
         _weekHolidays = HolidayCalculator.ForRange(WeekStart, WeekStart.AddDays(6), _holidayState);
 

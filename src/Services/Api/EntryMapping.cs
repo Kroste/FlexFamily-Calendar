@@ -47,7 +47,6 @@ public static class EntryMapping
             // Fall ab, dass eine ältere Server-Version das Feld noch nicht mitliefert.
             Status = string.IsNullOrWhiteSpace(dto.Status) ? EntryStatuses.Approved : dto.Status,
             Title = dto.CategoryLabel ?? "",
-            ActivityTypeId = NullIfEmpty(dto.ActivityTypeId),   // Kategorie-Referenz → Desktop löst Name/Farbe auf
             // Bei maskierten Einträgen liefert der Server hier bewusst nichts (EntryDto.Mask) —
             // eine Sonderfarbe würde die Maskierung sonst über die Optik unterlaufen.
             Color = dto.Color ?? "",
@@ -82,7 +81,7 @@ public static class EntryMapping
                 Date: start, EndDate: end,
                 StartTime: null, EndTime: null, EndsNextDay: false,
                 CategoryLabel: NullIfEmpty(e.Title), Note: NullIfEmpty(e.Notes),
-                ActivityTypeId: NullIfEmpty(e.ActivityTypeId), Color: NullIfEmpty(e.Color));
+                Color: NullIfEmpty(e.Color));
         }
 
         return new CreateEntryBody(
@@ -93,7 +92,7 @@ public static class EntryMapping
             EndTime: TimeOnly.FromTimeSpan(e.EndTime),
             EndsNextDay: e.EndTime <= e.StartTime,   // über Mitternacht
             CategoryLabel: NullIfEmpty(e.Title), Note: NullIfEmpty(e.Notes),
-            ActivityTypeId: NullIfEmpty(e.ActivityTypeId), Color: NullIfEmpty(e.Color));
+            Color: NullIfEmpty(e.Color));
     }
 
     /// <summary>Desktop-Eintrag (an einem konkreten Tag) → Server-Update-Body. Type wird
@@ -103,7 +102,7 @@ public static class EntryMapping
     {
         var c = ToCreateBody(e, day);
         return new UpdateEntryBody(c.Date, c.EndDate, c.StartTime, c.EndTime, c.EndsNextDay,
-            c.CategoryLabel, c.Note, c.Type, c.ActivityTypeId, c.Color);
+            c.CategoryLabel, c.Note, c.Type, c.Color);
     }
 
     private static string? NullIfEmpty(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();

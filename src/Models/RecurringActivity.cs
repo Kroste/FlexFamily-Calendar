@@ -21,7 +21,7 @@ public class RecurringActivity
 
     /// <summary>
     /// Nur für die einmalige Übernahme alter lokaler Dateien: dort stand die Kategorie, deren Name
-    /// der Titel war. <see cref="Services.RecurringTitleMigration"/> überträgt ihn beim Laden und
+    /// der Titel war. <see cref="Services.LegacyCategoryMigration"/> überträgt ihn beim Laden und
     /// setzt das Feld auf null — ab dann wird es nicht mehr geschrieben. Im Server-Modus erledigt
     /// das die EF-Migration RecurringFreeTextTitle.
     /// </summary>
@@ -48,7 +48,7 @@ public class RecurringActivity
 
     /// <summary>Farbe, die die Kacheln der Serie tragen — für den Punkt in der Verwaltungsliste.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public string TileColor => EntryColors.Tile(EntryType.Activity, null, Color);
+    public string TileColor => EntryColors.Tile(EntryType.Activity, Color);
 
     [System.Text.Json.Serialization.JsonIgnore]
     public string TimeRange => $"{StartTime:hh\\:mm}–{EndTime:hh\\:mm}";

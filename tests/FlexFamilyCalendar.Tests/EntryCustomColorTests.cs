@@ -19,17 +19,17 @@ public class EntryCustomColorTests
     // ───────── Rangfolge ─────────
 
     [Fact]
-    public void OwnColor_BeatsCategoryAndType()
+    public void OwnColor_BeatsType()
     {
-        Assert.Equal("#123456", EntryColors.Tile(EntryType.Activity, "#8E44AD", "#123456"));
-        Assert.Equal("#123456", EntryColors.Tile(EntryType.Work, null, "#123456"));
+        Assert.Equal("#123456", EntryColors.Tile(EntryType.Activity, "#123456"));
+        Assert.Equal("#123456", EntryColors.Tile(EntryType.Work, "#123456"));
     }
 
     [Fact]
-    public void GarbageOwnColor_FallsThroughToCategory()
+    public void GarbageOwnColor_FallsThroughToType()
     {
-        Assert.Equal("#8E44AD", EntryColors.Tile(EntryType.Activity, "#8E44AD", "blau"));
-        Assert.Equal(EntryTypeInfo.Color(EntryType.Work), EntryColors.Tile(EntryType.Work, null, ""));
+        Assert.Equal(EntryTypeInfo.Color(EntryType.Activity), EntryColors.Tile(EntryType.Activity, "blau"));
+        Assert.Equal(EntryTypeInfo.Color(EntryType.Work), EntryColors.Tile(EntryType.Work, ""));
     }
 
     // ───────── Maskierung ─────────
@@ -77,7 +77,7 @@ public class EntryCustomColorTests
     public void Editor_SavesChosenColor()
     {
         var vm = new EntryEditorViewModel(Day, new[] { Person() });
-        vm.SelectedType = vm.EntryTypes.First(t => t.Type == EntryType.Work);
+        vm.Title = "Arbeit";
         vm.StartTime = new TimeSpan(7, 0, 0);
         vm.EndTime = new TimeSpan(15, 0, 0);
         vm.UseCustomColor = true;
@@ -94,7 +94,7 @@ public class EntryCustomColorTests
     public void Editor_TogglingOn_StartsFromTheAutomaticColor()
     {
         var vm = new EntryEditorViewModel(Day, new[] { Person() });
-        vm.SelectedType = vm.EntryTypes.First(t => t.Type == EntryType.Work);
+        vm.Title = "Arbeit";
 
         vm.UseCustomColor = true;
 
@@ -106,7 +106,7 @@ public class EntryCustomColorTests
     public void Editor_TogglingOff_ReturnsToAutomatic()
     {
         var vm = new EntryEditorViewModel(Day, new[] { Person() });
-        vm.SelectedType = vm.EntryTypes.First(t => t.Type == EntryType.Work);
+        vm.Title = "Arbeit";
         vm.StartTime = new TimeSpan(7, 0, 0);
         vm.EndTime = new TimeSpan(15, 0, 0);
         vm.UseCustomColor = true;
@@ -167,7 +167,7 @@ public class EntryCustomColorTests
 
         var back = EntryMapping.ToDesktop(new ServerEntryDto(
             "e1", "emp", "Work", Day, null, new TimeOnly(7, 0), new TimeOnly(15, 0),
-            false, null, null, EntryStatuses.Approved, false, null, "#F39C12"), Day);
+            false, null, null, EntryStatuses.Approved, false, "#F39C12"), Day);
         Assert.Equal("#F39C12", back.Color);
     }
 
@@ -177,7 +177,7 @@ public class EntryCustomColorTests
         // So liefert der Server einen maskierten Eintrag aus (EntryDto.Mask setzt Color null).
         var back = EntryMapping.ToDesktop(new ServerEntryDto(
             "e1", "emp", "Absence", Day, Day, null, null, false, null, null,
-            EntryStatuses.Approved, true, null, null), Day);
+            EntryStatuses.Approved, true, null), Day);
 
         Assert.Equal("", back.Color);
         Assert.Equal(EntryColors.ForType(EntryType.Absence), back.TileColor);

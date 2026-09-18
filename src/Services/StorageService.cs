@@ -105,22 +105,17 @@ public class StorageService : IStorageService
         LogService.Debug("Benachrichtigungen gespeichert ({0})", notifications.Count);
     }
 
-    public async Task<List<ActivityType>> LoadActivityTypesAsync()
-    {
-        return await JsonFileStore.LoadAsync<List<ActivityType>>(ActivityTypesFile, static () => new());
-    }
+    /// <summary>Die alten Kategorien — nur noch gelesen, um Altbestand zu übernehmen. Einmal je Lauf.</summary>
+    private async Task<IReadOnlyList<LegacyCategory>> LoadLegacyCategoriesAsync()
+        => _legacyCategories ??= await JsonFileStore.LoadAsync<List<LegacyCategory>>(ActivityTypesFile, static () => new());
 
-    public async Task SaveActivityTypesAsync(List<ActivityType> types)
-    {
-        await JsonFileStore.WriteAtomicAsync(ActivityTypesFile, types);
-        LogService.Debug("Aktivitätstypen gespeichert ({0})", types.Count);
-    }
+    private IReadOnlyList<LegacyCategory>? _legacyCategories;
 
     public async Task<List<RecurringActivity>> LoadRecurringActivitiesAsync()
     {
         var rules = await JsonFileStore.LoadAsync<List<RecurringActivity>>(RecurringActivitiesFile, static () => new());
         if (rules.Any(r => r.LegacyActivityTypeId is not null)
-            && RecurringTitleMigration.Apply(rules, await LoadActivityTypesAsync()))
+            && LegacyCategoryMigration.ApplyToRules(rules, await LoadLegacyCategoriesAsync()))
         {
             await SaveRecurringActivitiesAsync(rules);
             LogService.Info("Serien: Kategorienamen als Bezeichnung übernommen ({0} Einträge)", rules.Count);
@@ -176,6 +171,15 @@ public class StorageService : IStorageService
         // Migration: ehemaliges AuPairShift (=1) → Arbeit
         foreach (var e in day.Entries)
             if ((int)e.Type == 1) e.Type = EntryType.Work;
+
+        // Migration: Kategorie → Bezeichnung + eigene Farbe (Kategorien gibt es seit v0.21 nicht mehr).
+        // Tageweise beim ersten Laden; danach steht das alte Feld nicht mehr in der Datei.
+        if (day.Entries.Any(e => e.LegacyActivityTypeId is not null)
+            && LegacyCategoryMigration.ApplyToEntries(day.Entries, await LoadLegacyCategoriesAsync()))
+        {
+            await SaveDayAsync(day);
+            LogService.Info("Kalendertag {0}: Kategorien als Bezeichnung und Farbe übernommen", iso);
+        }
 
         return day;
     }

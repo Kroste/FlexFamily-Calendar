@@ -4,7 +4,6 @@ using FlexFamilyCalendar.Api.Auth;
 using FlexFamilyCalendar.Api.ChatHistory;
 using FlexFamilyCalendar.Api.Data;
 using FlexFamilyCalendar.Api.Logging;
-using FlexFamilyCalendar.Api.ActivityTypes;
 using FlexFamilyCalendar.Api.DayNotes;
 using FlexFamilyCalendar.Api.Ai;
 using FlexFamilyCalendar.Api.Entries;
@@ -451,7 +450,7 @@ app.MapPost("/api/entries", async (CreateEntryRequest req, AppDbContext db, Clai
     if (permError is not null)
         return Results.Json(new { error = permError }, statusCode: StatusCodes.Status403Forbidden);
 
-    var valError = EntryWriteRules.Validate(req.Type, req.Date, req.EndDate, req.StartTime, req.EndTime, req.CategoryLabel, req.ActivityTypeId);
+    var valError = EntryWriteRules.Validate(req.Type, req.Date, req.EndDate, req.StartTime, req.EndTime, req.CategoryLabel);
     if (valError is not null) return Results.BadRequest(new { error = valError });
 
     if (!await db.Users.AnyAsync(u => u.Id == targetUserId))
@@ -467,7 +466,6 @@ app.MapPost("/api/entries", async (CreateEntryRequest req, AppDbContext db, Clai
         EndTime = req.EndTime,
         EndsNextDay = req.EndsNextDay,
         CategoryLabel = string.IsNullOrWhiteSpace(req.CategoryLabel) ? null : req.CategoryLabel!.Trim(),
-        ActivityTypeId = string.IsNullOrWhiteSpace(req.ActivityTypeId) ? null : req.ActivityTypeId!.Trim(),
         Note = string.IsNullOrWhiteSpace(req.Note) ? null : req.Note!.Trim(),
         Color = EntryWriteRules.NormalizeColor(req.Color),
         Status = EntryWriteRules.InitialStatus(req.Type, isAdmin),
@@ -535,7 +533,7 @@ app.MapPut("/api/entries/{id:guid}", async (Guid id, UpdateEntryRequest req, App
             return Results.Json(new { error = permError }, statusCode: StatusCodes.Status403Forbidden);
     }
 
-    var valError = EntryWriteRules.Validate(newType, req.Date, req.EndDate, req.StartTime, req.EndTime, req.CategoryLabel, req.ActivityTypeId);
+    var valError = EntryWriteRules.Validate(newType, req.Date, req.EndDate, req.StartTime, req.EndTime, req.CategoryLabel);
     if (valError is not null) return Results.BadRequest(new { error = valError });
 
     entry.Type = newType;
@@ -545,7 +543,6 @@ app.MapPut("/api/entries/{id:guid}", async (Guid id, UpdateEntryRequest req, App
     entry.EndTime = req.EndTime;
     entry.EndsNextDay = req.EndsNextDay;
     entry.CategoryLabel = string.IsNullOrWhiteSpace(req.CategoryLabel) ? null : req.CategoryLabel!.Trim();
-    entry.ActivityTypeId = string.IsNullOrWhiteSpace(req.ActivityTypeId) ? null : req.ActivityTypeId!.Trim();
     entry.Note = string.IsNullOrWhiteSpace(req.Note) ? null : req.Note!.Trim();
     entry.Color = EntryWriteRules.NormalizeColor(req.Color);
 
@@ -593,30 +590,6 @@ app.MapPost("/api/entries/{id:guid}/reject", async (Guid id, AppDbContext db) =>
     entry.Status = EntryStatus.Rejected;
     await db.SaveChangesAsync();
     return Results.Ok(EntryDto.Full(entry));
-})
-    .RequireAuthorization("Admin");
-
-// --- Aktivitätstypen (Kategorien) ---------------------------------------
-
-// Liste: alle angemeldeten Benutzer (zum Anzeigen von Kategoriename/-farbe im Plan).
-app.MapGet("/api/activity-types", async (AppDbContext db) =>
-    (await db.ActivityTypes.AsNoTracking().OrderBy(a => a.Name).ToListAsync()).Select(ActivityTypeDto.From))
-    .RequireAuthorization();
-
-// Komplett ersetzen (Admin): passt zum „ganze Liste speichern" des Clients. Letzter-Schreiber-gewinnt.
-app.MapPut("/api/activity-types", async (List<ActivityTypeDto> items, AppDbContext db) =>
-{
-    await db.ActivityTypes.ExecuteDeleteAsync();
-    foreach (var i in items)
-        db.ActivityTypes.Add(new ActivityTypeEntity
-        {
-            Id = i.Id == Guid.Empty ? Guid.NewGuid() : i.Id,
-            Name = i.Name.Trim(),
-            Color = i.Color ?? "",
-            Categories = i.Categories ?? new()
-        });
-    await db.SaveChangesAsync();
-    return Results.Ok((await db.ActivityTypes.OrderBy(a => a.Name).ToListAsync()).Select(ActivityTypeDto.From));
 })
     .RequireAuthorization("Admin");
 

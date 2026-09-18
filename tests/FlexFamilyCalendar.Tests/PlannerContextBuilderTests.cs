@@ -22,7 +22,6 @@ public class PlannerContextBuilderTests
             Today: new DateOnly(2026, 6, 1),
             WeekStart: new DateOnly(2026, 6, 1),
             Users: users ?? Array.Empty<User>(),
-            ActivityTypes: Array.Empty<ActivityType>(),
             RecurringActivities: rules ?? Array.Empty<RecurringActivity>(),
             Week: week ?? Array.Empty<(DateOnly, IReadOnlyList<CalendarEntry>)>(),
             Notes: notes ?? Array.Empty<PlannerNote>());

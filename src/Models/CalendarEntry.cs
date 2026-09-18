@@ -30,10 +30,19 @@ public class CalendarEntry
     public TimeSpan EndTime { get; set; }
     public string Title { get; set; } = "";
     public string Notes { get; set; } = "";
-    public string? ActivityTypeId { get; set; }   // optionale Kategorie bei Typ Activity
 
     /// <summary>
-    /// Frei gewählte Kachelfarbe dieses einen Eintrags (leer = automatisch aus Kategorie/Typ).
+    /// Nur für die einmalige Übernahme alter lokaler Dateien: dort stand die Kategorie, deren Name
+    /// und Farbe der Eintrag trug. <see cref="Services.LegacyCategoryMigration"/> überträgt beides
+    /// beim Laden an den Eintrag und setzt das Feld auf null — ab dann wird es nicht mehr
+    /// geschrieben. Im Server-Modus erledigt das die EF-Migration DropCategories.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("ActivityTypeId")]
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? LegacyActivityTypeId { get; set; }
+
+    /// <summary>
+    /// Frei gewählte Kachelfarbe dieses einen Eintrags (leer = automatisch aus dem Typ).
     /// Persistiert, weil sie zur Planung gehört und nicht zur Ansicht des Betrachters.
     /// </summary>
     public string Color { get; set; } = "";
@@ -91,12 +100,12 @@ public class CalendarEntry
     public string OwnerColor { get; set; } = "#7F8C8D";
 
     /// <summary>
-    /// Farbe der Plan-Kachel: Kategorie schlägt Typ. Bewusst auf <see cref="DisplayType"/>
+    /// Farbe der Plan-Kachel: eigene Farbe schlägt Typ. Bewusst auf <see cref="DisplayType"/>
     /// gerechnet, nicht auf <see cref="Type"/> — sonst verriete das Rot einer Krankmeldung den
     /// Grund, den die Maskierung gerade als „Abwesend" verbirgt.
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public string TileColor => EntryColors.Tile(DisplayType, HasActivity ? ActivityColor : null, VisibleColor);
+    public string TileColor => EntryColors.Tile(DisplayType, VisibleColor);
 
     /// <summary>
     /// Die eigene Farbe zählt nur, solange am Eintrag nichts maskiert wurde. Sonst wäre eine
@@ -137,33 +146,23 @@ public class CalendarEntry
     [System.Text.Json.Serialization.JsonIgnore]
     public bool HasSwap => SwapMark != SwapMark.None;
 
-    /// <summary>Aufgelöster Aktivitäts-Kategoriename (Laufzeit; leer = keine Kategorie).</summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public string ActivityName { get; set; } = "";
-
-    /// <summary>Farbe der Aktivitäts-Kategorie (Laufzeit).</summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public string ActivityColor { get; set; } = "#7F8C8D";
-
-    [System.Text.Json.Serialization.JsonIgnore]
-    public bool HasActivity => !string.IsNullOrEmpty(ActivityName);
-
     /// <summary>
-    /// Aktivität mit eigener Bezeichnung, aber ohne Kategorie — dann IST die Bezeichnung der Name
-    /// („Fußball"), nicht das generische „Aktivität" mit dem Text klein darunter. Seit Serien
-    /// Freitext statt Kategorie tragen, ist das ihr Normalfall.
+    /// Die Bezeichnung IST der Name der Kachel — außer bei Abwesenheiten, deren Name der
+    /// (maskierte) Typ ist. Seit es weder Kategorien noch eine Typ-Auswahl im Dialog gibt, ist
+    /// die Freitext-Bezeichnung das, was im Plan oben steht: „Arbeit", „Frei", „Sprachschule".
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public bool IsTitledActivity => !HasActivity && DisplayType == EntryType.Activity
-                                    && !string.IsNullOrWhiteSpace(DisplayTitle);
+    public bool ShowsTitleAsName => !IsAbsenceDisplay && !string.IsNullOrWhiteSpace(DisplayTitle);
 
-    /// <summary>Karte zeigt das feste Typ-Label nur ohne Kategorie und ohne eigene Bezeichnung.</summary>
+    /// <summary>Typ-Label als Name: bei Abwesenheiten und bei Alt-Einträgen ohne Bezeichnung
+    /// (die dann wie früher „Arbeit" o. ä. zeigen).</summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public bool ShowsTypeLabel => !HasActivity && !IsTitledActivity;
+    public bool ShowsTypeLabel => !ShowsTitleAsName;
 
-    /// <summary>Titel als Zusatzzeile — außer er steht schon als Name ganz oben.</summary>
+    /// <summary>Zusatzzeile nur bei Abwesenheiten: dort ist die Bezeichnung ein Vermerk unter dem
+    /// Typ — und ohnehin nur für den Betroffenen und Admins gesetzt (Maskierung).</summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public bool ShowsSubtitle => !string.IsNullOrEmpty(DisplayTitle) && !IsTitledActivity;
+    public bool ShowsSubtitle => IsAbsenceDisplay && !string.IsNullOrEmpty(DisplayTitle);
 
     /// <summary>Laufzeit: aus einer wiederkehrenden Regel projiziert (nicht persistiert, nicht editierbar).</summary>
     [System.Text.Json.Serialization.JsonIgnore]

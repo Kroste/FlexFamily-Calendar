@@ -16,7 +16,6 @@ public record ServerEntryDto(
     string? Note,
     string Status,
     bool Masked,
-    string? ActivityTypeId = null,
     string? Color = null);
 
 public record ServerUserDto(
@@ -88,7 +87,6 @@ public record ReorderUsersBody(List<string> UserIds);
 
 public record ApiErrorBody(string? Error);
 
-public record ServerActivityTypeDto(string Id, string Name, string Color, List<string> Categories);
 
 public record ServerRecurrenceSkipDto(string Id, DateOnly From, DateOnly To, string? Reason);
 
@@ -163,7 +161,6 @@ public record CreateEntryBody(
     bool EndsNextDay,
     string? CategoryLabel,
     string? Note,
-    string? ActivityTypeId = null,
     string? Color = null);
 
 public record UpdateEntryBody(
@@ -175,7 +172,6 @@ public record UpdateEntryBody(
     string? CategoryLabel,
     string? Note,
     string? Type = null,
-    string? ActivityTypeId = null,
     string? Color = null);
 
 public record ServerMailRecipientDto(string Email, string PdfBase64);

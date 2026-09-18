@@ -71,6 +71,8 @@ public static class EntryMoveCopy
         EndTime = e.EndTime,
         Title = e.Title,
         Notes = e.Notes,
-        ActivityTypeId = e.ActivityTypeId,
+        // Die eigene Kachelfarbe gehört zum Eintrag — fehlte sie hier, verlor jede verschobene
+        // oder kopierte Schicht ihre Farbe.
+        Color = e.Color,
     };
 }

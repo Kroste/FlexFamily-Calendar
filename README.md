@@ -21,10 +21,7 @@ Urlaubsmeldungen und Schichttausch — für Eltern, Kinder, Angestellte und Au-P
 - [Der Wochenplan](#der-wochenplan)
 - [Sicht-Regel: was du wann siehst](#sicht-regel-was-du-wann-siehst)
 - [Einen Eintrag anlegen](#einen-eintrag-anlegen)
-  - [Arbeit / Schicht](#arbeit--schicht)
-  - [Aktivität](#aktivität)
-  - [Übernachtung](#übernachtung)
-  - [Krank, Urlaub oder Abwesend](#krank-urlaub-oder-abwesend)
+  - [Abwesenheit: Krank, Urlaub oder Abwesend](#abwesenheit-krank-urlaub-oder-abwesend)
 - [Wiederkehrende Aktivitäten](#wiederkehrende-aktivitäten)
 - [Feiertage](#feiertage)
 - [Woche kopieren und finalisieren](#woche-kopieren-und-finalisieren)
@@ -164,8 +161,8 @@ Die Zeilen sind gruppiert:
 3. **Angestellte**
 4. **Au-Pairs**
 
-Jede Zelle zeigt, was diese Person an diesem Tag macht — Schichten, Aktivitäten,
-Übernachtungen, Abwesenheiten.
+Jede Zelle zeigt, was diese Person an diesem Tag macht — mit dem Namen, den du dem
+Eintrag gegeben hast („Arbeit", „Frei", „Sprachschule" …), oder als Abwesenheit.
 
 **Die Farbe einer Kachel sagt, worum es geht** — nicht, wer es ist. Wer es ist,
 steht ja als Zeile daneben. So siehst du beim Überfliegen sofort, wer arbeitet,
@@ -175,8 +172,8 @@ Termin, Schule).
 Woher die Farbe kommt, in dieser Reihenfolge:
 
 1. die **Farbe, die du beim Anlegen des Eintrags selbst gewählt** hast
-2. sonst die Farbe der **Kategorie** (Sprachschule, Remise, Frei …)
-3. sonst die eingebaute Farbe des **Typs** (Arbeit, Urlaub, Krank …)
+2. sonst die eingebaute Standardfarbe (Einträge, Urlaub, Krank, Abwesend haben
+   jeweils ihre eigene)
 
 Die **Uhrzeit steht fett zuoberst** in jeder Kachel. Die Schrift darauf wird je
 nach Farbe automatisch schwarz oder weiß gesetzt, damit sie auf jedem Farbton
@@ -221,62 +218,36 @@ Steht in der Zelle schon etwas, klick auf das kleine **+** unten rechts in der
 Zelle — damit legst du einen **zweiten Eintrag** für dieselbe Person am selben
 Tag an, ohne den vorhandenen anzufassen.
 
-Alle Einträge haben eine **Zeit** (von–bis), einen **Typ** und optional einen
-**Kommentar**.
+Ganz oben wählst du, was du anlegst: **Eintrag** oder **Abwesenheit
+(Urlaub/Krank)**.
 
-**Kachelfarbe:** Standardmäßig richtet sie sich nach Kategorie bzw. Typ. Setz den
-Haken bei *Eigene Farbe für diesen Eintrag*, dann wählst du sie frei — der
-Farbwähler startet bei der Farbe, die der Eintrag ohnehin hätte. Die Vorschau
-daneben zeigt die fertige Kachel; die Schrift darauf wird automatisch schwarz
-oder weiß, je nachdem was besser lesbar ist. Haken wieder raus = zurück zur
-automatischen Farbe. Bei mehrtägigem Urlaub oder Krankmeldung gilt die Farbe für
-den ganzen Zeitraum. Die Zeitfelder starten **leer**: Klick rein und tipp die Uhrzeit
-direkt los. Die App versteht dabei mehrere Schreibweisen — `8`, `830`, `8:30`
-und `08:30` ergeben alle dasselbe. Bei Krank, Urlaub und Abwesend fallen die
-Zeitfelder ganz weg, dort zählt nur der Datumsbereich.
+Ein Eintrag hat:
 
-### Arbeit / Schicht
+- eine **Bezeichnung** — frei wählbar, z.B. „Arbeit", „Frei", „Remise",
+  „Sprachschule". Sie ist der Name, der im Plan fett auf der Kachel steht. Beim
+  Tippen schlägt die App vor, was in der Woche oder bei den wiederkehrenden
+  Aktivitäten schon vorkommt; du kannst aber jederzeit etwas Neues schreiben.
+- **Startzeit** und **Endzeit**. Die Felder starten leer: Klick rein und tipp die
+  Uhrzeit direkt los. Die App versteht mehrere Schreibweisen — `8`, `830`,
+  `8:30` und `08:30` ergeben alle dasselbe. Über Mitternacht (z.B. 20:00–06:00)
+  geht auch.
+- eine **Kachelfarbe** (optional): Setz den Haken bei *Eigene Farbe für diesen
+  Eintrag*, dann wählst du sie frei — der Farbwähler startet bei der Standard-
+  farbe. Die Vorschau daneben zeigt die fertige Kachel; die Schrift darauf wird
+  automatisch schwarz oder weiß, je nachdem was besser lesbar ist.
+- **Notizen** (optional).
 
-Für Angestellte und Au-Pairs. Trage **Startzeit** und **Endzeit** ein — die
-gearbeiteten Stunden werden automatisch auf das [Stundenkonto](#stundenkonto)
-angerechnet.
+Eine Auswahl von Typen oder Kategorien gibt es nicht mehr — was ein Eintrag ist,
+sagt seine Bezeichnung. Neue Einträge zählen vorerst auf das
+[Stundenkonto](#stundenkonto); dessen Berechnung wird noch überarbeitet.
 
-**Über Mitternacht arbeiten** (z.B. Au-Pair 20:00–06:00): einfach eintragen, die
-App wickelt die Zeit über den Tag hinweg richtig ab. Der Eintrag erscheint bis
-Mitternacht am Starttag und optisch gedämpft am Folgetag; die Stunden zählen nur
-einmal am Starttag.
+### Abwesenheit: Krank, Urlaub oder Abwesend
 
-### Aktivität
-
-Für alles, was keine Arbeit ist — Schule, Kita, Sport, Sprachschule, Remise,
-Frei, Freizeit.
-
-Deine **Kategorien stehen direkt im Typ-Dropdown**, gleichberechtigt neben
-Arbeit, Urlaub und Krank — kein Umweg mehr über „Aktivität" und ein zweites
-Dropdown. Der Punkt vor dem Namen zeigt dir vorab die Farbe, die der Eintrag im
-Plan bekommt.
-
-Welche Kategorien erscheinen, hängt an der Rolle der gewählten Person: Kindern
-stehen andere zur Verfügung als Au-Pairs. Angelegt und eingefärbt werden sie im
-[Admin-Bereich](#admin-bereich-nur-eltern).
-
-### Übernachtung
-
-Für Betreuungspersonen, die nachts auf Abruf da sind. Trage den vollen
-Zeitbereich ein (z.B. 22:00–07:00). Die Anzeige deckt den ganzen Zeitraum ab
-(auch über Mitternacht), aber auf das Stundenkonto werden **pauschal x Stunden
-pro Tag** angerechnet (Standard 2 h, vom Admin einstellbar in
-Einstellungen → Übernachtung) — nicht die tatsächliche Dauer.
-
-Eine Übernachtung zählt **nicht** als aktive Arbeit — sie ignoriert Tages-,
-Wochen- und Ruhezeit-Grenzen, überschneidet sich also nicht mit ihnen.
-
-### Krank, Urlaub oder Abwesend
-
-Krank- und Urlaubsmeldungen laufen **als Zeitbereich** (von–bis) über ganze
-Tage — Uhrzeiten gibt es hier nicht, die Felder sind für diese Typen
-ausgeblendet. Im Eintrag-Editor Typ auswählen, Startdatum und Enddatum setzen — die App legt für
-jeden betroffenen Tag einen Eintrag an und verknüpft sie miteinander.
+Wähl oben **Abwesenheit (Urlaub/Krank)**, dann die Art (Urlaub, Krank oder
+Abwesend) und den Zeitraum mit **Von** und **Bis**. Uhrzeiten gibt es hier nicht,
+eine Abwesenheit gilt für ganze Tage — die App legt für jeden betroffenen Tag
+einen Eintrag an und verknüpft sie miteinander. Die Kachelfarbe gilt für den
+ganzen Zeitraum.
 
 - **Krankmeldung**: gilt sofort. Der Admin bekommt eine Benachrichtigung; wenn
   die Woche schon finalisiert war, kann er einen KI-Umplanungsvorschlag anfordern.
@@ -286,8 +257,12 @@ jeden betroffenen Tag einen Eintrag an und verknüpft sie miteinander.
   (rot) direkt an der Zeile in der Glocke — kein Umweg über einen Extra-Dialog.
   Erst nach Genehmigung ist der Urlaub voll deckend sichtbar.
 
+Kollegen sehen bei Urlaub und Krankheit nur „Abwesend" — nie den Grund und nie
+deinen Vermerk dazu.
+
 Als Angestellte(r) oder Au-Pair kannst du dich nur für dich selbst
-krank- oder urlaubsmelden. Der Admin bekommt automatisch eine Benachrichtigung.
+krank- oder urlaubsmelden; der Dialog öffnet sich dann direkt als Abwesenheit.
+Der Admin bekommt automatisch eine Benachrichtigung.
 
 ## Wiederkehrende Aktivitäten
 
@@ -484,15 +459,12 @@ Privatsphäre der einzelnen Personen:
 
 ## Admin-Bereich (nur Eltern)
 
-Als Admin öffnet der Button **Admin** einen Dialog mit fünf Tabs:
+Als Admin öffnet der Button **Admin** einen Dialog mit vier Tabs:
 
 - **Benutzer**: neue Personen anlegen (Rolle, Kategorie, Farbe, Wochenstunden,
   Übernachtungs-Pauschale, KI-Stil-Hinweis, Konto-Startzeit, Anfangs-Saldo),
   bearbeiten, löschen. Kinder bekommen keinen Passwort-Zwang (Kind-Konten
   ohne Anmeldung sind möglich).
-- **Kategorien**: Aktivitätstypen anlegen (Name, Farbe, für welche Rollen sie
-  auswählbar sein sollen). Beispiel: „Sport" für Kinder, „Sprachkurs" für
-  Au-Pair, „Home Office" für Eltern.
 - **Wiederkehrend**: Wochen-Regeln pflegen — Person, **Bezeichnung als freier
   Text** (z.B. „Fußball", „Sprachschule"), Wochentage, Startzeit, Endzeit, „an
   Feiertagen ausfallen" ja/nein, optional eine eigene Kachelfarbe.

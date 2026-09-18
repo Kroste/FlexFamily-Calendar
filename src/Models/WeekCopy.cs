@@ -22,6 +22,7 @@ public static class WeekCopy
         StartTime = e.StartTime,
         EndTime = e.EndTime,
         Title = e.Title,
+        Color = e.Color,   // sonst verlor die kopierte Woche alle eigenen Kachelfarben
         Notes = e.Notes
     };
 }

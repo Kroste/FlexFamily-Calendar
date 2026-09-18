@@ -38,13 +38,11 @@ public static class PlanExportBuilder
         var displayType = EntryPrivacy.DisplayType(e.Type, canSeeReason);
 
         var showTitle = EntryPrivacy.ShowReason(e.Type, canSeeReason) && !string.IsNullOrEmpty(e.Title);
-        // Aktivität mit Bezeichnung, aber ohne Kategorie: die Bezeichnung ist der Name — wie auf
-        // der Kachel, statt „Aktivität · Fußball".
-        var label = e.HasActivity ? e.ActivityName
-                  : displayType == EntryType.Activity && showTitle ? e.Title
-                  : typeLabel(displayType);
-        if (showTitle && label != e.Title)
-            label += $" · {e.Title}";
+        // Wie auf der Kachel: die Bezeichnung IST der Name; nur Abwesenheiten heißen nach ihrem
+        // (maskierten) Typ, mit der Bezeichnung als Vermerk — sofern der Empfänger sie sehen darf.
+        var label = EntryTypeInfo.IsAbsence(displayType)
+            ? typeLabel(displayType) + (showTitle ? $" · {e.Title}" : "")
+            : showTitle ? e.Title : typeLabel(displayType);
 
         var time = EntryTypeInfo.IsAbsence(displayType) ? e.AbsenceSpanLabel : e.TimeRange;
         // Farbe nach Art des Eintrags, nicht nach Person — und auf dem hier je Empfänger neu
@@ -54,7 +52,7 @@ public static class PlanExportBuilder
         // sonst wäre eine fremde Krankmeldung an ihrer Sonderfarbe zu erkennen.
         var ownColor = displayType == e.Type ? e.Color : null;
         return new PlanCellEntry(
-            EntryColors.Tile(displayType, e.HasActivity ? e.ActivityColor : null, ownColor), time, label);
+            EntryColors.Tile(displayType, ownColor), time, label);
     }
 
     /// <summary>

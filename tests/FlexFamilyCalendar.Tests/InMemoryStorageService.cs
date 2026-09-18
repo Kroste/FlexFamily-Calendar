@@ -11,7 +11,6 @@ public class InMemoryStorageService : IStorageService
     private readonly Dictionary<string, CalendarDay> _days = new();
     private List<ShiftSwapRequest> _swapRequests = new();
     private List<Notification> _notifications = new();
-    private List<ActivityType> _activityTypes = new();
     private List<RecurringActivity> _recurringActivities = new();
 
     public Task<List<User>> LoadUsersAsync()
@@ -89,15 +88,6 @@ public class InMemoryStorageService : IStorageService
     /// <summary>Kompletter Bestand quer über alle Empfänger — nur für Prüfungen in Tests.</summary>
     public IReadOnlyList<Notification> AllNotifications => _notifications.Select(Clone).ToList();
 
-    public Task<List<ActivityType>> LoadActivityTypesAsync()
-        => Task.FromResult(_activityTypes.Select(Clone).ToList());
-
-    public Task SaveActivityTypesAsync(List<ActivityType> types)
-    {
-        _activityTypes = types.Select(Clone).ToList();
-        return Task.CompletedTask;
-    }
-
     public Task<List<RecurringActivity>> LoadRecurringActivitiesAsync()
         => Task.FromResult(_recurringActivities.Select(Clone).ToList());
 
@@ -126,11 +116,6 @@ public class InMemoryStorageService : IStorageService
         { Id = c.Id, Role = c.Role, Text = c.Text, CreatedAtUtc = c.CreatedAtUtc }).ToList();
         return Task.CompletedTask;
     }
-
-    private static ActivityType Clone(ActivityType t) => new()
-    {
-        Id = t.Id, Name = t.Name, Color = t.Color, Categories = new List<PersonCategory>(t.Categories)
-    };
 
     private static RecurringActivity Clone(RecurringActivity a) => new()
     {

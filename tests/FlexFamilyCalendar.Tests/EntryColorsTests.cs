@@ -13,13 +13,7 @@ public class EntryColorsTests
     }
 
     [Fact]
-    public void Tile_PrefersActivityCategoryOverType()
-    {
-        Assert.Equal("#8E44AD", EntryColors.Tile(EntryType.Activity, "#8E44AD"));
-    }
-
-    [Fact]
-    public void Tile_FallsBackToTypeColor_WithoutCategory()
+    public void Tile_FallsBackToTypeColor_WithoutOwnColor()
     {
         Assert.Equal(EntryTypeInfo.Color(EntryType.Work), EntryColors.Tile(EntryType.Work, null));
         Assert.Equal(EntryTypeInfo.Color(EntryType.Work), EntryColors.Tile(EntryType.Work, ""));

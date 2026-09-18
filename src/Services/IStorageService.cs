@@ -65,8 +65,6 @@ public interface IStorageService
     /// <summary>Markiert eigene als gelesen; <paramref name="ids"/> null = alle eigenen.</summary>
     Task MarkNotificationsReadAsync(string userId, IReadOnlyCollection<string>? ids);
 
-    Task<List<ActivityType>> LoadActivityTypesAsync();
-    Task SaveActivityTypesAsync(List<ActivityType> types);
     Task<List<RecurringActivity>> LoadRecurringActivitiesAsync();
     Task SaveRecurringActivitiesAsync(List<RecurringActivity> activities);
     Task<List<PlannerNote>> LoadPlannerNotesAsync();

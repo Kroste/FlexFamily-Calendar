@@ -3,11 +3,10 @@ using FlexFamilyCalendar.Services.AI;
 
 namespace FlexFamilyCalendar.ViewModels;
 
-/// <summary>Bündelt die Admin-Verwaltung in Tabs: Benutzer, Kategorien, wiederkehrende Aktivitäten, Einstellungen, KI.</summary>
+/// <summary>Bündelt die Admin-Verwaltung in Tabs: Benutzer, wiederkehrende Aktivitäten, Einstellungen, KI.</summary>
 public class AdminViewModel : ViewModelBase
 {
     public UserManagementViewModel Users { get; }
-    public ActivityTypeManagementViewModel Categories { get; }
     public RecurringActivityManagementViewModel Recurring { get; }
     public SettingsViewModel Settings { get; }
     public AiSettingsViewModel Ai { get; }
@@ -15,7 +14,6 @@ public class AdminViewModel : ViewModelBase
     public AdminViewModel(AuthService auth, IStorageService storage, AiService ai, IMailSender mailSender, UpdateCheckRunner? runUpdateCheck = null)
     {
         Users = new UserManagementViewModel(auth);
-        Categories = new ActivityTypeManagementViewModel(storage);
         Recurring = new RecurringActivityManagementViewModel(storage);
         Settings = new SettingsViewModel(storage, mailSender, runUpdateCheck);
         Ai = new AiSettingsViewModel(ai, storage);

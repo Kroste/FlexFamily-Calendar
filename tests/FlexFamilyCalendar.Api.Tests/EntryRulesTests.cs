@@ -195,17 +195,17 @@ public class EntryWriteRulesTests
     [Fact]
     public void Custom_without_title_is_rejected()
         => Assert.NotNull(EntryWriteRules.Validate(EntryTypes.Custom, new DateOnly(2026, 5, 25), null,
-            new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: null, activityTypeId: null));
+            new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: null));
 
     [Fact]
     public void Custom_with_title_and_times_is_accepted()
         => Assert.Null(EntryWriteRules.Validate(EntryTypes.Custom, new DateOnly(2026, 5, 25), null,
-            new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: "Zahnarzt", activityTypeId: null));
+            new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: "Zahnarzt"));
 
     [Fact]
     public void Custom_without_times_is_rejected()
         => Assert.NotNull(EntryWriteRules.Validate(EntryTypes.Custom, new DateOnly(2026, 5, 25), null,
-            null, null, categoryLabel: "Zahnarzt", activityTypeId: null));
+            null, null, categoryLabel: "Zahnarzt"));
 
     [Fact]
     public void Unknown_type_is_rejected()
@@ -228,16 +228,19 @@ public class EntryWriteRulesTests
         => Assert.NotNull(EntryWriteRules.Validate(EntryTypes.Work, new DateOnly(2026, 5, 25), null, null, null, null));
 
     [Fact]
-    public void Activity_with_no_label_and_no_category_is_rejected()
-        => Assert.NotNull(EntryWriteRules.Validate(EntryTypes.Activity, new DateOnly(2026, 5, 25), null, new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: null, activityTypeId: null));
+    public void Activity_without_a_name_is_rejected()
+        // Ohne Kategorien ist die Bezeichnung der einzige Name, den der Eintrag im Plan hat.
+        => Assert.NotNull(EntryWriteRules.Validate(EntryTypes.Activity, new DateOnly(2026, 5, 25), null, new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: null));
 
     [Fact]
-    public void Activity_with_only_activity_type_id_is_accepted()
-        => Assert.Null(EntryWriteRules.Validate(EntryTypes.Activity, new DateOnly(2026, 5, 25), null, new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: null, activityTypeId: "act-123"));
+    public void Work_without_a_name_stays_allowed()
+        // Ältere Clients und der KI-Planer legen Schichten ohne Bezeichnung an; die zeigt der
+        // Client dann als „Arbeit" an. Nicht serverseitig brechen.
+        => Assert.Null(EntryWriteRules.Validate(EntryTypes.Work, new DateOnly(2026, 5, 25), null, new TimeOnly(8, 0), new TimeOnly(16, 0), categoryLabel: null));
 
     [Fact]
     public void Activity_with_only_free_text_label_is_accepted()
-        => Assert.Null(EntryWriteRules.Validate(EntryTypes.Activity, new DateOnly(2026, 5, 25), null, new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: "Klavier", activityTypeId: null));
+        => Assert.Null(EntryWriteRules.Validate(EntryTypes.Activity, new DateOnly(2026, 5, 25), null, new TimeOnly(10, 0), new TimeOnly(12, 0), categoryLabel: "Klavier"));
 
     [Fact]
     public void Range_with_end_before_start_is_rejected()

@@ -235,15 +235,6 @@ public class ApiStorageService : IStorageService
 
     // --- Server-Listen (Speichern ersetzt jeweils die ganze Liste) ---
 
-    public async Task<List<ActivityType>> LoadActivityTypesAsync()
-    {
-        var dtos = await _api.GetActivityTypesAsync();
-        return dtos.Select(ActivityTypeMapping.ToDesktop).ToList();
-    }
-
-    public Task SaveActivityTypesAsync(List<ActivityType> types)
-        => _api.ReplaceActivityTypesAsync(types.Select(ActivityTypeMapping.ToServer).ToList());
-
     public async Task<List<RecurringActivity>> LoadRecurringActivitiesAsync()
     {
         var dtos = await _api.GetRecurringActivitiesAsync();

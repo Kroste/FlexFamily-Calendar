@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using FlexFamilyCalendar.Api.ActivityTypes;
 using FlexFamilyCalendar.Api.Models;
 using FlexFamilyCalendar.Api.Notifications;
 using FlexFamilyCalendar.Api.PlannerNotes;
@@ -24,28 +23,6 @@ namespace FlexFamilyCalendar.Api.Tests;
 /// </summary>
 public class ListEndpointRoundTripTests
 {
-    [Fact]
-    public async Task ActivityTypes_werden_nach_Namen_sortiert_geliefert()
-    {
-        using var factory = new ApiTestFactory();
-        var client = await factory.CreateAuthenticatedClientAsync(
-            ApiTestFactory.AdminUser, ApiTestFactory.AdminPassword);
-
-        factory.Seed(db => db.ActivityTypes.AddRange(
-            new ActivityTypeEntity { Name = "Sport", Color = "#27AE60", Categories = ["Child"] },
-            new ActivityTypeEntity { Name = "Arzt", Color = "#C0392B", Categories = ["Parent", "Child"] }));
-
-        var read = await client.GetFromJsonAsync<List<ActivityTypeDto>>(
-            "api/activity-types", TestContext.Current.CancellationToken);
-
-        Assert.NotNull(read);
-        Assert.Equal(2, read!.Count);
-        Assert.Equal("Arzt", read[0].Name);
-        Assert.Equal("Sport", read[1].Name);
-        // Die Kategorienliste ist ein text[] in Postgres — sie darf beim Lesen nicht leer werden.
-        Assert.Equal(["Parent", "Child"], read[0].Categories);
-    }
-
     [Fact]
     public async Task RecurringActivities_liefern_ihre_Aussetzungen_mit()
     {
@@ -160,8 +137,6 @@ public class ListEndpointRoundTripTests
         var client = await factory.CreateAuthenticatedClientAsync(
             ApiTestFactory.AdminUser, ApiTestFactory.AdminPassword);
 
-        Assert.Empty((await client.GetFromJsonAsync<List<ActivityTypeDto>>(
-            "api/activity-types", TestContext.Current.CancellationToken))!);
         Assert.Empty((await client.GetFromJsonAsync<List<RecurringActivityDto>>(
             "api/recurring-activities", TestContext.Current.CancellationToken))!);
         Assert.Empty((await client.GetFromJsonAsync<List<ShiftSwapRequestDto>>(
@@ -174,7 +149,7 @@ public class ListEndpointRoundTripTests
         using var factory = new ApiTestFactory();
         var anonym = factory.CreateSeededClient();
 
-        foreach (var pfad in new[] { "api/activity-types", "api/recurring-activities",
+        foreach (var pfad in new[] { "api/recurring-activities",
                                      "api/swap-requests", "api/notifications" })
         {
             var resp = await anonym.GetAsync(pfad, TestContext.Current.CancellationToken);
@@ -210,5 +185,17 @@ public class ListEndpointRoundTripTests
 
         var eintrag = Assert.Single(read!);
         Assert.Equal("meine Frage", eintrag.Text);
+    }
+
+    [Fact]
+    public async Task Kategorien_gibt_es_nicht_mehr()
+    {
+        // Seit v0.21 gibt es keine Kategorien: Einträge und Serien tragen ihren Namen als Freitext.
+        using var factory = new ApiTestFactory();
+        var client = await factory.CreateAuthenticatedClientAsync(ApiTestFactory.AdminUser, ApiTestFactory.AdminPassword);
+
+        var resp = await client.GetAsync("api/activity-types", TestContext.Current.CancellationToken);
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, resp.StatusCode);
     }
 }

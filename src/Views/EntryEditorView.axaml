@@ -24,6 +24,15 @@
     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="600">
       <StackPanel Spacing="14">
 
+        <!-- Eintrag oder Abwesenheit — nur beim Anlegen durch den Admin. Keine Typ-Auswahl mehr:
+             ein normaler Eintrag heißt, wie man ihn nennt; nur Abwesenheiten haben eine Art. -->
+        <StackPanel Orientation="Horizontal" Spacing="16" IsVisible="{Binding CanSwitchMode}">
+          <RadioButton GroupName="EntryMode" Content="{loc:Tr Entry_ModeEntry}"
+                       IsChecked="{Binding IsEntryMode, Mode=TwoWay}" />
+          <RadioButton GroupName="EntryMode" Content="{loc:Tr Entry_ModeAbsence}"
+                       IsChecked="{Binding IsAbsenceMode, Mode=TwoWay}" />
+        </StackPanel>
+
         <StackPanel Spacing="4" IsVisible="{Binding CanPickUser}">
           <TextBlock Text="{loc:Tr Entry_User}" FontSize="12" Opacity="0.7" />
           <ComboBox ItemsSource="{Binding AvailableUsers}"
@@ -37,43 +46,22 @@
           </ComboBox>
         </StackPanel>
 
-        <!-- Typ: feste Typen und die eigenen Kategorien in EINER Liste. Der Punkt zeigt die
-             Kachelfarbe, die der Eintrag im Plan bekommt — bei Kategorien deren eigene Farbe,
-             sonst die des Typs. -->
-        <StackPanel Spacing="4">
-          <TextBlock Text="{loc:Tr Entry_Type}" FontSize="12" Opacity="0.7" />
-          <ComboBox ItemsSource="{Binding EntryTypes}"
-                    SelectedItem="{Binding SelectedType}"
-                    HorizontalAlignment="Stretch">
-            <ComboBox.ItemTemplate>
-              <DataTemplate>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                  <Border Width="12" Height="12" CornerRadius="6" VerticalAlignment="Center"
-                          BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1"
-                          Background="{Binding PreviewColor, Converter={StaticResource ColorStringToBrushConverter}}" />
-                  <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
-                </StackPanel>
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
+        <!-- ─── Eintrag ─── -->
+
+        <!-- Bezeichnung: das erste und wichtigste Feld — sie ist der Name im Plan. Schlägt beim
+             Tippen vor, was schon vorkommt, bleibt aber frei. -->
+        <StackPanel Spacing="4" IsVisible="{Binding IsEntryMode}">
+          <TextBlock Text="{Binding TitleLabel}" FontSize="12" FontWeight="SemiBold" Opacity="0.85" />
+          <AutoCompleteBox Text="{Binding Title, Mode=TwoWay}"
+                           ItemsSource="{Binding TitleSuggestions}"
+                           FilterMode="ContainsOrdinal"
+                           MinimumPrefixLength="1"
+                           MaxDropDownHeight="220"
+                           PlaceholderText="{Binding TitlePlaceholder}"
+                           HorizontalAlignment="Stretch" />
         </StackPanel>
 
-        <!-- Datumsbereich (nur bei Abwesenheit: Urlaub/Krank/Abwesend).
-             Von/Bis UNTEREINANDER: der Fluent-DatePicker ist mindestens ~296 px breit (Tag, Monat,
-             Jahr). Nebeneinander passten zwei davon in keinen Dialog und schoben sich übereinander. -->
-        <StackPanel Spacing="8" IsVisible="{Binding ShowDateRange}">
-          <StackPanel Spacing="4">
-            <TextBlock Text="{loc:Tr Entry_DateFrom}" FontSize="12" Opacity="0.7" />
-            <DatePicker SelectedDate="{Binding AbsenceFrom}" HorizontalAlignment="Stretch" />
-          </StackPanel>
-          <StackPanel Spacing="4">
-            <TextBlock Text="{loc:Tr Entry_DateTo}" FontSize="12" Opacity="0.7" />
-            <DatePicker SelectedDate="{Binding AbsenceTo}" HorizontalAlignment="Stretch" />
-          </StackPanel>
-        </StackPanel>
-
-        <!-- Uhrzeiten: das Kernstück des Dialogs, deshalb größer und fetter gesetzt als der Rest
-             des Formulars. Bei Abwesenheiten ganz ausgeblendet (siehe ShowTimes). -->
+        <!-- Uhrzeiten: größer und fetter gesetzt als der Rest des Formulars. -->
         <Grid ColumnDefinitions="*,16,*" IsVisible="{Binding ShowTimes}">
           <StackPanel Grid.Column="0" Spacing="4">
             <TextBlock Text="{loc:Tr Entry_StartTime}" FontSize="12" FontWeight="SemiBold" Opacity="0.85" />
@@ -90,6 +78,42 @@
                                HorizontalAlignment="Stretch" />
           </StackPanel>
         </Grid>
+
+        <!-- ─── Abwesenheit ─── -->
+
+        <StackPanel Spacing="4" IsVisible="{Binding IsAbsenceMode}">
+          <TextBlock Text="{loc:Tr Entry_AbsenceKind}" FontSize="12" Opacity="0.7" />
+          <ComboBox ItemsSource="{Binding AbsenceKinds}"
+                    SelectedItem="{Binding SelectedAbsenceKind}"
+                    HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Label}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+
+        <!-- Von/Bis UNTEREINANDER: der Fluent-DatePicker ist mindestens ~296 px breit (Tag, Monat,
+             Jahr). Nebeneinander passten zwei davon in keinen Dialog und schoben sich übereinander. -->
+        <StackPanel Spacing="8" IsVisible="{Binding ShowDateRange}">
+          <StackPanel Spacing="4">
+            <TextBlock Text="{loc:Tr Entry_DateFrom}" FontSize="12" Opacity="0.7" />
+            <DatePicker SelectedDate="{Binding AbsenceFrom}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+          <StackPanel Spacing="4">
+            <TextBlock Text="{loc:Tr Entry_DateTo}" FontSize="12" Opacity="0.7" />
+            <DatePicker SelectedDate="{Binding AbsenceTo}" HorizontalAlignment="Stretch" />
+          </StackPanel>
+        </StackPanel>
+
+        <!-- Vermerk zur Abwesenheit (optional) — sehen nur die Person selbst und die Admins. -->
+        <StackPanel Spacing="4" IsVisible="{Binding IsAbsenceMode}">
+          <TextBlock Text="{Binding TitleLabel}" FontSize="12" Opacity="0.7" />
+          <TextBox Text="{Binding Title}" PlaceholderText="{Binding TitlePlaceholder}" CornerRadius="6" />
+        </StackPanel>
+
+        <!-- ─── Beides ─── -->
 
         <!-- Kachelfarbe. Vorschau zeigt Grund UND Schrift so, wie die Kachel später im Plan
              aussieht — die Schriftfarbe wird gerechnet, nicht gewählt (EntryColors.OnTile). -->
@@ -120,13 +144,6 @@
                 Background="{DynamicResource SelectionFillBrush}" CornerRadius="6" Padding="10,8">
           <TextBlock Text="{Binding OvernightNote}" FontSize="12" TextWrapping="Wrap" />
         </Border>
-
-        <StackPanel Spacing="4">
-          <TextBlock Text="{loc:Tr Entry_TitleLabel}" FontSize="12" Opacity="0.7" />
-          <TextBox Text="{Binding Title}"
-                   PlaceholderText="{loc:Tr Entry_TitlePlaceholder}"
-                   CornerRadius="6" />
-        </StackPanel>
 
         <StackPanel Spacing="4">
           <TextBlock Text="{loc:Tr Entry_NotesLabel}" FontSize="12" Opacity="0.7" />

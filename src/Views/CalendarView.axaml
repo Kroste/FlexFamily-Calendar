@@ -331,12 +331,10 @@
                                       <TextBlock Text="{Binding DisplayType, Converter={x:Static cv:EntryTypeLabelConverter.Instance}}"
                                                  FontSize="11" FontWeight="SemiBold" Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}"
                                                  TextTrimming="CharacterEllipsis" IsVisible="{Binding ShowsTypeLabel}" />
-                                      <TextBlock Text="{Binding ActivityName}" IsVisible="{Binding HasActivity}"
-                                                 FontSize="11" FontWeight="SemiBold"
-                                                 Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}" TextTrimming="CharacterEllipsis" />
-                                      <!-- Bezeichnung als Name (Serien, Aktivitäten ohne Kategorie) — gleiche
-                                           Optik wie ein Typ- oder Kategoriename. -->
-                                      <TextBlock Text="{Binding DisplayTitle}" IsVisible="{Binding IsTitledActivity}"
+                                      <!-- Die Bezeichnung IST der Name der Kachel („Arbeit", „Frei",
+                                           „Sprachschule") — außer bei Abwesenheiten, die nach ihrem
+                                           (maskierten) Typ heißen. Gleiche Optik wie das Typ-Label. -->
+                                      <TextBlock Text="{Binding DisplayTitle}" IsVisible="{Binding ShowsTitleAsName}"
                                                  FontSize="11" FontWeight="SemiBold"
                                                  Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}" TextTrimming="CharacterEllipsis" />
                                       <TextBlock Text="{Binding DisplayTitle}" FontSize="10.5" Foreground="{Binding TileForeground, Converter={StaticResource ColorStringToBrushConverter}}" Opacity="0.9"

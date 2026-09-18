@@ -67,7 +67,8 @@ public class DateRangeLayoutTests : IClassFixture<HeadlessAppFixture>
         {
             var vm = new EntryEditorViewModel(new DateOnly(2026, 9, 18),
                 new[] { new User { Id = "u1", Username = "mara", DisplayName = "Mara" } });
-            vm.SelectedType = vm.EntryTypes.First(t => t.Type == EntryType.Vacation);
+            vm.IsAbsenceMode = true;
+            vm.SelectedAbsenceKind = vm.AbsenceKinds.First(k => k.Type == EntryType.Vacation);
 
             // Schmalste Breite, die der Eintrag-Dialog zulässt (MinWidth 432 + Ränder).
             var window = new Window { Width = 480, Height = 900, Content = new EntryEditorView { DataContext = vm } };

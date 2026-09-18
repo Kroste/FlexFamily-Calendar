@@ -17,11 +17,11 @@ public partial class CalendarViewModel
     {
         if (person != null)
         {
-            EntryDialogRequested?.Invoke(date, null, new List<User> { person }.AsReadOnly(), false, AllTypes, _activityTypes);
+            EntryDialogRequested?.Invoke(date, null, new List<User> { person }.AsReadOnly(), false, AllTypes, TitleSuggestions());
             return;
         }
         var users = _allUsers.Count > 0 ? _allUsers : new List<User> { CurrentUser };
-        EntryDialogRequested?.Invoke(date, null, users.AsReadOnly(), true, AllTypes, _activityTypes);
+        EntryDialogRequested?.Invoke(date, null, users.AsReadOnly(), true, AllTypes, TitleSuggestions());
     }
 
     /// <summary>Selbst-Antrag: Benutzer meldet sich krank / trägt Urlaub ein (nur für sich).
@@ -31,7 +31,7 @@ public partial class CalendarViewModel
         var finalized = Days.FirstOrDefault(d => d.Date == date)?.IsFinalized ?? false;
         LogService.Click(CurrentUser.Username, $"Krank/Urlaub eintragen ({date:dd.MM.yyyy})");
         EntryDialogRequested?.Invoke(date, null, new List<User> { CurrentUser }.AsReadOnly(),
-            false, AbsenceTypes(finalized), _activityTypes);
+            false, AbsenceTypes(finalized), TitleSuggestions());
     }
 
     public void RequestEditEntry(DateOnly date, CalendarEntry entry)
@@ -50,8 +50,25 @@ public partial class CalendarViewModel
         var allowed = adminEdit ? AllTypes : AbsenceTypes(finalized);
         // Abwesenheit: Editor auf den Beginn des Zeitraums öffnen (für die von-bis-Bearbeitung).
         var editDate = EntryTypeInfo.IsAbsence(entry.Type) && entry.AbsenceStart is { } s ? s : date;
-        EntryDialogRequested?.Invoke(editDate, entry, users.AsReadOnly(), adminEdit, allowed, _activityTypes);
+        EntryDialogRequested?.Invoke(editDate, entry, users.AsReadOnly(), adminEdit, allowed, TitleSuggestions());
     }
+
+    /// <summary>
+    /// Bezeichnungen, die der Dialog beim Tippen vorschlägt: was in der geladenen Woche und in den
+    /// Serien schon vorkommt. Frei bleibt es trotzdem — aber „Sprachschule" tippt niemand jedes Mal
+    /// aus. Abwesenheiten bleiben außen vor: ihre Bezeichnung ist ein privater Vermerk
+    /// („Grippe") und hätte in einer Vorschlagsliste für andere Einträge nichts zu suchen.
+    /// </summary>
+    private IReadOnlyList<string> TitleSuggestions()
+        => Days.SelectMany(d => d.TimelineEntries)
+               .Where(e => !EntryTypeInfo.IsAbsence(e.Type))
+               .Select(e => e.Title)
+               .Concat(_recurringActivities.Select(r => r.Title))
+               .Select(s => s.Trim())
+               .Where(s => s.Length > 0)
+               .Distinct(StringComparer.CurrentCultureIgnoreCase)
+               .OrderBy(s => s, StringComparer.CurrentCultureIgnoreCase)
+               .ToList();
 
     /// <summary>Speichert/löscht das Dialog-Ergebnis: ein Pfad für Neu, Edit und Delete.</summary>
     public async Task ApplyEntryResultAsync(DateOnly date, EntryDialogResult result)

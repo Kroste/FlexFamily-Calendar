@@ -23,8 +23,6 @@ public partial class CalendarViewModel : ViewModelBase
 
     private List<ShiftSwapRequest> _swapRequests = new();
 
-    private List<ActivityType> _activityTypes = new();
-
     private List<RecurringActivity> _recurringActivities = new();
 
     private IReadOnlyList<Holiday> _weekHolidays = Array.Empty<Holiday>();
@@ -142,8 +140,8 @@ public partial class CalendarViewModel : ViewModelBase
     /// <summary>Feiertage im Kalender anzeigen (pro Benutzer gemerkt, per Header-Toggle umschaltbar).</summary>
     [ObservableProperty] private bool _isHolidaysVisible = true;
 
-    /// <summary>date, existing (null=neu), users, canPickUser, allowedTypes, activityTypes. Vom CalendarView-Code-Behind abonniert.</summary>
-    public event Action<DateOnly, CalendarEntry?, IReadOnlyList<User>, bool, IReadOnlyList<EntryType>, IReadOnlyList<ActivityType>>? EntryDialogRequested;
+    /// <summary>date, existing (null=neu), users, canPickUser, allowedTypes, titleSuggestions. Vom CalendarView-Code-Behind abonniert.</summary>
+    public event Action<DateOnly, CalendarEntry?, IReadOnlyList<User>, bool, IReadOnlyList<EntryType>, IReadOnlyList<string>>? EntryDialogRequested;
 
     /// <summary>Öffnet den Schichttausch-Dialog mit vorbereitetem ViewModel. Vom CalendarView-Code-Behind abonniert.</summary>
     public event Action<ShiftSwapViewModel>? SwapDialogRequested;

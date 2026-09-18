@@ -26,7 +26,6 @@ public static class AbsencePlanner
                 EndTime = template.EndTime,
                 Title = template.Title,
                 Notes = template.Notes,
-                ActivityTypeId = template.ActivityTypeId,
                 Color = template.Color,      // gewählte Kachelfarbe gilt für den ganzen Zeitraum
                 AbsenceGroupId = groupId,
                 AbsenceStart = from,

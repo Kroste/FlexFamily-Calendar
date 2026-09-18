@@ -66,18 +66,16 @@ public static class EntryWriteRules
 
     /// <summary>Inhaltliche Prüfung (Pflichtfelder je Typ). Gibt eine Fehlermeldung zurück, sonst null.</summary>
     public static string? Validate(string type, DateOnly date, DateOnly? endDate,
-        TimeOnly? start, TimeOnly? end, string? categoryLabel, string? activityTypeId = null)
+        TimeOnly? start, TimeOnly? end, string? categoryLabel)
     {
         if (endDate is { } ed && ed < date)
             return "Enddatum liegt vor dem Startdatum.";
         if (EntryTypes.IsTimed(type) && (start is null || end is null))
             return "Schichten brauchen Start- und Endzeit.";
-        // Bei Aktivitäten reicht ENTWEDER eine ActivityTypeId-Referenz (übliche Auswahl aus Admin-Kategorien)
-        // ODER ein Freitext-Label (categoryLabel). Beide leer = ungültig.
-        if (type == EntryTypes.Activity
-            && string.IsNullOrWhiteSpace(categoryLabel)
-            && string.IsNullOrWhiteSpace(activityTypeId))
-            return "Aktivitäten brauchen eine Kategorie.";
+        // Aktivitäten brauchen eine Bezeichnung — seit es keine Kategorien mehr gibt, ist sie der
+        // einzige Name, den der Eintrag im Plan hat.
+        if (type == EntryTypes.Activity && string.IsNullOrWhiteSpace(categoryLabel))
+            return "Aktivitäten brauchen eine Bezeichnung.";
         // Custom braucht immer einen Freitext-Titel, sonst ist der Eintrag nichtssagend.
         if (type == EntryTypes.Custom && string.IsNullOrWhiteSpace(categoryLabel))
             return "Freie Termine brauchen einen Titel.";

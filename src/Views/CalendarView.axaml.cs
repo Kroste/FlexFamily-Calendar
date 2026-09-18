@@ -166,15 +166,15 @@ public partial class CalendarView : UserControl
     }
 
     private async void OnEntryDialogRequested(DateOnly date, CalendarEntry? existing, IReadOnlyList<User> users,
-        bool canPickUser, IReadOnlyList<EntryType> allowedTypes, IReadOnlyList<ActivityType> activityTypes)
+        bool canPickUser, IReadOnlyList<EntryType> allowedTypes, IReadOnlyList<string> titleSuggestions)
     {
         try
         {
             if (App.DialogService is null) { LogService.Warn("Kein Dialog-Backend verfügbar."); return; }
 
             var vm = existing is null
-                ? new EntryEditorViewModel(date, users, canPickUser, allowedTypes, activityTypes)
-                : new EntryEditorViewModel(date, users, existing, canPickUser, allowedTypes, activityTypes);
+                ? new EntryEditorViewModel(date, users, canPickUser, allowedTypes, titleSuggestions)
+                : new EntryEditorViewModel(date, users, existing, canPickUser, allowedTypes, titleSuggestions);
 
             var result = await App.DialogService.ShowEntryEditorAsync(vm);
 

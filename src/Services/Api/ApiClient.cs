@@ -136,20 +136,6 @@ public class ApiClient
         LogService.Info("API Personen-Reihenfolge gespeichert: {0} Einträge", userIds.Count);
     }
 
-    public async Task<List<ServerActivityTypeDto>> GetActivityTypesAsync()
-    {
-        var list = await _http.GetFromJsonAsync<List<ServerActivityTypeDto>>("api/activity-types") ?? new();
-        LogService.Debug("API Aktivitätstypen geladen: {0}", list.Count);
-        return list;
-    }
-
-    public async Task ReplaceActivityTypesAsync(List<ServerActivityTypeDto> items)
-    {
-        var resp = await _http.PutAsJsonAsync("api/activity-types", items);
-        if (!resp.IsSuccessStatusCode) throw await ErrorAsync(resp, "Aktivitätstypen speichern");
-        LogService.Info("API Aktivitätstypen ersetzt: {0}", items.Count);
-    }
-
     public async Task<List<ServerRecurringActivityDto>> GetRecurringActivitiesAsync()
     {
         var list = await _http.GetFromJsonAsync<List<ServerRecurringActivityDto>>("api/recurring-activities") ?? new();

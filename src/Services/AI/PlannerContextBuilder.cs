@@ -12,7 +12,6 @@ public record PlannerContext(
     DateOnly Today,
     DateOnly WeekStart,
     IReadOnlyList<User> Users,
-    IReadOnlyList<ActivityType> ActivityTypes,
     IReadOnlyList<RecurringActivity> RecurringActivities,
     IReadOnlyList<(DateOnly Date, IReadOnlyList<CalendarEntry> Entries)> Week,
     IReadOnlyList<PlannerNote> Notes,
@@ -144,7 +143,6 @@ public static class PlannerContextBuilder
         }
 
         AppendPeople(sb, ctx.Users);
-        AppendActivityTypes(sb, ctx.ActivityTypes);
         AppendRecurring(sb, ctx.RecurringActivities, ctx.Users);
         AppendWeek(sb, ctx.Week, ctx.Users);
         AppendNotes(sb, ctx.Notes);
@@ -163,15 +161,6 @@ public static class PlannerContextBuilder
             var max = u.MaxWeeklyHours > 0 ? $", max. {u.MaxWeeklyHours:0.#} Std./Woche" : "";
             sb.AppendLine($"- {name} (userId: {u.Id}, {u.Category}, Rolle: {u.Role}) — Soll: {soll}{max}, {ruhe}");
         }
-        sb.AppendLine();
-    }
-
-    private static void AppendActivityTypes(StringBuilder sb, IReadOnlyList<ActivityType> types)
-    {
-        if (types.Count == 0) return;
-        sb.AppendLine("## Aktivitäts-Kategorien");
-        foreach (var t in types)
-            sb.AppendLine($"- {t.Name}");
         sb.AppendLine();
     }
 

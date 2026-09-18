@@ -26,16 +26,37 @@ public class PlanExportTests
     }
 
     [Fact]
-    public void CellEntry_Activity_UsesCategoryAndTitle()
+    public void CellEntry_Title_IsTheName()
     {
+        // Seit es weder Kategorien noch eine Typ-Auswahl gibt, heißt ein Eintrag im PDF so, wie
+        // er auf der Kachel heißt: nach seiner Bezeichnung — nicht „Aktivität · Sprachkurs".
         var e = new CalendarEntry
         {
             Type = EntryType.Activity, UserId = "u1",
             StartTime = TimeSpan.FromHours(16), EndTime = TimeSpan.FromHours(17),
-            ActivityName = "Sprachkurs", Title = "Online"
+            Title = "Sprachkurs"
         };
 
-        Assert.Equal("Sprachkurs · Online", PlanExportBuilder.CellEntry(e, true, "admin", TypeLabel).Label);
+        Assert.Equal("Sprachkurs", PlanExportBuilder.CellEntry(e, true, "admin", TypeLabel).Label);
+    }
+
+    [Fact]
+    public void CellEntry_WithoutTitle_FallsBackToTheType()
+    {
+        var e = new CalendarEntry { Type = EntryType.Work, UserId = "u1",
+            StartTime = TimeSpan.FromHours(8), EndTime = TimeSpan.FromHours(16) };
+
+        Assert.Equal(TypeLabel(EntryType.Work), PlanExportBuilder.CellEntry(e, true, "admin", TypeLabel).Label);
+    }
+
+    [Fact]
+    public void CellEntry_Absence_KeepsTypeAndShowsNoteOnlyToWhoMaySeeIt()
+    {
+        var e = new CalendarEntry { Type = EntryType.SickLeave, UserId = "u1", Title = "Grippe",
+            AbsenceStart = new DateOnly(2026, 6, 1), AbsenceEnd = new DateOnly(2026, 6, 1) };
+
+        Assert.Equal($"{TypeLabel(EntryType.SickLeave)} · Grippe", PlanExportBuilder.CellEntry(e, false, "u1", TypeLabel).Label);
+        Assert.Equal(TypeLabel(EntryType.Absence), PlanExportBuilder.CellEntry(e, false, "fremd", TypeLabel).Label);
     }
 
     [Fact]

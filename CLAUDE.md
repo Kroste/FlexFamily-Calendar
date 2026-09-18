@@ -189,7 +189,7 @@
   Der Zustand wird zudem **vor** dem `await` zurückgesetzt: der Handler läuft pro Release
   zweimal (Tunnel und Bubble), sonst liefe der Reorder doppelt.
 - **Die Plan-Kachel färbt sich nach der Art des Eintrags, nicht nach der Person**
-  (`EntryColors.Tile`: eigene Farbe schlägt Kategorie schlägt Typ, `CalendarEntry.TileColor`). Die Plansicht ist eine
+  (`EntryColors.Tile`: eigene Farbe schlägt Typ, `CalendarEntry.TileColor`). Die Plansicht ist eine
   Leitungssicht — gefragt ist, wer arbeitet, wer frei hat und wer unterwegs und damit nicht
   verfügbar ist; wem die Zeile gehört, steht links daneben. `OwnerColor` bleibt für den
   Personen-Punkt in der Namensspalte und das View-as-Banner. **Gerechnet wird auf `DisplayType`,
@@ -212,7 +212,7 @@
   deswegen verlorener Eintrag nicht. Gefiltert wird, weil der Wert ungeprüft in die Oberfläche
   jedes Betrachters wandert.
 - **Schriftfarbe auf der Kachel wird gerechnet, nicht gesetzt** (`EntryColors.OnTile`: WCAG-Kontrast
-  gegen Schwarz und Weiß, der bessere gewinnt). Sobald der Admin eigene Kategoriefarben vergibt,
+  gegen Schwarz und Weiß, der bessere gewinnt). Sobald eigene Farben im Spiel sind,
   ist jede feste Helligkeitsschwelle irgendwann die falsche. `PdfExportService.TextColor`
   delegiert an dieselbe Funktion — vorher hatte es eine eigene Schwelle (0.62 auf
   0.299/0.587/0.114) und wich bei mittleren Farben von der Bildschirmdarstellung ab.
@@ -221,13 +221,9 @@
   KI-Planer bei jeder Serie nur „(ohne Titel)". Beim Umbau wurde der Kategoriename als Titel
   übernommen: serverseitig in der EF-Migration `RecurringFreeTextTitle` (SQL vor dem DropColumn,
   gegen ein Wegwerf-Postgres 17 mit allen Fällen geprüft — Groß-/Kleinschreibung der Id, eigener
-  Titel hat Vorrang, gelöschte Kategorie), lokal in `RecurringTitleMigration` beim ersten Laden.
+  Titel hat Vorrang, gelöschte Kategorie), lokal in `LegacyCategoryMigration.ApplyToRules` beim ersten Laden.
   Dafür liest `RecurringActivity.LegacyActivityTypeId` das alte JSON-Feld `ActivityTypeId` und
-  wird ab dann nicht mehr geschrieben (`WhenWritingNull`). **Beim Entfernen der Kategorien
-  (Schritt 2) muss diese Übernahme weiter laufen können** — sie braucht den Kategorienamen aus
-  `activity-types.json`. Auf der Kachel und im PDF ist die Bezeichnung einer Aktivität ohne
-  Kategorie der Name (`CalendarEntry.IsTitledActivity`) statt „Aktivität" plus Untertitel.
-  Serien haben wie Einzeleinträge eine freie Kachelfarbe (`RecurringActivity.Color`, Migration
+  wird ab dann nicht mehr geschrieben (`WhenWritingNull`). Die Übernahme liest die Namen aus der alten `activity-types.json` (`LegacyCategory`), die deshalb liegen bleibt.   Serien haben wie Einzeleinträge eine freie Kachelfarbe (`RecurringActivity.Color`, Migration
   `RecurringColor`, serverseitig über `EntryWriteRules.NormalizeColor` gesäubert). Die
   Projektion schreibt sie in `CalendarEntry.Color` jeder Kachel — damit gilt dieselbe Rangfolge
   und dieselbe Maskierungsprüfung wie bei einer am Eintrag gewählten Farbe, ohne Sonderweg.
@@ -238,12 +234,26 @@
   mit `ConnectionStrings__Default=…` per `dotnet ef database update <vorige Migration>` auf den
   Live-Stand bringen, Testdaten per `psql` anlegen, auf die neue Migration heben, Ergebnis
   abfragen, `Down` prüfen, Container stoppen.
-- **Das Typ-Dropdown ist flach**: feste Typen plus die Kategorien der gewählten Person in einer
-  Liste (`EntryTypeOption.Activity`). Die generische Option „Aktivität" entfällt genau dann,
-  wenn es für diese Person mindestens eine Kategorie gibt — ohne passende Kategorie bleibt sie
-  stehen, sonst ginge die Fähigkeit verloren. Die Liste hängt an der Personenkategorie und wird
-  bei Benutzerwechsel neu gebaut; im Konstruktor zusätzlich einmal explizit, weil bei leerer
-  Benutzerliste `SelectedUser` null bleibt und die Partial-Methode nie feuert.
+- **Keine Kategorien, keine Typ-Auswahl (v0.21).** Ein Eintrag heißt, wie man ihn nennt: die
+  Freitext-Bezeichnung (`Title`, serverseitig `CategoryLabel`) ist der Name im Plan —
+  `CalendarEntry.ShowsTitleAsName`, im PDF genauso. Nur Abwesenheiten heißen nach ihrem
+  (maskierten) Typ, mit der Bezeichnung als Vermerk darunter; Alt-Einträge ohne Bezeichnung zeigen
+  weiter ihr Typ-Label. Der Dialog hat zwei Modi (`EntryEditorViewModel.IsAbsenceMode`): **Eintrag**
+  (Bezeichnung Pflicht, mit Vorschlägen aus Woche und Serien — Abwesenheits-Vermerke bewusst
+  NICHT, die sind privat) und **Abwesenheit** (Urlaub/Krank/Abwesend, Von/Bis). Den Umschalter
+  sieht nur, wer beides anlegen darf und neu anlegt; Selbst-Antrag = direkt Abwesenheit; beim
+  Bearbeiten steht der Modus durch den Eintrag fest. **Neue Einträge sind intern `Work`** —
+  Stundenkonto, Tausch (nur Arbeitsschichten), Ruhezeit-Warnungen und die Freigabe-Regel hängen
+  am Typ und laufen so unverändert weiter, bis das Stundenkonto umgebaut ist (es rechnet laut Lars
+  anders als angenommen). Folge bis dahin: auch „Sprachschule" zählt als Arbeitszeit. Bestehende
+  Einträge behalten beim Bearbeiten ihren Typ (Aktivität, alte Übernachtung …).
+  Kategorien sind komplett raus (Admin-Reiter, `IStorageService`, API, Tabelle). Die EF-Migration
+  `DropCategories` überträgt vorher Name → `CategoryLabel` und Farbe → `Color` (nur wo leer, nur
+  gültiges Hex), gegen Postgres 17 mit allen Fällen geprüft; lokal macht das
+  `LegacyCategoryMigration.ApplyToEntries` tageweise beim ersten Laden eines Tages.
+- **`Clone`-Methoden kopieren Felder einzeln — neue Felder dort nachtragen.** `WeekCopy` und
+  `EntryMoveCopy` hatten `Color` seit v0.16 nicht übernommen: „Woche kopieren" und
+  Verschieben/Kopieren einer Schicht verloren still die eigene Kachelfarbe.
 - **Zeitfelder im Eintrag-Dialog starten leer** (`TimeSpan?` ohne Vorbelegung). Abwesenheiten
   spannen ganze Tage und haben deshalb gar keine Uhrzeit: `ShowTimes` blendet die Felder aus
   und `Save` überspringt die Zeitprüfung — ohne diese Ausnahme ließe sich seit den leeren
@@ -347,7 +357,7 @@ docs/      Screenshots, Logo
   (`server/FlexFamilyCalendar.Api/Migrations/`). Nach Feldänderungen:
   `dotnet ef migrations add <Name>` — Live-DB wird beim Redeploy per Startup-Migrate
   aktualisiert (Retry-Block in `Program.cs`, im Testing-Environment übersprungen).
-- **Übersetzung Client↔Server** liegt in `src/Services/Api/*Mapping.cs` (User, Entry, ActivityType,
+- **Übersetzung Client↔Server** liegt in `src/Services/Api/*Mapping.cs` (User, Entry,
   RecurringActivity, ShiftSwap, Notification). Eintrags-Modell-Unterschied: Desktop = Abwesenheit als
   Tag-pro-Eintrag mit `AbsenceGroupId`, Server = ein Bereich-Eintrag (Date+EndDate).
 

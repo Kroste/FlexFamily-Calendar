@@ -8,9 +8,8 @@ namespace FlexFamilyCalendar.Models;
 /// und wer anderweitig unterwegs (und damit nicht verfügbar) ist. Wer die Zeile besitzt, steht
 /// ohnehin links daneben.
 ///
-/// Reihenfolge: die am Eintrag hinterlegte Farbe schlägt die Kategorie, die Kategorie schlägt
-/// den Typ. So lässt sich beim Anlegen für den Einzelfall eine Farbe setzen, ohne die Kategorie
-/// oder gar den Typ umzudefinieren.
+/// Reihenfolge: die am Eintrag hinterlegte Farbe schlägt den Typ. Kategorien gibt es nicht mehr;
+/// ihre Farben wurden beim Umbau als eigene Farbe an die Einträge übernommen.
 /// </summary>
 public static class EntryColors
 {
@@ -20,16 +19,11 @@ public static class EntryColors
     /// <summary>Farbe für einen Eintragstyp.</summary>
     public static string ForType(EntryType type) => EntryTypeInfo.Color(type);
 
-    /// <summary>
-    /// Kachelfarbe eines Eintrags: <paramref name="entryColor"/> vor <paramref name="activityColor"/>
-    /// vor Typ. Beide Sonderfarben greifen nur, wenn sie gesetzt UND lesbar sind —
-    /// <paramref name="activityColor"/> darf nur übergeben werden, wenn der Eintrag wirklich eine
-    /// Kategorie aufgelöst hat, sonst schlüge die Restfarbe eines früheren Laufs durch.
-    /// </summary>
-    public static string Tile(EntryType displayType, string? activityColor, string? entryColor = null)
+    /// <summary>Kachelfarbe eines Eintrags: <paramref name="entryColor"/> vor Typ. Die eigene Farbe
+    /// greift nur, wenn sie gesetzt UND lesbar ist.</summary>
+    public static string Tile(EntryType displayType, string? entryColor = null)
     {
         if (IsValidHex(entryColor)) return entryColor!;
-        if (IsValidHex(activityColor)) return activityColor!;
         var byType = ForType(displayType);
         return IsValidHex(byType) ? byType : Fallback;
     }

@@ -12,12 +12,12 @@ namespace FlexFamilyCalendar.Tests;
 /// bisher WAR die Kategorie der Name, der Titel blieb leer — ohne Übernahme stünden alle Serien
 /// danach namenlos im Plan.
 /// </summary>
-public class RecurringTitleMigrationTests
+public class RecurringLegacyCategoryTests
 {
-    private static readonly List<ActivityType> Types = new()
+    private static readonly List<LegacyCategory> Types = new()
     {
-        new() { Id = "abc-123", Name = "Sprachschule" },
-        new() { Id = "def-456", Name = "Fußball" }
+        new("abc-123", "Sprachschule", "#8E44AD"),
+        new("def-456", "Fußball", "#16A085")
     };
 
     [Fact]
@@ -25,7 +25,7 @@ public class RecurringTitleMigrationTests
     {
         var rule = new RecurringActivity { Title = "", LegacyActivityTypeId = "abc-123" };
 
-        Assert.True(RecurringTitleMigration.Apply(new[] { rule }, Types));
+        Assert.True(LegacyCategoryMigration.ApplyToRules(new[] { rule }, Types));
 
         Assert.Equal("Sprachschule", rule.Title);
         Assert.Null(rule.LegacyActivityTypeId);
@@ -36,7 +36,7 @@ public class RecurringTitleMigrationTests
     {
         var rule = new RecurringActivity { LegacyActivityTypeId = "ABC-123" };
 
-        RecurringTitleMigration.Apply(new[] { rule }, Types);
+        LegacyCategoryMigration.ApplyToRules(new[] { rule }, Types);
 
         Assert.Equal("Sprachschule", rule.Title);
     }
@@ -46,7 +46,7 @@ public class RecurringTitleMigrationTests
     {
         var rule = new RecurringActivity { Title = "Englisch B1", LegacyActivityTypeId = "abc-123" };
 
-        RecurringTitleMigration.Apply(new[] { rule }, Types);
+        LegacyCategoryMigration.ApplyToRules(new[] { rule }, Types);
 
         Assert.Equal("Englisch B1", rule.Title);
         Assert.Null(rule.LegacyActivityTypeId);
@@ -58,7 +58,7 @@ public class RecurringTitleMigrationTests
         // Der Name war in diesem Fall schon vorher weg — die Verwaltungsliste zeigte eine leere Zelle.
         var rule = new RecurringActivity { LegacyActivityTypeId = "gibt-es-nicht" };
 
-        Assert.True(RecurringTitleMigration.Apply(new[] { rule }, Types));
+        Assert.True(LegacyCategoryMigration.ApplyToRules(new[] { rule }, Types));
 
         Assert.Equal("", rule.Title);
         Assert.Null(rule.LegacyActivityTypeId);
@@ -69,7 +69,7 @@ public class RecurringTitleMigrationTests
     {
         var rule = new RecurringActivity { Title = "Fußball" };
 
-        Assert.False(RecurringTitleMigration.Apply(new[] { rule }, Types));
+        Assert.False(LegacyCategoryMigration.ApplyToRules(new[] { rule }, Types));
     }
 }
 
@@ -171,7 +171,7 @@ public class TitledActivityDisplayTests
     {
         var e = Recurring("Fußball");
 
-        Assert.True(e.IsTitledActivity);
+        Assert.True(e.ShowsTitleAsName);
         Assert.False(e.ShowsTypeLabel);    // kein „Aktivität" darüber
         Assert.False(e.ShowsSubtitle);     // und nicht doppelt darunter
     }
@@ -181,16 +181,28 @@ public class TitledActivityDisplayTests
     {
         var e = Recurring("");
 
-        Assert.False(e.IsTitledActivity);
+        Assert.False(e.ShowsTitleAsName);
         Assert.True(e.ShowsTypeLabel);
     }
 
     [Fact]
-    public void Work_with_a_title_keeps_type_and_subtitle()
+    public void Work_with_a_title_is_named_by_its_title_too()
     {
-        var e = new CalendarEntry { Type = EntryType.Work, Title = "Frühdienst", DisplayType = EntryType.Work, DisplayTitle = "Frühdienst" };
+        // Keine Typ-Auswahl mehr: auch eine Schicht heißt, wie man sie nennt — „Betreuung Kinder"
+        // statt „Arbeit" mit dem Text klein darunter.
+        var e = new CalendarEntry { Type = EntryType.Work, Title = "Betreuung Kinder", DisplayType = EntryType.Work, DisplayTitle = "Betreuung Kinder" };
 
-        Assert.False(e.IsTitledActivity);
+        Assert.True(e.ShowsTitleAsName);
+        Assert.False(e.ShowsTypeLabel);
+        Assert.False(e.ShowsSubtitle);
+    }
+
+    [Fact]
+    public void Absence_is_named_by_its_type_with_the_note_below()
+    {
+        var e = new CalendarEntry { Type = EntryType.Vacation, Title = "Malle", DisplayType = EntryType.Vacation, DisplayTitle = "Malle" };
+
+        Assert.False(e.ShowsTitleAsName);
         Assert.True(e.ShowsTypeLabel);
         Assert.True(e.ShowsSubtitle);
     }

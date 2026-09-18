@@ -8,6 +8,15 @@ Geschrieben für die Menschen, die die App benutzen: was sich für sie ändert, 
 Update-Dialog zeigt den Text ohne Formatierung — also schlichte Aufzählungen, kein Fettdruck,
 keine Links.
 
+## v0.21.0 — 18.09.2026
+
+- Der Eintrag-Dialog hat keine Typ-Auswahl mehr. Ein Eintrag bekommt eine frei wählbare Bezeichnung, z.B. „Arbeit", „Frei", „Remise" oder „Sprachschule" — sie steht fett als Name auf der Kachel.
+- Beim Tippen der Bezeichnung schlägt die App vor, was in der Woche und bei den wiederkehrenden Aktivitäten schon vorkommt.
+- Urlaub und Krankmeldung bekommen einen eigenen Modus: oben im Dialog „Abwesenheit (Urlaub/Krank)" wählen, dann Art und Zeitraum. Genehmigung, Krankmeldung und Datenschutz funktionieren wie bisher.
+- Die Kategorien sind entfernt, auch der Reiter im Admin-Bereich. Bestehende Einträge behalten ihren Kategorienamen als Bezeichnung und ihre Kategoriefarbe als eigene Farbe — der Plan sieht also gleich aus.
+- „Woche kopieren" sowie das Verschieben und Kopieren einer Schicht übernehmen jetzt auch die eigene Kachelfarbe. Bisher ging sie dabei verloren.
+- Hinweis: Neue Einträge zählen vorerst alle als Arbeitszeit. Die Berechnung des Stundenkontos wird noch überarbeitet.
+
 ## v0.20.1 — 18.09.2026
 
 - Die Datumsfelder „Von" und „Bis" überlappten sich im Pausen-Dialog der Serien und bei Urlaub/Krank im Eintrag-Dialog. Sie stehen jetzt untereinander.

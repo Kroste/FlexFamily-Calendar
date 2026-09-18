@@ -34,7 +34,7 @@ public class EntryEditorTimeTests
     public void NewEntry_ShowsTimeFields_ForWork()
     {
         var vm = new EntryEditorViewModel(Day, new[] { Person() });
-        vm.SelectedType = vm.EntryTypes.First(t => t.Type == EntryType.Work);
+        vm.Title = "Arbeit";
 
         Assert.True(vm.ShowTimes);
     }
@@ -43,7 +43,7 @@ public class EntryEditorTimeTests
     public void Work_WithoutTimes_IsRejected()
     {
         var vm = new EntryEditorViewModel(Day, new[] { Person() });
-        vm.SelectedType = vm.EntryTypes.First(t => t.Type == EntryType.Work);
+        vm.Title = "Arbeit";
 
         var result = Save(vm);
 
@@ -55,7 +55,7 @@ public class EntryEditorTimeTests
     public void Work_WithTypedTimes_Saves()
     {
         var vm = new EntryEditorViewModel(Day, new[] { Person() });
-        vm.SelectedType = vm.EntryTypes.First(t => t.Type == EntryType.Work);
+        vm.Title = "Arbeit";
         vm.StartTime = new TimeSpan(7, 0, 0);
         vm.EndTime = new TimeSpan(15, 30, 0);
 
@@ -72,7 +72,8 @@ public class EntryEditorTimeTests
     public void Absence_NeedsNoTimes(EntryType type)
     {
         var vm = new EntryEditorViewModel(Day, new[] { Person() });
-        vm.SelectedType = vm.EntryTypes.First(t => t.Type == type);
+        vm.IsAbsenceMode = true;
+        vm.SelectedAbsenceKind = vm.AbsenceKinds.First(k => k.Type == type);
 
         Assert.False(vm.ShowTimes);
 
