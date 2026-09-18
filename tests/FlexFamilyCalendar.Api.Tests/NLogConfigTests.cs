@@ -31,6 +31,19 @@ public class NLogConfigTests
     }
 
     [Fact]
+    public void Datei_Target_hat_einen_Groessendeckel()
+    {
+        // Auf dem VPS teilt sich das Log-Volume die Platte mit Postgres. Eine durchdrehende
+        // Schleife darf nicht bis zum Tageswechsel schreiben dürfen.
+        var factory = new LogFactory { ThrowConfigExceptions = true };
+        factory.Setup().LoadConfigurationFromFile(ConfigPath, optional: false);
+
+        var file = factory.Configuration!.AllTargets.OfType<FileTarget>().Single();
+        Assert.InRange(file.ArchiveAboveSize, 1, 50L * 1024 * 1024);
+        Assert.InRange(file.MaxArchiveFiles, 1, 60);
+    }
+
+    [Fact]
     public void Jedes_Target_maskiert_Secrets_tatsaechlich()
     {
         RuntimeHelpers.RunModuleConstructor(typeof(MaskingLayoutRenderer).Module.ModuleHandle);

@@ -32,6 +32,19 @@ public class NLogConfigTests
     }
 
     [Fact]
+    public void Datei_Target_hat_einen_Groessendeckel()
+    {
+        // Nur tägliches Rotieren reicht nicht: eine durchdrehende Schleife schrieb die Datei
+        // unter Windows bis zum Tageswechsel voll. Größe UND Anzahl müssen begrenzt sein.
+        var factory = new LogFactory { ThrowConfigExceptions = true };
+        factory.Setup().LoadConfigurationFromFile(ConfigPath, optional: false);
+
+        var file = factory.Configuration!.AllTargets.OfType<FileTarget>().Single();
+        Assert.InRange(file.ArchiveAboveSize, 1, 50L * 1024 * 1024);
+        Assert.InRange(file.MaxArchiveFiles, 1, 60);
+    }
+
+    [Fact]
     public void Datei_Target_loggt_ab_Trace()
     {
         var factory = new LogFactory { ThrowConfigExceptions = true };

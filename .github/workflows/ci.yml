@@ -45,3 +45,18 @@ jobs:
       # sie nicht kennt, und der Lauf endet mit "Es wurden keine Tests ausgeführt".
       - name: Build & Test (Solution)
         run: dotnet test FlexFamilyCalendar.slnx -c Release --verbosity normal
+
+  # Der Single-Instance-Wächter verhält sich unter Windows grundlegend anders als unter Linux:
+  # dort sind Named Pipes echte Kernel-Objekte, hier bildet .NET sie auf Unix-Sockets ab.
+  single-instance-windows:
+    name: Single-Instance (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Wächter-Tests
+        run: dotnet test --project tests/FlexFamilyCalendar.Tests/FlexFamilyCalendar.Tests.csproj -c Release --filter-query "/*/*/SingleInstanceGuardTests/*"

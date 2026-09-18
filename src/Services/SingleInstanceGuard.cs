@@ -22,9 +22,19 @@ public sealed class SingleInstanceGuard : IDisposable
     private static readonly TimeSpan ConnectTimeout = TimeSpan.FromMilliseconds(500);
 
     private readonly string _pipeName;
+    private readonly object _serverLock = new();
     private CancellationTokenSource? _cts;
     private NamedPipeServerStream? _server;
     private bool _disposed;
+    private int _acceptFailures;
+
+    /// <summary>Anzahl fehlgeschlagener Annahmen seit dem Start — für Tests, die eine
+    /// Endlosschleife ausschließen müssen, ohne sie auf der Uhr zu messen.</summary>
+    internal int AcceptFailures => Volatile.Read(ref _acceptFailures);
+
+    /// <summary>Ab so vielen Fehlern in Folge wird die Pipe-Instanz ersetzt statt zurückgesetzt.</summary>
+    private const int RecreateAfterFailures = 5;
+    private static readonly TimeSpan MaxBackoff = TimeSpan.FromSeconds(5);
 
     public SingleInstanceGuard(string? userName = null)
         => _pipeName = $"FlexFamilyCalendar.SingleInstance.{userName ?? Environment.UserName}";
@@ -100,10 +110,9 @@ public sealed class SingleInstanceGuard : IDisposable
     {
         try
         {
-            _server = new NamedPipeServerStream(_pipeName, PipeDirection.In, 1,
-                PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+            _server = NewServer();
             _cts = new CancellationTokenSource();
-            _ = ListenAsync(_server, _cts.Token);
+            _ = ListenAsync(_cts.Token);
             return true;
         }
         catch (IOException)
@@ -112,6 +121,9 @@ public sealed class SingleInstanceGuard : IDisposable
             return false;
         }
     }
+
+    private NamedPipeServerStream NewServer()
+        => new(_pipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
 
     private bool CanConnectToPrimary()
     {
@@ -127,11 +139,16 @@ public sealed class SingleInstanceGuard : IDisposable
         }
     }
 
-    private async Task ListenAsync(NamedPipeServerStream server, CancellationToken token)
+    private async Task ListenAsync(CancellationToken token)
     {
         var buffer = new byte[1];
+        var failuresInARow = 0;
         while (!token.IsCancellationRequested)
         {
+            NamedPipeServerStream? server;
+            lock (_serverLock) server = _server;
+            if (server is null) return;
+
             try
             {
                 await server.WaitForConnectionAsync(token);
@@ -141,6 +158,7 @@ public sealed class SingleInstanceGuard : IDisposable
                     LogService.Info("Zweitstart erkannt — bestehendes Fenster wird nach vorn geholt.");
                     ActivationRequested?.Invoke();
                 }
+                failuresInARow = 0;
             }
             catch (OperationCanceledException)
             {
@@ -152,30 +170,112 @@ public sealed class SingleInstanceGuard : IDisposable
             }
             catch (IOException ex)
             {
-                // Abgebrochene Verbindung: nächste abwarten, nicht die Schleife verlieren.
-                LogService.Debug("Instanz-Pipe: Verbindung abgebrochen ({0})", ex.Message);
+                failuresInARow++;
+                Interlocked.Increment(ref _acceptFailures);
+                // Gedrosselt: nur der erste Fehler einer Serie landet im Log. Vorher stand hier
+                // jede Iteration — unter Windows im Millisekundentakt, bis die Platte voll war.
+                if (failuresInARow == 1)
+                    LogService.Debug("Instanz-Pipe: Verbindung abgebrochen ({0})", ex.Message);
             }
 
-            try
+            if (!ResetForNextClient(server) || failuresInARow >= RecreateAfterFailures)
             {
-                if (server.IsConnected) server.Disconnect();
+                if (!ReplaceServer(server, failuresInARow)) return;
             }
-            catch (Exception ex)
+
+            if (failuresInARow > 0)
             {
-                LogService.Debug("Instanz-Pipe konnte nicht getrennt werden: {0}", ex.Message);
+                // Selbst wenn künftig ein anderer Fehlerpfad die Pipe kaputt lässt: eine
+                // ungebremste Schleife ist damit ausgeschlossen.
+                try { await Task.Delay(Backoff(failuresInARow), token); }
+                catch (OperationCanceledException) { return; }
             }
         }
     }
 
+    /// <summary>
+    /// Bereitet die Pipe auf den nächsten Client vor.
+    ///
+    /// <c>Disconnect()</c> läuft bewusst OHNE Vorabprüfung von <c>IsConnected</c>. Legt ein
+    /// Client auf, ohne zu schreiben — genau das tut die Probe jedes Zweitstarts in
+    /// <see cref="CanConnectToPrimary"/> —, geht die Server-Pipe unter Windows in den Zustand
+    /// <c>Broken</c>, und dort ist <c>IsConnected</c> false. Die frühere Prüfung übersprang
+    /// deshalb genau den Fall, in dem das Trennen Pflicht ist: ohne <c>Disconnect()</c> wirft
+    /// jedes weitere <c>WaitForConnectionAsync</c> sofort „Pipe is broken", und die Schleife lief
+    /// ohne Pause weiter — im Millisekundentakt, mit einem Log-Eintrag pro Durchlauf.
+    /// Unter Linux bildet .NET die Pipe auf ein Unix-Socket ab, dort trat das nie auf.
+    /// </summary>
+    /// <returns><c>false</c>, wenn die Instanz sich nicht zurücksetzen ließ und ersetzt werden muss.</returns>
+    private static bool ResetForNextClient(NamedPipeServerStream server)
+    {
+        try
+        {
+            server.Disconnect();
+            return true;
+        }
+        catch (ObjectDisposedException)
+        {
+            return true;   // Dispose läuft, die Schleife endet im nächsten Durchlauf
+        }
+        catch (InvalidOperationException)
+        {
+            // Nie verbunden gewesen oder schon getrennt — die Pipe wartet bereits.
+            return true;
+        }
+        catch (Exception ex)
+        {
+            LogService.Debug("Instanz-Pipe ließ sich nicht zurücksetzen: {0}", ex.Message);
+            return false;
+        }
+    }
+
+    /// <summary>Letzte Rettung: alte Pipe-Instanz wegwerfen, neue anlegen.</summary>
+    /// <returns><c>false</c>, wenn der Wächter aufgibt (Dispose läuft oder Name inzwischen belegt).</returns>
+    private bool ReplaceServer(NamedPipeServerStream broken, int failuresInARow)
+    {
+        lock (_serverLock)
+        {
+            if (_disposed || !ReferenceEquals(_server, broken)) return !_disposed;
+
+            LogService.Warn("Instanz-Pipe nach {0} Fehlern in Folge neu aufgebaut.", failuresInARow);
+            broken.Dispose();
+            try
+            {
+                _server = NewServer();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Zwischen Dispose und Neuanlage hat ein anderer Prozess den Namen belegt. Die
+                // App läuft weiter, nur holt ein Zweitstart sie nicht mehr nach vorn.
+                LogService.Warn("Instanz-Pipe konnte nicht neu angelegt werden: {0}", ex.Message);
+                _server = null;
+                return false;
+            }
+        }
+    }
+
+    private static TimeSpan Backoff(int failuresInARow)
+    {
+        var ms = 50 * Math.Pow(2, Math.Min(failuresInARow - 1, 10));
+        return TimeSpan.FromMilliseconds(Math.Min(ms, MaxBackoff.TotalMilliseconds));
+    }
+
     public void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true;
+        lock (_serverLock)
+        {
+            if (_disposed) return;
+            _disposed = true;
+        }
 
         try { _cts?.Cancel(); } catch (ObjectDisposedException) { /* schon weg */ }
         _cts?.Dispose();
-        _server?.Dispose();
         _cts = null;
-        _server = null;
+        lock (_serverLock)
+        {
+            _server?.Dispose();
+            _server = null;
+        }
     }
 }

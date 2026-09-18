@@ -117,6 +117,85 @@ public class SingleInstanceGuardTests
         try { await accepting; } catch (OperationCanceledException) { /* nie verbunden */ }
     }
 
+    // ───────── Abgebrochene Verbindungen (Windows: „Pipe is broken") ─────────
+    //
+    // Jeder Zweitstart prüft mit TryClaim erst per Probe, ob schon jemand lauscht — verbindet
+    // sich und legt sofort wieder auf, ohne zu schreiben. Unter Windows geht die Server-Pipe
+    // dabei in den Zustand Broken; ohne Disconnect() wirft danach jedes WaitForConnectionAsync
+    // sofort, und die Schleife lief im Millisekundentakt samt Log-Eintrag pro Durchlauf.
+    // Unter Linux (Unix-Socket) tritt das nicht auf — diese Tests laufen deshalb zusätzlich
+    // im Windows-Job der CI, sonst sind sie hier nur Formsache.
+
+    [Fact]
+    public async Task Nach_abgebrochenen_Proben_kommt_die_Aktivierung_trotzdem_an()
+    {
+        var name = UniqueName();
+        using var primary = new SingleInstanceGuard(name);
+        Assert.True(primary.TryClaim());
+
+        var activated = new TaskCompletionSource();
+        primary.ActivationRequested += () => activated.TrySetResult();
+
+        // Fünf Zweitstarts, die nur proben — genau der Weg, der die Pipe kaputt hinterließ.
+        for (var i = 0; i < 5; i++)
+        {
+            using var probe = new SingleInstanceGuard(name);
+            Assert.False(probe.TryClaim());
+        }
+
+        using var secondary = new SingleInstanceGuard(name);
+        secondary.NotifyPrimary();
+
+        var done = await Task.WhenAny(activated.Task, Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+        Assert.Same(activated.Task, done);
+    }
+
+    [Fact]
+    public async Task Abgebrochene_Proben_erzeugen_keine_Endlosschleife()
+    {
+        var name = UniqueName();
+        using var primary = new SingleInstanceGuard(name);
+        Assert.True(primary.TryClaim());
+
+        for (var i = 0; i < 3; i++)
+        {
+            using var probe = new SingleInstanceGuard(name);
+            Assert.False(probe.TryClaim());
+        }
+
+        // Eine Sekunde Leerlauf. Vorher kamen unter Windows in dieser Zeit Tausende
+        // Fehlschläge zusammen; mit Zurücksetzen der Pipe sind es höchstens eine Handvoll.
+        await Task.Delay(TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);
+
+        Assert.True(primary.AcceptFailures < 20, $"{primary.AcceptFailures} Fehlschläge in einer Sekunde — die Annahme-Schleife dreht durch.");
+    }
+
+    [Fact]
+    public async Task Aktivierung_funktioniert_mehrfach_hintereinander()
+    {
+        // Jede Aktivierung trennt die Pipe danach wieder; läuft das Zurücksetzen schief, kommt
+        // höchstens der erste Zweitstart durch.
+        var name = UniqueName();
+        using var primary = new SingleInstanceGuard(name);
+        Assert.True(primary.TryClaim());
+
+        var count = 0;
+        var third = new TaskCompletionSource();
+        primary.ActivationRequested += () => { if (Interlocked.Increment(ref count) == 3) third.TrySetResult(); };
+
+        for (var i = 0; i < 3; i++)
+        {
+            using var secondary = new SingleInstanceGuard(name);
+            Assert.False(secondary.TryClaim());
+            secondary.NotifyPrimary();
+            // Dem Server Zeit geben, die vorige Verbindung abzuräumen, bevor der nächste kommt.
+            await Task.Delay(200, TestContext.Current.CancellationToken);
+        }
+
+        var done = await Task.WhenAny(third.Task, Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+        Assert.Same(third.Task, done);
+    }
+
     [Fact]
     public void NotifyPrimary_ohne_laufende_Instanz_wirft_nicht()
     {
