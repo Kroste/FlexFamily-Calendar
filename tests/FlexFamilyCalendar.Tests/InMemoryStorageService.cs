@@ -135,7 +135,7 @@ public class InMemoryStorageService : IStorageService
     private static RecurringActivity Clone(RecurringActivity a) => new()
     {
         Id = a.Id, UserId = a.UserId, UserDisplayName = a.UserDisplayName, Title = a.Title,
-        ActivityTypeId = a.ActivityTypeId, StartTime = a.StartTime, EndTime = a.EndTime,
+        StartTime = a.StartTime, EndTime = a.EndTime,
         Weekdays = new List<DayOfWeek>(a.Weekdays), SkipOnHolidays = a.SkipOnHolidays
     };
 

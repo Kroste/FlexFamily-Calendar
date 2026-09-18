@@ -14,7 +14,6 @@ public record RecurringActivityDto(
     string UserId,
     string UserDisplayName,
     string Title,
-    string? ActivityTypeId,
     TimeOnly StartTime,
     TimeOnly EndTime,
     List<int> Weekdays,
@@ -22,7 +21,7 @@ public record RecurringActivityDto(
     List<RecurrenceSkipDto> Skips)
 {
     public static RecurringActivityDto From(RecurringActivityEntity e) => new(
-        e.Id, e.UserId, e.UserDisplayName, e.Title, e.ActivityTypeId,
+        e.Id, e.UserId, e.UserDisplayName, e.Title,
         e.StartTime, e.EndTime, e.Weekdays, e.SkipOnHolidays,
         e.Skips.Select(RecurrenceSkipDto.FromEntity).ToList());
 }

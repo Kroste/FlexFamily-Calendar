@@ -148,9 +148,22 @@ public class CalendarEntry
     [System.Text.Json.Serialization.JsonIgnore]
     public bool HasActivity => !string.IsNullOrEmpty(ActivityName);
 
-    /// <summary>Karte zeigt das feste Typ-Label nur, wenn keine Aktivitäts-Kategorie aufgelöst ist.</summary>
+    /// <summary>
+    /// Aktivität mit eigener Bezeichnung, aber ohne Kategorie — dann IST die Bezeichnung der Name
+    /// („Fußball"), nicht das generische „Aktivität" mit dem Text klein darunter. Seit Serien
+    /// Freitext statt Kategorie tragen, ist das ihr Normalfall.
+    /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public bool ShowsTypeLabel => !HasActivity;
+    public bool IsTitledActivity => !HasActivity && DisplayType == EntryType.Activity
+                                    && !string.IsNullOrWhiteSpace(DisplayTitle);
+
+    /// <summary>Karte zeigt das feste Typ-Label nur ohne Kategorie und ohne eigene Bezeichnung.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool ShowsTypeLabel => !HasActivity && !IsTitledActivity;
+
+    /// <summary>Titel als Zusatzzeile — außer er steht schon als Name ganz oben.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool ShowsSubtitle => !string.IsNullOrEmpty(DisplayTitle) && !IsTitledActivity;
 
     /// <summary>Laufzeit: aus einer wiederkehrenden Regel projiziert (nicht persistiert, nicht editierbar).</summary>
     [System.Text.Json.Serialization.JsonIgnore]

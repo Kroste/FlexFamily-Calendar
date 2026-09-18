@@ -101,7 +101,6 @@ public record ServerRecurringActivityDto(
     string UserId,
     string UserDisplayName,
     string Title,
-    string? ActivityTypeId,
     TimeOnly StartTime,
     TimeOnly EndTime,
     List<int> Weekdays,

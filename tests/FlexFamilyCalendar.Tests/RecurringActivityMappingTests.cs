@@ -9,7 +9,7 @@ public class RecurringActivityMappingTests
     public void ToDesktop_maps_weekdays_times_and_fields()
     {
         var dto = new ServerRecurringActivityDto(
-            "r1", "u1", "Mia", "Fußball", "cat1",
+            "r1", "u1", "Mia", "Fußball",
             new TimeOnly(16, 0), new TimeOnly(17, 30),
             new List<int> { 4, 2 }, SkipOnHolidays: true, Skips: null);   // 4=Thursday, 2=Tuesday
 
@@ -19,19 +19,10 @@ public class RecurringActivityMappingTests
         Assert.Equal("u1", a.UserId);
         Assert.Equal("Mia", a.UserDisplayName);
         Assert.Equal("Fußball", a.Title);
-        Assert.Equal("cat1", a.ActivityTypeId);
         Assert.Equal(new TimeSpan(16, 0, 0), a.StartTime);
         Assert.Equal(new TimeSpan(17, 30, 0), a.EndTime);
         Assert.Equal(new[] { DayOfWeek.Thursday, DayOfWeek.Tuesday }, a.Weekdays);
         Assert.True(a.SkipOnHolidays);
-    }
-
-    [Fact]
-    public void Empty_activity_type_id_becomes_null()
-    {
-        var dto = new ServerRecurringActivityDto("r1", "u1", "X", "T", "",
-            new TimeOnly(8, 0), new TimeOnly(9, 0), new List<int> { 1 }, false, null);
-        Assert.Null(RecurringActivityMapping.ToDesktop(dto).ActivityTypeId);
     }
 
     [Fact]
@@ -40,7 +31,6 @@ public class RecurringActivityMappingTests
         var a = new RecurringActivity
         {
             Id = "r2", UserId = "u1", UserDisplayName = "Tom", Title = "Klavier",
-            ActivityTypeId = null,
             StartTime = new TimeSpan(18, 0, 0), EndTime = new TimeSpan(19, 0, 0),
             Weekdays = new List<DayOfWeek> { DayOfWeek.Monday, DayOfWeek.Wednesday },
             SkipOnHolidays = false
@@ -49,7 +39,6 @@ public class RecurringActivityMappingTests
         var dto = RecurringActivityMapping.ToServer(a);
 
         Assert.Equal(new[] { 1, 3 }, dto.Weekdays);
-        Assert.Null(dto.ActivityTypeId);
         Assert.Equal(new TimeOnly(18, 0), dto.StartTime);
     }
 

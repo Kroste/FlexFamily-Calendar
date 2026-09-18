@@ -6,9 +6,6 @@
              x:Class="FlexFamilyCalendar.Views.RecurringActivityManagementView"
              x:CompileBindings="False">
 
-  <UserControl.Resources>
-    <cv:ColorStringToBrushConverter x:Key="ColorStringToBrushConverter" />
-  </UserControl.Resources>
 
   <Grid Margin="16" ColumnDefinitions="280,16,*">
 
@@ -30,7 +27,7 @@
                   <TextBlock Text="{Binding WeekdaysLabel}" FontWeight="SemiBold" />
                   <TextBlock Text="{Binding TimeRange}" FontWeight="SemiBold" Opacity="0.8" />
                 </StackPanel>
-                <TextBlock Text="{Binding CategoryName}" FontSize="12" />
+                <TextBlock Text="{Binding Title}" FontSize="12" />
                 <TextBlock Text="{Binding UserDisplayName}" FontSize="11" Opacity="0.6" />
               </StackPanel>
             </DataTemplate>
@@ -56,19 +53,9 @@
         </StackPanel>
 
         <StackPanel Spacing="4">
-          <TextBlock Text="{loc:Tr Entry_ActivityType}" FontSize="12" Opacity="0.7" />
-          <ComboBox ItemsSource="{Binding AvailableActivityTypes}" SelectedItem="{Binding SelectedActivityType}"
-                    HorizontalAlignment="Stretch" PlaceholderText="{loc:Tr Entry_ActivityNone}">
-            <ComboBox.ItemTemplate>
-              <DataTemplate>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                  <Border Width="16" Height="16" CornerRadius="8" VerticalAlignment="Center"
-                          Background="{Binding Color, Converter={StaticResource ColorStringToBrushConverter}}" />
-                  <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                </StackPanel>
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
+          <TextBlock Text="{loc:Tr Recur_Name}" FontSize="12" Opacity="0.7" />
+          <TextBox Text="{Binding Title}" PlaceholderText="{loc:Tr Recur_NamePlaceholder}"
+                   MaxLength="80" CornerRadius="6" />
         </StackPanel>
 
         <Grid ColumnDefinitions="*,16,*">

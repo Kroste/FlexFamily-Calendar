@@ -37,8 +37,13 @@ public static class PlanExportBuilder
         var canSeeReason = viewerIsAdmin || e.UserId == viewerId;
         var displayType = EntryPrivacy.DisplayType(e.Type, canSeeReason);
 
-        var label = e.HasActivity ? e.ActivityName : typeLabel(displayType);
-        if (EntryPrivacy.ShowReason(e.Type, canSeeReason) && !string.IsNullOrEmpty(e.Title))
+        var showTitle = EntryPrivacy.ShowReason(e.Type, canSeeReason) && !string.IsNullOrEmpty(e.Title);
+        // Aktivität mit Bezeichnung, aber ohne Kategorie: die Bezeichnung ist der Name — wie auf
+        // der Kachel, statt „Aktivität · Fußball".
+        var label = e.HasActivity ? e.ActivityName
+                  : displayType == EntryType.Activity && showTitle ? e.Title
+                  : typeLabel(displayType);
+        if (showTitle && label != e.Title)
             label += $" · {e.Title}";
 
         var time = EntryTypeInfo.IsAbsence(displayType) ? e.AbsenceSpanLabel : e.TimeRange;

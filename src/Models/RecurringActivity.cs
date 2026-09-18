@@ -12,8 +12,18 @@ public class RecurringActivity
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string UserId { get; set; } = "";
     public string UserDisplayName { get; set; } = "";
+    /// <summary>Freitext-Bezeichnung, der Name im Kalender. Früher kam er aus einer Kategorie.</summary>
     public string Title { get; set; } = "";
-    public string? ActivityTypeId { get; set; }
+
+    /// <summary>
+    /// Nur für die einmalige Übernahme alter lokaler Dateien: dort stand die Kategorie, deren Name
+    /// der Titel war. <see cref="Services.RecurringTitleMigration"/> überträgt ihn beim Laden und
+    /// setzt das Feld auf null — ab dann wird es nicht mehr geschrieben. Im Server-Modus erledigt
+    /// das die EF-Migration RecurringFreeTextTitle.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("ActivityTypeId")]
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? LegacyActivityTypeId { get; set; }
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
 
@@ -31,10 +41,6 @@ public class RecurringActivity
 
     /// <summary>Liegt das Datum in einem aktiven Aussetzungs-Zeitraum?</summary>
     public bool IsPausedOn(DateOnly date) => Skips.Any(s => s.Contains(date));
-
-    /// <summary>Aufgelöster Kategoriename (Laufzeit; für die Verwaltungsliste). Die Kategorie ist der Name im Kalender.</summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public string CategoryName { get; set; } = "";
 
     [System.Text.Json.Serialization.JsonIgnore]
     public string TimeRange => $"{StartTime:hh\\:mm}–{EndTime:hh\\:mm}";

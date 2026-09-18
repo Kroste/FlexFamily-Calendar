@@ -295,6 +295,10 @@ Regelmäßige Termine (Sport jeden Dienstag, Kita jeden Werktag, Sprachkurs jede
 Freitag) trägst du nicht jede Woche neu ein — der **Admin pflegt sie als
 Wochen-Regel** im Admin-Bereich → Wiederkehrend.
 
+Jede Regel bekommt eine **Bezeichnung als freien Text** — du bist dabei an keine
+vorgegebene Liste gebunden. Im Plan steht diese Bezeichnung fett als Name auf der
+Kachel, in der Standardfarbe für Aktivitäten.
+
 Wiederkehrende Aktivitäten erscheinen als **Overlay** im Wochenplan — sie sind
 sichtbar, aber nicht als eigenständige Einträge gespeichert, sondern werden aus
 der Regel projiziert.
@@ -484,8 +488,9 @@ Als Admin öffnet der Button **Admin** einen Dialog mit fünf Tabs:
 - **Kategorien**: Aktivitätstypen anlegen (Name, Farbe, für welche Rollen sie
   auswählbar sein sollen). Beispiel: „Sport" für Kinder, „Sprachkurs" für
   Au-Pair, „Home Office" für Eltern.
-- **Wiederkehrend**: Wochen-Regeln pflegen — Wochentag, Startzeit, Endzeit,
-  Kategorie, Person, „an Feiertagen ausfallen" ja/nein.
+- **Wiederkehrend**: Wochen-Regeln pflegen — Person, **Bezeichnung als freier
+  Text** (z.B. „Fußball", „Sprachschule"), Wochentage, Startzeit, Endzeit, „an
+  Feiertagen ausfallen" ja/nein.
 - **Einstellungen**: Bundesland (für Feiertage), Übernachtungs-Pauschale in
   Stunden pro Tag, SMTP-Server (nur wenn lokal — im Server-Modus liegt SMTP
   in ENV), Update-Prüfintervall.

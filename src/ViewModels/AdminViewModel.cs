@@ -22,7 +22,6 @@ public class AdminViewModel : ViewModelBase
 
         // Wenn der Admin im jeweiligen Tab speichert, müssen die ComboBoxen im Wiederkehrend-Tab
         // sofort die neue Auswahl zeigen — ohne Schließen/Neuöffnen des Admin-Dialogs.
-        Categories.Changed += () => _ = Recurring.RefreshActivityTypesAsync();
         Users.Changed += () => _ = Recurring.RefreshUsersAsync();
     }
 }

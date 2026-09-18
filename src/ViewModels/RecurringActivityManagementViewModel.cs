@@ -13,15 +13,14 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
     private readonly IStorageService _storage;
     private List<RecurringActivity> _all = new();
     private List<User> _users = new();
-    private List<ActivityType> _activityTypes = new();
 
     public ObservableCollection<RecurringActivity> Activities { get; } = new();
     public ObservableCollection<User> AvailableUsers { get; } = new();
-    public ObservableCollection<ActivityType> AvailableActivityTypes { get; } = new();
 
     [ObservableProperty] private RecurringActivity? _selectedActivity;
     [ObservableProperty] private User? _selectedUser;
-    [ObservableProperty] private ActivityType? _selectedActivityType;
+    /// <summary>Freitext statt Kategorie: „Fußball", „Sprachschule", „Musikschule" — was eben ansteht.</summary>
+    [ObservableProperty] private string _title = "";
     [ObservableProperty] private TimeSpan? _startTime = TimeSpan.FromHours(16);
     [ObservableProperty] private TimeSpan? _endTime = TimeSpan.FromHours(17);
     [ObservableProperty] private bool _mon;
@@ -43,7 +42,6 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
     private async Task ReloadAsync()
     {
         _users = await _storage.LoadUsersAsync();
-        _activityTypes = await _storage.LoadActivityTypesAsync();
         _all = await _storage.LoadRecurringActivitiesAsync();
 
         AvailableUsers.Clear();
@@ -52,10 +50,7 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
 
         Activities.Clear();
         foreach (var a in _all.OrderBy(a => a.UserDisplayName).ThenBy(a => a.StartTime))
-        {
-            a.CategoryName = _activityTypes.FirstOrDefault(t => t.Id == a.ActivityTypeId)?.Name ?? "";
             Activities.Add(a);
-        }
     }
 
     /// <summary>Aktualisiert nur die Benutzer-Auswahl (z.B. nach Neuanlage im Benutzer-Tab),
@@ -68,29 +63,6 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
         foreach (var u in _users.OrderBy(u => string.IsNullOrEmpty(u.DisplayName) ? u.Username : u.DisplayName))
             AvailableUsers.Add(u);
         SelectedUser = AvailableUsers.FirstOrDefault(u => u.Id == prevId);
-    }
-
-    /// <summary>Aktualisiert nur die Kategorien-Auswahl (z.B. nach Neuanlage im Kategorien-Tab),
-    /// ohne die laufende Eingabe zu verwerfen.</summary>
-    public async Task RefreshActivityTypesAsync()
-    {
-        _activityTypes = await _storage.LoadActivityTypesAsync();
-        // Anzeigename umbenannter Kategorien in der Activities-Liste mit auffrischen.
-        foreach (var a in _all)
-            a.CategoryName = _activityTypes.FirstOrDefault(t => t.Id == a.ActivityTypeId)?.Name ?? "";
-        RefreshActivityTypes();
-    }
-
-    partial void OnSelectedUserChanged(User? value) => RefreshActivityTypes();
-
-    private void RefreshActivityTypes()
-    {
-        var prevId = SelectedActivityType?.Id;
-        AvailableActivityTypes.Clear();
-        if (SelectedUser != null)
-            foreach (var t in _activityTypes.Where(t => t.AppliesTo(SelectedUser.Category)))
-                AvailableActivityTypes.Add(t);
-        SelectedActivityType = AvailableActivityTypes.FirstOrDefault(t => t.Id == prevId);
     }
 
     partial void OnSelectedActivityChanged(RecurringActivity? value)
@@ -108,7 +80,7 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
         Sat = value.Weekdays.Contains(DayOfWeek.Saturday);
         Sun = value.Weekdays.Contains(DayOfWeek.Sunday);
         SkipOnHolidays = value.SkipOnHolidays;
-        SelectedActivityType = AvailableActivityTypes.FirstOrDefault(t => t.Id == value.ActivityTypeId);
+        Title = value.Title;
     }
 
     private List<DayOfWeek> CollectWeekdays()
@@ -133,6 +105,7 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
         EndTime = TimeSpan.FromHours(17);
         Mon = Tue = Wed = Thu = Fri = Sat = Sun = false;
         SkipOnHolidays = true;
+        Title = "";
         ErrorMessage = "";
     }
 
@@ -141,7 +114,7 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
     {
         ErrorMessage = "";
         if (SelectedUser == null) { ErrorMessage = Localizer.Instance["Recur_ErrorNoUser"]; return; }
-        if (SelectedActivityType == null) { ErrorMessage = Localizer.Instance["Recur_ErrorNoCategory"]; return; }
+        if (string.IsNullOrWhiteSpace(Title)) { ErrorMessage = Localizer.Instance["Recur_ErrorNoName"]; return; }
         if (StartTime == null || EndTime == null) { ErrorMessage = Localizer.Instance["Recur_ErrorNoTime"]; return; }
         if (EndTime <= StartTime) { ErrorMessage = Localizer.Instance["Recur_ErrorEndBeforeStart"]; return; }
         var weekdays = CollectWeekdays();
@@ -155,7 +128,7 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
             {
                 UserId = SelectedUser.Id,
                 UserDisplayName = name,
-                ActivityTypeId = SelectedActivityType.Id,
+                Title = Title.Trim(),
                 StartTime = StartTime.Value,
                 EndTime = EndTime.Value,
                 Weekdays = weekdays,
@@ -166,7 +139,7 @@ public partial class RecurringActivityManagementViewModel : ViewModelBase
         {
             SelectedActivity.UserId = SelectedUser.Id;
             SelectedActivity.UserDisplayName = name;
-            SelectedActivity.ActivityTypeId = SelectedActivityType.Id;
+            SelectedActivity.Title = Title.Trim();
             SelectedActivity.StartTime = StartTime.Value;
             SelectedActivity.EndTime = EndTime.Value;
             SelectedActivity.Weekdays = weekdays;

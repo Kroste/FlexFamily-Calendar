@@ -192,14 +192,12 @@ public class RecurrenceEngineTests
         var storage = new InMemoryStorageService();
         var rule = Football(DayOfWeek.Thursday, DayOfWeek.Tuesday);
         rule.SkipOnHolidays = true;
-        rule.ActivityTypeId = "act-1";
 
         await storage.SaveRecurringActivitiesAsync(new List<RecurringActivity> { rule });
         var loaded = Assert.Single(await storage.LoadRecurringActivitiesAsync());
 
         Assert.Equal(rule.Id, loaded.Id);
         Assert.Equal("Fußball", loaded.Title);
-        Assert.Equal("act-1", loaded.ActivityTypeId);
         Assert.True(loaded.SkipOnHolidays);
         Assert.Equal(new[] { DayOfWeek.Thursday, DayOfWeek.Tuesday }, loaded.Weekdays);
     }

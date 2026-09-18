@@ -30,7 +30,6 @@ public static class RecurrenceEngine
                 StartTime = r.StartTime,
                 EndTime = r.EndTime,
                 Title = r.Title,
-                ActivityTypeId = r.ActivityTypeId,
                 IsRecurring = true,
                 HolidayConflict = isHoliday,  // nur erreichbar, wenn die Regel an Feiertagen nicht ausgeblendet ist
                 IsPaused = r.IsPausedOn(date) // Urlaub/Krank: Eintrag bleibt sichtbar, wird im UI grau dargestellt

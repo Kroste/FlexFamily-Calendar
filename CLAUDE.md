@@ -216,6 +216,24 @@
   ist jede feste Helligkeitsschwelle irgendwann die falsche. `PdfExportService.TextColor`
   delegiert an dieselbe Funktion — vorher hatte es eine eigene Schwelle (0.62 auf
   0.299/0.587/0.114) und wich bei mittleren Farben von der Bildschirmdarstellung ab.
+- **Serien (`RecurringActivity`) tragen eine Freitext-Bezeichnung (`Title`), keine Kategorie.**
+  Bis v0.18 WAR die Kategorie der Name — der Dialog setzte `Title` nie, deshalb sah auch der
+  KI-Planer bei jeder Serie nur „(ohne Titel)". Beim Umbau wurde der Kategoriename als Titel
+  übernommen: serverseitig in der EF-Migration `RecurringFreeTextTitle` (SQL vor dem DropColumn,
+  gegen ein Wegwerf-Postgres 17 mit allen Fällen geprüft — Groß-/Kleinschreibung der Id, eigener
+  Titel hat Vorrang, gelöschte Kategorie), lokal in `RecurringTitleMigration` beim ersten Laden.
+  Dafür liest `RecurringActivity.LegacyActivityTypeId` das alte JSON-Feld `ActivityTypeId` und
+  wird ab dann nicht mehr geschrieben (`WhenWritingNull`). **Beim Entfernen der Kategorien
+  (Schritt 2) muss diese Übernahme weiter laufen können** — sie braucht den Kategorienamen aus
+  `activity-types.json`. Auf der Kachel und im PDF ist die Bezeichnung einer Aktivität ohne
+  Kategorie der Name (`CalendarEntry.IsTitledActivity`) statt „Aktivität" plus Untertitel.
+- **EF-Migrationen, die Daten umschreiben, gehören gegen echtes Postgres geprüft.** Die
+  Integrationstests laufen auf EF-InMemory, das keine Migrationen ausführt. Vorgehen: über den
+  Host ein Wegwerf-Postgres starten
+  (`host-spawn podman run -d --rm --name ffc-migtest -e POSTGRES_PASSWORD=test -e POSTGRES_DB=ffc -p 127.0.0.1:55432:5432 docker.io/library/postgres:17`),
+  mit `ConnectionStrings__Default=…` per `dotnet ef database update <vorige Migration>` auf den
+  Live-Stand bringen, Testdaten per `psql` anlegen, auf die neue Migration heben, Ergebnis
+  abfragen, `Down` prüfen, Container stoppen.
 - **Das Typ-Dropdown ist flach**: feste Typen plus die Kategorien der gewählten Person in einer
   Liste (`EntryTypeOption.Activity`). Die generische Option „Aktivität" entfällt genau dann,
   wenn es für diese Person mindestens eine Kategorie gibt — ohne passende Kategorie bleibt sie

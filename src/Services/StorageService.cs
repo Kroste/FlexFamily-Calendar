@@ -118,7 +118,14 @@ public class StorageService : IStorageService
 
     public async Task<List<RecurringActivity>> LoadRecurringActivitiesAsync()
     {
-        return await JsonFileStore.LoadAsync<List<RecurringActivity>>(RecurringActivitiesFile, static () => new());
+        var rules = await JsonFileStore.LoadAsync<List<RecurringActivity>>(RecurringActivitiesFile, static () => new());
+        if (rules.Any(r => r.LegacyActivityTypeId is not null)
+            && RecurringTitleMigration.Apply(rules, await LoadActivityTypesAsync()))
+        {
+            await SaveRecurringActivitiesAsync(rules);
+            LogService.Info("Serien: Kategorienamen als Bezeichnung übernommen ({0} Einträge)", rules.Count);
+        }
+        return rules;
     }
 
     public async Task SaveRecurringActivitiesAsync(List<RecurringActivity> activities)

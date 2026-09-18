@@ -10,7 +10,7 @@ public class SystemTextJsonSkipRoundtripTest
     {
         var skip = new ServerRecurrenceSkipDto("s1", new DateOnly(2026, 7, 1), new DateOnly(2026, 7, 14), "Urlaub");
         var dto = new ServerRecurringActivityDto(
-            "r1", "u1", "Mia", "Fußball", "cat1",
+            "r1", "u1", "Mia", "Fußball",
             new TimeOnly(16, 0), new TimeOnly(17, 0),
             new List<int> { 4 }, SkipOnHolidays: false,
             Skips: new List<ServerRecurrenceSkipDto> { skip });
