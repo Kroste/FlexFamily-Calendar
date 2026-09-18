@@ -475,6 +475,15 @@ docs/      Screenshots, Logo
      dann endlos weiter, obwohl alle Tests längst grün sind — sichtbar nur als Lauf ohne
      Zusammenfassung. Die Session sitzt auf einem Thread-Pool-Thread und hält den Prozess
      beim Beenden ohnehin nicht auf.
+  3. **Genau EINE Session pro Testprozess** (`HeadlessAppFixture` hält sie statisch). Als
+     Klassen-Fixture startete jede Klasse ihre eigene Session mit eigenem UI-Thread; Controls
+     aus Klasse A gehörten dann einem anderen Thread als der Dispatcher von Klasse B. Ein
+     Sprachwechsel erreicht über die statischen `LocalizedString`-Wrapper jedes noch nicht
+     eingesammelte Control (Avalonia bindet nur schwach) → „The calling thread cannot access
+     this object". GC-abhängig: lokal Debug grün, Release und CI rot (v0.23.0). Deshalb laufen
+     auch die `LocalizerTests`, die die Sprache wechseln, per `Session.Dispatch` auf dem
+     UI-Thread — wie in der App. Reihenfolge-Probleme lokal nachstellen:
+     `tests/FlexFamilyCalendar.Tests/bin/Release/net10.0/FlexFamilyCalendar.Tests :<seed>`.
   Jeder neue Input-Test gehört gegen den kaputten Stand gegengeprüft: läuft er auch ohne den
   Fix grün, misst er etwas anderes als gedacht.
 - Versionierung via **MinVer** (Git-Tag `vX.Y.Z`), GitHub-Account **Kroste** (`lars-oste@gmx.de`).

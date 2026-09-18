@@ -44,8 +44,13 @@ public class HeadlessTestApp : Application
 }
 
 /// <summary>
-/// Hält die Headless-Session über alle Tests einer Klasse. Der Aufbau kostet spürbar Zeit und
-/// die Session ist prozessweit — pro Test eine neue wäre langsam und würde sich gegenseitig stören.
+/// EINE Headless-Session für den ganzen Testprozess, egal wie viele Klassen die Fixture ziehen.
+/// Vorher startete jede Klasse ihre eigene — mit eigenem UI-Thread. Steuerelemente aus Klasse A
+/// gehörten damit einem anderen Thread als der Dispatcher von Klasse B, und ein Sprachwechsel
+/// über die statischen <c>LocalizedString</c>-Wrapper erreichte beide: „The calling thread
+/// cannot access this object". Ob es krachte, hing davon ab, ob der GC die geschlossenen
+/// Fenster schon eingesammelt hatte — lokal im Debug-Build grün, im Release-Build und auf der
+/// CI rot.
 ///
 /// Bewusst OHNE <c>IDisposable</c>: <c>HeadlessUnitTestSession.Dispose()</c> wartet per
 /// <c>_dispatchTask.Wait()</c> auf das Ende der Dispatcher-Schleife, und die kommt hier nicht
@@ -55,5 +60,8 @@ public class HeadlessTestApp : Application
 /// </summary>
 public sealed class HeadlessAppFixture
 {
-    public HeadlessUnitTestSession Session { get; } = HeadlessUnitTestSession.StartNew(typeof(HeadlessTestApp));
+    private static readonly Lazy<HeadlessUnitTestSession> Shared =
+        new(() => HeadlessUnitTestSession.StartNew(typeof(HeadlessTestApp)), LazyThreadSafetyMode.ExecutionAndPublication);
+
+    public HeadlessUnitTestSession Session => Shared.Value;
 }
