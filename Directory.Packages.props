@@ -42,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Build">
-    <PackageVersion Include="MinVer" Version="7.0.0" />
+    <PackageVersion Include="MinVer" Version="8.0.0" />
   </ItemGroup>
 
   <!-- Tests laufen auf xunit.v3 / Microsoft.Testing.Platform. Microsoft.NET.Test.Sdk und
