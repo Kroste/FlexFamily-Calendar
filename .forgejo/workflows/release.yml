@@ -123,8 +123,13 @@ jobs:
           - rid: linux-x64
             runner: ubuntu-latest
             archive: tar.gz
+          # **Auch win-x64 baut auf Linux.** `dotnet publish -r win-x64
+          # --self-contained` erzeugt eine vollwertige .exe samt Runtime,
+          # gleich auf welchem System der Befehl laeuft. Ein
+          # windows-latest-Eintrag bliebe hier ewig auf "waiting" stehen,
+          # weil Forgejo nur einen Linux-Runner hat.
           - rid: win-x64
-            runner: windows-latest
+            runner: ubuntu-latest
             archive: zip
     steps:
       - uses: actions/checkout@v7
