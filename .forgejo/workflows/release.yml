@@ -1,0 +1,363 @@
+# **Forgejo-Fassung von .github/workflows/release.yml.**
+#
+# Erzeugt von Werkzeuge/forgejo/workflow-uebertragen.py am 27.10.2026.
+# Gebaut wird fuer git.flexfamily.cloud; die GitHub-Fassung bleibt vorerst
+# daneben bestehen.
+#
+# **Beide Dateien gehoeren synchron.** Wer an den Bauschritten etwas
+# aendert, zieht es hier nach -- sonst laufen die Seiten auseinander, und
+# das faellt erst auf, wenn eine von beiden rot wird.
+
+name: Release
+
+# Auf jedes Tag `vX.Y.Z`. Den Release-Text liefert CHANGELOG.md (Abschnitt `## vX.Y.Z`), siehe
+# Job `release-notes` — er erscheint in der App im Update-Dialog unter „Was ist neu".
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag für Test-Release (z.B. v0.0.0-test)'
+        required: true
+        type: string
+
+permissions:
+  contents: write   # GH-Release-Assets schreiben
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DESKTOP_PROJECT: desktop/FlexFamilyCalendar.Desktop.csproj
+  # Aus Tag-Push: github.ref_name = vX.Y.Z. Aus workflow_dispatch: aus den Inputs.
+  RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+  # GH-Actions: ab Juni 2026 Default Node 24 — explizit jetzt schon erzwingen, damit
+  # die Deprecation-Warnungen für actions/checkout etc. verschwinden.
+
+jobs:
+
+  # ─────────── Precheck: sind die Docker-Hub-Secrets gesetzt? ───────────
+  # Job-Level `if:` darf nicht direkt auf `secrets.X` zugreifen — Workaround
+  # über einen Precheck-Step, der das Ergebnis als Output exportiert.
+  precheck:
+    runs-on: ubuntu-latest
+    outputs:
+      docker_ready: ${{ steps.check.outputs.docker_ready }}
+    steps:
+      - id: check
+        env:
+          DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -n "$DH_USER" ] && [ -n "$DH_TOKEN" ]; then
+            echo "docker_ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "docker_ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::DOCKERHUB_USERNAME/DOCKERHUB_TOKEN nicht gesetzt — Docker-Push übersprungen."
+          fi
+
+  # ─────────── Release-Text aus CHANGELOG.md ───────────
+  # Läuft VOR den Artefakt-Jobs und legt das Release mit Text an. Vorher wurden nur Tags gepusht,
+  # und softprops/action-gh-release legte das Release mit leerem Text an — in der App stand im
+  # Update-Dialog unter „Was ist neu" nichts. Fehlt der Abschnitt zum Tag, bricht das Release hier
+  # ab, statt wieder leer zu erscheinen. Die Artefakt-Jobs hängen per `needs` daran: liefen sie
+  # parallel, könnte softprops den gerade gesetzten Text mit seinem veralteten Stand überschreiben.
+  release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Release anlegen und Dateien anhaengen
+        env:
+          # Forgejo legt diesen Token je Lauf an; er gilt nur fuer dieses
+          # Repo und nur solange der Lauf dauert.
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SERVER: ${{ github.server_url }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -e
+          # Besteht das Release schon (zweiter Lauf desselben Tags), werden
+          # die Dateien ersetzt statt mit HTTP 409 abzubrechen.
+          id=$(curl -sf -H "Authorization: token $TOKEN" \
+                 "$SERVER/api/v1/repos/$REPO/releases/tags/$TAG" 2>/dev/null \
+               | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])' 2>/dev/null || true)
+          if [ -z "$id" ]; then
+            id=$(curl -sf -X POST -H "Authorization: token $TOKEN" \
+                   -H "Content-Type: application/json" \
+                   -d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":\"Gebaut von Forgejo Actions.\"}" \
+                   "$SERVER/api/v1/repos/$REPO/releases" \
+                 | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+          fi
+          [ -n "$id" ] || { echo "Keine Release-ID erhalten"; exit 1; }
+
+          hochgeladen=0
+          for datei in *.zip *.tar.gz *.AppImage *.nupkg; do
+            [ -f "$datei" ] || continue
+            # Gleichnamigen Anhang vorher loeschen, sonst haengt Forgejo die
+            # Datei ein zweites Mal an statt sie zu ersetzen.
+            alt=$(curl -sf -H "Authorization: token $TOKEN" \
+                    "$SERVER/api/v1/repos/$REPO/releases/$id/assets" 2>/dev/null \
+                  | python3 -c "import json,sys; print(next((str(a['id']) for a in json.load(sys.stdin) if a['name']=='$(basename "$datei")'), ''))" 2>/dev/null || true)
+            [ -n "$alt" ] && curl -s -X DELETE -H "Authorization: token $TOKEN" \
+              "$SERVER/api/v1/repos/$REPO/releases/$id/assets/$alt" >/dev/null
+            echo "lade hoch: $datei ($(du -h "$datei" | cut -f1))"
+            curl -sf -X POST -H "Authorization: token $TOKEN" \
+              -F "attachment=@$datei" \
+              "$SERVER/api/v1/repos/$REPO/releases/$id/assets?name=$(basename "$datei")" >/dev/null
+            hochgeladen=$((hochgeladen+1))
+          done
+          # **Ein Release ohne Dateien ist kein Release.** Lieber hier rot
+          # als eine leere Seite, die niemand bemerkt.
+          [ "$hochgeladen" -gt 0 ] || { echo "Keine Datei hochgeladen"; exit 1; }
+          echo "Fertig ($hochgeladen Dateien): $SERVER/$REPO/releases/tag/$TAG"
+  # ─────────── Desktop: Linux + Windows als self-contained Single-File ───────────
+  desktop:
+    name: Desktop ${{ matrix.rid }}
+    needs: release-notes
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: linux-x64
+            runner: ubuntu-latest
+            archive: tar.gz
+          - rid: win-x64
+            runner: windows-latest
+            archive: zip
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Publish
+        shell: bash
+        run: |
+          # Tag → SemVer (z.B. v1.2.3 → 1.2.3, v1.2.3-test → 1.2.3-test).
+          # AssemblyVersion muss strikt numerisch sein; pre-release-suffix abschneiden.
+          VERSION="${RELEASE_TAG#v}"
+          NUMERIC="${VERSION%%-*}"
+          dotnet publish "$DESKTOP_PROJECT" \
+            -c Release -r ${{ matrix.rid }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            -p:DebugType=embedded \
+            -p:Version="$VERSION" \
+            -p:AssemblyVersion="${NUMERIC}.0" \
+            -p:FileVersion="${NUMERIC}.0" \
+            -o publish
+
+      - name: Pack
+        shell: bash
+        run: |
+          name="FlexFamilyCalendar-${RELEASE_TAG}-${{ matrix.rid }}"
+          if [ "${{ matrix.archive }}" = "zip" ]; then
+            7z a "${name}.zip" "./publish/*"
+          else
+            tar -C publish -czf "${name}.tar.gz" .
+          fi
+          ls -lh FlexFamilyCalendar-*
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: FlexFamilyCalendar-${{ env.RELEASE_TAG }}-${{ matrix.rid }}.*
+
+  # ─────────── Android APK ───────────
+  # Signiert per Debug-Keystore — für Verteilung über die GitHub-Release-Seite reicht das;
+  # Play-Store-Distribution wäre eine spätere Stufe (Release-Keystore in Secrets, .aab statt .apk).
+  android-apk:
+    name: Android APK
+    needs: release-notes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install android workload
+        run: dotnet workload install android
+
+      - name: Publish APK
+        shell: bash
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          NUMERIC="${VERSION%%-*}"
+          # ApplicationDisplayVersion (SemVer, User-sichtbar) + ApplicationVersion (VersionCode,
+          # muss strikt aufwärts sein). Je Stelle 1000 statt 100: mit dem alten Faktor kollidierte
+          # 0.16.100 mit 0.17.0, und Android merkt so etwas nicht — es installiert dann einfach
+          # die falsche Version. Bleibt monoton zur alten Formel (0.16.1: 1601 → 16001) und
+          # unter Androids Obergrenze von 2100000000.
+          IFS='.' read -r MAJ MIN PAT <<< "$NUMERIC"
+          VERSION_CODE=$(( MAJ * 1000000 + MIN * 1000 + PAT ))
+          dotnet publish mobile/FlexFamilyCalendar.Android.csproj \
+            -c Release \
+            -p:ApplicationDisplayVersion="$NUMERIC" \
+            -p:ApplicationVersion="$VERSION_CODE" \
+            -o publish
+          # Der Publish legt ein signed APK (Debug-Keystore) unter publish ab.
+          find publish -maxdepth 2 -name "*.apk" -print
+          APK=$(find publish -maxdepth 2 -name "*-Signed.apk" | head -1)
+          if [ -z "$APK" ]; then APK=$(find publish -maxdepth 2 -name "*.apk" | head -1); fi
+          cp "$APK" "FlexFamilyCalendar-${RELEASE_TAG}-android.apk"
+          ls -lh FlexFamilyCalendar-*.apk
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: FlexFamilyCalendar-${{ env.RELEASE_TAG }}-android.apk
+
+  # ─────────── Linux AppImage ───────────
+  appimage:
+    name: Linux AppImage
+    needs: release-notes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: APT-Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick libfuse2
+
+      - name: Publish
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          NUMERIC="${VERSION%%-*}"
+          dotnet publish "$DESKTOP_PROJECT" \
+            -c Release -r linux-x64 \
+            --self-contained true \
+            -p:DebugType=embedded \
+            -p:Version="$VERSION" \
+            -p:AssemblyVersion="${NUMERIC}.0" \
+            -p:FileVersion="${NUMERIC}.0" \
+            -o publish
+
+      - name: AppDir
+        run: |
+          mkdir -p AppDir/usr/bin AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/256x256/apps
+          cp -r publish/* AppDir/usr/bin/
+          chmod +x AppDir/usr/bin/FlexFamilyCalendar.Desktop
+
+          # Branded 256x256-PNG direkt kopieren (aus scripts/build_icon.py reproduzierbar).
+          cp src/Assets/flexfamily-calendar.png \
+             AppDir/usr/share/icons/hicolor/256x256/apps/flexfamily-calendar.png
+          cp src/Assets/flexfamily-calendar.png AppDir/flexfamily-calendar.png
+
+          cat > AppDir/usr/share/applications/flexfamily-calendar.desktop <<EOF
+          [Desktop Entry]
+          Name=FlexFamily Calendar
+          Comment=Familienplaner für Arbeitszeiten und Aktivitäten
+          Exec=FlexFamilyCalendar.Desktop
+          Icon=flexfamily-calendar
+          Terminal=false
+          Type=Application
+          Categories=Office;Calendar;
+          EOF
+          cp AppDir/usr/share/applications/flexfamily-calendar.desktop AppDir/
+
+          cat > AppDir/AppRun <<'EOF'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/bin/FlexFamilyCalendar.Desktop" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+
+      - name: Build AppImage
+        run: |
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage AppDir \
+            "FlexFamilyCalendar-${RELEASE_TAG}-x86_64.AppImage"
+          ls -lh FlexFamilyCalendar-*.AppImage
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: FlexFamilyCalendar-${{ env.RELEASE_TAG }}-x86_64.AppImage
+
+  # ─────────── Docker: API ───────────
+  docker-api:
+    name: Docker Image (API)
+    needs: precheck
+    if: needs.precheck.outputs.docker_ready == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Tag "v0.1.5" → "0.1.5" — SemVer akzeptiert kein v-Präfix; sonst kippt der Restore
+      # bereits mit "not a valid version string".
+      - id: ver
+        run: echo "value=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v7
+        with:
+          # Repo-Root, damit Directory.Build.props (Nullable/ImplicitUsings/MinVer) im Build ist.
+          context: .
+          file: server/FlexFamilyCalendar.Api/Dockerfile
+          push: true
+          build-args: |
+            APP_VERSION=${{ steps.ver.outputs.value }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/flexfamily-calendar-api:${{ env.RELEASE_TAG }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/flexfamily-calendar-api:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ env.RELEASE_TAG }}
+
+  # ─────────── Docker: Caddy + eingebettete WASM-SPA ───────────
+  docker-caddy:
+    name: Docker Image (Caddy + SPA)
+    needs: precheck
+    if: needs.precheck.outputs.docker_ready == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: ver
+        run: echo "value=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: .                       # Repo-Root: Caddy.Dockerfile braucht src/ + browser/
+          file: server/Caddy.Dockerfile
+          push: true
+          build-args: |
+            APP_VERSION=${{ steps.ver.outputs.value }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/flexfamily-calendar-caddy:${{ env.RELEASE_TAG }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/flexfamily-calendar-caddy:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ env.RELEASE_TAG }}
