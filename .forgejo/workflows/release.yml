@@ -51,6 +51,16 @@ jobs:
         run: |
           if [ -n "$DH_USER" ] && [ -n "$DH_TOKEN" ]; then
             echo "docker_ready=true" >> "$GITHUB_OUTPUT"
+            # **Was drinsteht, nicht nur dass etwas drinsteht.** Am
+            # 28.10.2026 scheiterten beide Docker-Jobs an "unauthorized:
+            # incorrect username or password" — und das kann heißen: falscher
+            # Benutzername, falscher Token, oder ein Wert, der gar kein Token
+            # ist. Die Längen stehen hier, damit sich die Fälle trennen
+            # lassen, ohne drei Dinge gleichzeitig zu ändern. Der Benutzername
+            # steht im Klartext: Er ist keins der Geheimnisse, und genau an
+            # ihm lag der Verdacht (es muss `larsoste` sein, nicht die
+            # E-Mail-Adresse).
+            echo "Docker Hub: Benutzer '$DH_USER', Token ${#DH_TOKEN} Zeichen."
           else
             echo "docker_ready=false" >> "$GITHUB_OUTPUT"
             echo "::warning::DOCKERHUB_USERNAME/DOCKERHUB_TOKEN nicht gesetzt — Docker-Push übersprungen."
