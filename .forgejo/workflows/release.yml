@@ -168,7 +168,11 @@ jobs:
         run: |
           name="FlexFamilyCalendar-${RELEASE_TAG}-${{ matrix.rid }}"
           if [ "${{ matrix.archive }}" = "zip" ]; then
-            7z a "${name}.zip" "./publish/*"
+            # **Kein 7z.** Auf GitHubs windows-latest liegt es bei; im
+            # Forgejo-Runner-Image (ubuntu-22.04 von catthehacker) nicht --
+            # "7z: command not found". zip ist da und erzeugt dasselbe
+            # Archiv; -r, weil publish Unterverzeichnisse hat.
+            (cd publish && zip -qr "$OLDPWD/${name}.zip" .)
           else
             tar -C publish -czf "${name}.tar.gz" .
           fi
@@ -219,6 +223,35 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # **Das Android-SDK muss hier eingerichtet werden.** Auf GitHubs
+      # ubuntu-latest liegt es vorinstalliert; im Forgejo-Runner-Image
+      # (catthehacker/ubuntu:act-22.04) nicht, und der Build bricht mit
+      # "XA5300: The Android SDK directory could not be found" ab.
+      # android-actions/setup-android laesst sich nicht nehmen: Der Runner
+      # holt Actions von data.forgejo.org, und dort gibt es die nicht (404).
+      # Also von Hand -- cmdline-tools auspacken, Lizenzen annehmen, die
+      # Plattform ziehen.
+      #
+      # Die Nummer im Dateinamen ist die Build-Nummer der cmdline-tools,
+      # keine Versionsnummer; sie laesst sich nicht weglassen. Geprueft am
+      # 28.10.2026: liefert HTTP 200.
+      - name: Android-SDK einrichten
+        run: |
+          set -eu
+          SDK="$HOME/android-sdk"
+          mkdir -p "$SDK/cmdline-tools"
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip -O /tmp/cmdline.zip
+          unzip -q /tmp/cmdline.zip -d "$SDK/cmdline-tools"
+          mv "$SDK/cmdline-tools/cmdline-tools" "$SDK/cmdline-tools/latest"
+          SM="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          # `yes |` nimmt die Lizenzen an. Ohne das bleibt sdkmanager stehen
+          # und wartet auf eine Eingabe, die im Job nie kommt.
+          yes 2>/dev/null | "$SM" --licenses >/dev/null || true
+          # net10.0-android baut gegen API 36.
+          "$SM" "platform-tools" "platforms;android-36" "build-tools;36.0.0" >/dev/null
+          echo "ANDROID_HOME=$SDK"     >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
 
       - name: Install android workload
         run: dotnet workload install android
@@ -338,7 +371,12 @@ jobs:
         run: |
           wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x appimagetool-x86_64.AppImage
-          ARCH=x86_64 ./appimagetool-x86_64.AppImage AppDir \
+          # **--appimage-extract-and-run.** Ein AppImage mountet sich selbst
+          # per FUSE; im Job-Container gibt es kein /dev/fuse ("fuse: device
+          # not found, try 'modprobe fuse' first"), und das Kernel-Modul im
+          # Container nachzuladen ist keine Option. Der Schalter packt das
+          # Werkzeug stattdessen aus und startet es direkt.
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir \
             "FlexFamilyCalendar-${RELEASE_TAG}-x86_64.AppImage"
           ls -lh FlexFamilyCalendar-*.AppImage
 
