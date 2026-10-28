@@ -7,22 +7,37 @@ using System.Text.Json.Nodes;
 namespace FlexFamilyCalendar.Services.Update;
 
 /// <summary>
-/// Fragt die GitHub-Releases-API nach dem aktuellsten Release und prüft, ob die laufende
+/// Fragt die Releases-API nach dem aktuellsten Release und prüft, ob die laufende
 /// App-Version älter ist. Wählt das Asset, das zur aktuellen Plattform passt
 /// (linux-x64.tar.gz / x86_64.AppImage / win-x64.zip).
+///
+/// <para><b>Seit dem 28.10.2026 die eigene Forge, nicht mehr GitHub.</b> Lars
+/// will GitHub abschalten. Forgejos Release-API ist feldgleich —
+/// <c>tag_name</c>, <c>assets[].name</c>, <c>browser_download_url</c> heißen
+/// dort genauso —, deshalb ändert sich an <see cref="Parse"/> nichts.
+/// <see cref="ApiRoot"/> ist überschreibbar, damit Tests gegen einen eigenen
+/// Server laufen können.</para>
 /// </summary>
 public class UpdateService
 {
+    /// <summary>Wurzel der Releases-API. Persönliche Repos liegen in der Forge
+    /// unter <c>lars</c>, nicht unter <c>Kroste</c>.</summary>
+    public const string ApiRoot = "https://git.flexfamily.cloud/api/v1";
+
     private readonly HttpClient _http;
     private readonly string _owner;
     private readonly string _repo;
+    private readonly string _apiRoot;
 
-    public UpdateService(string owner, string repo, HttpClient? http = null)
+    public UpdateService(string owner, string repo, HttpClient? http = null, string? apiRoot = null)
     {
         _owner = owner;
         _repo = repo;
+        _apiRoot = apiRoot ?? ApiRoot;
         _http = http ?? new HttpClient();
-        // GitHub verlangt einen User-Agent, sonst 403.
+        // Ein User-Agent gehört dazu: GitHub antwortete ohne ihn mit 403,
+        // Forgejo ist toleranter — im Protokoll des Servers steht er trotzdem,
+        // und das ist bei einer Fehlersuche Gold wert.
         if (!_http.DefaultRequestHeaders.Contains("User-Agent"))
             _http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("FlexFamilyCalendar", "1.0"));
     }
@@ -65,7 +80,7 @@ public class UpdateService
     {
         if (platform == UpdatePlatform.Unsupported) return null;
 
-        var url = $"https://api.github.com/repos/{_owner}/{_repo}/releases/latest";
+        var url = $"{_apiRoot}/repos/{_owner}/{_repo}/releases/latest";
         using var resp = await _http.GetAsync(url, ct);
         if (!resp.IsSuccessStatusCode) return null;
 

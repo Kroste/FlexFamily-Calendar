@@ -11,7 +11,9 @@ namespace FlexFamilyCalendar.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    private const string UpdateRepoOwner = "Kroste";
+    // In der Forge liegen persönliche Repos unter `lars`, nicht unter `Kroste`;
+    // die Organisationsnamen wurden dagegen übernommen.
+    private const string UpdateRepoOwner = "lars";
     private const string UpdateRepoName = "FlexFamily-Calendar";
 
     private readonly AuthService _auth;
