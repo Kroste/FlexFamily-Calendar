@@ -111,7 +111,12 @@ jobs:
           done
           # **Ein Release ohne Dateien ist kein Release.** Lieber hier rot
           # als eine leere Seite, die niemand bemerkt.
-          [ "$hochgeladen" -gt 0 ] || { echo "Keine Datei hochgeladen"; exit 1; }
+          # **Hier KEIN Abbruch bei null Dateien.** Dieser Job legt das Release
+          # mit seinem Text an; die Pakete haengen desktop, android-apk und
+          # appimage spaeter einzeln an. Die Pruefung stand hier zuerst drin
+          # und liess den Lauf scheitern, bevor etwas gebaut war -- alle drei
+          # haengen per `needs` an diesem Job und wurden uebersprungen.
+          : # nichts zu pruefen
           echo "Fertig ($hochgeladen Dateien): $SERVER/$REPO/releases/tag/$TAG"
   # ─────────── Desktop: Linux + Windows als self-contained Single-File ───────────
   desktop:
