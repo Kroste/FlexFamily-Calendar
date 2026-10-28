@@ -169,10 +169,32 @@ jobs:
           fi
           ls -lh FlexFamilyCalendar-*
 
-      - uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          files: FlexFamilyCalendar-${{ env.RELEASE_TAG }}-${{ matrix.rid }}.*
+      - name: An das Release haengen
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SERVER: ${{ github.server_url }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ env.RELEASE_TAG }}
+        run: |
+          set -e
+          # Das Release legt der Job release-notes an; hier wird nur
+          # angehaengt. Deshalb kein Anlegen und kein Abbruch, wenn
+          # nichts da ist -- die Jobs laufen unabhaengig voneinander.
+          id=$(curl -sf -H "Authorization: token $TOKEN" \
+                 "$SERVER/api/v1/repos/$REPO/releases/tags/$TAG" \
+               | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+          for datei in $(find . -type f -name "FlexFamilyCalendar-*" | sort); do
+            name=$(basename "$datei")
+            alt=$(curl -sf -H "Authorization: token $TOKEN" \
+                    "$SERVER/api/v1/repos/$REPO/releases/$id/assets" 2>/dev/null \
+                  | python3 -c "import json,sys; print(next((str(a['id']) for a in json.load(sys.stdin) if a['name']=='$name'), ''))" || true)
+            [ -n "$alt" ] && curl -s -X DELETE -H "Authorization: token $TOKEN" \
+              "$SERVER/api/v1/repos/$REPO/releases/$id/assets/$alt" >/dev/null
+            echo "haenge an: $name ($(du -h "$datei" | cut -f1))"
+            curl -sf -X POST -H "Authorization: token $TOKEN" \
+              -F "attachment=@$datei" \
+              "$SERVER/api/v1/repos/$REPO/releases/$id/assets?name=$name" >/dev/null
+          done
 
   # ─────────── Android APK ───────────
   # Signiert per Debug-Keystore — für Verteilung über die GitHub-Release-Seite reicht das;
@@ -220,10 +242,32 @@ jobs:
           cp "$APK" "FlexFamilyCalendar-${RELEASE_TAG}-android.apk"
           ls -lh FlexFamilyCalendar-*.apk
 
-      - uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          files: FlexFamilyCalendar-${{ env.RELEASE_TAG }}-android.apk
+      - name: An das Release haengen
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SERVER: ${{ github.server_url }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ env.RELEASE_TAG }}
+        run: |
+          set -e
+          # Das Release legt der Job release-notes an; hier wird nur
+          # angehaengt. Deshalb kein Anlegen und kein Abbruch, wenn
+          # nichts da ist -- die Jobs laufen unabhaengig voneinander.
+          id=$(curl -sf -H "Authorization: token $TOKEN" \
+                 "$SERVER/api/v1/repos/$REPO/releases/tags/$TAG" \
+               | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+          for datei in $(find . -type f -name "FlexFamilyCalendar-*" | sort); do
+            name=$(basename "$datei")
+            alt=$(curl -sf -H "Authorization: token $TOKEN" \
+                    "$SERVER/api/v1/repos/$REPO/releases/$id/assets" 2>/dev/null \
+                  | python3 -c "import json,sys; print(next((str(a['id']) for a in json.load(sys.stdin) if a['name']=='$name'), ''))" || true)
+            [ -n "$alt" ] && curl -s -X DELETE -H "Authorization: token $TOKEN" \
+              "$SERVER/api/v1/repos/$REPO/releases/$id/assets/$alt" >/dev/null
+            echo "haenge an: $name ($(du -h "$datei" | cut -f1))"
+            curl -sf -X POST -H "Authorization: token $TOKEN" \
+              -F "attachment=@$datei" \
+              "$SERVER/api/v1/repos/$REPO/releases/$id/assets?name=$name" >/dev/null
+          done
 
   # ─────────── Linux AppImage ───────────
   appimage:
@@ -293,10 +337,32 @@ jobs:
             "FlexFamilyCalendar-${RELEASE_TAG}-x86_64.AppImage"
           ls -lh FlexFamilyCalendar-*.AppImage
 
-      - uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          files: FlexFamilyCalendar-${{ env.RELEASE_TAG }}-x86_64.AppImage
+      - name: An das Release haengen
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SERVER: ${{ github.server_url }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ env.RELEASE_TAG }}
+        run: |
+          set -e
+          # Das Release legt der Job release-notes an; hier wird nur
+          # angehaengt. Deshalb kein Anlegen und kein Abbruch, wenn
+          # nichts da ist -- die Jobs laufen unabhaengig voneinander.
+          id=$(curl -sf -H "Authorization: token $TOKEN" \
+                 "$SERVER/api/v1/repos/$REPO/releases/tags/$TAG" \
+               | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+          for datei in $(find . -type f -name "FlexFamilyCalendar-*" | sort); do
+            name=$(basename "$datei")
+            alt=$(curl -sf -H "Authorization: token $TOKEN" \
+                    "$SERVER/api/v1/repos/$REPO/releases/$id/assets" 2>/dev/null \
+                  | python3 -c "import json,sys; print(next((str(a['id']) for a in json.load(sys.stdin) if a['name']=='$name'), ''))" || true)
+            [ -n "$alt" ] && curl -s -X DELETE -H "Authorization: token $TOKEN" \
+              "$SERVER/api/v1/repos/$REPO/releases/$id/assets/$alt" >/dev/null
+            echo "haenge an: $name ($(du -h "$datei" | cut -f1))"
+            curl -sf -X POST -H "Authorization: token $TOKEN" \
+              -F "attachment=@$datei" \
+              "$SERVER/api/v1/repos/$REPO/releases/$id/assets?name=$name" >/dev/null
+          done
 
   # ─────────── Docker: API ───────────
   docker-api:
