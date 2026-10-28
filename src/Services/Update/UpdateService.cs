@@ -22,7 +22,7 @@ public class UpdateService
 {
     /// <summary>Wurzel der Releases-API. Persönliche Repos liegen in der Forge
     /// unter <c>lars</c>, nicht unter <c>Kroste</c>.</summary>
-    public const string ApiRoot = "https://git.flexfamily.cloud/api/v1";
+    public const string ApiRoot = "https://git.flexfamily.de/api/v1";
 
     private readonly HttpClient _http;
     private readonly string _owner;
