@@ -8,6 +8,10 @@ Geschrieben für die Menschen, die die App benutzen: was sich für sie ändert, 
 Update-Dialog zeigt den Text ohne Formatierung — also schlichte Aufzählungen, kein Fettdruck,
 keine Links.
 
+## v0.23.3 — 28.10.2026
+
+- Die App sucht ihre Updates jetzt auf git.flexfamily.de statt auf GitHub. Für dich ändert sich nichts: Der Dialog „Was ist neu" und das Selbst-Update funktionieren wie bisher.
+
 ## v0.23.2 — 18.09.2026
 
 - Der Scrollbalken ist schmaler und hat einen runden Griff, ohne Pfeilknöpfe.
